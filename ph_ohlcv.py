@@ -1,7 +1,6 @@
 # ============================================================
 # ph_ohlcv.py
 # ============================================================
-import ccxt
 import api
 import time
 import csv
@@ -25,6 +24,7 @@ except Exception:
     dbr = None
 
 def create_exchange(api_key=api.API_KEY, secret=api.API_SECRET):
+    import ccxt # ccxt ist nur nötig, wenn wirklich eine Exchange-Instanz erstellt wird (typisch LIVE-Modus). 
     return ccxt.phemex({
         "apiKey": api_key,
         "secret": secret,
