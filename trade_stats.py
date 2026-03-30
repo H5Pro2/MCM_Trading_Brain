@@ -36,6 +36,7 @@ class TradeStats:
             "pnl_tp": 0.0,
             "pnl_sl": 0.0,
             "current_timestamp": None,
+            "last_outcome_decomposition": {},
         }
 
         if reset:
@@ -73,7 +74,7 @@ class TradeStats:
             pass
 
     # ─────────────────────────────────────────────
-    def on_exit(self, *, entry: float, tp: float, sl: float, reason: str, side: str = None, amount: float = 1.0, exploration_trade: bool = False):
+    def on_exit(self, *, entry: float, tp: float, sl: float, reason: str, side: str = None, amount: float = 1.0, exploration_trade: bool = False, outcome_decomposition: dict = None):
         pnl = 0.0
 
         side = str(side).upper().strip() if side is not None else "LONG"
@@ -119,6 +120,7 @@ class TradeStats:
         pnl = pnl - fees
 
         self.data["trades"] += 1
+        self.data["last_outcome_decomposition"] = dict(outcome_decomposition or {})
 
         if exploration_trade:
             self.data["exploration_trades"] = int(self.data.get("exploration_trades", 0) or 0) + 1
@@ -209,13 +211,14 @@ class TradeStats:
 
         return data
     # ─────────────────────────────────────────────
-    def on_cancel(self, *, order_id=None, cause: str = None, exploration_trade: bool = False):
+    def on_cancel(self, *, order_id=None, cause: str = None, exploration_trade: bool = False, outcome_decomposition: dict = None):
         """
         Order wurde gecancelt bevor ein Trade/Exit stattgefunden hat.
         Keine PnL-Änderung – nur Zählung.
         """
         try:
             self.data["cancels"] = int(self.data.get("cancels", 0) or 0) + 1
+            self.data["last_outcome_decomposition"] = dict(outcome_decomposition or {})
 
             if exploration_trade:
                 self.data["exploration_cancels"] = int(self.data.get("exploration_cancels", 0) or 0) + 1

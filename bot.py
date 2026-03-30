@@ -215,6 +215,7 @@ class Bot:
                         order_id=oid,
                         cause="exchange_cancel",
                         exploration_trade=False,
+                        outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
                     )
                     self.position = None
                     return
@@ -232,6 +233,7 @@ class Bot:
                 side=self.position.get("side"),
                 amount=Config.ORDER_SIZE if live_mode else 1.0,
                 exploration_trade=False,
+                outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
             )
 
             self.position = None
