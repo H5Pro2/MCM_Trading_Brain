@@ -5,6 +5,7 @@ import api
 import time
 import csv
 import os
+import importlib.util
 from config import Config
 from datetime import datetime
 # --------------------------------------------------
@@ -24,12 +25,16 @@ except Exception:
     dbr = None
 
 def create_exchange(api_key=api.API_KEY, secret=api.API_SECRET):
-    import ccxt # ccxt ist nur nötig, wenn wirklich eine Exchange-Instanz erstellt wird (typisch LIVE-Modus). 
+    if importlib.util.find_spec("ccxt") is None:
+        raise ModuleNotFoundError(
+            "ccxt ist nicht installiert. Für LIVE-Exchange bitte zuerst 'ccxt' installieren."
+        )
+    import ccxt
     return ccxt.phemex({
         "apiKey": api_key,
         "secret": secret,
         "enableRateLimit": True,
-        'options': {'defaultType': Config.MECHANIK}  # Phemex Futurev
+        'options': {'defaultType': Config.MECHANIK}  # Phemex Future
     })
 # --------------------------------------------------
 
