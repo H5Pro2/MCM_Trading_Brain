@@ -580,6 +580,8 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
     experience_state = update_experience_state(bot, reason)
     outcome_decomposition = build_outcome_decomposition(bot, reason, position, experience_state)
     bot.last_outcome_decomposition = dict(outcome_decomposition or {})
+    outcome_decomposition = build_outcome_decomposition(bot, reason, position, experience_state)
+    bot.last_outcome_decomposition = dict(outcome_decomposition or {})
 
     signature_key = str(getattr(bot, "last_signature_key", "") or "").strip()
     if signature_key:

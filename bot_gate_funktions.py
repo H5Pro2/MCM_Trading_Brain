@@ -101,6 +101,7 @@ def evaluate_entry_decision(bot, window, candle_state):
         "vision": raw_vision,
         "filtered_vision": filtered_vision,
         "focus": focus,
+        "world_state": dict(decision.get("world_state", {}) or {}),
         "state_signature": state_signature,
         "entry_expectation": float(expectation_state.get("entry_expectation", 0.0) or 0.0),
         "target_expectation": float(expectation_state.get("target_expectation", 0.0) or 0.0),
