@@ -15,6 +15,7 @@ from ph_ohlcv import (
 )
 
 from place_orders import _SYMBOL, set_context, place_order
+from memory_state import save_memory_state
 
 # --------------------------------------------------
 # BACKTEST RANGE PRINT
@@ -119,6 +120,7 @@ if __name__ == "__main__":
 
             bot.processed += 1
 
+        save_memory_state(bot)
         stats = bot.stats.snapshot()
 
         _print_backtest_range(filepath)

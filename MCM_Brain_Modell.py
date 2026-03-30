@@ -578,6 +578,8 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
         bot.target_drift = float((float(getattr(bot, "target_drift", 0.0) or 0.0)) * 1.08)
 
     experience_state = update_experience_state(bot, reason)
+    outcome_decomposition = build_outcome_decomposition(bot, reason, position, experience_state)
+    bot.last_outcome_decomposition = dict(outcome_decomposition or {})
 
     signature_key = str(getattr(bot, "last_signature_key", "") or "").strip()
     if signature_key:
@@ -625,10 +627,84 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
         f"experience_regulation={float((experience_state or {}).get('experience_regulation', 0.0) or 0.0):.4f} "
         f"reflection_maturity={float((experience_state or {}).get('reflection_maturity', 0.0) or 0.0):.4f} "
         f"signature_key={signature_key or '-'} "
-        f"signature_score={signature_score:.4f}"
+        f"signature_score={signature_score:.4f} "
+        f"outcome_decomposition={dict(outcome_decomposition or {})}"
     )
 
     return snapshot
+
+
+def build_world_state(candle_state, tension_state, stimulus):
+    return {
+        "candle_state": dict(candle_state or {}),
+        "tension_state": dict(tension_state or {}),
+        "vision": dict((stimulus or {}).get("vision", {}) or {}),
+        "filtered_vision": dict((stimulus or {}).get("filtered_vision", {}) or {}),
+        "focus": dict((stimulus or {}).get("focus", {}) or {}),
+    }
+
+
+def build_outcome_decomposition(bot, outcome_reason, position=None, experience_state=None):
+    reason = str(outcome_reason or "").strip().lower()
+    state = dict(experience_state or {})
+
+    perception_quality = float(max(0.0, min(
+        1.0,
+        0.52
+        + (float(getattr(bot, "focus_confidence", 0.0) or 0.0) * 0.22)
+        - (float(getattr(bot, "last_signal_relevance", 0.0) or 0.0) * 0.10),
+    )))
+    felt_quality = float(max(0.0, min(
+        1.0,
+        0.50
+        + (float(state.get("experience_regulation", 0.0) or 0.0) * 0.20)
+        + (float(state.get("reflection_maturity", 0.0) or 0.0) * 0.12),
+    )))
+    thought_quality = float(max(0.0, min(
+        1.0,
+        0.50
+        + (float(state.get("reflection_maturity", 0.0) or 0.0) * 0.22)
+        + (float(state.get("load_bearing_capacity", 0.0) or 0.0) * 0.12),
+    )))
+
+    plan_quality = 0.50
+    execution_quality = 0.50
+    risk_fit_quality = 0.50
+
+    if reason == "tp_hit":
+        plan_quality += 0.18
+        execution_quality += 0.18
+        risk_fit_quality += 0.12
+    elif reason == "sl_hit":
+        plan_quality -= 0.16
+        execution_quality -= 0.12
+        risk_fit_quality -= 0.18
+    elif reason in ("cancel", "timeout"):
+        execution_quality -= 0.15
+        plan_quality -= 0.08
+    elif reason == "reward_too_small":
+        plan_quality -= 0.18
+    elif reason == "rr_too_low":
+        plan_quality -= 0.16
+        risk_fit_quality -= 0.12
+    elif reason == "sl_distance_too_high":
+        risk_fit_quality -= 0.20
+        plan_quality -= 0.10
+
+    if isinstance(position, dict):
+        risk = abs(float(position.get("entry", 0.0) or 0.0) - float(position.get("sl", 0.0) or 0.0))
+        if risk > 0.0:
+            risk_fit_quality = float(max(0.0, min(1.0, risk_fit_quality - min(0.18, risk * 2.5))))
+
+    return {
+        "perception_quality": float(max(0.0, min(1.0, perception_quality))),
+        "felt_quality": float(max(0.0, min(1.0, felt_quality))),
+        "thought_quality": float(max(0.0, min(1.0, thought_quality))),
+        "plan_quality": float(max(0.0, min(1.0, plan_quality))),
+        "execution_quality": float(max(0.0, min(1.0, execution_quality))),
+        "risk_fit_quality": float(max(0.0, min(1.0, risk_fit_quality))),
+        "reason": str(reason or "-"),
+    }
 
 # --------------------------------------------------
 # PRICE BUILD
@@ -2299,10 +2375,13 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
 # --------------------------------------------------
 # perception_stat
 # --------------------------------------------------
-def build_perception_state(candle_state, tension_state, stimulus, bot=None):
+def build_perception_state(world_state, bot=None):
 
-    focus = dict((stimulus or {}).get("focus", {}) or {})
-    filtered_vision = dict((stimulus or {}).get("filtered_vision", {}) or {})
+    world = dict(world_state or {})
+    candle_state = dict(world.get("candle_state", {}) or {})
+    tension_state = dict(world.get("tension_state", {}) or {})
+    focus = dict(world.get("focus", {}) or {})
+    filtered_vision = dict(world.get("filtered_vision", {}) or {})
 
     focus_direction = float(focus.get("focus_direction", 0.0) or 0.0)
     focus_strength = float(focus.get("focus_strength", 0.0) or 0.0)
@@ -2413,7 +2492,8 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
     )
 
     fused_preview = resolve_fused_decision(candle_state, tension_state, snapshot, bot=bot)
-    perception_state = build_perception_state(candle_state, tension_state, stimulus, bot=bot)
+    world_state = build_world_state(candle_state, tension_state, stimulus)
+    perception_state = build_perception_state(world_state, bot=bot)
     felt_state = build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, decision=str(fused_preview.get("decision", "WAIT") or "WAIT"))
 
     state_signature = build_state_signature(candle_state, tension_state, snapshot, stimulus, bot=bot)
@@ -2450,6 +2530,7 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
             "vision": dict(stimulus.get("vision", {}) or {}),
             "filtered_vision": dict(stimulus.get("filtered_vision", {}) or {}),
             "focus": dict(stimulus.get("focus", {}) or {}),
+            "world_state": dict(world_state or {}),
             "perception_state": dict(perception_state or {}),
             "felt_state": dict(felt_state or {}),
             "thought_state": dict(thought_state or {}),
@@ -2503,6 +2584,7 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
         "vision": dict(stimulus.get("vision", {}) or {}),
         "filtered_vision": dict(stimulus.get("filtered_vision", {}) or {}),
         "focus": dict(stimulus.get("focus", {}) or {}),
+        "world_state": dict(world_state or {}),
         "perception_state": dict(perception_state or {}),
         "felt_state": dict(felt_state or {}),
         "thought_state": dict(thought_state or {}),

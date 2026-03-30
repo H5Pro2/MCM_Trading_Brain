@@ -1,7 +1,9 @@
 import numpy as np
 from sklearn.cluster import DBSCAN
 import random
-
+# --------------------------------------------------
+N_AGENTS = 160
+DIMS = 3
 # --------------------------------------------------
 # Wahrnehmung
 # --------------------------------------------------
@@ -49,7 +51,7 @@ class SelfModel:
 
 class MCMField:
 
-    def __init__(self, n_agents=80, dims=3):
+    def __init__(self, n_agents=N_AGENTS, dims=DIMS):
 
         self.N = n_agents
         self.D = dims

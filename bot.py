@@ -17,6 +17,7 @@ from debug_reader import dbr_debug
 from ph_ohlcv import _build_candle_state
 from bot_gate_funktions import evaluate_entry_decision
 from MCM_Brain_Modell import apply_outcome_stimulus
+from memory_state import apply_memory_state, read_memory_state, save_memory_state
 
 
 DEBUG = True
@@ -82,6 +83,12 @@ class Bot:
         self.felt_state = {}
         self.thought_state = {}
         self.meta_regulation_state = {}
+        self.last_outcome_decomposition = {}
+
+        self._memory_state_payload = read_memory_state()
+        self._memory_state_mcm_loaded = False
+        apply_memory_state(self, self._memory_state_payload)
+        self._memory_state_mcm_loaded = isinstance(self.mcm_brain, dict)
         
         snapshot = get_active_order_snapshot()
 
@@ -106,11 +113,37 @@ class Bot:
                 "last_checked_ts": snapshot.get("entry_ts"),
                 "meta": {},
             }
+    # ==================================================
+    # MEMORY STATE
+    # ==================================================
+    def _ensure_memory_state_loaded(self):
 
+        if self._memory_state_mcm_loaded:
+            return
+
+        if not isinstance(self.mcm_brain, dict):
+            return
+
+        apply_memory_state(self, self._memory_state_payload)
+        self._memory_state_mcm_loaded = True
+
+    def _save_memory_state(self):
+
+        payload = save_memory_state(self)
+
+        if payload is None:
+            return None
+
+        self._memory_state_payload = payload
+        self._memory_state_mcm_loaded = isinstance(self.mcm_brain, dict)
+        return payload
+            
     # ==================================================
     # INTERNE PIPELINE (NUR WINDOW → LOGIK)
     # ==================================================
     def _process_window(self, window):
+
+        self._ensure_memory_state_loaded()
 
         # --------------------------------------------------
         # Restart Recovery → Timestamp initialisieren
@@ -177,6 +210,7 @@ class Bot:
                 oid = self.position.get("order_id")
                 if oid is not None and consume_cancelled(oid):
                     apply_outcome_stimulus(self, "cancel", self.position)
+                    self._save_memory_state()
                     self.stats.on_cancel(
                         order_id=oid,
                         cause="exchange_cancel",
@@ -186,6 +220,7 @@ class Bot:
                     return
 
             apply_outcome_stimulus(self, reason, self.position)
+            self._save_memory_state()
             if str(reason).lower() == "sl_hit":
                 self.mcm_pause_left = int(getattr(Config, "MCM_SL_PAUSE_STEPS", 3) or 3)
 
@@ -299,6 +334,7 @@ class Bot:
             if (self.processed - created) > max_wait:
 
                 apply_outcome_stimulus(self, "timeout", self.pending_entry)
+                self._save_memory_state()
                 self.stats.on_cancel(
                     order_id=None,
                     cause="backtest_timeout",
@@ -340,6 +376,7 @@ class Bot:
                     value_check.get("reason"),
                     entry_result,
                 )
+                self._save_memory_state()
                 return
 
             side = str(entry_result.get("decision", "")).upper().strip()
@@ -423,6 +460,7 @@ class Bot:
                     },
                     "vision": dict(entry_result.get("vision", {}) or {}),
                     "filtered_vision": dict(entry_result.get("filtered_vision", {}) or {}),
+                    "world_state": dict(entry_result.get("world_state", {}) or {}),
                     "state_signature": dict(entry_result.get("state_signature", {}) or {}),
                     "trade_plan": {
                         "entry_validity_band": dict(entry_result.get("entry_validity_band", {}) or {}),
@@ -450,6 +488,7 @@ class Bot:
                 },
             }
 
+            self._save_memory_state()
             return
 
     # ==================================================
