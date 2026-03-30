@@ -14,7 +14,7 @@ class Config:
     # ==================================================
     # DATENQUELLE
     # ==================================================
-    BACKTEST_FILEPATH = "data/1-12_2025_5m_SOLUSDT.csv" 
+    BACKTEST_FILEPATH = "data/1-2_2026_5m_SOLUSDT.csv" 
     # workspace | 1-12_2023_5m_SOLUSDT | 1-12_2024_5m_SOLUSDT | 1-12_2025_5m_SOLUSDT | 1-2_2026_5m_SOLUSDT 
     
     CSV_OHLCV_PATH = "workspace.csv"   # Live Mode OHLCV Daten Börse
@@ -36,13 +36,13 @@ class Config:
     # ==================================================
     # RISK MANAGEMENT
     # ==================================================
-    RR = 2
+    RR = 1.6
     MIN_RR = 1
-    MAX_RR = 6
+    MAX_RR = 2
     # trade_value_gate.py Ökonomische Absicherung
     BASE_RISK_PCT = 0.0045
-    MAX_SL_DISTANCE = 0.006
-    MIN_TP_DISTANCE = 0.015
+    MAX_SL_DISTANCE = 0.01
+    MIN_TP_DISTANCE = 0.01
 
     RR_EXECUTION_MIN = 1.8
     PENDING_ENTRY_MAX_WAIT_BARS = 4
@@ -101,6 +101,7 @@ class Config:
     MCM_PLAN_GATE_ALIGN = 0.92
     MCM_PROTECTIVE_WIDTH_GAIN = 0.95
     MCM_STRESS_WIDTH_GAIN = 0.34
+    MCM_MEMORY_STATE_PATH = "bot_memory/memory_state.json"
 
     # ==================================================
     # KOSTEN
