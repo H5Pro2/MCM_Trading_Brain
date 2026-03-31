@@ -30,7 +30,7 @@ _CANCELLED_ORDER_IDS = set()
 # DEBUGGING
 # --------------------------------------------------
 def gate_debug(msg):
-    dbr.dbr_gate_state(msg, "order_debug.txt")
+    dbr.dbr_debug(msg, "order_debug.csv")
 # --------------------------------------------------
 # ACTIVE CHECK - wird in rl_structure_bot.py genutz
 # --------------------------------------------------

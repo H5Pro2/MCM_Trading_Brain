@@ -31,6 +31,9 @@ class TradeStats:
             "trades": 0,
             "tp": 0,
             "sl": 0,
+            "pnl_netto": start_equity,
+            "pnl_tp": 0.0,
+            "pnl_sl": 0.0,
             "cancels": 0,
             "attempts": 0,
             "attempts_submitted": 0,
@@ -40,12 +43,9 @@ class TradeStats:
             "attempts_skipped": 0,
             "attempt_structure_zone": 0,
             "attempt_non_structure_zone": 0,
-            "pnl_netto": start_equity,
-            "pnl_tp": 0.0,
-            "pnl_sl": 0.0,
             "current_timestamp": None,
             "last_outcome_decomposition": {},
-            "recent_attempts": [],
+            #"recent_attempts": [],
         }
 
         if reset:

@@ -47,12 +47,14 @@ import place_orders_funktions as of
 # MODULE STATE (Backwards-Compat Imports)
 # --------------------------------------------------
 _SYMBOL = None
+_MONITOR_THREAD = None
+_MONITOR_LOCK = threading.Lock()
 
 # --------------------------------------------------
 # DEBUGGING
 # --------------------------------------------------
 def gate_debug(msg):
-    dbr.dbr_gate_state(msg, "order_debug.txt")
+    dbr.dbr_debug(msg, "order_debug.csv")
 
 # --------------------------------------------------
 # CONTEXT (zustandsbasierte Monitor-Referenz)
@@ -132,6 +134,27 @@ def consume_cancelled(order_id) -> bool:
 
 def get_cancel_count() -> int:
     return of.get_cancel_count()
+# --------------------------------------------------
+def ensure_order_monitor_started():
+    global _MONITOR_THREAD
+
+    if str(getattr(Config, "MODE", "LIVE")).upper() != "LIVE":
+        return None
+
+    if _MONITOR_THREAD is not None and _MONITOR_THREAD.is_alive():
+        return _MONITOR_THREAD
+
+    with _MONITOR_LOCK:
+        if _MONITOR_THREAD is not None and _MONITOR_THREAD.is_alive():
+            return _MONITOR_THREAD
+
+        _MONITOR_THREAD = threading.Thread(
+            target=_order_monitor_loop,
+            daemon=True,
+        )
+        _MONITOR_THREAD.start()
+
+    return _MONITOR_THREAD
 # --------------------------------------------------
 # CANCEL ORDER BY ID
 # --------------------------------------------------
@@ -312,15 +335,6 @@ def _order_monitor_loop():
         except Exception as e:
             of._CONNECTION_OK = False
             gate_debug(f"❌ Monitor Fehler: {e}")
-
-# --------------------------------------------------
-# THREAD START (einmalig beim Modul-Import)
-# --------------------------------------------------
-_monitor_thread = threading.Thread(
-    target=_order_monitor_loop,
-    daemon=True,
-)
-_monitor_thread.start()
 
 # --------------------------------------------------
 # PLACE ORDER

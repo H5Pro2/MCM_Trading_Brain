@@ -87,7 +87,7 @@ def fetch_ohlcv(exchange, symbol, timeframe):
         
         _load_csv_ohlcv()
 
-        ws_size = int(getattr(__import__("bot_config"), "WORKSPACE_SIZE", 500))
+        ws_size = int(getattr(Config, "WINDOW_SIZE", 500) or 500)
 
         start = _CSV_POS
         end = start + ws_size

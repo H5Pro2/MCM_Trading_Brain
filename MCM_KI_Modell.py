@@ -324,17 +324,18 @@ class RegulationLayer:
 # --------------------------------------------------
 # Beispiel
 # --------------------------------------------------
+if __name__ == "__main__":
 
-ai = MCM_AI()
+    ai = MCM_AI()
 
-stimuli = ["neutral","positive","negative","reward","threat"]
+    stimuli = ["neutral", "positive", "negative", "reward", "threat"]
 
-for t in range(200):
+    for t in range(200):
 
-    stimulus = random.choice(stimuli)
+        stimulus = random.choice(stimuli)
 
-    action = ai.step(stimulus)
+        action = ai.step(stimulus)
 
-    mean_energy = np.mean(ai.field.energy[:,0])
+        mean_energy = np.mean(ai.field.energy[:, 0])
 
-    print(t, stimulus, "→", action, "| energy:", round(mean_energy,3))
+        print(t, stimulus, "→", action, "| energy:", round(mean_energy, 3))

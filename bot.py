@@ -92,30 +92,52 @@ class Bot:
         self._memory_state_mcm_loaded = False
         apply_memory_state(self, self._memory_state_payload)
         self._memory_state_mcm_loaded = isinstance(self.mcm_brain, dict)
-        
-        snapshot = get_active_order_snapshot()
+
+        live_mode = str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE"
+        snapshot = None
+
+        if live_mode and bool(getattr(Config, "AKTIV_ORDER", False)):
+            snapshot = get_active_order_snapshot()
 
         if snapshot:
-            print("RESTART RECOVERY → ACTIVE ORDER FOUND")
+            entry_raw = snapshot.get("entry")
+            tp_raw = snapshot.get("tp")
+            sl_raw = snapshot.get("sl")
 
-            entry = float(snapshot["entry"])
-            sl = float(snapshot["sl"])
-            risk = abs(entry - sl)
+            try:
+                entry = float(entry_raw)
+            except Exception:
+                entry = None
 
-            self.position = {
-                "side": snapshot["side"],
-                "entry": entry,
-                "tp": float(snapshot["tp"]),
-                "sl": sl,
-                "mfe": 0.0,
-                "mae": 0.0,
-                "risk": risk,
-                "order_id": snapshot.get("id"),
-                "entry_ts": snapshot.get("entry_ts"),
-                "entry_index": None,
-                "last_checked_ts": snapshot.get("entry_ts"),
-                "meta": {},
-            }
+            try:
+                tp_value = float(tp_raw) if tp_raw is not None else None
+            except Exception:
+                tp_value = None
+
+            try:
+                sl_value = float(sl_raw) if sl_raw is not None else None
+            except Exception:
+                sl_value = None
+
+            if entry is not None and tp_value is not None and sl_value is not None:
+                print("RESTART RECOVERY → ACTIVE ORDER FOUND")
+
+                risk = abs(entry - sl_value)
+
+                self.position = {
+                    "side": snapshot.get("side"),
+                    "entry": entry,
+                    "tp": tp_value,
+                    "sl": sl_value,
+                    "mfe": 0.0,
+                    "mae": 0.0,
+                    "risk": risk,
+                    "order_id": snapshot.get("id"),
+                    "entry_ts": snapshot.get("entry_ts"),
+                    "entry_index": None,
+                    "last_checked_ts": snapshot.get("entry_ts"),
+                    "meta": {},
+                }
     # ==================================================
     # MEMORY STATE
     # ==================================================

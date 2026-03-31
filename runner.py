@@ -14,7 +14,7 @@ from ph_ohlcv import (
     fetch_ohlcv,
 )
 
-from place_orders import _SYMBOL, set_context, place_order
+from place_orders import _SYMBOL, set_context, place_order, ensure_order_monitor_started
 from memory_state import save_memory_state
 
 # --------------------------------------------------
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         # Polling ≈ 1/60 der Candle-Dauer (min 1s, max 15s)
         poll_interval = max(1, min(15, tf_seconds // 60))
 
-        exchange = create_exchange(Config.MECHANIK)
+        exchange = create_exchange()
 
         set_context(
             exchange=exchange,
@@ -176,6 +176,7 @@ if __name__ == "__main__":
             get_sufficient_balance=get_sufficient_balance,
             get_account_value=get_account_value,
         )
+        ensure_order_monitor_started()
 
         bot = Bot(None)
 

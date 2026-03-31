@@ -25,7 +25,7 @@ def _mcm_decision_debug(msg):
 
 def _mcm_outcome_debug(msg):
     if bool(getattr(Config, "MCM_OUTCOME_DEBUG", False)):
-        dbr_debug(msg, "mcm_outcome_debug.txt")
+        dbr_debug(msg, "mcm_outcome_debug.csv")
 
 
 STRUCTURE_ENGINE = StructureEngine()
