@@ -10,8 +10,16 @@
 from config import Config
 from csv_feed import CSVFeed
 from trade_stats import TradeStats
-from bot_engine.exit_engine import ExitEngine
-from bot_gates.trade_value_gate import TradeValueGate
+try:
+    from bot_engine.exit_engine import ExitEngine
+except ModuleNotFoundError:
+    from bot_engine.exit_engine import ExitEngine
+
+try:
+    from bot_gates.trade_value_gate import TradeValueGate
+except ModuleNotFoundError:
+    from bot_gates.trade_value_gate import TradeValueGate
+
 from place_orders import place_order, consume_cancelled, get_active_order_snapshot, is_order_active
 from debug_reader import dbr_debug
 from ph_ohlcv import _build_candle_state
@@ -79,10 +87,12 @@ class Bot:
         self.observation_mode = False
         self.last_signal_relevance = 0.0
 
+        self.structure_perception_state = {}
         self.perception_state = {}
         self.outer_visual_perception_state = {}
         self.inner_field_perception_state = {}
         self.processing_state = {}
+        self.expectation_state = {}
         self.felt_state = {}
         self.thought_state = {}
         self.meta_regulation_state = {}
@@ -190,7 +200,6 @@ class Bot:
 
         self.current_timestamp = window[-1].get("timestamp")
         self.stats.data["current_timestamp"] = self.current_timestamp
-        self.stats._save()
 
         last = window[-1]
         prev_close = window[-2].get("close") if len(window) > 1 else None
@@ -244,7 +253,9 @@ class Bot:
                         cause="exchange_cancel",
                         exploration_trade=False,
                         outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
+                        context=dict(self.position.get("meta", {}) or {}),
                     )
+                    self._save_memory_state()
                     self.position = None
                     return
 
@@ -262,6 +273,7 @@ class Bot:
                 amount=Config.ORDER_SIZE if live_mode else 1.0,
                 exploration_trade=False,
                 outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
+                context=dict(self.position.get("meta", {}) or {}),
             )
 
             self.position = None
@@ -373,15 +385,18 @@ class Bot:
 
                 apply_outcome_stimulus(self, "timeout", self.pending_entry)
                 self.stats.on_attempt(
-                    status="cancelled",
+                    status="timeout",
                     context=meta,
                 )
                 self.stats.on_cancel(
                     order_id=None,
                     cause="backtest_timeout",
                     exploration_trade=False,
+                    outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
+                    context=meta,
                 )
 
+                self._save_memory_state()
                 self.pending_entry = None
                 return
 
@@ -412,12 +427,14 @@ class Bot:
                 dbr_debug(f"VALUE_GATE: {value_check}", "value_check_debug.csv")
 
             if not value_check.get("trade_allowed", False):
+                blocked_context = _build_entry_attempt_context(
+                    self,
+                    entry_result,
+                )
+
                 self.stats.on_attempt(
                     status="blocked_value_gate",
-                    context={
-                        "world_state": dict(entry_result.get("world_state", {}) or {}),
-                        "outer_visual_perception_state": dict(entry_result.get("outer_visual_perception_state", {}) or {}),
-                    },
+                    context=blocked_context,
                 )
                 apply_outcome_stimulus(
                     self,
@@ -473,6 +490,11 @@ class Bot:
                 if order_id is None:
                     return
 
+            attempt_meta = _build_entry_attempt_context(
+                self,
+                entry_result,
+            )
+
             self.pending_entry = {
                 "side": side,
                 "entry": entry_price,
@@ -481,69 +503,11 @@ class Bot:
                 "risk": float(risk),
                 "created_index": self.processed,
                 "max_wait_bars": int(getattr(Config, "PENDING_ENTRY_MAX_WAIT_BARS", 20) or 20),
-                "meta": {
-                    "state": {
-                        "energy": float(entry_result.get("energy", 0.0) or 0.0),
-                        "coherence": float(entry_result.get("coherence", 0.0) or 0.0),
-                        "asymmetry": int(entry_result.get("asymmetry", 0) or 0),
-                        "coh_zone": float(entry_result.get("coh_zone", 0.0) or 0.0),
-                        "self_state": str(entry_result.get("self_state", "stable") or "stable"),
-                        "attractor": str(entry_result.get("attractor", "neutral") or "neutral"),
-                        "memory_center": float(entry_result.get("memory_center", 0.0) or 0.0),
-                        "memory_strength": int(entry_result.get("memory_strength", 0) or 0),
-                    },
-                    "focus": {
-                        "focus_point": float(self.focus_point or 0.0),
-                        "focus_confidence": float(self.focus_confidence or 0.0),
-                        "target_lock": float(self.target_lock or 0.0),
-                        "target_drift": float(self.target_drift or 0.0),
-                    },
-                    "experience": {
-                        "entry_expectation": float(entry_result.get("entry_expectation", 0.0) or 0.0),
-                        "target_expectation": float(entry_result.get("target_expectation", 0.0) or 0.0),
-                        "approach_pressure": float(entry_result.get("approach_pressure", 0.0) or 0.0),
-                        "pressure_release": float(entry_result.get("pressure_release", 0.0) or 0.0),
-                        "experience_regulation": float(entry_result.get("experience_regulation", 0.0) or 0.0),
-                        "reflection_maturity": float(entry_result.get("reflection_maturity", 0.0) or 0.0),
-                    },
-                    "vision": dict(entry_result.get("vision", {}) or {}),
-                    "filtered_vision": dict(entry_result.get("filtered_vision", {}) or {}),
-                    "world_state": dict(entry_result.get("world_state", {}) or {}),
-                    "outer_visual_perception_state": dict(entry_result.get("outer_visual_perception_state", {}) or {}),
-                    "inner_field_perception_state": dict(entry_result.get("inner_field_perception_state", {}) or {}),
-                    "processing_state": dict(entry_result.get("processing_state", {}) or {}),
-                    "state_signature": dict(entry_result.get("state_signature", {}) or {}),
-                    "trade_plan": {
-                        "entry_validity_band": dict(entry_result.get("entry_validity_band", {}) or {}),
-                        "target_conviction": float(entry_result.get("target_conviction", 0.0) or 0.0),
-                        "risk_model_score": float(entry_result.get("risk_model_score", 0.0) or 0.0),
-                        "reward_model_score": float(entry_result.get("reward_model_score", 0.0) or 0.0),
-                    },
-                    "signal": {
-                        "signature_bias": float(entry_result.get("signature_bias", 0.0) or 0.0),
-                        "signature_block": bool(entry_result.get("signature_block", False)),
-                        "signature_quality": float(entry_result.get("signature_quality", 0.0) or 0.0),
-                        "signature_distance": float(entry_result.get("signature_distance", 0.0) or 0.0),
-                        "context_cluster_id": str(entry_result.get("context_cluster_id", "-") or "-"),
-                        "context_cluster_bias": float(entry_result.get("context_cluster_bias", 0.0) or 0.0),
-                        "context_cluster_quality": float(entry_result.get("context_cluster_quality", 0.0) or 0.0),
-                        "context_cluster_distance": float(entry_result.get("context_cluster_distance", 0.0) or 0.0),
-                        "context_cluster_block": bool(entry_result.get("context_cluster_block", False)),
-                        "inhibition_level": float(entry_result.get("inhibition_level", 0.0) or 0.0),
-                        "habituation_level": float(entry_result.get("habituation_level", 0.0) or 0.0),
-                        "competition_bias": float(entry_result.get("competition_bias", 0.0) or 0.0),
-                        "observation_mode": bool(entry_result.get("observation_mode", False)),
-                        "long_score": float(entry_result.get("long_score", 0.0) or 0.0),
-                        "short_score": float(entry_result.get("short_score", 0.0) or 0.0),
-                    },
-                },
+                "meta": attempt_meta,
             }
             self.stats.on_attempt(
                 status="submitted",
-                context={
-                    "world_state": dict(entry_result.get("world_state", {}) or {}),
-                    "outer_visual_perception_state": dict(entry_result.get("outer_visual_perception_state", {}) or {}),
-                },
+                context=attempt_meta,
             )
 
             self._save_memory_state()
@@ -583,3 +547,77 @@ class Bot:
             self.processed += 1
 
         return processed
+    
+# --------------------------------------------------
+# ATTEMPT CONTEXT
+# --------------------------------------------------
+def _build_entry_attempt_context(bot, entry_result: dict) -> dict:
+
+    result = dict(entry_result or {})
+
+    return {
+        "state": {
+            "energy": float(result.get("energy", 0.0) or 0.0),
+            "coherence": float(result.get("coherence", 0.0) or 0.0),
+            "asymmetry": int(result.get("asymmetry", 0) or 0),
+            "coh_zone": float(result.get("coh_zone", 0.0) or 0.0),
+            "self_state": str(result.get("self_state", "stable") or "stable"),
+            "attractor": str(result.get("attractor", "neutral") or "neutral"),
+            "memory_center": float(result.get("memory_center", 0.0) or 0.0),
+            "memory_strength": int(result.get("memory_strength", 0) or 0),
+        },
+        "focus": {
+            "focus_point": float(getattr(bot, "focus_point", 0.0) or 0.0),
+            "focus_confidence": float(getattr(bot, "focus_confidence", 0.0) or 0.0),
+            "target_lock": float(getattr(bot, "target_lock", 0.0) or 0.0),
+            "target_drift": float(getattr(bot, "target_drift", 0.0) or 0.0),
+        },
+        "experience": {
+            "entry_expectation": float(result.get("entry_expectation", 0.0) or 0.0),
+            "target_expectation": float(result.get("target_expectation", 0.0) or 0.0),
+            "approach_pressure": float(result.get("approach_pressure", 0.0) or 0.0),
+            "pressure_release": float(result.get("pressure_release", 0.0) or 0.0),
+            "experience_regulation": float(result.get("experience_regulation", 0.0) or 0.0),
+            "reflection_maturity": float(result.get("reflection_maturity", 0.0) or 0.0),
+        },
+        "vision": dict(result.get("vision", {}) or {}),
+        "filtered_vision": dict(result.get("filtered_vision", {}) or {}),
+        "world_state": dict(result.get("world_state", {}) or {}),
+        "structure_perception_state": dict(result.get("structure_perception_state", {}) or {}),
+        "outer_visual_perception_state": dict(result.get("outer_visual_perception_state", {}) or {}),
+        "inner_field_perception_state": dict(result.get("inner_field_perception_state", {}) or {}),
+        "processing_state": dict(result.get("processing_state", {}) or {}),
+        "perception_state": dict(result.get("perception_state", {}) or {}),
+        "felt_state": dict(result.get("felt_state", {}) or {}),
+        "thought_state": dict(result.get("thought_state", {}) or {}),
+        "meta_regulation_state": dict(result.get("meta_regulation_state", {}) or {}),
+        "expectation_state": dict(result.get("expectation_state", {}) or {}),
+        "state_signature": dict(result.get("state_signature", {}) or {}),
+        "trade_plan": {
+            "entry_price": float(result.get("entry_price", 0.0) or 0.0),
+            "tp_price": float(result.get("tp_price", 0.0) or 0.0),
+            "sl_price": float(result.get("sl_price", 0.0) or 0.0),
+            "rr_value": float(result.get("rr_value", 0.0) or 0.0),
+            "entry_validity_band": dict(result.get("entry_validity_band", {}) or {}),
+            "target_conviction": float(result.get("target_conviction", 0.0) or 0.0),
+            "risk_model_score": float(result.get("risk_model_score", 0.0) or 0.0),
+            "reward_model_score": float(result.get("reward_model_score", 0.0) or 0.0),
+        },
+        "signal": {
+            "signature_bias": float(result.get("signature_bias", 0.0) or 0.0),
+            "signature_block": bool(result.get("signature_block", False)),
+            "signature_quality": float(result.get("signature_quality", 0.0) or 0.0),
+            "signature_distance": float(result.get("signature_distance", 0.0) or 0.0),
+            "context_cluster_id": str(result.get("context_cluster_id", "-") or "-"),
+            "context_cluster_bias": float(result.get("context_cluster_bias", 0.0) or 0.0),
+            "context_cluster_quality": float(result.get("context_cluster_quality", 0.0) or 0.0),
+            "context_cluster_distance": float(result.get("context_cluster_distance", 0.0) or 0.0),
+            "context_cluster_block": bool(result.get("context_cluster_block", False)),
+            "inhibition_level": float(result.get("inhibition_level", 0.0) or 0.0),
+            "habituation_level": float(result.get("habituation_level", 0.0) or 0.0),
+            "competition_bias": float(result.get("competition_bias", 0.0) or 0.0),
+            "observation_mode": bool(result.get("observation_mode", False)),
+            "long_score": float(result.get("long_score", 0.0) or 0.0),
+            "short_score": float(result.get("short_score", 0.0) or 0.0),
+        },
+    }

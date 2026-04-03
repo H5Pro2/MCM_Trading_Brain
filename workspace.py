@@ -4,9 +4,10 @@
 
 import csv
 import os
+from config import Config
 from ph_ohlcv import fetch_ohlcv
 
-WORKSPACE_PATH = "data/workspace.csv"
+WORKSPACE_PATH = str(getattr(Config, "CSV_OHLCV_PATH", "data/workspace.csv") or "data/workspace.csv")
 
 
 # ============================================================

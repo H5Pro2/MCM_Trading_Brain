@@ -4,9 +4,16 @@
 # ==================================================
 from config import Config
 from debug_reader import dbr_debug
-from bot_engine.mcm_core_engine import compute_tension_from_ohlc
+try:
+    from bot_engine.mcm_core_engine import build_tension_state_from_window
+except ModuleNotFoundError:
+    from bot_engine.mcm_core_engine import build_tension_state_from_window
+
 from MCM_KI_Modell import MCMField, ClusterDetector, Memory, SelfModel, AttractorSystem, RegulationLayer
-from bot_engine.strukture_engine import StructureEngine
+try:
+    from bot_engine.strukture_engine import StructureEngine
+except ModuleNotFoundError:
+    from bot_engine.strukture_engine import StructureEngine
 import numpy as np
 
 
@@ -62,18 +69,23 @@ def build_market_vision(candle_state, tension_state):
     coherence = float(tension_state.get("coherence", 0.0) or 0.0)
     asymmetry = float(tension_state.get("asymmetry", 0.0) or 0.0)
     coh_zone = float(tension_state.get("coh_zone", 0.0) or 0.0)
+    relative_range = float(tension_state.get("relative_range", 0.0) or 0.0)
+    momentum = float(tension_state.get("momentum", 0.0) or 0.0)
+    stability = float(tension_state.get("stability", 0.0) or 0.0)
+    perceived_pressure = float(tension_state.get("perceived_pressure", 0.0) or 0.0)
+    volume_pressure = float(tension_state.get("volume_pressure", 0.0) or 0.0)
 
     close_position = float(candle_state.get("close_position", 0.0) or 0.0)
     wick_bias = float(candle_state.get("wick_bias", 0.0) or 0.0)
     return_intensity = float(candle_state.get("return_intensity", 0.0) or 0.0)
 
-    left_eye_flow = (coherence * 0.90) + (coh_zone * 0.25)
-    right_eye_flow = (close_position * 0.85) + (return_intensity * 0.55)
-    optic_flow = (left_eye_flow * 0.55) + (right_eye_flow * 0.45) + (asymmetry * 0.12)
-    threat_map = (abs(wick_bias) * 0.55) + max(0.0, energy - 1.15) * 0.35 + abs(min(0.0, coherence)) * 0.30
-    target_map = (max(0.0, coherence) * 0.45) + (max(0.0, close_position) * 0.35) + (max(0.0, return_intensity) * 0.20)
-    orientation_drive = (energy - 1.0) * 0.45 + optic_flow * 0.75 - threat_map * 0.15
-    vision_contrast = abs(coherence - close_position) + abs(wick_bias) * 0.35
+    left_eye_flow = (coherence * 0.84) + (coh_zone * 0.22) + (momentum * 0.18)
+    right_eye_flow = (close_position * 0.78) + (return_intensity * 0.44) + (volume_pressure * 0.12)
+    optic_flow = (left_eye_flow * 0.52) + (right_eye_flow * 0.42) + (asymmetry * 0.10) + (momentum * 0.12)
+    threat_map = (abs(wick_bias) * 0.48) + max(0.0, energy - 1.05) * 0.26 + abs(min(0.0, coherence)) * 0.22 + (perceived_pressure * 0.32) + (max(0.0, 1.0 - stability) * 0.16)
+    target_map = (max(0.0, coherence) * 0.34) + (max(0.0, close_position) * 0.28) + (max(0.0, return_intensity) * 0.14) + (max(0.0, momentum) * 0.16) + (max(0.0, stability - 0.50) * 0.18)
+    orientation_drive = (energy - 1.0) * 0.32 + optic_flow * 0.68 + (momentum * 0.24) - (threat_map * 0.12) + (relative_range * 0.10)
+    vision_contrast = abs(coherence - close_position) + abs(wick_bias) * 0.26 + abs(momentum) * 0.10 + max(0.0, relative_range - 0.55) * 0.18 + (1.0 - stability) * 0.12
 
     return {
         "left_eye_field": float(max(-2.5, min(2.5, left_eye_flow))),
@@ -585,21 +597,12 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
     outcome_decomposition = build_outcome_decomposition(bot, reason, position, experience_state)
     bot.last_outcome_decomposition = dict(outcome_decomposition or {})
 
-    signature_key = str(getattr(bot, "last_signature_key", "") or "").strip()
-    if signature_key:
-        update_signature_memory(
-            bot,
-            {"signature_key": signature_key},
-            outcome=reason,
-        )
+    commit_pending_learning_context(
+        bot,
+        outcome=reason,
+    )
 
-    context_cluster_id = str(getattr(bot, "last_context_cluster_id", "") or "").strip()
-    if context_cluster_id:
-        update_context_cluster_outcome(
-            bot,
-            context_cluster_id,
-            outcome=reason,
-        )
+    signature_key = str(getattr(bot, "last_signature_key", "") or "").strip()
 
     after_memory = snapshot.get("strongest_memory") or {}
 
@@ -762,132 +765,14 @@ def build_outcome_decomposition(bot, outcome_reason, position=None, experience_s
         if risk > 0.0:
             risk_fit_quality = float(max(0.0, min(1.0, risk_fit_quality - min(0.18, risk * 2.5))))
 
-    return {
-        "perception_quality": float(max(0.0, min(1.0, perception_quality))),
-        "felt_quality": float(max(0.0, min(1.0, felt_quality))),
-        "thought_quality": float(max(0.0, min(1.0, thought_quality))),
-        "plan_quality": float(max(0.0, min(1.0, plan_quality))),
-        "execution_quality": float(max(0.0, min(1.0, execution_quality))),
-        "risk_fit_quality": float(max(0.0, min(1.0, risk_fit_quality))),
-        "reason": str(reason or "-"),
-    }
+    attempt_density = float(state.get("attempt_density", 0.0) or 0.0)
+    overtrade_pressure = float(state.get("overtrade_pressure", 0.0) or 0.0)
+    context_quality = float(state.get("context_quality", 0.0) or 0.0)
 
-def build_world_state(candle_state, tension_state, stimulus):
-    return {
-        "candle_state": dict(candle_state or {}),
-        "tension_state": dict(tension_state or {}),
-        "vision": dict((stimulus or {}).get("vision", {}) or {}),
-        "filtered_vision": dict((stimulus or {}).get("filtered_vision", {}) or {}),
-        "focus": dict((stimulus or {}).get("focus", {}) or {}),
-    }
-
-def build_outer_visual_perception_state(world_state):
-    world = dict(world_state or {})
-    focus = dict(world.get("focus", {}) or {})
-    filtered_vision = dict(world.get("filtered_vision", {}) or {})
-    vision = dict(world.get("vision", {}) or {})
-
-    return {
-        "focus_direction": float(focus.get("focus_direction", 0.0) or 0.0),
-        "focus_strength": float(focus.get("focus_strength", 0.0) or 0.0),
-        "focus_confidence": float(focus.get("focus_confidence", 0.0) or 0.0),
-        "target_lock": float(focus.get("target_lock", 0.0) or 0.0),
-        "noise_damp": float(focus.get("noise_damp", 0.0) or 0.0),
-        "signal_relevance": float(focus.get("signal_relevance", 0.0) or 0.0),
-        "visual_target_map": float(filtered_vision.get("target_map", 0.0) or 0.0),
-        "visual_threat_map": float(filtered_vision.get("threat_map", 0.0) or 0.0),
-        "visual_optic_flow": float(filtered_vision.get("optic_flow", 0.0) or 0.0),
-        "visual_contrast": float(vision.get("vision_contrast", 0.0) or 0.0),
-    }
-
-def build_inner_field_perception_state(snapshot, bot=None):
-    snap = dict(snapshot or {})
-    prior_regulation = float(getattr(bot, "experience_regulation", 0.0) or 0.0) if bot is not None else 0.0
-    return {
-        "field_mean_energy": float(snap.get("mean_energy", 0.0) or 0.0),
-        "field_mean_motivation": float(snap.get("mean_motivation", 0.0) or 0.0),
-        "field_mean_risk": float(snap.get("mean_risk", 0.0) or 0.0),
-        "field_mean_velocity": float(snap.get("mean_velocity", 0.0) or 0.0),
-        "field_cluster_count": int(snap.get("cluster_count", 0) or 0),
-        "field_regulation_pressure": float(snap.get("regulation_pressure", 0.0) or 0.0),
-        "self_state": str(snap.get("self_state", "stable") or "stable"),
-        "attractor": str(snap.get("attractor", "neutral") or "neutral"),
-        "prior_experience_regulation": float(prior_regulation),
-    }
-
-def build_processing_state(outer_visual_perception_state, inner_field_perception_state, perception_state):
-    outer = dict(outer_visual_perception_state or {})
-    inner = dict(inner_field_perception_state or {})
-    perception = dict(perception_state or {})
-
-    signal_relevance = float(outer.get("signal_relevance", 0.0) or 0.0)
-    visual_contrast = float(outer.get("visual_contrast", 0.0) or 0.0)
-    field_risk = abs(float(inner.get("field_mean_risk", 0.0) or 0.0))
-    field_pressure = float(inner.get("field_regulation_pressure", 0.0) or 0.0)
-    uncertainty = float(perception.get("uncertainty_score", 0.0) or 0.0)
-    novelty = float(perception.get("novelty_score", 0.0) or 0.0)   
-
-    processing_load = max(0.0, min(1.0, (uncertainty * 0.35) + (novelty * 0.20) + (field_pressure * 0.20) + (field_risk * 0.15) + (visual_contrast * 0.10)))
-    processing_stability = max(0.0, min(1.0, signal_relevance * 0.45 + max(0.0, 1.0 - uncertainty) * 0.35 + max(0.0, 1.0 - min(1.0, field_risk)) * 0.20))
-    processing_readiness = max(0.0, min(1.0, (processing_stability * 0.58) + (max(0.0, 1.0 - processing_load) * 0.42)))
-
-    return {
-        "processing_load": float(processing_load),
-        "processing_stability": float(processing_stability),
-        "processing_readiness": float(processing_readiness),
-    }
-
-def build_outcome_decomposition(bot, outcome_reason, position=None, experience_state=None):
-    reason = str(outcome_reason or "").strip().lower()
-    state = dict(experience_state or {})
-
-    perception_quality = float(max(0.0, min(
-        1.0,
-        0.52
-        + (float(getattr(bot, "focus_confidence", 0.0) or 0.0) * 0.22)
-        - (float(getattr(bot, "last_signal_relevance", 0.0) or 0.0) * 0.10),
-    )))
-    felt_quality = float(max(0.0, min(
-        1.0,
-        0.50
-        + (float(state.get("experience_regulation", 0.0) or 0.0) * 0.20)
-        + (float(state.get("reflection_maturity", 0.0) or 0.0) * 0.12),
-    )))
-    thought_quality = float(max(0.0, min(
-        1.0,
-        0.50
-        + (float(state.get("reflection_maturity", 0.0) or 0.0) * 0.22)
-        + (float(state.get("load_bearing_capacity", 0.0) or 0.0) * 0.12),
-    )))
-
-    plan_quality = 0.50
-    execution_quality = 0.50
-    risk_fit_quality = 0.50
-
-    if reason == "tp_hit":
-        plan_quality += 0.18
-        execution_quality += 0.18
-        risk_fit_quality += 0.12
-    elif reason == "sl_hit":
-        plan_quality -= 0.16
-        execution_quality -= 0.12
-        risk_fit_quality -= 0.18
-    elif reason in ("cancel", "timeout"):
-        execution_quality -= 0.15
-        plan_quality -= 0.08
-    elif reason == "reward_too_small":
-        plan_quality -= 0.18
-    elif reason == "rr_too_low":
-        plan_quality -= 0.16
-        risk_fit_quality -= 0.12
-    elif reason == "sl_distance_too_high":
-        risk_fit_quality -= 0.20
-        plan_quality -= 0.10
-
-    if isinstance(position, dict):
-        risk = abs(float(position.get("entry", 0.0) or 0.0) - float(position.get("sl", 0.0) or 0.0))
-        if risk > 0.0:
-            risk_fit_quality = float(max(0.0, min(1.0, risk_fit_quality - min(0.18, risk * 2.5))))
+    plan_quality = float(max(0.0, min(1.0, plan_quality - (overtrade_pressure * 0.10) + (context_quality * 0.08))))
+    execution_quality = float(max(0.0, min(1.0, execution_quality - (attempt_density * 0.08) - (overtrade_pressure * 0.10) + (context_quality * 0.10))))
+    felt_quality = float(max(0.0, min(1.0, felt_quality - (overtrade_pressure * 0.12) + (context_quality * 0.10))))
+    thought_quality = float(max(0.0, min(1.0, thought_quality - (attempt_density * 0.06) + (context_quality * 0.08))))
 
     return {
         "perception_quality": float(max(0.0, min(1.0, perception_quality))),
@@ -896,9 +781,11 @@ def build_outcome_decomposition(bot, outcome_reason, position=None, experience_s
         "plan_quality": float(max(0.0, min(1.0, plan_quality))),
         "execution_quality": float(max(0.0, min(1.0, execution_quality))),
         "risk_fit_quality": float(max(0.0, min(1.0, risk_fit_quality))),
+        "attempt_density": float(attempt_density),
+        "overtrade_pressure": float(overtrade_pressure),
+        "context_quality": float(context_quality),
         "reason": str(reason or "-"),
     }
-
 # --------------------------------------------------
 # PRICE BUILD
 # --------------------------------------------------
@@ -1477,6 +1364,21 @@ def update_experience_state(bot, outcome_reason):
     prior_protective_width_regulation = float(getattr(bot, "protective_width_regulation", 0.0) or 0.0)
     prior_protective_courage = float(getattr(bot, "protective_courage", 0.0) or 0.0)
 
+    attempt_feedback = {}
+    stats = getattr(bot, "stats", None)
+    if stats is not None and hasattr(stats, "get_attempt_feedback"):
+        try:
+            attempt_feedback = dict(stats.get_attempt_feedback() or {})
+        except Exception:
+            attempt_feedback = {}
+
+    attempt_density = float(attempt_feedback.get("attempt_density", 0.0) or 0.0)
+    overtrade_pressure = float(attempt_feedback.get("overtrade_pressure", 0.0) or 0.0)
+    context_quality = float(attempt_feedback.get("context_quality", 0.0) or 0.0)
+    blocked_ratio = float(attempt_feedback.get("blocked_ratio", 0.0) or 0.0)
+    timeout_ratio = float(attempt_feedback.get("timeout_ratio", 0.0) or 0.0)
+    fill_ratio = float(attempt_feedback.get("fill_ratio", 0.0) or 0.0)
+
     release_gain = 0.0
     regulation_gain = 0.0
     maturity_gain = 0.0
@@ -1498,10 +1400,14 @@ def update_experience_state(bot, outcome_reason):
         regulation_gain = 0.03
         maturity_gain = 0.04
 
+    release_gain += (attempt_density * 0.08) + (overtrade_pressure * 0.12)
+    regulation_gain += (context_quality * 0.10) + (fill_ratio * 0.06) - (overtrade_pressure * 0.10) - (timeout_ratio * 0.06)
+    maturity_gain += (context_quality * 0.08) + (fill_ratio * 0.04) + (blocked_ratio * 0.02) - (overtrade_pressure * 0.06)
+
     bot.pressure_release = float(max(0.0, min(1.0, (prior_release * 0.30) + release_gain)))
-    bot.approach_pressure = float(max(0.0, min(1.0, prior_pressure * 0.36)))
-    bot.entry_expectation = float(max(0.0, min(1.0, prior_entry_expectation * 0.42)))
-    bot.target_expectation = float(max(0.0, min(1.0, prior_target_expectation * 0.34)))
+    bot.approach_pressure = float(max(0.0, min(1.0, (prior_pressure * 0.36) + (attempt_density * 0.18) + (overtrade_pressure * 0.26) - (context_quality * 0.14))))
+    bot.entry_expectation = float(max(0.0, min(1.0, (prior_entry_expectation * 0.42) - (overtrade_pressure * 0.10) + (context_quality * 0.04))))
+    bot.target_expectation = float(max(0.0, min(1.0, (prior_target_expectation * 0.34) - (overtrade_pressure * 0.08) + (fill_ratio * 0.06))))
     bot.experience_regulation = float(max(0.0, min(1.0, (prior_regulation * 0.82) + regulation_gain + (prior_maturity * 0.04))))
     bot.reflection_maturity = float(max(0.0, min(1.0, (prior_maturity * 0.96) + maturity_gain + (abs(release_gain - regulation_gain) * 0.04))))
     bot.load_bearing_capacity = float(max(0.0, min(
@@ -1509,7 +1415,8 @@ def update_experience_state(bot, outcome_reason):
         (prior_load_bearing_capacity * 0.76)
         + (bot.experience_regulation * 0.22)
         + (bot.reflection_maturity * 0.16)
-        - (bot.pressure_release * 0.10),
+        - (bot.pressure_release * 0.10)
+        - (overtrade_pressure * 0.08),
     )))
     bot.protective_width_regulation = float(max(0.0, min(
         1.0,
@@ -1517,14 +1424,17 @@ def update_experience_state(bot, outcome_reason):
         + (bot.pressure_release * 0.36)
         + (bot.experience_regulation * 0.28)
         + (bot.reflection_maturity * 0.18)
-        + (prior_pressure * 0.14),
+        + (prior_pressure * 0.14)
+        + (overtrade_pressure * 0.12),
     )))
     bot.protective_courage = float(max(0.0, min(
         0.86,
         (prior_protective_courage * 0.62)
         + (bot.load_bearing_capacity * 0.16)
         + (bot.reflection_maturity * 0.10)
-        - (bot.pressure_release * 0.16),
+        - (bot.pressure_release * 0.16)
+        - (overtrade_pressure * 0.12)
+        + (context_quality * 0.08),
     )))
 
     return {
@@ -1537,6 +1447,12 @@ def update_experience_state(bot, outcome_reason):
         "load_bearing_capacity": float(bot.load_bearing_capacity),
         "protective_width_regulation": float(bot.protective_width_regulation),
         "protective_courage": float(bot.protective_courage),
+        "attempt_density": float(attempt_density),
+        "overtrade_pressure": float(overtrade_pressure),
+        "context_quality": float(context_quality),
+        "fill_ratio": float(fill_ratio),
+        "blocked_ratio": float(blocked_ratio),
+        "timeout_ratio": float(timeout_ratio),
     }
 
 
@@ -2407,9 +2323,10 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
 # --------------------------------------------------
 # felt_state
 # --------------------------------------------------
-def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, decision="WAIT"):
+def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, decision="WAIT", expectation_state=None):
 
-    expectation_state = update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, decision=decision)
+    if expectation_state is None:
+        expectation_state = update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, decision=decision)
     filtered_vision = dict((stimulus or {}).get("filtered_vision", {}) or {})
     perception = dict(perception_state or {})
     competition_abs = abs(float(getattr(bot, "competition_bias", 0.0) or 0.0)) if bot is not None else 0.0
@@ -2643,6 +2560,87 @@ def build_perception_state(world_state, bot=None):
     }
 
 # --------------------------------------------------
+# register pending learning context
+# --------------------------------------------------
+def register_pending_learning_context(bot, state_signature):
+
+    if bot is None:
+        return None
+
+    signature = dict(state_signature or {})
+    signature_key = str(signature.get("signature_key", "") or "").strip()
+
+    if not signature_key:
+        return None
+
+    bot.last_signature_key = signature_key
+    bot.last_signature_context = dict(signature)
+    bot.last_signature_outcome = None
+
+    cluster_context = lookup_context_cluster(bot, signature)
+    cluster_id = None
+
+    if isinstance(cluster_context, dict):
+        cluster_id = str(cluster_context.get("cluster_id", "") or "").strip()
+
+    bot.last_context_cluster_id = cluster_id or None
+    bot.last_context_cluster_key = str(signature_key)
+
+    return {
+        "signature_key": str(signature_key),
+        "context_cluster_id": cluster_id or None,
+    }
+# --------------------------------------------------
+# commit pending learning context
+# --------------------------------------------------
+def commit_pending_learning_context(bot, outcome=None):
+
+    if bot is None:
+        return None
+
+    signature_context = dict(getattr(bot, "last_signature_context", {}) or {})
+    signature_key = str(getattr(bot, "last_signature_key", "") or "").strip()
+
+    if not signature_context and signature_key:
+        signature_context = {
+            "signature_key": str(signature_key),
+        }
+
+    if not signature_context:
+        return None
+
+    signature_result = update_signature_memory(
+        bot,
+        signature_context,
+        outcome=outcome,
+    )
+
+    cluster_result = classify_state_cluster(
+        bot,
+        signature_context,
+    )
+
+    if isinstance(cluster_result, dict):
+        cluster_id = str(cluster_result.get("cluster_id", "") or "").strip()
+
+        if cluster_id:
+            update_context_cluster_outcome(
+                bot,
+                cluster_id,
+                outcome=outcome,
+            )
+
+    merge_similar_signatures(bot)
+    split_unstable_cluster(bot)
+
+    return {
+        "signature_key": str(getattr(bot, "last_signature_key", "") or "").strip() or None,
+        "context_cluster_id": str(getattr(bot, "last_context_cluster_id", "") or "").strip() or None,
+        "signature_result": dict(signature_result or {}),
+        "cluster_result": dict(cluster_result or {}),
+    }
+
+# --------------------------------------------------
 # ENTRY API
 # --------------------------------------------------
 def decide_mcm_brain_entry(window, candle_state, bot=None):
@@ -2652,20 +2650,12 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
 
     last = window[-1]
 
-    energy, coherence, asymmetry, coh_zone = compute_tension_from_ohlc(
-        float(last.get("open", 0.0) or 0.0),
-        float(last.get("high", 0.0) or 0.0),
-        float(last.get("low", 0.0) or 0.0),
-        float(last.get("close", 0.0) or 0.0),
-        float(last.get("volume", 0.0) or 0.0),
-    )
+    tension_state = build_tension_state_from_window(window)
 
-    tension_state = {
-        "energy": float(energy),
-        "coherence": float(coherence),
-        "asymmetry": int(asymmetry),
-        "coh_zone": float(coh_zone),
-    }
+    energy = float(tension_state.get("energy", 0.0) or 0.0)
+    coherence = float(tension_state.get("coherence", 0.0) or 0.0)
+    asymmetry = int(tension_state.get("asymmetry", 0) or 0)
+    coh_zone = float(tension_state.get("coh_zone", 0.0) or 0.0)
 
     if not bool(getattr(Config, "MCM_ENABLED", True)):
         return None
@@ -2706,19 +2696,12 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
     fused_preview = resolve_fused_decision(candle_state, tension_state, snapshot, bot=bot)
 
     structure_perception_state = STRUCTURE_ENGINE.build_structure_perception_state(window)
-    try:
-        world_state = build_world_state(
-            candle_state,
-            tension_state,
-            stimulus,
-            structure_perception_state=structure_perception_state,
-        )
-    except TypeError:
-        # Backward-compatible fallback, falls lokal noch eine ältere
-        # build_world_state(candle_state, tension_state, stimulus)-Signatur aktiv ist.
-        world_state = build_world_state(candle_state, tension_state, stimulus)
-        world_state = dict(world_state or {})
-        world_state["structure_perception_state"] = dict(structure_perception_state or {})
+    world_state = build_world_state(
+        candle_state,
+        tension_state,
+        stimulus,
+        structure_perception_state=structure_perception_state,
+    )
     outer_visual_perception_state = build_outer_visual_perception_state(world_state)
     inner_field_perception_state = build_inner_field_perception_state(snapshot, bot=bot)
     perception_state = build_perception_state(world_state, bot=bot)
@@ -2727,14 +2710,29 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
         inner_field_perception_state,
         perception_state,
     )
-    felt_state = build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, decision=str(fused_preview.get("decision", "WAIT") or "WAIT"))
+    expectation_state = update_expectation_pressure_state(
+        bot,
+        candle_state,
+        stimulus,
+        snapshot,
+        decision=str(fused_preview.get("decision", "WAIT") or "WAIT"),
+    )
+    felt_state = build_felt_state(
+        bot,
+        candle_state,
+        stimulus,
+        snapshot,
+        perception_state,
+        decision=str(fused_preview.get("decision", "WAIT") or "WAIT"),
+        expectation_state=expectation_state,
+    )
     
     state_signature = build_state_signature(candle_state, tension_state, snapshot, stimulus, bot=bot)
 
-    update_signature_memory(bot, state_signature, outcome=None)
-    classify_state_cluster(bot, state_signature)
-    merge_similar_signatures(bot)
-    split_unstable_cluster(bot)
+    register_pending_learning_context(
+        bot,
+        state_signature,
+    )
 
     fused = dict(fused_preview or {})
     fused = reinterpret_focus_by_signature(bot, fused, state_signature)
@@ -2747,6 +2745,7 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
     bot.inner_field_perception_state = dict(inner_field_perception_state)
     bot.structure_perception_state = dict(structure_perception_state)
     bot.processing_state = dict(processing_state)
+    bot.expectation_state = dict(expectation_state or {})
     bot.felt_state = dict(felt_state)
     bot.thought_state = dict(thought_state)
     bot.meta_regulation_state = dict(meta_regulation_state)
@@ -2776,7 +2775,7 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
             "felt_state": dict(felt_state or {}),
             "thought_state": dict(thought_state or {}),
             "meta_regulation_state": dict(meta_regulation_state or {}),
-            "expectation_state": dict(felt_state or {}),
+            "expectation_state": dict(expectation_state or {}),
             "state_signature": dict(state_signature or {}),
             "signature_bias": float(fused.get("signature_bias", 0.0) or 0.0),
             "signature_block": bool(fused.get("signature_block", False)),
@@ -2834,7 +2833,7 @@ def decide_mcm_brain_entry(window, candle_state, bot=None):
         "felt_state": dict(felt_state or {}),
         "thought_state": dict(thought_state or {}),
         "meta_regulation_state": dict(meta_regulation_state or {}),
-        "expectation_state": dict(felt_state or {}),
+        "expectation_state": dict(expectation_state or {}),
         "state_signature": dict(state_signature or {}),
         "signature_bias": float(fused.get("signature_bias", 0.0) or 0.0),
         "signature_block": bool(fused.get("signature_block", False)),

@@ -12,11 +12,13 @@ import os
 from config import Config
 
 class TradeStats:
-    def __init__(self, path="debug/trade_stats.json", csv_path="debug/trade_equity.csv", reset=True):
+    def __init__(self, path="debug/trade_stats.json", csv_path="debug/trade_equity.csv", attempt_path="debug/attempt_records.jsonl", outcome_path="debug/outcome_records.jsonl", reset=True):
         from ph_ohlcv import create_exchange, get_account_value
 
         self.path = path
         self.csv_path = csv_path
+        self.attempt_path = attempt_path
+        self.outcome_path = outcome_path
 
         if str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE":
             try:
@@ -39,13 +41,20 @@ class TradeStats:
             "attempts_submitted": 0,
             "attempts_filled": 0,
             "attempts_cancelled": 0,
+            "attempts_timeout": 0,
             "attempts_blocked": 0,
             "attempts_skipped": 0,
             "attempt_structure_zone": 0,
             "attempt_non_structure_zone": 0,
             "current_timestamp": None,
             "last_outcome_decomposition": {},
-            #"recent_attempts": [],
+            "recent_attempts": [],
+            "attempt_records": [],
+            "outcome_records": [],
+            "equity_peak": start_equity,
+            "max_drawdown_abs": 0.0,
+            "max_drawdown_pct": 0.0,
+            "kpi_summary": {},
         }
 
         if reset:
@@ -58,8 +67,21 @@ class TradeStats:
                     os.remove(self.csv_path)
                 except Exception:
                     pass
+
+            if os.path.exists(self.attempt_path):
+                try:
+                    os.remove(self.attempt_path)
+                except Exception:
+                    pass
+
+            if os.path.exists(self.outcome_path):
+                try:
+                    os.remove(self.outcome_path)
+                except Exception:
+                    pass
         else:
             self._load()
+
 
     # ─────────────────────────────────────────────
     def _load(self):
@@ -72,7 +94,191 @@ class TradeStats:
                     self.data.update(obj)
         except Exception:
             pass
+    # ─────────────────────────────────────────────
+    def _normalize_record_value(self, value):
+        if isinstance(value, dict):
+            normalized = {}
+            for key, item in value.items():
+                if key is None:
+                    continue
+                normalized[str(key)] = self._normalize_record_value(item)
+            return normalized
 
+        if isinstance(value, list):
+            return [self._normalize_record_value(item) for item in list(value or [])[:128]]
+
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
+
+        return str(value)
+
+    # ─────────────────────────────────────────────
+    def _append_record(self, key: str, record: dict, limit: int = 40):
+        records = list(self.data.get(key, []) or [])
+        records.append(dict(record or {}))
+        self.data[key] = records[-max(1, int(limit or 1)):]
+
+    # ─────────────────────────────────────────────
+    def _append_record_file(self, path: str, record: dict):
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(dict(record or {}), ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+
+    # ─────────────────────────────────────────────
+    def _structure_band(self, structure_quality: float) -> str:
+        quality = float(structure_quality or 0.0)
+
+        if quality >= 0.70:
+            return "high"
+
+        if quality >= 0.55:
+            return "mid"
+
+        return "low"
+
+    # ─────────────────────────────────────────────
+    def _rebuild_kpi_summary(self):
+        trades = int(self.data.get("trades", 0) or 0)
+        tp = int(self.data.get("tp", 0) or 0)
+        sl = int(self.data.get("sl", 0) or 0)
+        cancels = int(self.data.get("cancels", 0) or 0)
+        attempts = int(self.data.get("attempts", 0) or 0)
+
+        pnl_netto = float(self.data.get("pnl_netto", 0.0) or 0.0)
+        pnl_tp = float(self.data.get("pnl_tp", 0.0) or 0.0)
+        pnl_sl = float(self.data.get("pnl_sl", 0.0) or 0.0)
+
+        avg_win = (pnl_tp / tp) if tp > 0 else 0.0
+        avg_loss = (pnl_sl / sl) if sl > 0 else 0.0
+        profit_factor = abs(pnl_tp / pnl_sl) if pnl_sl != 0 else 0.0
+        expectancy = (pnl_netto / trades) if trades > 0 else 0.0
+        winrate = (tp / trades) if trades > 0 else 0.0
+
+        attempt_feedback = self.get_attempt_feedback()
+
+        outcomes = list(self.data.get("outcome_records", []) or [])
+        band_stats = {
+            "high": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0},
+            "mid": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0},
+            "low": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0},
+        }
+
+        for item in outcomes:
+            record = dict(item or {})
+            band = self._structure_band(record.get("structure_quality", 0.0))
+            reason = str(record.get("reason", "") or "").strip().lower()
+
+            band_stats[band]["count"] += 1
+            band_stats[band]["pnl"] += float(record.get("pnl", 0.0) or 0.0)
+
+            if reason == "tp_hit":
+                band_stats[band]["tp"] += 1
+            elif reason == "sl_hit":
+                band_stats[band]["sl"] += 1
+            else:
+                band_stats[band]["cancel"] += 1
+
+        for band_name, payload in band_stats.items():
+            count = int(payload.get("count", 0) or 0)
+            tp_count = int(payload.get("tp", 0) or 0)
+            payload["winrate"] = float(tp_count / count) if count > 0 else 0.0
+            payload["avg_pnl"] = float(payload.get("pnl", 0.0) or 0.0) / count if count > 0 else 0.0
+
+        self.data["kpi_summary"] = {
+            "proof": {
+                "winrate": float(winrate),
+                "profit_factor": float(profit_factor),
+                "expectancy": float(expectancy),
+                "avg_win": float(avg_win),
+                "avg_loss": float(avg_loss),
+                "attempts_per_trade": float(attempts / max(1, trades)),
+                "attempt_fill_rate": float(self.data.get("attempts_filled", 0) or 0) / max(1, attempts),
+                "attempt_zone_share": float(self.data.get("attempt_structure_zone", 0) or 0) / max(1, attempts),
+                "attempt_density": float(attempt_feedback.get("attempt_density", 0.0) or 0.0),
+                "context_quality": float(attempt_feedback.get("context_quality", 0.0) or 0.0),
+                "overtrade_pressure": float(attempt_feedback.get("overtrade_pressure", 0.0) or 0.0),
+                "max_drawdown_abs": float(self.data.get("max_drawdown_abs", 0.0) or 0.0),
+                "max_drawdown_pct": float(self.data.get("max_drawdown_pct", 0.0) or 0.0),
+            },
+            "structure_bands": {
+                "high": dict(band_stats["high"]),
+                "mid": dict(band_stats["mid"]),
+                "low": dict(band_stats["low"]),
+            },
+            "totals": {
+                "trades": int(trades),
+                "tp": int(tp),
+                "sl": int(sl),
+                "cancels": int(cancels),
+                "attempts": int(attempts),
+                "pnl_netto": float(pnl_netto),
+            },
+        }
+
+    # ─────────────────────────────────────────────
+    def _pick_fields(self, payload: dict, keys: list[str]) -> dict:
+        source = dict(payload or {})
+        result = {}
+
+        for key in list(keys or []):
+            if key not in source:
+                continue
+
+            value = source.get(key)
+            if value is None:
+                continue
+
+            result[str(key)] = value
+
+        return result
+
+    # ─────────────────────────────────────────────
+    def _compact_context(self, context: dict) -> dict:
+        normalized_context = self._normalize_record_value(context or {})
+
+        compact = {
+            "state": self._pick_fields(
+                normalized_context.get("state", {}),
+                ["energy", "coherence", "asymmetry", "coh_zone", "self_state", "attractor"],
+            ),
+            "focus": self._pick_fields(
+                normalized_context.get("focus", {}),
+                ["focus_point", "focus_confidence", "target_lock", "target_drift"],
+            ),
+            "structure_perception_state": self._pick_fields(
+                normalized_context.get("structure_perception_state", {}),
+                ["zone_proximity", "structure_stability", "structure_quality", "context_confidence"],
+            ),
+            "felt_state": self._pick_fields(
+                normalized_context.get("felt_state", {}),
+                ["pressure", "opportunity", "risk", "stability"],
+            ),
+            "thought_state": self._pick_fields(
+                normalized_context.get("thought_state", {}),
+                ["conflict", "maturity", "conviction", "uncertainty"],
+            ),
+            "meta_regulation_state": self._pick_fields(
+                normalized_context.get("meta_regulation_state", {}),
+                ["decision", "allow_plan", "observe_priority", "readiness", "maturity"],
+            ),
+            "expectation_state": self._pick_fields(
+                normalized_context.get("expectation_state", {}),
+                ["entry_expectation", "target_expectation", "approach_pressure", "pressure_release", "experience_regulation", "reflection_maturity"],
+            ),
+            "state_signature": self._pick_fields(
+                normalized_context.get("state_signature", {}),
+                ["signature_key"],
+            ),
+            "signal": self._pick_fields(
+                normalized_context.get("signal", {}),
+                ["signature_bias", "signature_quality", "signature_distance", "context_cluster_id", "context_cluster_bias", "context_cluster_quality", "context_cluster_distance", "inhibition_level", "habituation_level", "competition_bias", "observation_mode", "long_score", "short_score"],
+            ),
+        }
+
+        return {key: value for key, value in compact.items() if value}
     # ─────────────────────────────────────────────
     def _save(self):
         try:
@@ -97,8 +303,112 @@ class TradeStats:
             return 0.0
 
     # ─────────────────────────────────────────────
+    def _build_attempt_record(self, status_key: str, context: dict, structure_quality: float, structure_bucket: str) -> dict:
+        compact_context = self._compact_context(context or {})
+
+        return {
+            "event": "attempt",
+            "status": str(status_key or "unknown"),
+            "timestamp": self.data.get("current_timestamp"),
+            "structure_quality": float(structure_quality),
+            "structure_bucket": str(structure_bucket),
+            "context": compact_context,
+        }
+
+    # ─────────────────────────────────────────────
+    def get_attempt_feedback(self, window: int = 24) -> dict:
+        recent_attempts = list(self.data.get("recent_attempts", []) or [])
+        items = recent_attempts[-max(1, int(window or 1)):]
+
+        if not items:
+            return {
+                "recent_attempt_count": 0,
+                "attempt_density": 0.0,
+                "fill_ratio": 0.0,
+                "blocked_ratio": 0.0,
+                "cancel_ratio": 0.0,
+                "timeout_ratio": 0.0,
+                "zone_ratio": 0.0,
+                "mean_structure_quality": 0.0,
+                "context_quality": 0.0,
+                "overtrade_pressure": 0.0,
+            }
+
+        total = float(len(items))
+        filled = 0.0
+        blocked = 0.0
+        cancelled = 0.0
+        timeout = 0.0
+        zone = 0.0
+        structure_sum = 0.0
+
+        for item in items:
+            status = str((item or {}).get("status", "") or "").strip().lower()
+            structure_quality = float((item or {}).get("structure_quality", 0.0) or 0.0)
+            structure_bucket = str((item or {}).get("structure_bucket", "") or "").strip().lower()
+
+            structure_sum += structure_quality
+
+            if status == "filled":
+                filled += 1.0
+            elif status in ("blocked", "blocked_value_gate"):
+                blocked += 1.0
+            elif status == "cancelled":
+                cancelled += 1.0
+            elif status == "timeout":
+                timeout += 1.0
+
+            if structure_bucket == "zone":
+                zone += 1.0
+
+        attempt_density = max(0.0, min(1.0, total / max(8.0, float(window) * 0.50)))
+        fill_ratio = filled / total
+        blocked_ratio = blocked / total
+        cancel_ratio = cancelled / total
+        timeout_ratio = timeout / total
+        zone_ratio = zone / total
+        mean_structure_quality = structure_sum / total
+        context_quality = max(
+            0.0,
+            min(
+                1.0,
+                (mean_structure_quality * 0.56)
+                + (zone_ratio * 0.24)
+                + (fill_ratio * 0.12)
+                - (blocked_ratio * 0.10)
+                - (cancel_ratio * 0.08)
+                - (timeout_ratio * 0.12),
+            ),
+        )
+        overtrade_pressure = max(
+            0.0,
+            min(
+                1.0,
+                (attempt_density * 0.48)
+                + ((1.0 - context_quality) * 0.28)
+                + (blocked_ratio * 0.14)
+                + (cancel_ratio * 0.10)
+                + (timeout_ratio * 0.16),
+            ),
+        )
+
+        return {
+            "recent_attempt_count": int(total),
+            "attempt_density": float(attempt_density),
+            "fill_ratio": float(fill_ratio),
+            "blocked_ratio": float(blocked_ratio),
+            "cancel_ratio": float(cancel_ratio),
+            "timeout_ratio": float(timeout_ratio),
+            "zone_ratio": float(zone_ratio),
+            "mean_structure_quality": float(mean_structure_quality),
+            "context_quality": float(context_quality),
+            "overtrade_pressure": float(overtrade_pressure),
+        }
+
+    # ─────────────────────────────────────────────
     def on_attempt(self, *, status: str, context: dict = None):
         status_key = str(status or "").strip().lower()
+        normalized_context = self._normalize_record_value(context or {})
 
         self.data["attempts"] = int(self.data.get("attempts", 0) or 0) + 1
         if status_key == "submitted":
@@ -107,18 +417,27 @@ class TradeStats:
             self.data["attempts_filled"] = int(self.data.get("attempts_filled", 0) or 0) + 1
         elif status_key == "cancelled":
             self.data["attempts_cancelled"] = int(self.data.get("attempts_cancelled", 0) or 0) + 1
+        elif status_key == "timeout":
+            self.data["attempts_timeout"] = int(self.data.get("attempts_timeout", 0) or 0) + 1
         elif status_key in ("blocked", "blocked_value_gate"):
             self.data["attempts_blocked"] = int(self.data.get("attempts_blocked", 0) or 0) + 1
         elif status_key == "skipped":
             self.data["attempts_skipped"] = int(self.data.get("attempts_skipped", 0) or 0) + 1
 
-        structure_quality = self._extract_structure_quality(context or {})
+        structure_quality = self._extract_structure_quality(normalized_context)
         if structure_quality >= 0.55:
             self.data["attempt_structure_zone"] = int(self.data.get("attempt_structure_zone", 0) or 0) + 1
             structure_bucket = "zone"
         else:
             self.data["attempt_non_structure_zone"] = int(self.data.get("attempt_non_structure_zone", 0) or 0) + 1
             structure_bucket = "non_zone"
+
+        attempt_record = self._build_attempt_record(
+            status_key,
+            normalized_context,
+            structure_quality,
+            structure_bucket,
+        )
 
         recent = list(self.data.get("recent_attempts", []) or [])
         recent.append(
@@ -128,11 +447,14 @@ class TradeStats:
                 "structure_bucket": structure_bucket,
             }
         )
-        self.data["recent_attempts"] = recent[-200:]
+        self.data["recent_attempts"] = recent[-80:]
+        self._append_record("attempt_records", attempt_record, limit=40)
+        self._append_record_file(self.attempt_path, attempt_record)
+        self._rebuild_kpi_summary()
         self._save()
 
     # ─────────────────────────────────────────────
-    def on_exit(self, *, entry: float, tp: float, sl: float, reason: str, side: str = None, amount: float = 1.0, exploration_trade: bool = False, outcome_decomposition: dict = None):
+    def on_exit(self, *, entry: float, tp: float, sl: float, reason: str, side: str = None, amount: float = 1.0, exploration_trade: bool = False, outcome_decomposition: dict = None, context: dict = None):
         pnl = 0.0
 
         side = str(side).upper().strip() if side is not None else "LONG"
@@ -177,8 +499,11 @@ class TradeStats:
         )
         pnl = pnl - fees
 
+        compact_context = self._compact_context(context or {})
+        normalized_decomposition = self._normalize_record_value(outcome_decomposition or {})
+
         self.data["trades"] += 1
-        self.data["last_outcome_decomposition"] = dict(outcome_decomposition or {})
+        self.data["last_outcome_decomposition"] = dict(normalized_decomposition or {})
 
         if exploration_trade:
             self.data["exploration_trades"] = int(self.data.get("exploration_trades", 0) or 0) + 1
@@ -195,6 +520,41 @@ class TradeStats:
         if pnl < 0:
             self.data["pnl_sl"] += pnl
 
+        structure_quality = self._extract_structure_quality(compact_context)
+        structure_bucket = "zone" if structure_quality >= 0.55 else "non_zone"
+
+        outcome_record = {
+            "event": "trade_exit",
+            "reason": str(reason or "").strip().lower(),
+            "timestamp": self.data.get("current_timestamp"),
+            "side": side,
+            "entry": float(entry),
+            "tp": float(tp),
+            "sl": float(sl),
+            "amount": float(amount),
+            "pnl": float(pnl),
+            "structure_quality": float(structure_quality),
+            "structure_bucket": structure_bucket,
+            "outcome_decomposition": normalized_decomposition,
+            "context": compact_context,
+        }
+
+        self._append_record("outcome_records", outcome_record, limit=40)
+        self._append_record_file(self.outcome_path, outcome_record)
+
+        equity_peak = max(
+            float(self.data.get("equity_peak", self.data.get("pnl_netto", 0.0)) or self.data.get("pnl_netto", 0.0)),
+            float(self.data.get("pnl_netto", 0.0) or 0.0),
+        )
+        self.data["equity_peak"] = float(equity_peak)
+
+        drawdown_abs = max(0.0, equity_peak - float(self.data.get("pnl_netto", 0.0) or 0.0))
+        drawdown_pct = (drawdown_abs / equity_peak) if equity_peak > 0.0 else 0.0
+
+        self.data["max_drawdown_abs"] = float(max(float(self.data.get("max_drawdown_abs", 0.0) or 0.0), drawdown_abs))
+        self.data["max_drawdown_pct"] = float(max(float(self.data.get("max_drawdown_pct", 0.0) or 0.0), drawdown_pct))
+
+        self._rebuild_kpi_summary()
         self._save()
 
         # ---------------- CSV Equity Export ----------------
@@ -255,6 +615,10 @@ class TradeStats:
             else 0.0
         )
 
+        self._rebuild_kpi_summary()
+        kpi_summary = dict(self.data.get("kpi_summary", {}) or {})
+        proof = dict(kpi_summary.get("proof", {}) or {})
+
         data.update({
             "avg_win": avg_win,
             "avg_loss": avg_loss,
@@ -274,21 +638,48 @@ class TradeStats:
             "attempt_fill_rate": (
                 float(data.get("attempts_filled", 0) or 0) / max(1, int(data.get("attempts", 0) or 0))
             ),
+            "attempt_density": float(proof.get("attempt_density", 0.0) or 0.0),
+            "context_quality": float(proof.get("context_quality", 0.0) or 0.0),
+            "overtrade_pressure": float(proof.get("overtrade_pressure", 0.0) or 0.0),
+            "max_drawdown_abs": float(proof.get("max_drawdown_abs", 0.0) or 0.0),
+            "max_drawdown_pct": float(proof.get("max_drawdown_pct", 0.0) or 0.0),
+            "kpi_summary": kpi_summary,
         })
 
         return data
     # ─────────────────────────────────────────────
-    def on_cancel(self, *, order_id=None, cause: str = None, exploration_trade: bool = False, outcome_decomposition: dict = None):
+    def on_cancel(self, *, order_id=None, cause: str = None, exploration_trade: bool = False, outcome_decomposition: dict = None, context: dict = None):
         """
         Order wurde gecancelt bevor ein Trade/Exit stattgefunden hat.
         Keine PnL-Änderung – nur Zählung.
         """
         try:
+            normalized_context = self._normalize_record_value(context or {})
+            normalized_decomposition = self._normalize_record_value(outcome_decomposition or {})
+            structure_quality = self._extract_structure_quality(normalized_context)
+            structure_bucket = "zone" if structure_quality >= 0.55 else "non_zone"
+
             self.data["cancels"] = int(self.data.get("cancels", 0) or 0) + 1
-            self.data["last_outcome_decomposition"] = dict(outcome_decomposition or {})
+            self.data["last_outcome_decomposition"] = dict(normalized_decomposition or {})
             if exploration_trade:
                 self.data["exploration_cancels"] = int(self.data.get("exploration_cancels", 0) or 0) + 1
 
+            compact_context = self._compact_context(normalized_context)
+            outcome_record = {
+                    "event": "cancel",
+                    "reason": "cancel",
+                    "timestamp": self.data.get("current_timestamp"),
+                    "order_id": None if order_id is None else str(order_id),
+                    "cause": None if cause is None else str(cause),
+                    "structure_quality": float(structure_quality),
+                    "structure_bucket": structure_bucket,
+                    "outcome_decomposition": normalized_decomposition,
+                    "context": compact_context,
+                }
+
+            self._append_record("outcome_records", outcome_record, limit=40)
+            self._append_record_file(self.outcome_path, outcome_record)
+            self._rebuild_kpi_summary()
             self._save()
         except Exception:
             pass

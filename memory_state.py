@@ -43,6 +43,27 @@ def _to_int(value, default: int = 0) -> int:
     except Exception:
         return int(default)
 
+# --------------------------------------------------
+def normalize_json_state(value):
+
+    if isinstance(value, dict):
+        normalized = {}
+
+        for key, item in value.items():
+            if key is None:
+                continue
+
+            normalized[str(key)] = normalize_json_state(item)
+
+        return normalized
+
+    if isinstance(value, list):
+        return [normalize_json_state(item) for item in list(value or [])[:128]]
+
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+
+    return _to_str(value, None)
 
 # --------------------------------------------------
 def _to_float(value, default: float = 0.0) -> float:
@@ -242,9 +263,37 @@ def build_memory_state(bot) -> dict:
         "context_cluster_seq": max(0, _to_int(getattr(bot, "context_cluster_seq", 0), 0)),
         "last_signature_key": _to_str(getattr(bot, "last_signature_key", None), None),
         "last_signature_outcome": _to_str(getattr(bot, "last_signature_outcome", None), None),
-        "last_signature_context": getattr(bot, "last_signature_context", None),
+        "last_signature_context": normalize_json_state(getattr(bot, "last_signature_context", None)),
         "last_context_cluster_id": _to_str(getattr(bot, "last_context_cluster_id", None), None),
         "last_context_cluster_key": _to_str(getattr(bot, "last_context_cluster_key", None), None),
+        "focus_point": _to_float(getattr(bot, "focus_point", 0.0), 0.0),
+        "focus_confidence": _to_float(getattr(bot, "focus_confidence", 0.0), 0.0),
+        "target_lock": _to_float(getattr(bot, "target_lock", 0.0), 0.0),
+        "target_drift": _to_float(getattr(bot, "target_drift", 0.0), 0.0),
+        "entry_expectation": _to_float(getattr(bot, "entry_expectation", 0.0), 0.0),
+        "target_expectation": _to_float(getattr(bot, "target_expectation", 0.0), 0.0),
+        "approach_pressure": _to_float(getattr(bot, "approach_pressure", 0.0), 0.0),
+        "pressure_release": _to_float(getattr(bot, "pressure_release", 0.0), 0.0),
+        "experience_regulation": _to_float(getattr(bot, "experience_regulation", 0.0), 0.0),
+        "reflection_maturity": _to_float(getattr(bot, "reflection_maturity", 0.0), 0.0),
+        "load_bearing_capacity": _to_float(getattr(bot, "load_bearing_capacity", 0.0), 0.0),
+        "protective_width_regulation": _to_float(getattr(bot, "protective_width_regulation", 0.0), 0.0),
+        "protective_courage": _to_float(getattr(bot, "protective_courage", 0.0), 0.0),
+        "inhibition_level": _to_float(getattr(bot, "inhibition_level", 0.0), 0.0),
+        "habituation_level": _to_float(getattr(bot, "habituation_level", 0.0), 0.0),
+        "competition_bias": _to_float(getattr(bot, "competition_bias", 0.0), 0.0),
+        "observation_mode": bool(getattr(bot, "observation_mode", False)),
+        "last_signal_relevance": _to_float(getattr(bot, "last_signal_relevance", 0.0), 0.0),
+        "structure_perception_state": normalize_json_state(getattr(bot, "structure_perception_state", {})),
+        "perception_state": normalize_json_state(getattr(bot, "perception_state", {})),
+        "outer_visual_perception_state": normalize_json_state(getattr(bot, "outer_visual_perception_state", {})),
+        "inner_field_perception_state": normalize_json_state(getattr(bot, "inner_field_perception_state", {})),
+        "processing_state": normalize_json_state(getattr(bot, "processing_state", {})),
+        "expectation_state": normalize_json_state(getattr(bot, "expectation_state", {})),
+        "felt_state": normalize_json_state(getattr(bot, "felt_state", {})),
+        "thought_state": normalize_json_state(getattr(bot, "thought_state", {})),
+        "meta_regulation_state": normalize_json_state(getattr(bot, "meta_regulation_state", {})),
+        "last_outcome_decomposition": normalize_json_state(getattr(bot, "last_outcome_decomposition", {})),
         "mcm_memory": mcm_memory,
         "mcm_last_attractor": _to_str(getattr(bot, "mcm_last_attractor", None), None),
         "mcm_last_action": _to_str(getattr(bot, "mcm_last_action", None), None),
@@ -267,9 +316,37 @@ def apply_memory_state(bot, state: dict | None) -> dict:
 
     bot.last_signature_key = _to_str(payload.get("last_signature_key"), None)
     bot.last_signature_outcome = _to_str(payload.get("last_signature_outcome"), None)
-    bot.last_signature_context = payload.get("last_signature_context")
+    bot.last_signature_context = normalize_json_state(payload.get("last_signature_context"))
     bot.last_context_cluster_id = _to_str(payload.get("last_context_cluster_id"), None)
     bot.last_context_cluster_key = _to_str(payload.get("last_context_cluster_key"), None)
+    bot.focus_point = _to_float(payload.get("focus_point", 0.0), 0.0)
+    bot.focus_confidence = _to_float(payload.get("focus_confidence", 0.0), 0.0)
+    bot.target_lock = _to_float(payload.get("target_lock", 0.0), 0.0)
+    bot.target_drift = _to_float(payload.get("target_drift", 0.0), 0.0)
+    bot.entry_expectation = _to_float(payload.get("entry_expectation", 0.0), 0.0)
+    bot.target_expectation = _to_float(payload.get("target_expectation", 0.0), 0.0)
+    bot.approach_pressure = _to_float(payload.get("approach_pressure", 0.0), 0.0)
+    bot.pressure_release = _to_float(payload.get("pressure_release", 0.0), 0.0)
+    bot.experience_regulation = _to_float(payload.get("experience_regulation", 0.0), 0.0)
+    bot.reflection_maturity = _to_float(payload.get("reflection_maturity", 0.0), 0.0)
+    bot.load_bearing_capacity = _to_float(payload.get("load_bearing_capacity", 0.0), 0.0)
+    bot.protective_width_regulation = _to_float(payload.get("protective_width_regulation", 0.0), 0.0)
+    bot.protective_courage = _to_float(payload.get("protective_courage", 0.0), 0.0)
+    bot.inhibition_level = _to_float(payload.get("inhibition_level", 0.0), 0.0)
+    bot.habituation_level = _to_float(payload.get("habituation_level", 0.0), 0.0)
+    bot.competition_bias = _to_float(payload.get("competition_bias", 0.0), 0.0)
+    bot.observation_mode = bool(payload.get("observation_mode", False))
+    bot.last_signal_relevance = _to_float(payload.get("last_signal_relevance", 0.0), 0.0)
+    bot.structure_perception_state = normalize_json_state(payload.get("structure_perception_state", {}))
+    bot.perception_state = normalize_json_state(payload.get("perception_state", {}))
+    bot.outer_visual_perception_state = normalize_json_state(payload.get("outer_visual_perception_state", {}))
+    bot.inner_field_perception_state = normalize_json_state(payload.get("inner_field_perception_state", {}))
+    bot.processing_state = normalize_json_state(payload.get("processing_state", {}))
+    bot.expectation_state = normalize_json_state(payload.get("expectation_state", {}))
+    bot.felt_state = normalize_json_state(payload.get("felt_state", {}))
+    bot.thought_state = normalize_json_state(payload.get("thought_state", {}))
+    bot.meta_regulation_state = normalize_json_state(payload.get("meta_regulation_state", {}))
+    bot.last_outcome_decomposition = normalize_json_state(payload.get("last_outcome_decomposition", {}))
     bot.mcm_last_attractor = _to_str(payload.get("mcm_last_attractor"), None)
     bot.mcm_last_action = _to_str(payload.get("mcm_last_action"), None)
 
@@ -299,6 +376,34 @@ def read_memory_state(path: str | None = None) -> dict:
             "last_signature_context": None,
             "last_context_cluster_id": None,
             "last_context_cluster_key": None,
+            "focus_point": 0.0,
+            "focus_confidence": 0.0,
+            "target_lock": 0.0,
+            "target_drift": 0.0,
+            "entry_expectation": 0.0,
+            "target_expectation": 0.0,
+            "approach_pressure": 0.0,
+            "pressure_release": 0.0,
+            "experience_regulation": 0.0,
+            "reflection_maturity": 0.0,
+            "load_bearing_capacity": 0.0,
+            "protective_width_regulation": 0.0,
+            "protective_courage": 0.0,
+            "inhibition_level": 0.0,
+            "habituation_level": 0.0,
+            "competition_bias": 0.0,
+            "observation_mode": False,
+            "last_signal_relevance": 0.0,
+            "structure_perception_state": {},
+            "perception_state": {},
+            "outer_visual_perception_state": {},
+            "inner_field_perception_state": {},
+            "processing_state": {},
+            "expectation_state": {},
+            "felt_state": {},
+            "thought_state": {},
+            "meta_regulation_state": {},
+            "last_outcome_decomposition": {},
             "mcm_memory": [],
             "mcm_last_attractor": None,
             "mcm_last_action": None,
@@ -308,7 +413,7 @@ def read_memory_state(path: str | None = None) -> dict:
         with open(filepath, "r", encoding="utf-8") as f:
             raw = json.load(f)
     except Exception:
-        return {
+        return '''{
             "signature_memory": {},
             "context_clusters": {},
             "context_cluster_seq": 0,
@@ -320,7 +425,7 @@ def read_memory_state(path: str | None = None) -> dict:
             "mcm_memory": [],
             "mcm_last_attractor": None,
             "mcm_last_action": None,
-        }
+        }'''
 
     return {
         "signature_memory": normalize_signature_memory((raw or {}).get("signature_memory", {})),
@@ -328,9 +433,37 @@ def read_memory_state(path: str | None = None) -> dict:
         "context_cluster_seq": max(0, _to_int((raw or {}).get("context_cluster_seq", 0), 0)),
         "last_signature_key": _to_str((raw or {}).get("last_signature_key"), None),
         "last_signature_outcome": _to_str((raw or {}).get("last_signature_outcome"), None),
-        "last_signature_context": (raw or {}).get("last_signature_context"),
+        "last_signature_context": normalize_json_state((raw or {}).get("last_signature_context")),
         "last_context_cluster_id": _to_str((raw or {}).get("last_context_cluster_id"), None),
         "last_context_cluster_key": _to_str((raw or {}).get("last_context_cluster_key"), None),
+        "focus_point": _to_float((raw or {}).get("focus_point", 0.0), 0.0),
+        "focus_confidence": _to_float((raw or {}).get("focus_confidence", 0.0), 0.0),
+        "target_lock": _to_float((raw or {}).get("target_lock", 0.0), 0.0),
+        "target_drift": _to_float((raw or {}).get("target_drift", 0.0), 0.0),
+        "entry_expectation": _to_float((raw or {}).get("entry_expectation", 0.0), 0.0),
+        "target_expectation": _to_float((raw or {}).get("target_expectation", 0.0), 0.0),
+        "approach_pressure": _to_float((raw or {}).get("approach_pressure", 0.0), 0.0),
+        "pressure_release": _to_float((raw or {}).get("pressure_release", 0.0), 0.0),
+        "experience_regulation": _to_float((raw or {}).get("experience_regulation", 0.0), 0.0),
+        "reflection_maturity": _to_float((raw or {}).get("reflection_maturity", 0.0), 0.0),
+        "load_bearing_capacity": _to_float((raw or {}).get("load_bearing_capacity", 0.0), 0.0),
+        "protective_width_regulation": _to_float((raw or {}).get("protective_width_regulation", 0.0), 0.0),
+        "protective_courage": _to_float((raw or {}).get("protective_courage", 0.0), 0.0),
+        "inhibition_level": _to_float((raw or {}).get("inhibition_level", 0.0), 0.0),
+        "habituation_level": _to_float((raw or {}).get("habituation_level", 0.0), 0.0),
+        "competition_bias": _to_float((raw or {}).get("competition_bias", 0.0), 0.0),
+        "observation_mode": bool((raw or {}).get("observation_mode", False)),
+        "last_signal_relevance": _to_float((raw or {}).get("last_signal_relevance", 0.0), 0.0),
+        "structure_perception_state": normalize_json_state((raw or {}).get("structure_perception_state", {})),
+        "perception_state": normalize_json_state((raw or {}).get("perception_state", {})),
+        "outer_visual_perception_state": normalize_json_state((raw or {}).get("outer_visual_perception_state", {})),
+        "inner_field_perception_state": normalize_json_state((raw or {}).get("inner_field_perception_state", {})),
+        "processing_state": normalize_json_state((raw or {}).get("processing_state", {})),
+        "expectation_state": normalize_json_state((raw or {}).get("expectation_state", {})),
+        "felt_state": normalize_json_state((raw or {}).get("felt_state", {})),
+        "thought_state": normalize_json_state((raw or {}).get("thought_state", {})),
+        "meta_regulation_state": normalize_json_state((raw or {}).get("meta_regulation_state", {})),
+        "last_outcome_decomposition": normalize_json_state((raw or {}).get("last_outcome_decomposition", {})),
         "mcm_memory": normalize_mcm_memory((raw or {}).get("mcm_memory", [])),
         "mcm_last_attractor": _to_str((raw or {}).get("mcm_last_attractor"), None),
         "mcm_last_action": _to_str((raw or {}).get("mcm_last_action"), None),

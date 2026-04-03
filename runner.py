@@ -144,6 +144,26 @@ if __name__ == "__main__":
             f"PNL_NETTO: {stats.get('pnl_netto', 0.0):.4f}"
         )
 
+        proof = dict((stats.get("kpi_summary", {}) or {}).get("proof", {}) or {})
+        structure_bands = dict((stats.get("kpi_summary", {}) or {}).get("structure_bands", {}) or {})
+
+        print(
+            f"KPI NACHWEIS | "
+            f"EXPECTANCY: {float(proof.get('expectancy', 0.0) or 0.0):.4f} | "
+            f"PF: {float(proof.get('profit_factor', 0.0) or 0.0):.3f} | "
+            f"ATTEMPT_DENSITY: {float(proof.get('attempt_density', 0.0) or 0.0):.3f} | "
+            f"CONTEXT_QUALITY: {float(proof.get('context_quality', 0.0) or 0.0):.3f} | "
+            f"OVERTRADE_PRESSURE: {float(proof.get('overtrade_pressure', 0.0) or 0.0):.3f} | "
+            f"MAX_DD_PCT: {float(proof.get('max_drawdown_pct', 0.0) or 0.0) * 100.0:.2f}%"
+        )
+
+        print(
+            f"STRUKTURBÄNDER | "
+            f"HIGH: win={float(((structure_bands.get('high', {}) or {}).get('winrate', 0.0) or 0.0) * 100.0):.2f}% pnl={float((structure_bands.get('high', {}) or {}).get('avg_pnl', 0.0) or 0.0):.4f} | "
+            f"MID: win={float(((structure_bands.get('mid', {}) or {}).get('winrate', 0.0) or 0.0) * 100.0):.2f}% pnl={float((structure_bands.get('mid', {}) or {}).get('avg_pnl', 0.0) or 0.0):.4f} | "
+            f"LOW: win={float(((structure_bands.get('low', {}) or {}).get('winrate', 0.0) or 0.0) * 100.0):.2f}% pnl={float((structure_bands.get('low', {}) or {}).get('avg_pnl', 0.0) or 0.0):.4f}"
+        )
+
     # --------------------------------------------------
     # LIVE MODE (SEQUENZIELL · BACKEND-IDENTISCH)
     # --------------------------------------------------

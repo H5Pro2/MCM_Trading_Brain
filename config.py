@@ -17,7 +17,7 @@ class Config:
     BACKTEST_FILEPATH = "data/1-2_2026_5m_SOLUSDT.csv" 
     # workspace | 1-12_2023_5m_SOLUSDT | 1-12_2024_5m_SOLUSDT | 1-12_2025_5m_SOLUSDT | 1-2_2026_5m_SOLUSDT 
     
-    CSV_OHLCV_PATH = "workspace.csv"   # Live Mode OHLCV Daten Börse
+    CSV_OHLCV_PATH = "data/workspace.csv"   # Live Mode OHLCV Daten Börse
     # ==================================================
     # MARKT
     # ==================================================

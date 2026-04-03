@@ -45,6 +45,10 @@ def evaluate_entry_decision(bot, window, candle_state):
     filtered_vision = dict(decision.get("filtered_vision", {}) or {})
     raw_vision = dict(decision.get("vision", {}) or {})
     state_signature = dict(decision.get("state_signature", {}) or {})
+    perception_state = dict(decision.get("perception_state", {}) or {})
+    felt_state = dict(decision.get("felt_state", {}) or {})
+    thought_state = dict(decision.get("thought_state", {}) or {})
+    meta_regulation_state = dict(decision.get("meta_regulation_state", {}) or {})
     expectation_state = dict(decision.get("expectation_state", {}) or {})
 
     if DEBUG:
@@ -102,9 +106,15 @@ def evaluate_entry_decision(bot, window, candle_state):
         "filtered_vision": filtered_vision,
         "focus": focus,
         "world_state": dict(decision.get("world_state", {}) or {}),
+        "structure_perception_state": dict(decision.get("structure_perception_state", {}) or {}),
         "outer_visual_perception_state": dict(decision.get("outer_visual_perception_state", {}) or {}),
         "inner_field_perception_state": dict(decision.get("inner_field_perception_state", {}) or {}),
         "processing_state": dict(decision.get("processing_state", {}) or {}),
+        "perception_state": perception_state,
+        "felt_state": felt_state,
+        "thought_state": thought_state,
+        "meta_regulation_state": meta_regulation_state,
+        "expectation_state": expectation_state,
         "state_signature": state_signature,
         "entry_expectation": float(expectation_state.get("entry_expectation", 0.0) or 0.0),
         "target_expectation": float(expectation_state.get("target_expectation", 0.0) or 0.0),

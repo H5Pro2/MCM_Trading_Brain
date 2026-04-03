@@ -30,12 +30,14 @@ from config import Config
 # ─────────────────────────────────────────────
 STATS_PATH = "debug/trade_stats.json"
 EQUITY_PATH = "debug/trade_equity.csv"
-CMAP = 'magma' 
+MEMORY_STATE_PATH = str(getattr(Config, "MCM_MEMORY_STATE_PATH", "bot_memory/memory_state.json") or "bot_memory/memory_state.json")
+CMAP = 'plasma' 
+heatmap_alpha = 0.18
 # coolwarm, seismic, RdBu, RdYlBu, RdYlGn, Spectral, PiYG, PRGn, BrBG, PuOr, RdGy
 # viridis, plasma, inferno, magma, cividis, turbo
 # ─────────────────────────────────────────────
 if Config.MODE == "LIVE":
-    WORKSPACE_PATH = "data/workspace.csv"
+    WORKSPACE_PATH = str(getattr(Config, "CSV_OHLCV_PATH", "data/workspace.csv") or "data/workspace.csv")
 else:
     WORKSPACE_PATH = Config.BACKTEST_FILEPATH
 
@@ -135,23 +137,329 @@ class TradeStatsGUI:
     # ─────────────────────────────────────────────
     # RL Heatmap: NUR DATEN (Matrix) – KEIN imshow / KEIN remove / KEIN self-call
     # ─────────────────────────────────────────────
-    def _draw_rl_heatmap(self):
+    def _resolve_memory_state_path(self):
 
+        configured = str(MEMORY_STATE_PATH or "debug/memory_state.json")
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        path_abs_v2 = os.path.join(base_dir, "bot_memory", "mcm_meta_vector_memory.json")
-        path_rel_v2 = os.path.join("bot_memory", "mcm_meta_vector_memory.json")
-        path_abs_legacy = os.path.join(base_dir, "bot_memory", "mcm_memory_engine.json")
-        path_rel_legacy = os.path.join("bot_memory", "mcm_memory_engine.json")
+        candidates = []
 
-        if os.path.exists(path_abs_v2):
-            path = path_abs_v2
-        elif os.path.exists(path_rel_v2):
-            path = path_rel_v2
-        elif os.path.exists(path_abs_legacy):
-            path = path_abs_legacy
+        if os.path.isabs(configured):
+            candidates.append(configured)
         else:
-            path = path_rel_legacy
+            candidates.append(os.path.join(base_dir, configured))
+            candidates.append(configured)
+
+        fallback = "debug/memory_state.json"
+        if configured != fallback:
+            candidates.append(os.path.join(base_dir, fallback))
+            candidates.append(fallback)
+
+        seen = set()
+
+        for candidate in candidates:
+            candidate = str(candidate)
+            if candidate in seen:
+                continue
+            seen.add(candidate)
+
+            if os.path.exists(candidate):
+                return candidate
+
+        return str(candidates[0]) if candidates else str(configured)
+
+    def _heat_value(self, value, scale=1.0):
+
+        try:
+            value = float(value)
+        except Exception:
+            value = 0.0
+
+        scale = max(float(scale or 1.0), 1e-9)
+        normalized = 0.5 + (value / (2.0 * scale))
+
+        if normalized < 0.0:
+            return 0.0
+        if normalized > 1.0:
+            return 1.0
+        return float(normalized)
+
+    def _positive_heat_value(self, value, scale=1.0):
+
+        try:
+            value = float(value)
+        except Exception:
+            value = 0.0
+
+        scale = max(float(scale or 1.0), 1e-9)
+        normalized = value / scale
+
+        if normalized < 0.0:
+            return 0.0
+        if normalized > 1.0:
+            return 1.0
+        return float(normalized)
+
+    def _outcome_heat_value(self, tp=0.0, sl=0.0, cancel=0.0, timeout=0.0):
+
+        tp = float(tp or 0.0)
+        sl = float(sl or 0.0)
+        cancel = float(cancel or 0.0)
+        timeout = float(timeout or 0.0)
+
+        total = max(tp + sl + cancel + timeout, 1.0)
+        score = (tp - sl - (cancel * 0.55) - (timeout * 0.75)) / total
+        return self._heat_value(score, 1.0)
+
+    def _vector_to_lane_row(self, vector):
+
+        values = list(vector or [])
+
+        if len(values) < 26:
+            values.extend([0.0] * (26 - len(values)))
+
+        try:
+            values = [float(v) for v in values[:26]]
+        except Exception:
+            cleaned = []
+            for value in values[:26]:
+                try:
+                    cleaned.append(float(value))
+                except Exception:
+                    cleaned.append(0.0)
+            values = cleaned
+
+        world_signal = (
+            (values[0] / 2.2)
+            + values[1]
+            + (values[2] / 2.0)
+            + values[3]
+            + values[4]
+        ) / 5.0
+
+        perception_signal = (
+            values[5]
+            + values[6]
+            + values[7]
+            - abs(values[8])
+            + values[18]
+            - values[19]
+        ) / 6.0
+
+        felt_signal = (
+            values[9]
+            + values[10]
+            + values[11]
+            - values[12]
+        ) / 4.0
+
+        thought_meta_signal = (
+            values[13]
+            + values[14]
+            + values[15]
+            + values[16]
+            + values[17]
+        ) / 5.0
+
+        memory_signal = (
+            values[20]
+            - values[21]
+            + values[22]
+            + (values[23] / 12.0)
+            + (values[24] / 2.0)
+            + (values[25] / 2.0)
+        ) / 6.0
+
+        return [
+            self._heat_value(world_signal, 1.0),
+            self._heat_value(perception_signal, 1.0),
+            self._heat_value(felt_signal, 1.0),
+            self._heat_value(thought_meta_signal, 1.0),
+            self._heat_value(memory_signal, 1.0),
+        ]
+
+    def _build_summary_heat_row(self, memory):
+
+        signature_memory = dict((memory or {}).get("signature_memory", {}) or {})
+        context_clusters = dict((memory or {}).get("context_clusters", {}) or {})
+        mcm_memory = list((memory or {}).get("mcm_memory", []) or [])
+
+        attractor_map = {
+            "defense": -1.0,
+            "analysis": -0.5,
+            "neutral": 0.0,
+            "cooperate": 0.5,
+            "explore": 1.0,
+        }
+
+        action_map = {
+            "stressed": -1.0,
+            "stable": 0.0,
+            "active": 0.5,
+            "excited": 1.0,
+        }
+
+        last_attractor = attractor_map.get(str((memory or {}).get("mcm_last_attractor", "neutral") or "neutral").strip().lower(), 0.0)
+        last_action = action_map.get(str((memory or {}).get("mcm_last_action", "stable") or "stable").strip().lower(), 0.0)
+
+        return [
+            self._positive_heat_value(len(signature_memory), 24.0),
+            self._positive_heat_value(len(context_clusters), 16.0),
+            self._positive_heat_value(len(mcm_memory), 12.0),
+            self._heat_value(last_attractor, 1.0),
+            self._heat_value(last_action, 1.0),
+            self._positive_heat_value((memory or {}).get("context_cluster_seq", 0), 24.0),
+            1.0 if (memory or {}).get("last_signature_key") else 0.0,
+            1.0 if (memory or {}).get("last_context_cluster_id") else 0.0,
+        ]
+
+    def _build_context_cluster_heat_rows(self, memory):
+
+        clusters = dict((memory or {}).get("context_clusters", {}) or {})
+
+        rows = []
+
+        items = sorted(
+            clusters.values(),
+            key=lambda item: (
+                abs(float((item or {}).get("score", 0.0) or 0.0)),
+                float((item or {}).get("trust", 0.0) or 0.0),
+                int((item or {}).get("seen", 0) or 0),
+            ),
+            reverse=True,
+        )[:8]
+
+        for item in items:
+
+            lane_row = self._vector_to_lane_row((item or {}).get("center_vector", []))
+            outcome_value = self._outcome_heat_value(
+                tp=(item or {}).get("tp", 0),
+                sl=(item or {}).get("sl", 0),
+                cancel=(item or {}).get("cancel", 0),
+                timeout=(item or {}).get("timeout", 0),
+            )
+
+            rows.append(
+                lane_row + [
+                    self._heat_value((item or {}).get("score", 0.0), 12.0),
+                    self._positive_heat_value((item or {}).get("trust", 0.0), 1.0),
+                    outcome_value,
+                ]
+            )
+
+        return rows
+
+    def _build_signature_heat_rows(self, memory):
+
+        signature_memory = dict((memory or {}).get("signature_memory", {}) or {})
+
+        rows = []
+
+        items = sorted(
+            signature_memory.values(),
+            key=lambda item: (
+                abs(float((item or {}).get("score", 0.0) or 0.0)),
+                int((item or {}).get("seen", 0) or 0),
+                -int((item or {}).get("age", 0) or 0),
+            ),
+            reverse=True,
+        )[:8]
+
+        for item in items:
+
+            lane_row = self._vector_to_lane_row((item or {}).get("signature_vector", []))
+            outcome_value = self._outcome_heat_value(
+                tp=(item or {}).get("tp", 0),
+                sl=(item or {}).get("sl", 0),
+                cancel=(item or {}).get("cancel", 0),
+                timeout=(item or {}).get("timeout", 0),
+            )
+
+            rows.append(
+                lane_row + [
+                    self._heat_value((item or {}).get("score", 0.0), 6.0),
+                    self._positive_heat_value((item or {}).get("seen", 0), 12.0),
+                    outcome_value,
+                ]
+            )
+
+        return rows
+
+    def _build_mcm_memory_heat_rows(self, memory):
+
+        memory_items = list((memory or {}).get("mcm_memory", []) or [])
+
+        rows = []
+
+        items = sorted(
+            memory_items,
+            key=lambda item: int((item or {}).get("strength", 0) or 0),
+            reverse=True,
+        )[:8]
+
+        for item in items:
+
+            center = float((item or {}).get("center", 0.0) or 0.0)
+            strength = float((item or {}).get("strength", 0) or 0.0)
+
+            rows.append([
+                self._heat_value(center, 2.2),
+                0.50,
+                0.50,
+                0.50,
+                self._heat_value(center, 2.2),
+                self._heat_value(center * max(1.0, strength / 6.0), 4.0),
+                self._positive_heat_value(strength, 12.0),
+                self._heat_value(center, 2.2),
+            ])
+
+        return rows
+
+    def _ensure_heatmap_artist(self, matrix, alpha):
+
+        if matrix is None:
+            return
+
+        if self.rl_heatmap is None:
+            self.rl_heatmap = self.eq_ax.imshow(
+                matrix,
+                cmap=CMAP,
+                alpha=alpha,
+                aspect="auto",
+                origin="lower",
+                extent=(0, 1, 0, 1),
+                transform=self.eq_ax.transAxes,
+                interpolation="bicubic",
+                zorder=0
+            )
+        else:
+            self.rl_heatmap.set_data(matrix)
+            self.rl_heatmap.set_alpha(alpha)
+
+        self.rl_heatmap.set_clim(0.0, 1.0)
+
+        if self.cbar is None:
+            fig = self.eq_ax.figure
+            self.cbar = fig.colorbar(
+                self.rl_heatmap,
+                ax=self.eq_ax,
+                location="right",
+                fraction=0.03,
+                pad=0.02
+            )
+
+            self.cbar.ax.yaxis.set_tick_params(color=FG)
+            self.cbar.outline.set_edgecolor(FG_DIM)
+            self.cbar.ax.set_facecolor(BG)
+
+            for label in self.cbar.ax.get_yticklabels():
+                label.set_color(FG)
+
+        self.cbar.set_label("Memory State", color=FG)
+
+    def _draw_rl_heatmap(self):
+
+        path = self._resolve_memory_state_path()
 
         if not os.path.exists(path):
             return None
@@ -162,65 +470,31 @@ class TradeStatsGUI:
         except Exception:
             return None
 
-        nodes = memory.get("regime_nodes")
-
-        if not nodes:
-            return None
-
-        values = []
-
-        for node in nodes:
-
-            stats = node.get("side_stats", {})
-
-            long_stats = stats.get("LONG", {})
-            short_stats = stats.get("SHORT", {})
-
-            tp_long = float(long_stats.get("tp", 0) or 0)
-            sl_long = float(long_stats.get("sl", 0) or 0)
-
-            tp_short = float(short_stats.get("tp", 0) or 0)
-            sl_short = float(short_stats.get("sl", 0) or 0)
-
-            tp = tp_long + tp_short
-            sl = sl_long + sl_short
-
-            rr_sum_long = float(long_stats.get("rr_sum", 0.0) or 0.0)
-            rr_sum_short = float(short_stats.get("rr_sum", 0.0) or 0.0)
-
-            rr_count_long = float(long_stats.get("rr_count", 0) or 0)
-            rr_count_short = float(short_stats.get("rr_count", 0) or 0)
-
-            rr_sum = rr_sum_long + rr_sum_short
-            rr_count = rr_count_long + rr_count_short
-
-            if rr_count > 0:
-                avg_rr = rr_sum / rr_count
-            else:
-                avg_rr = 1.0
-
-            score = (tp * avg_rr) - sl
-
-            values.append(score)
-
-        # --------
-        if len(values) < 4:
-            return None
-
-        size = int(len(values) ** 0.5)
-
-        if size < 2:
-            return None
-
-        values = values[: size * size]
+        summary_row = self._build_summary_heat_row(memory)
+        context_rows = self._build_context_cluster_heat_rows(memory)
+        signature_rows = self._build_signature_heat_rows(memory)
+        mcm_rows = self._build_mcm_memory_heat_rows(memory)
 
         matrix = []
 
-        for i in range(size):
+        if summary_row:
+            matrix.append(summary_row)
 
-            row = values[i * size:(i + 1) * size]
+        if context_rows:
+            matrix.extend(context_rows)
 
-            matrix.append(row)
+        if signature_rows:
+            if matrix:
+                matrix.append([0.10] * len(summary_row))
+            matrix.extend(signature_rows)
+
+        if mcm_rows:
+            if matrix:
+                matrix.append([0.18] * len(summary_row))
+            matrix.extend(mcm_rows)
+
+        if not matrix:
+            return None
 
         return matrix
 
@@ -311,10 +585,17 @@ class TradeStatsGUI:
             justify="center"
         ).grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
-        for i, f in enumerate(
-            ["TRADES", "TP_COUNT", "SL_COUNT", "WINRATE"],
-            start=1,
-        ):
+        left_fields = [
+            "TRADES",
+            "TP_COUNT",
+            "SL_COUNT",
+            "WINRATE",
+            "EXPECTANCY",
+            "PROFIT_FACTOR",
+            "MAX_DD_PCT",
+        ]
+
+        for i, f in enumerate(left_fields, start=1):
             self._field(left, i, f)
 
         # RIGHT BLOCK
@@ -325,19 +606,25 @@ class TradeStatsGUI:
 
         ttk.Label(
             right,
-            text="PNL",
+            text="PNL / KPI",
             style="Title.TLabel",
             anchor="center",
             justify="center"
         ).grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
-        row_index = 1
+        right_fields = [
+            "PNL_NETTO",
+            "PNL_TP",
+            "PNL_SL",
+            "ATTEMPT_DENSITY",
+            "CONTEXT_QUALITY",
+            "OVERTRADE_PRESSURE",
+            "ZONE_SHARE",
+            "Time_Range",
+        ]
 
-        for f in ["PNL_NETTO", "PNL_TP", "PNL_SL"]:
-            self._field(right, row_index, f)
-            row_index += 1
-
-        self._field(right, row_index, "Time_Range")
+        for row_index, field_name in enumerate(right_fields, start=1):
+            self._field(right, row_index, field_name)
 
     # ─────────────────────────────────────────────
     # EQUITY RESET (bei Bot-Neustart / CSV Reset)
@@ -418,32 +705,12 @@ class TradeStatsGUI:
         matrix = self._draw_rl_heatmap()
 
         if matrix is not None:
-            self.rl_heatmap = self.eq_ax.imshow(
-                matrix,
-                cmap=CMAP,
-                alpha=0.50,
-                aspect="auto",
-                origin="lower",
-                extent=(0, 1, 0, 1),
-                transform=self.eq_ax.transAxes,
-                zorder=0
-            )
+            self._ensure_heatmap_artist(matrix, alpha=heatmap_alpha)
 
-            self.cbar = fig.colorbar(
-                self.rl_heatmap,
-                ax=self.eq_ax,
-                location="right",   # ← hier geändert
-                fraction=0.03,
-                pad=0.02
-            )
-
-            self.cbar.set_label("RL Score", color=FG)
-            self.cbar.ax.yaxis.set_tick_params(color=FG)
-            self.cbar.outline.set_edgecolor(FG_DIM)
-            self.cbar.ax.set_facecolor(BG)
-
-            for label in self.cbar.ax.get_yticklabels():
-                label.set_color(FG)
+            try:
+                self._rl_last_mtime = os.path.getmtime(self._resolve_memory_state_path())
+            except Exception:
+                self._rl_last_mtime = 0.0
 
         self.line_total, = self.eq_ax.plot([], [], label="PNL_NETTO", color=green)
         self.line_win, = self.eq_ax.plot([], [], label="PNL_TP", color=orange)
@@ -509,24 +776,41 @@ class TradeStatsGUI:
     def _update_loop(self):
         stats = self._read_stats()
 
-        trades = stats.get("trades", 0)
-        tp = stats.get("tp", 0)
-        sl = stats.get("sl", 0)
+        trades = int(stats.get("trades", 0) or 0)
+        tp = int(stats.get("tp", 0) or 0)
+        sl = int(stats.get("sl", 0) or 0)
 
-        pnl_netto = stats.get("pnl_netto", 0.0)
-        pnl_tp = stats.get("pnl_tp", 0.0)
-        pnl_sl = stats.get("pnl_sl", 0.0)
+        pnl_netto = float(stats.get("pnl_netto", 0.0) or 0.0)
+        pnl_tp = float(stats.get("pnl_tp", 0.0) or 0.0)
+        pnl_sl = float(stats.get("pnl_sl", 0.0) or 0.0)
 
-        winrate = (tp / trades * 100.0) if trades > 0 else 0.0
+        kpi_summary = dict(stats.get("kpi_summary", {}) or {})
+        proof = dict(kpi_summary.get("proof", {}) or {})
+
+        winrate = float(proof.get("winrate", 0.0) or 0.0) * 100.0
+        expectancy = float(proof.get("expectancy", 0.0) or 0.0)
+        profit_factor = float(proof.get("profit_factor", 0.0) or 0.0)
+        attempt_density = float(proof.get("attempt_density", 0.0) or 0.0)
+        context_quality = float(proof.get("context_quality", 0.0) or 0.0)
+        overtrade_pressure = float(proof.get("overtrade_pressure", 0.0) or 0.0)
+        zone_share = float(proof.get("attempt_zone_share", 0.0) or 0.0)
+        max_dd_pct = float(proof.get("max_drawdown_pct", 0.0) or 0.0) * 100.0
 
         self.vars["TRADES"][0].set(trades)
         self.vars["TP_COUNT"][0].set(tp)
         self.vars["SL_COUNT"][0].set(sl)
         self.vars["WINRATE"][0].set(f"{winrate:.2f} %")
+        self.vars["EXPECTANCY"][0].set(f"{expectancy:.4f}")
+        self.vars["PROFIT_FACTOR"][0].set(f"{profit_factor:.3f}")
+        self.vars["MAX_DD_PCT"][0].set(f"{max_dd_pct:.2f} %")
 
         self.vars["PNL_NETTO"][0].set(f"{pnl_netto:.4f}")
         self.vars["PNL_TP"][0].set(f"{pnl_tp:.4f}")
         self.vars["PNL_SL"][0].set(f"{pnl_sl:.4f}")
+        self.vars["ATTEMPT_DENSITY"][0].set(f"{attempt_density:.3f}")
+        self.vars["CONTEXT_QUALITY"][0].set(f"{context_quality:.3f}")
+        self.vars["OVERTRADE_PRESSURE"][0].set(f"{overtrade_pressure:.3f}")
+        self.vars["ZONE_SHARE"][0].set(f"{zone_share * 100.0:.2f} %")
 
         ws_range = self.print_Time_Range(WORKSPACE_PATH)
         self.vars["Time_Range"][0].set(ws_range)
@@ -583,20 +867,7 @@ class TradeStatsGUI:
         # --------------------------------------------------
         # RL HEATMAP LIVE UPDATE (mit mtime-Prüfung)
         # --------------------------------------------------
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        path_abs_v2 = os.path.join(base_dir, "bot_memory", "mcm_meta_vector_memory.json")
-        path_rel_v2 = os.path.join("bot_memory", "mcm_meta_vector_memory.json")
-        path_abs_legacy = os.path.join(base_dir, "bot_memory", "mcm_memory_engine.json")
-        path_rel_legacy = os.path.join("bot_memory", "mcm_memory_engine.json")
-
-        if os.path.exists(path_abs_v2):
-            path = path_abs_v2
-        elif os.path.exists(path_rel_v2):
-            path = path_rel_v2
-        elif os.path.exists(path_abs_legacy):
-            path = path_abs_legacy
-        else:
-            path = path_rel_legacy
+        path = self._resolve_memory_state_path()
 
         if os.path.exists(path):
             try:
@@ -609,21 +880,7 @@ class TradeStatsGUI:
                 matrix = self._draw_rl_heatmap()
 
                 if matrix is not None:
-
-                    if self.rl_heatmap is None:
-                        self.rl_heatmap = self.eq_ax.imshow(
-                            matrix,
-                            cmap=CMAP,
-                            alpha=0.18,
-                            aspect="auto",
-                            origin="lower",
-                            extent=(0, 1, 0, 1),
-                            transform=self.eq_ax.transAxes,
-                            zorder=0
-                        )
-                    else:
-                        self.rl_heatmap.set_data(matrix)
-
+                    self._ensure_heatmap_artist(matrix, alpha=0.18)
                     self._rl_last_mtime = mtime
 
         self.line_total.set_data(self._eq_trades, self._eq_pnl_netto)
