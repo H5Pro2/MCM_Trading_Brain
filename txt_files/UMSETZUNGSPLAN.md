@@ -1,24 +1,48 @@
-# Umsetzungsplan (offen) – permanenter Innenprozess, Episodenlernen, Erfahrungsraum
+# Umsetzungsplan (offen) – Ebenen-Trennung, MCM-Zustandsraum, Selbstregulation
 
 Dieses Dokument enthält **nur noch offene Punkte**.
-Bereits umgesetzte Basisbausteine wurden aus dem Plan entfernt.
-
-Nicht mehr als offene Phase geführt:
-- Soft-Perception für Struktur statt hartem Struktur-Gate
-- getrennte Zustandsketten für Wahrnehmung / Verarbeitung / Gefühl / Denken / Meta-Regulation / Erwartung
-- Attempt-/Outcome-Logging mit KPI-Grundlage
-- Outcome-getriebener Signature-/Context-Commit statt Entry-Lernschreibpunkt
-- persistente Sichtspeicher für Memory-State und Runtime-Zustände
+Bereits umgesetzte Basisbausteine wurden entfernt.
 
 ---
 
 WICHTIG !
 
 # --------------------------------------------------
-# Thread 1
+# Leitbild
 # --------------------------------------------------
 
-## Chart-Ablauf / Informationen
+## Ziel der offenen Erweiterung
+
+Ziel ist ein System, das einem menschlichen Trader strukturell näher kommt.
+
+Es gibt dabei drei klar getrennte Ebenen:
+
+- **Ebene 1** = äußeres Wahrnehmen
+- **Ebene 2** = inneres Wahrnehmen / Denken / Handeln
+- **Ebene 3** = Entwicklung aus Erfahrung / Selbstregulation
+
+Handlung ist dabei **nicht** der Mittelpunkt.
+Handlung ist nur ein möglicher Ausdruck des aktuellen Innenzustands.
+
+Der Bot soll nicht lernen, permanent weiter zu versuchen.
+Der Bot soll lernen, **handlungsfähig zu bleiben**.
+
+Das zentrale Ziel ist daher:
+
+- regulatorisches Gleichgewicht halten
+- Überlebensfähigkeit im Markt erhalten
+- Profitabilität als Existenzgrundlage abbilden
+- Beobachtung / Pause / Sammlung als wertvolle Reaktion lernen
+- Druck nach Fehlphasen abbauen statt weiter zu eskalieren
+- gezielter und tragfähiger mit Erfahrungswerten und Umgebung interagieren
+
+---
+
+# --------------------------------------------------
+# Ebene 1
+# --------------------------------------------------
+
+## Äußeres Wahrnehmen
 
 ### Aufgabe
 
@@ -32,7 +56,8 @@ WICHTIG !
   - HH
   - LL
   - Struktur
-- nur Stimulus-/Info-Paket erzeugen
+- neutrales Stimulus-/Informationspaket erzeugen
+- niemals denken
 - niemals entscheiden
 - niemals Memory ändern
 - niemals Order / Pending / Position anfassen
@@ -44,7 +69,7 @@ WICHTIG !
 - `mcm_core_engine.py` Spannungs-/Chartinfos wie Energy / Coherence / Asymmetry
 - `strukture_engine.py` reine Struktur-Wahrnehmung ohne Handelsfreigabe
 
-### Output von Thread 1
+### Output von Ebene 1
 
 Nur ein neutrales Paket, zum Beispiel:
 
@@ -54,18 +79,21 @@ Nur ein neutrales Paket, zum Beispiel:
 - `tension_state`
 - `structure_perception_state`
 
+---
+
 # --------------------------------------------------
-# Thread 2
+# Ebene 2
 # --------------------------------------------------
 
-## Wahrnehmung / Denken / Memory / Handeln
+## Inneres Wahrnehmen / Denken / Handeln
 
 ### Aufgabe
 
-- Stimulus von Thread 1 konsumieren
+- Stimulus von Ebene 1 konsumieren
 - Runtime permanent fortschreiben
 - Wahrnehmung / Verarbeitung / Gefühl / Denken / Meta / Erwartung bilden
-- Experience / Episode / Memory pflegen
+- MCM-Raum fortschreiben
+- Zustandsbild des MCM-Raums sichtbar halten
 - Entscheidungstendenz bilden:
   - `act`
   - `observe`
@@ -81,19 +109,50 @@ Nur ein neutrales Paket, zum Beispiel:
 
 - `MCMBrainRuntime` und Runtime-Fortschreibung in `MCM_Brain_Modell.py`
 - Entscheidungsbahn `build_runtime_decision_tendency(...)` / `decide_mcm_brain_entry(...)`
-- Episoden-/Erfahrungsraum / Review / Memory in `MCM_Brain_Modell.py` und `memory_state.py`
 - Handlungsbahn in `bot.py`:
   - `_handle_active_position(...)`
   - `_handle_pending_entry(...)`
   - `_handle_entry_attempt(...)`
 
+---
+
+# --------------------------------------------------
+# Ebene 3
+# --------------------------------------------------
+
+## Entwicklung aus Erfahrung / Selbstregulation
+
+### Aufgabe
+
+- Experience / Episode / Review / Memory pflegen
+- Nicht-Handlung als echte Erfahrung speichern
+- Fehlphasen als regulatorische Information verwerten
+- Beobachtung / Sammlung / Pause als entlastende Erfahrung bewerten
+- tragfähige Handlung von hektischer Handlung unterscheiden lernen
+- langfristig verändern, wie Ebene 2 künftig wahrnimmt, verarbeitet und reguliert
+
+### Gehört dahin
+
+- Episoden-/Erfahrungsraum / Review / Memory in `MCM_Brain_Modell.py`
+- Persistenz und Zustandsspeicherung in `memory_state.py`
+- KPI-/Nachweis-Pfad in `trade_stats.py`
+
+---
+
 # --------------------------------------------------
 # Harte Regel der Trennung
 # --------------------------------------------------
 
-## Harte Regel der Trennung
+## Grundregeln
 
-### Thread 1 schreibt nie
+- Ebene 1 liest Markt und erzeugt nur Wahrnehmungspakete.
+- Ebene 2 konsumiert diese Pakete und bildet daraus Innenzustände.
+- Ebene 3 bewertet Erfahrung und verändert langfristig die Innenbahn.
+- Handlung darf nur noch aus Ebene 2 kommen.
+- Ebene 1 kennt keine Orderlogik.
+- Ebene 1 schreibt niemals Innenzustände.
+
+### Ebene 1 schreibt nie
 
 - `mcm_runtime_snapshot`
 - `mcm_runtime_decision_state`
@@ -104,97 +163,209 @@ Nur ein neutrales Paket, zum Beispiel:
 - `position`
 - `pending_entry`
 
-### Grundregeln
+### Ebene 2 liest Chartdaten nur als Input
 
-- Thread 2 liest Chartdaten nur als Input, erzeugt aber selbst keine OHLCV-Beschaffung.
-- Handlung darf nur noch aus Thread 2 kommen.
-- Thread 1 kennt keine Orderlogik.
+- keine eigene OHLCV-Beschaffung
+- keine Vermischung mit Feed-Logik
+- keine implizite Rückverlagerung von Handlungslogik in Ebene 1
+
+---
 
 # --------------------------------------------------
 # Was dafür konkret weg muss
 # --------------------------------------------------
 
-## Was dafür konkret weg muss
+## Noch offene strukturelle Altmischung
 
-- `runner.py` darf nicht mehr direkt Logik + Brain + Handlung in einem Ablauf treiben. Es darf nur Marktpakete liefern.
-- `bot._process_window(...)` ist in der jetzigen Form noch zu breit, weil dort Runtime und Handlung zusammen laufen.
-- `step_mcm_runtime_idle(...)` darf nicht mehr vom Chartpfad als Ersatz für den Innenprozess benutzt werden, sondern muss in den permanenten Loop von Thread 2 wandern.
-
-# --------------------------------------------------
-# Zielbild
-# --------------------------------------------------
-
-## Zielbild
-
-### Thread 1
-
-- fetch/read market
-- normalize
-- build chart-info packet
-- publish to thread 2
-
-### Thread 2
-
-- consume packet
-- runtime tick
-- perception/thinking/memory
-- decision tendency
-- handle pending/entry/position/exit
-
---------------------------------------------------
-
-## Leitbild der offenen Erweiterung
-
-Ziel ist nicht mehr nur ein sequentieller Trade-Bot mit Lernbausteinen.
-Ziel ist ein **dauerhaft laufender Innenprozess**.
-
-Außenwelt:
-- liefert Reize
-- liefert keine direkte Handelsentscheidung
-
-Innenwelt:
-- läuft kontinuierlich weiter
-- verarbeitet Wahrnehmung auch ohne neue Order
-- bildet aus Episoden einen fortlaufenden Erfahrungsraum
-
-Handlung:
-- ist nur ein möglicher Output des aktuellen Innenzustands
-- bleibt technisch getrennt
+- `runner.py` darf nicht mehr direkt Logik + Brain + Handlung in einem Ablauf treiben.
+- `bot._process_window(...)` darf nicht dauerhaft die breite Mischstelle bleiben.
+- `step_mcm_runtime_idle(...)` darf nicht vom Chartpfad als Ersatz für den Innenprozess benutzt werden, sondern muss vollständig in den permanenten Innenloop von Ebene 2 gehören.
 
 ---
 
-## Phase A – Laufzeitmodell vom sequentiellen Ablauf zum permanenten Gehirnprozess
+# --------------------------------------------------
+# MCM-Basis des Zustandsraums
+# --------------------------------------------------
+
+## Fachliche Grundlage
+
+Der Zustandsraum bleibt auf der **Mental Core Matrix** aufgebaut.
+
+Neue Zustandsgrößen dürfen **nicht** als fremde starre Zusatzlogik neben das System gesetzt werden.
+Sie müssen aus dem MCM-Raum selbst abgeleitet werden.
+
+Das bedeutet:
+
+- Zentrum
+- Abweichung
+- Varianz
+- Rückführung
+
+bleiben die Grundstruktur.
+
+Darauf aufbauend wird der Raum lesbarer gemacht.
 
 ### Ziel
-- Das Gehirn darf nicht nur beim Candle-Schritt „aufgerufen“ werden.
-- Denken und innere Fortschreibung sollen als eigener permanenter Prozess laufen.
 
-### Offene Umsetzungspunkte
-- Eigenen `MCMBrainRuntime` als dauerhafte Laufzeitschicht einführen.
+Nicht MCM ersetzen,
+sondern den **laufenden MCM-Raum explizit als Zustandswiedergabe sichtbar machen**.
+
+---
+
+# --------------------------------------------------
+# Phase A – MCM-Zustandswiedergabe des gesamten Raums
+# --------------------------------------------------
+
+## Ziel
+
+Der Nettozustand des MCM-Feldes muss als eigene Größe sichtbar und nutzbar werden.
+
+## Offene Umsetzungspunkte
+
+- Feldverdichtung / Felddichte als eigene Ableitung aus dem MCM-Raum einführen.
+- Nicht nur lokale Teilsignale, sondern Gesamtzustand des Feldes zusammenführen.
+- Zustandsachsen aus dem MCM-Raum ableiten, z. B.:
+  - `field_density`
+  - `field_stability`
+  - `regulatory_load`
+  - `action_capacity`
+  - `recovery_need`
+- Nettozustand des MCM-Raums als explizite Zustandswiedergabe in Snapshots aufnehmen.
+- Snapshot-/Debug-/GUI-Ausgabe für diese Größen ergänzen.
+- Sicherstellen, dass diese Größen **aus dem MCM-Raum** kommen und nicht aus harten Handelsregeln.
+
+## Ergebnis
+
+Der Bot besitzt eine explizite Lesbarkeit seines gesamten Innenraums,
+nicht nur einzelner Teilwerte.
+
+---
+
+# --------------------------------------------------
+# Phase B – Permanenter Innenprozess
+# --------------------------------------------------
+
+## Ziel
+
+Das Gehirn darf nicht nur beim Candle-Schritt aufgerufen werden.
+Denken und innere Fortschreibung sollen als eigener permanenter Prozess laufen.
+
+## Offene Umsetzungspunkte
+
+- `MCMBrainRuntime` als dauerhafte Laufzeitschicht weiter vervollständigen.
 - Reizübergabe entkoppeln:
   - Marktdatenpfad erzeugt nur Stimulus-/Perception-Impulse
-  - Gehirnprozess konsumiert Impulse unabhängig vom Orderpfad
-- Zustandsfortschreibung in kleinen Ticks statt nur einmal pro `bot._process_window(...)`
-- Aktuellen Brain-Snapshot separat bereitstellen:
+  - Innenprozess konsumiert Impulse unabhängig vom Orderpfad
+- Zustandsfortschreibung in kleinen Ticks statt nur einmal pro Marktfenster
+- aktuellen Brain-Snapshot separat bereitstellen:
   - lesbar für Entscheidungsbahn
   - lesbar für GUI/Debug
   - schreibgeschützt außerhalb der Brain-Runtime
 - Backtest und Live auf dasselbe Laufzeitmodell bringen:
   - Backtest = deterministische Tick-Fortschreibung
-  - Live = permanenter Loop + technische Monitor-Threads
+  - Live = permanenter Innenloop + technische Monitor-Threads
 
-### Ergebnis
-- Außenreiz und innere Verarbeitung sind zeitlich entkoppelt.
-- Das Gehirn läuft kontinuierlich, nicht nur als Funktionsaufruf im Candle-Loop.
+## Ergebnis
+
+Außenreiz und innere Verarbeitung sind zeitlich entkoppelt.
+Das Gehirn läuft kontinuierlich, nicht nur als Funktionsaufruf im Candle-Loop.
 
 ---
 
-## Phase B – Harte Bahntrennung in der Runtime vervollständigen
+# --------------------------------------------------
+# Phase C – Selbstregulation als eigentliches Lernziel
+# --------------------------------------------------
 
-### Ziel
-- Die bereits vorhandene Zustandskette soll auch **architektonisch** getrennt werden.
+## Ziel
 
-### Offene Umsetzungspunkte
+Lernen bedeutet nicht nur, Outcomes zu speichern.
+Lernen bedeutet, den eigenen inneren Zustand regulatorisch tragfähig zu halten.
+
+## Offene Umsetzungspunkte
+
+- Selbstregulation als zentrale Lernrichtung im Erfahrungsraum verankern.
+- Fehlphasen nicht nur als Trade-Misserfolg, sondern als Überlastungsinformation behandeln.
+- Beobachtung / Sammlung / Pause als entlastende und sinnvolle Reaktion bewerten.
+- Handlung nicht nur nach Erfolgsquote, sondern nach regulatorischer Tragfähigkeit bewerten.
+- Bewertung ergänzen für:
+  - hektische Handlung
+  - tragfähige Handlung
+  - korrektes Nicht-Handeln
+  - regulatorische Erholung
+- Outcome-Decomposition und Review stärker an Selbstregulation koppeln.
+
+## Ergebnis
+
+Der Bot lernt nicht nur, was TP oder SL war,
+sondern ob sein innerer Zustand tragfähig oder überlastet war.
+
+---
+
+# --------------------------------------------------
+# Phase D – Überlebensdruck / Profitabilität als innere Zielspannung
+# --------------------------------------------------
+
+## Ziel
+
+Profitabilität wird nicht als starre Regel,
+sondern als Existenzgrundlage des Systems abgebildet.
+
+## Offene Umsetzungspunkte
+
+- PnL / Drawdown / Verlustserie als Innenreiz an den MCM-Raum koppeln.
+- `survival_pressure` oder äquivalente Größe als laufenden Zustand ergänzen.
+- Verluste als Belastung der Existenzbasis interpretieren.
+- Gewonnene Stabilität und positive Outcomes als Entlastung interpretieren.
+- Handlungsdrang bei hoher Existenzbelastung natürlicherweise dämpfen.
+- Erholung und wiedergewonnene Stabilität natürlicherweise zu neuer Handlungsfähigkeit führen.
+- Keine harte Regel wie `wenn pnl < x dann stop`.
+- Stattdessen: Überlebensdruck als systemischer Reiz,
+der Beobachtung, Sammlung und Schutzbreite attraktiver macht.
+
+## Ergebnis
+
+Profitabilität wird zur inneren Zielspannung des Systems,
+nicht zu einem starren externen Schalter.
+
+---
+
+# --------------------------------------------------
+# Phase E – Beobachtung / Pause / Sammlung als echte Zustandsbahn
+# --------------------------------------------------
+
+## Ziel
+
+Wird der Druck zu hoch,
+soll der Bot nicht einfach weiter probieren,
+sondern ausharren, beobachten, verstehen und sich wieder sammeln.
+
+## Offene Umsetzungspunkte
+
+- Pause nicht nur als technisches Nach-SL-Verhalten,
+  sondern als allgemeine regulatorische Zustandsbahn ausbauen.
+- Beobachtung als aktiv wertvolle Reaktion modellieren.
+- Druckabbau über Zeit, Ruhe und stabile Wahrnehmung fortschreiben.
+- Wiederanlaufen von Handlung an zurückgewonnene Handlungsfähigkeit koppeln.
+- `observe`, `hold` und `replan` als echte Regenerations- und Reifungszustände vertiefen.
+- Review bewerten lassen, ob Nicht-Handlung in der Situation besser war als Aktion.
+
+## Ergebnis
+
+Nicht-Handlung wird kein leerer Zustand,
+sondern ein echter Teil der Reifung und Selbstregulation.
+
+---
+
+# --------------------------------------------------
+# Phase F – Harte Bahntrennung in der Runtime vervollständigen
+# --------------------------------------------------
+
+## Ziel
+
+Die vorhandene Zustandskette soll auch architektonisch vollständig getrennt werden.
+
+## Offene Umsetzungspunkte
+
 - Wahrnehmungsbahn festziehen:
   - nur Markt-/Struktur-/Kontextimpulse
   - keine Orderfreigabe
@@ -212,217 +383,125 @@ Handlung:
   - läuft während `pending_entry` und `position`
   - blockiert nicht durch Exit-/Ordertechnik
 
-### Ergebnis
-- Wahrnehmung, Innenverarbeitung, Entscheidung und technische Handlung sind nicht mehr ineinander verschachtelt.
+## Ergebnis
+
+Wahrnehmung, Innenverarbeitung, Entscheidung und technische Handlung sind nicht mehr ineinander verschachtelt.
 
 ---
 
-## Phase C – Entscheidungsepisode als zentrales Lernobjekt einführen
+# --------------------------------------------------
+# Phase G – Entscheidungsepisode als zentrales Lernobjekt
+# --------------------------------------------------
 
-### Ziel
-- Nicht Signatur oder Outcome allein, sondern die **Episode** wird zur Haupteinheit des Lernens.
+## Ziel
 
-### Offene Umsetzungspunkte
-- Neues Episodenobjekt einführen, z. B. `decision_episode`.
-- Pro Episode erfassen:
-  - Außenkontext
-  - `world_state`
-  - `perception_state`
-  - `processing_state`
-  - `felt_state`
-  - `thought_state`
-  - `meta_regulation_state`
-  - `expectation_state`
-  - `state_signature`
+Nicht der einzelne Trade allein,
+sondern die gesamte Entscheidungsepisode soll das zentrale Lernobjekt sein.
+
+## Offene Umsetzungspunkte
+
+- Episode klar als vollständigen Verlauf behandeln:
+  - äußerer Reiz
+  - Innenzustand
   - Entscheidungstendenz
-  - freigegebene / blockierte / unterlassene Handlung
+  - Handlung oder Nicht-Handlung
   - In-Trade-Verlauf
-  - spätere Wirkung / Bewertung
-- Episode-Lifecycle definieren:
-  - `perceived`
-  - `internally_processed`
-  - `tendency_formed`
-  - `submitted` / `blocked` / `observed_only`
-  - `filled` / `timeout` / `cancelled`
-  - `in_trade_updates`
-  - `resolved`
-  - `reviewed`
-- Sichtbaren Nachweisteil und internen Lernteil trennen.
+  - Outcome
+  - Review
+- Nicht-Handlung vollständig in Episodenlogik aufnehmen.
+- Bewertungsachsen ausbauen für:
+  - regulatorische Tragfähigkeit
+  - Entscheidungsreife
+  - Unsicherheitsverarbeitung
+  - Beobachtungsqualität
+  - Korrekturqualität
+- Episoden stärker als Lernträger im Experience-Space verankern.
 
-### Ergebnis
-- Lernen basiert auf vollständigen Entscheidungswegen statt nur auf Endereignissen.
+## Ergebnis
 
----
-
-## Phase D – Internen Erfahrungsraum zusätzlich zum sichtbaren Speicher einführen
-
-### Ziel
-- Der aktuelle persistente Speicher bleibt für Nachweis, GUI und Debug.
-- Zusätzlich braucht das System einen **internen, nicht GUI-orientierten Erfahrungsraum**.
-
-### Offene Umsetzungspunkte
-- Eigenen internen Experience-Speicher im MCM-System einführen.
-- Nicht deklarativ auf KPI-/GUI-Sicht zuschneiden.
-- Verknüpfen statt nur speichern:
-  - Episode ↔ ähnliche Episoden
-  - Episode ↔ Kontextcluster
-  - Episode ↔ Denkweise
-  - Episode ↔ Nicht-Handlung
-- Gewichte für:
-  - Tragfähigkeit einer Denkstruktur
-  - Unsicherheitsmuster
-  - Reifungsmuster
-  - Fehlwiederholungen
-  - Beobachtungserfolg
-- Lokale Umbauten statt Voll-Neuberechnung:
-  - Drift
-  - Verstärkung
-  - Abschwächung
-  - Umlagerung
-
-### Ergebnis
-- Neben dem sichtbaren Memory-State entsteht ein echter interner Erfahrungsraum.
+Das System lernt aus ganzen inneren Entscheidungsverläufen,
+nicht nur aus TP/SL-Endpunkten.
 
 ---
 
-## Phase E – Dynamische Kontextbildung von „gespeichert“ zu „entsteht“ ausbauen
+# --------------------------------------------------
+# Phase H – In-Trade-Beobachtung und laufende Innenveränderung vertiefen
+# --------------------------------------------------
 
-### Ziel
-- Kontextcluster existieren bereits, sollen aber stärker emergent werden.
+## Ziel
 
-### Offene Umsetzungspunkte
-- Kontext nicht nur über Distanz-Match fortschreiben, sondern Differenz explizit modellieren.
-- Ähnlichkeits-/Abweichungsachsen pro Episode führen.
-- Neue Kontexte entstehen lassen aus:
-  - bekanntem Anteil
-  - abweichendem Anteil
-  - neuem Verknüpfungsmuster
-- Clusterarten ausbauen:
-  - Marktcluster
-  - Denkcluster
-  - Entscheidungscluster
-  - Unsicherheitscluster
-  - Beobachtungscluster
-  - Fehlwiederholungscluster
-  - Reifungscluster
-- Dynamiken ausbauen:
-  - driften
-  - verschmelzen
-  - sich aufspalten
-  - an Relevanz verlieren
-  - sich verdichten
+Auch während Pending und Position soll der Innenprozess weiterlaufen und lernen.
 
-### Ergebnis
-- Kontext ist nicht nur Lookup-Struktur, sondern emergente Erfahrungsgeometrie.
+## Offene Umsetzungspunkte
+
+- Pending-Phase als eigene Beobachtungs- und Bewertungsphase vertiefen.
+- Positionsphase als fortlaufende Innenbeobachtung ausbauen.
+- In-Trade-Verlauf auf Druck, Stabilität, Drift, Unsicherheit und Tragfähigkeit abbilden.
+- In-Trade-Ereignisse stärker in Review und Experience-Space einbeziehen.
+- prüfen, wie sich laufende Marktveränderungen auf inneren Zustand und spätere Reifung auswirken.
+
+## Ergebnis
+
+Der Bot bleibt auch während eines laufenden Handels ein wahrnehmendes und lernendes System.
 
 ---
 
-## Phase F – Nicht-Handlung als gleichwertige Erfahrung einbauen
+# --------------------------------------------------
+# Phase I – Messbarkeit und Nachweis der offenen Architektur ergänzen
+# --------------------------------------------------
 
-### Ziel
-- Bewusstes Nicht-Handeln darf nicht mehr nur implizit in `WAIT` oder Blockierung untergehen.
+## Ziel
 
-### Offene Umsetzungspunkte
-- Eigene Episodentypen einführen:
-  - `observed_only`
-  - `withheld`
-  - `replanned`
-  - `abandoned`
-- Pro Nicht-Handlungs-Episode speichern:
-  - warum nicht gehandelt wurde
-  - welche innere Lage dazu führte
-  - ob das spätere Nicht-Handeln korrekt war
-  - wie sich dadurch Erwartung / Druck / Reife verändert haben
-- Outcome-Review auch für Nicht-Handlung ergänzen:
-  - verpasster guter Trade
-  - vermiedener schlechter Trade
-  - korrektes Abwarten
-  - zu langes Zögern
+Die neue Architektur muss nach außen nachvollziehbar werden.
 
-### Ergebnis
-- Nicht-Handlung wird echte Erfahrung und echter Lerninput.
+## Offene Umsetzungspunkte
 
----
+- KPI-/Nachweis-Ebene für neue Zustände ergänzen:
+  - Felddichte
+  - regulatorische Last
+  - Überlebensdruck
+  - Handlungsfähigkeit
+  - Erholungsbedarf
+  - Beobachtungsanteil
+  - Pause-/Sammlungsanteil
+- GUI-/Debug-Ausgabe für diese Zustände ergänzen.
+- Teststand für neue Zustandsachsen ergänzen.
+- dedizierte Tests ergänzen für:
+  - `bot_gate_funktions.py`
+  - `mcm_core_engine.py`
+  - neue MCM-Gesamtzustandsachsen
+  - regulatorische Pausen-/Beobachtungsdynamik
 
-## Phase G – In-Trade-Lernen vor dem Exit einführen
+## Ergebnis
 
-### Ziel
-- Pending- und Positionsphase sollen innere Bewertung bereits **während** des Verlaufs erzeugen.
-
-### Offene Umsetzungspunkte
-- In-Trade-Update-Pfad ergänzen für:
-  - wachsende Bestätigung
-  - wachsende Reue
-  - Spannungsanstieg
-  - sinkende Tragfähigkeit
-  - innere Korrekturspannung
-- Während `pending_entry`:
-  - Entry-Vertrauen fortschreiben
-  - Marktverschiebung innerlich bewerten, nicht nur technisch canceln
-- Während offener Position:
-  - ursprüngliche Entscheidung laufend mit aktuellem Innenzustand vergleichen
-  - Abweichung zwischen Entscheidungsgrund und aktuellem Zustand messen
-- Vor Exit ein internes Zwischenfazit erzeugen, das später in das Episodenreview eingeht.
-
-### Ergebnis
-- Lernen beginnt nicht erst am TP/SL/Cancel, sondern schon während des laufenden Geschehens.
+Der offene Architekturfortschritt ist nicht nur konzeptionell,
+sondern auch messbar und testbar sichtbar.
 
 ---
 
-## Phase H – Entscheidungsbewertung stärker auf Denkstruktur statt nur Trade-Resultat ausrichten
+# --------------------------------------------------
+# Kompakte Zieldefinition
+# --------------------------------------------------
 
-### Ziel
-- Das System soll nicht primär TP/SL optimieren, sondern die Qualität seines Denk- und Entscheidungswegs.
+Die MCM-KI soll als System mit getrennter Außenwelt-, Innenwelt- und Entwicklungsebene aufgebaut werden.
 
-### Offene Umsetzungspunkte
-- Review-Gewichte verschieben:
-  - weniger Ergebnisfixierung
-  - mehr Bewertung von Wahrnehmungsqualität, Konflikterkennung, Reife, Korrekturbedarf
-- Episode-Review um Fragen ergänzen:
-  - war Beobachten richtiger als Handeln?
-  - wurde Unsicherheit korrekt erkannt?
-  - war die Denkstruktur tragfähig?
-  - wurde falsche Sicherheit aufgebaut?
-  - wurde Reue zu spät erkannt?
-- Neue Qualitätsfelder ergänzen:
-  - decision_path_quality
-  - uncertainty_recognition_quality
-  - observation_quality
-  - correction_timing_quality
-  - structural_bearing_quality
+Der Markt liefert nur Reize.
+Die Innenwelt verarbeitet diese Reize permanent weiter und bildet eine explizite Zustandswiedergabe des gesamten MCM-Raums.
 
-### Ergebnis
-- Der Bot bewertet seine innere Entscheidungsarchitektur, nicht nur das Handelsergebnis.
+Diese Zustandswiedergabe enthält insbesondere:
 
----
+- Feldverdichtung
+- regulatorische Last
+- Überlebensdruck
+- aktuelle Handlungsfähigkeit
+- Erholungsbedarf
 
-## Phase I – Messbarkeit der neuen Architektur ergänzen
+Lernen bedeutet, unter Druck nicht einfach weiter zu handeln,
+sondern regulatorisch tragfähig zu bleiben.
 
-### Ziel
-- Die neue Runtime und das Episodenlernen müssen separat nachweisbar werden.
+Profitabilität wird als Existenzgrundlage des Systems als innere Zielspannung geführt.
 
-### Offene Umsetzungspunkte
-- KPI-Ebene um Episodenmetriken ergänzen.
-- Neue Nachweisfelder aufbauen:
-  - Anteil Handlung / Nicht-Handlung / Beobachtung
-  - Trefferquote der Beobachtungsentscheidungen
-  - Reue-/Bestätigungsentwicklung innerhalb laufender Trades
-  - Stabilität der Denkstruktur vor Entry vs. bei Exit
-  - Reifungsentwicklung je Clusterfamilie
-  - Drift-/Merge-/Split-Ereignisse im Erfahrungsraum
-- GUI/Debug nur als Sichtfenster auf abgeleitete Kennzahlen verwenden.
-- Interner Erfahrungsraum bleibt davon getrennt.
+Beobachtung, Sammlung, Pause und korrektes Nicht-Handeln werden als echte Erfahrung und als Teil der Reifung behandelt.
 
-### Ergebnis
-- Der Umbau bleibt prüfbar, ohne den internen Lernraum auf GUI-Daten zu reduzieren.
-
----
-
-## Kompakte Zieldefinition
-
-Die MCM-KI soll als autonom laufender Innenprozess aufgebaut werden.
-Marktdaten liefern nur Wahrnehmungsimpulse.
-Das Gehirn verarbeitet diese permanent weiter, bildet dynamische Kontexte, verknüpft ähnliche und abweichende Erfahrungen, lernt aus Handlung und Nicht-Handlung und bewertet primär die eigene Denk- und Entscheidungsstruktur statt nur das Trade-Ergebnis.
-Die Handlungsbahn bleibt technisch getrennt.
-Während laufender Trades bleibt Wahrnehmung und innere Verarbeitung aktiv.
-Dadurch entsteht kein statischer Speicher von Trading-Daten, sondern ein fortlaufend umgebildeter Erfahrungsraum.
+Neue Zustandswerte entstehen nicht als fremde starre Zusatzlogik,
+sondern als explizite Lesbarkeit des laufenden Mental-Core-Matrix-Raums.
