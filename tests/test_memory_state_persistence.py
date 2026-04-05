@@ -47,12 +47,19 @@ class BotStub:
         self.thought_state = {}
         self.meta_regulation_state = {}
         self.last_outcome_decomposition = {}
+        self.mcm_runtime_snapshot = {}
+        self.mcm_runtime_decision_state = {}
+        self.mcm_runtime_market_ticks = 0
+        self.mcm_decision_episode = {}
+        self.mcm_experience_space = {}
+        self.mcm_last_observe_timestamp = None
         self.mcm_brain = None
         self.mcm_last_attractor = None
         self.mcm_last_action = None
 
 
 class MemoryStatePersistenceTests(unittest.TestCase):
+    
     def test_build_and_apply_memory_state_persists_runtime_state_chain(self):
         source = BotStub()
         source.focus_point = 0.22
@@ -83,6 +90,12 @@ class MemoryStatePersistenceTests(unittest.TestCase):
         source.thought_state = {"maturity": 0.47}
         source.meta_regulation_state = {"decision": "LONG", "allow_plan": True}
         source.last_outcome_decomposition = {"reason": "tp_hit", "plan_quality": 0.72}
+        source.mcm_runtime_snapshot = {"timestamp": 1712345678901, "decision_tendency": "act"}
+        source.mcm_runtime_decision_state = {"decision_tendency": "act", "proposed_decision": "LONG"}
+        source.mcm_runtime_market_ticks = 17
+        source.mcm_decision_episode = {"episode_id": "ep_17", "action_status": "submitted"}
+        source.mcm_experience_space = {"market_ticks": 17, "event_submitted": 1}
+        source.mcm_last_observe_timestamp = 1712345678901
 
         payload = memory_state.build_memory_state(source)
 
@@ -98,7 +111,12 @@ class MemoryStatePersistenceTests(unittest.TestCase):
         self.assertEqual(target.thought_state.get("maturity"), 0.47)
         self.assertEqual(target.meta_regulation_state.get("decision"), "LONG")
         self.assertEqual(target.last_outcome_decomposition.get("reason"), "tp_hit")
-
+        self.assertEqual(target.mcm_runtime_snapshot.get("decision_tendency"), "act")
+        self.assertEqual(target.mcm_runtime_decision_state.get("proposed_decision"), "LONG")
+        self.assertEqual(int(target.mcm_runtime_market_ticks), 17)
+        self.assertEqual(target.mcm_decision_episode.get("episode_id"), "ep_17")
+        self.assertEqual(target.mcm_experience_space.get("event_submitted"), 1)
+        self.assertEqual(target.mcm_last_observe_timestamp, 1712345678901)
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,6 +4,12 @@
 
 * `README.md` und `UMSETZUNGSPLAN.md` führen die Basis nicht mehr als offenen Altblock, sondern nur noch den offenen Erweiterungsstand.
 
+* `README.md` ist jetzt zusätzlich auf die Zielarchitektur mit **3 Ebenen** ausgerichtet:
+
+  * Ebene 1 = sehen / äußeres Wahrnehmen
+  * Ebene 2 = denken / inneres Wahrnehmen / Handeln
+  * Ebene 3 = Entwicklung aus Erfahrung / Verarbeitung / Wahrnehmung.
+
 * `MCM_Brain_Modell.py`
 
   * `register_pending_learning_context(...)` setzt Pending-Kontext.
@@ -11,6 +17,7 @@
   * `apply_outcome_stimulus(...)` ruft dieses Commit im Outcome-Pfad auf.
   * `update_experience_state(...)` verarbeitet `attempt_density`, `overtrade_pressure`, `context_quality`, `fill_ratio`, `timeout_ratio`, `blocked_ratio`.
   * `build_outcome_decomposition(...)` koppelt `attempt_density`, `overtrade_pressure`, `context_quality` bereits in die Qualitätswerte zurück.
+  * `MCMBrainRuntime` / Runtime-Snapshot / Episode / Experience-Space sind als Architekturbausteine bereits vorhanden.
 
 * `bot_gate_funktions.py`
 
@@ -30,6 +37,11 @@
   * schreibt Attempt-Details separat nach `attempt_records.jsonl`.
   * schreibt Outcome-Details separat nach `outcome_records.jsonl`.
   * baut KPI-Nachweis mit `attempt_density`, `context_quality`, `overtrade_pressure` aus den Record-Dateien auf.
+
+* `memory_state.py`
+
+  * persistiert bereits Runtime-, Episode- und Experience-Zustände.
+  * bildet damit die Persistenzbasis für Innenprozess und Entwicklungsebene.
 
 * Tests
 
@@ -69,6 +81,21 @@
   * Der verbleibende Hauptblock liegt nicht mehr in P0/P1.
   * Der verbleibende Hauptblock liegt jetzt im offenen Architekturplan: permanenter Innenprozess, Runtime-Trennung, Entscheidungsepisode, interner Erfahrungsraum.
 
+* **Der Architekturblock ist fachlich präzisiert.**
+
+  * Es geht nicht nur um Thread 1 vs. Thread 2.
+  * Es geht um das Zusammenspiel von:
+
+    * äußerem Wahrnehmen
+    * innerem Wahrnehmen / Denken / Handeln
+    * Entwicklung aus Erfahrung.
+
+* **Die eigentliche offene Arbeit liegt damit im Endausbau der Zielarchitektur.**
+
+  * Ebene 1 soll nur sehen.
+  * Ebene 2 soll nur intern verarbeiten, denken und handeln.
+  * Ebene 3 soll aus Episoden, Reviews und Outcomes die langfristige Entwicklung formen.
+
 # --------------------------------------------------
 # Schlussfolgerung
 # --------------------------------------------------
@@ -103,6 +130,21 @@
 
         * stabile Tension-/State-Ausgabe
 
+  * **P3**
+
+    * offener Architektur-Endausbau gemäß `UMSETZUNGSPLAN.md`:
+
+      * permanenter Innenprozess vollständig zu Ende ziehen
+      * harte Runtime-Bahntrennung weiter vervollständigen
+      * Entscheidungsepisode vollständig ausbauen
+      * internen Erfahrungsraum weiter vertiefen
+      * Nicht-Handlung / Review / KPI-Ebene weiter ausbauen
+      * Zielarchitektur auf 3 Ebenen sauber zu Ende führen:
+
+        * Ebene 1 = sehen / äußeres Wahrnehmen
+        * Ebene 2 = denken / inneres Wahrnehmen / Handeln
+        * Ebene 3 = Entwicklung aus Erfahrung / Verarbeitung / Wahrnehmung
+
 * **Priorisierte Reihenfolge**
 
   Test_Fix:
@@ -111,8 +153,5 @@
 
   Umsetzung:
   * Prio | 1. offener Architekturplan `UMSETZUNGSPLAN.md`
+  * Prio | 2. 3-Ebenen-Zielarchitektur in Runtime-/Episode-/Experience-Pfad vollständig angleichen
 
----
-
-geändert wurde:
-fix_liste.md

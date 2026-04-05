@@ -21,7 +21,9 @@
 #   False = mode bleibt wie übergeben ("a" oder "w")
 # ============================================================
 import os
+from config import Config
 _RESET_DONE = set()
+_DEBUG_COUNTERS = {}
 # ─────────────────────────────────────────────
 def _ensure_dir(path: str):
     d = os.path.dirname(path)
@@ -54,6 +56,14 @@ def dbr_write(
 
         if write_once:
             mode = "w"
+
+        if mode == "a" and not write_once:
+            every_n = max(1, int(getattr(Config, "DEBUG_WRITE_EVERY_N", 1) or 1))
+            if every_n > 1:
+                count = int(_DEBUG_COUNTERS.get(path, 0) or 0) + 1
+                _DEBUG_COUNTERS[path] = count
+                if (count % every_n) != 0:
+                    return
 
         with open(path, mode, encoding="utf-8") as f:
             f.write(s + "\n")

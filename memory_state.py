@@ -232,7 +232,7 @@ def normalize_mcm_memory(memory_items) -> list[dict]:
 # --------------------------------------------------
 # BUILD STATE
 # --------------------------------------------------
-def build_memory_state(bot) -> dict:
+def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
 
     if bot is None:
         return {
@@ -264,7 +264,7 @@ def build_memory_state(bot) -> dict:
         memory_items = getattr(memory_obj, "memory", None)
         mcm_memory = normalize_mcm_memory(memory_items)
 
-    return {
+    payload = {
         "signature_memory": normalize_signature_memory(getattr(bot, "signature_memory", {})),
         "context_clusters": normalize_context_clusters(getattr(bot, "context_clusters", {})),
         "context_cluster_seq": max(0, _to_int(getattr(bot, "context_cluster_seq", 0), 0)),
@@ -301,18 +301,24 @@ def build_memory_state(bot) -> dict:
         "thought_state": normalize_json_state(getattr(bot, "thought_state", {})),
         "meta_regulation_state": normalize_json_state(getattr(bot, "meta_regulation_state", {})),
         "last_outcome_decomposition": normalize_json_state(getattr(bot, "last_outcome_decomposition", {})),
-        "mcm_runtime_snapshot": normalize_json_state(getattr(bot, "mcm_runtime_snapshot", {})),
-        "mcm_runtime_decision_state": normalize_json_state(getattr(bot, "mcm_runtime_decision_state", {})),
-        "mcm_runtime_brain_snapshot": normalize_json_state(getattr(bot, "mcm_runtime_brain_snapshot", {})),
-        "mcm_runtime_market_ticks": max(0, _to_int(getattr(bot, "mcm_runtime_market_ticks", 0), 0)),
-        "mcm_decision_episode": normalize_json_state(getattr(bot, "mcm_decision_episode", {})),
-        "mcm_decision_episode_internal": normalize_json_state(getattr(bot, "mcm_decision_episode_internal", {})),
-        "mcm_experience_space": normalize_json_state(getattr(bot, "mcm_experience_space", {})),
-        "mcm_last_observe_timestamp": getattr(bot, "mcm_last_observe_timestamp", None),
         "mcm_memory": mcm_memory,
         "mcm_last_attractor": _to_str(getattr(bot, "mcm_last_attractor", None), None),
         "mcm_last_action": _to_str(getattr(bot, "mcm_last_action", None), None),
     }
+
+    if bool(include_runtime_state):
+        payload.update({
+            "mcm_runtime_snapshot": normalize_json_state(getattr(bot, "mcm_runtime_snapshot", {})),
+            "mcm_runtime_decision_state": normalize_json_state(getattr(bot, "mcm_runtime_decision_state", {})),
+            "mcm_runtime_brain_snapshot": normalize_json_state(getattr(bot, "mcm_runtime_brain_snapshot", {})),
+            "mcm_runtime_market_ticks": max(0, _to_int(getattr(bot, "mcm_runtime_market_ticks", 0), 0)),
+            "mcm_decision_episode": normalize_json_state(getattr(bot, "mcm_decision_episode", {})),
+            "mcm_decision_episode_internal": normalize_json_state(getattr(bot, "mcm_decision_episode_internal", {})),
+            "mcm_experience_space": normalize_json_state(getattr(bot, "mcm_experience_space", {})),
+            "mcm_last_observe_timestamp": getattr(bot, "mcm_last_observe_timestamp", None),
+        })
+
+    return payload
 
 
 # --------------------------------------------------
@@ -511,13 +517,17 @@ def load_memory_state(bot, path: str | None = None) -> dict:
 # --------------------------------------------------
 # SAVE
 # --------------------------------------------------
-def save_memory_state(bot, path: str | None = None) -> dict | None:
+def save_memory_state(bot, path: str | None = None, include_runtime_state: bool | None = None) -> dict | None:
 
     if bot is None:
         return None
 
     filepath = _memory_state_path(path)
-    payload = build_memory_state(bot)
+
+    if include_runtime_state is None:
+        include_runtime_state = bool(getattr(Config, "MCM_SAVE_RUNTIME_STATE", True))
+
+    payload = build_memory_state(bot, include_runtime_state=bool(include_runtime_state))
 
     try:
         _ensure_dir(filepath)

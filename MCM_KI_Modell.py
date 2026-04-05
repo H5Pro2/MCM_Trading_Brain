@@ -1,8 +1,9 @@
 import numpy as np
 from sklearn.cluster import DBSCAN
 import random
+from config import Config
 # --------------------------------------------------
-N_AGENTS = 160
+N_AGENTS = 80
 DIMS = 3
 # --------------------------------------------------
 # Wahrnehmung
@@ -62,6 +63,8 @@ class MCMField:
         self.k_center = 0.0035
         self.coupling = 0.08
         self.noise = 0.18
+        self.coupling_sigma = float(getattr(Config, "MCM_FIELD_COUPLING_SIGMA", 0.5) or 0.5)
+        self.local_neighbor_count = max(1, int(getattr(Config, "MCM_FIELD_LOCAL_NEIGHBORS", 8) or 8))
 
     def step(self, impulse):
 
@@ -71,20 +74,35 @@ class MCMField:
         # Zentrumskraft
         force = -self.k_center * self.energy
 
-        # lokale Kopplung über Dimensionen
+        # lokale Kopplung über sortierte Nachbarschaft statt vollem NxN-Feld
         coupling_force = np.zeros_like(self.energy)
+        sigma = max(float(self.coupling_sigma or 0.5), 1e-9)
+        local_neighbors = max(1, int(self.local_neighbor_count or 1))
 
         for d in range(self.D):
 
             e = self.energy[:,d]
+            order = np.argsort(e)
+            sorted_e = e[order]
+            sorted_force = np.zeros_like(sorted_e)
 
-            diff = e[None,:] - e[:,None]
+            for idx in range(len(sorted_e)):
 
-            weights = np.exp(-(diff**2)/0.5)
+                start = max(0, idx - local_neighbors)
+                end = min(len(sorted_e), idx + local_neighbors + 1)
 
-            np.fill_diagonal(weights,0.0)
+                neighborhood = sorted_e[start:end]
+                if len(neighborhood) <= 1:
+                    continue
 
-            coupling_force[:,d] = self.coupling * np.sum(weights * diff, axis=1)
+                diff = neighborhood - sorted_e[idx]
+                if idx - start >= 0 and idx - start < len(diff):
+                    diff[idx - start] = 0.0
+
+                weights = np.exp(-(diff ** 2) / sigma)
+                sorted_force[idx] = self.coupling * np.sum(weights * diff)
+
+            coupling_force[order, d] = sorted_force
 
         # Inertia / Trägheit des Feldes
         self.velocity = 0.92 * self.velocity
@@ -102,11 +120,28 @@ class MCMField:
 
 class ClusterDetector:
 
-    def detect(self, energy):
+    def __init__(self):
 
-        points = energy
+        self.tick_seq = 0
+        self.last_clusters = []
+        self.eps = float(getattr(Config, "MCM_CLUSTER_EPS", 0.4) or 0.4)
+        self.min_samples = max(2, int(getattr(Config, "MCM_CLUSTER_MIN_SAMPLES", 4) or 4))
+        self.detect_every_n = max(1, int(getattr(Config, "MCM_CLUSTER_EVERY_N_TICKS", 2) or 2))
 
-        db = DBSCAN(eps=0.4,min_samples=4).fit(points)
+    def detect(self, energy, force: bool = False):
+
+        self.tick_seq = int(self.tick_seq or 0) + 1
+
+        if (not bool(force)) and self.last_clusters and (self.tick_seq % self.detect_every_n) != 0:
+            return [np.array(item, copy=True) for item in list(self.last_clusters or [])]
+
+        points = np.asarray(energy, dtype=float)
+
+        if len(points) < self.min_samples:
+            self.last_clusters = []
+            return []
+
+        db = DBSCAN(eps=self.eps, min_samples=self.min_samples).fit(points)
 
         labels = db.labels_
 
@@ -115,9 +150,10 @@ class ClusterDetector:
         for c in set(labels):
             if c == -1:
                 continue
-            clusters.append(points[labels==c])
+            clusters.append(np.array(points[labels == c], copy=True))
 
-        return clusters
+        self.last_clusters = [np.array(item, copy=True) for item in list(clusters or [])]
+        return [np.array(item, copy=True) for item in list(self.last_clusters or [])]
 
 
 # --------------------------------------------------

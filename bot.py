@@ -9,6 +9,7 @@
 # ==================================================
 import queue
 import threading
+import time
 
 from config import Config
 from csv_feed import CSVFeed
@@ -118,8 +119,9 @@ class Bot:
         self._runtime_thread_lock = threading.Lock()
         self._runtime_stop_event = threading.Event()
         self._market_packet_queue = queue.Queue()
-        self._runtime_idle_sleep = 0.25
         self._runtime_seeded = bool(self.mcm_runtime is not None and self.mcm_runtime.has_impulse())
+        self._memory_state_dirty = False
+        self._memory_state_last_save_ts = 0.0
 
         live_mode = str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE"
         snapshot = None
@@ -272,7 +274,7 @@ class Bot:
                     outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
                     context=position_context,
                 )
-                self._save_memory_state()
+                self._mark_memory_state_dirty()
                 self.position = None
                 return True
 
@@ -587,7 +589,7 @@ class Bot:
 
         self._save_memory_state()
         return True
-                    
+
     # ==================================================
     # MCM RUNTIME
     # ==================================================
@@ -617,38 +619,12 @@ class Bot:
         if thread is not None and thread.is_alive():
             thread.join()
 
+        self._save_memory_state(force=True)
         return thread
 
     def wait_until_runtime_idle(self):
 
         self._market_packet_queue.join()
-
-    def publish_market_window(self, window):
-
-        packet = self._build_market_packet(window)
-        if packet is None:
-            return None
-
-        self._market_packet_queue.put(dict(packet))
-        return dict(packet)
-
-    def _runtime_loop(self):
-
-        while True:
-            if self._runtime_stop_event.is_set() and self._market_packet_queue.empty():
-                break
-
-            try:
-                packet = self._market_packet_queue.get(timeout=self._runtime_idle_sleep)
-            except queue.Empty:
-                if self._runtime_seeded:
-                    self._step_runtime_idle()
-                continue
-
-            try:
-                self._process_market_packet(packet)
-            finally:
-                self._market_packet_queue.task_done()
 
     def _build_market_packet(self, window):
 
@@ -672,6 +648,116 @@ class Bot:
             "tension_state": dict(tension_state or {}),
             "structure_perception_state": dict(structure_perception_state or {}),
         }
+    
+    def publish_market_window(self, window):
+
+        packet = self._build_market_packet(window)
+        if packet is None:
+            return None
+
+        self._market_packet_queue.put(dict(packet))
+        return dict(packet)
+
+    def _runtime_loop(self):
+
+        while True:
+            if self._runtime_stop_event.is_set() and self._market_packet_queue.empty():
+                break
+
+            idle_sleep = self._runtime_idle_sleep_seconds()
+
+            try:
+                packet = self._market_packet_queue.get(timeout=idle_sleep)
+            except queue.Empty:
+                if self._runtime_seeded:
+                    self._step_runtime_idle(
+                        cycles=self._runtime_idle_cycles(),
+                    )
+                self._flush_memory_state_if_due()
+                continue
+
+            try:
+                self._process_market_packet(packet)
+                self._flush_memory_state_if_due()
+            finally:
+                self._market_packet_queue.task_done()
+
+    def _runtime_idle_sleep_seconds(self):
+
+        min_sleep = max(
+            0.01,
+            float(getattr(Config, "MCM_RUNTIME_IDLE_SLEEP_MIN_SECONDS", 0.05) or 0.05),
+        )
+        max_sleep = max(
+            min_sleep,
+            float(getattr(Config, "MCM_RUNTIME_IDLE_SLEEP_MAX_SECONDS", 0.35) or 0.35),
+        )
+
+        queue_depth = int(self._market_packet_queue.qsize() or 0)
+        if queue_depth > 0:
+            return float(min_sleep)
+
+        dynamic_load = max(
+            float(getattr(self, "focus_confidence", 0.0) or 0.0),
+            float(getattr(self, "target_lock", 0.0) or 0.0),
+            float(getattr(self, "last_signal_relevance", 0.0) or 0.0),
+            abs(float(getattr(self, "competition_bias", 0.0) or 0.0)),
+        )
+
+        if self.position is not None:
+            dynamic_load = max(dynamic_load, 1.0)
+        elif self.pending_entry is not None:
+            dynamic_load = max(dynamic_load, 0.82)
+        elif bool(getattr(self, "observation_mode", False)):
+            dynamic_load = max(dynamic_load, 0.68)
+
+        dynamic_load = max(0.0, min(1.0, float(dynamic_load)))
+        sleep_span = max_sleep - min_sleep
+        return float(max_sleep - (sleep_span * dynamic_load))
+
+    def _runtime_idle_cycles(self):
+
+        base_cycles = max(
+            1,
+            int(getattr(Config, "MCM_RUNTIME_IDLE_TICKS", 1) or 1),
+        )
+        max_cycles = max(
+            base_cycles,
+            int(getattr(Config, "MCM_RUNTIME_IDLE_TICKS_MAX", base_cycles) or base_cycles),
+        )
+
+        dynamic_load = max(
+            float(getattr(self, "focus_confidence", 0.0) or 0.0),
+            float(getattr(self, "target_lock", 0.0) or 0.0),
+            float(getattr(self, "last_signal_relevance", 0.0) or 0.0),
+            abs(float(getattr(self, "competition_bias", 0.0) or 0.0)),
+        )
+
+        cycle_boost = 0
+
+        if self.position is not None:
+            cycle_boost += 2
+        elif self.pending_entry is not None:
+            cycle_boost += 1
+
+        if bool(getattr(self, "observation_mode", False)):
+            cycle_boost += 1
+
+        cycle_boost += int(round(max(0.0, min(1.0, float(dynamic_load))) * max(0, max_cycles - base_cycles)))
+        return int(min(max_cycles, base_cycles + cycle_boost))
+
+    def _step_runtime_idle(self, cycles=None):
+
+        self._ensure_memory_state_loaded()
+
+        idle_cycles = cycles
+        if idle_cycles is None:
+            idle_cycles = self._runtime_idle_cycles()
+
+        return step_mcm_runtime_idle(
+            bot=self,
+            cycles=max(1, int(idle_cycles or 1)),
+        )
 
     def _seed_runtime_window(self, window, candle_state=None):
 
@@ -698,15 +784,6 @@ class Bot:
         self._runtime_seeded = True
         return result
 
-    def _step_runtime_idle(self):
-
-        self._ensure_memory_state_loaded()
-
-        return step_mcm_runtime_idle(
-            bot=self,
-            cycles=int(getattr(Config, "MCM_RUNTIME_IDLE_TICKS", 1) or 1),
-        )
-
     # ==================================================
     # MEMORY STATE
     # ==================================================
@@ -725,20 +802,50 @@ class Bot:
 
         self._memory_state_mcm_loaded = True
 
-    def _save_memory_state(self):
+    def _mark_memory_state_dirty(self):
 
-        payload = save_memory_state(self)
+        self._memory_state_dirty = True
+        return True
+
+    def _flush_memory_state_if_due(self, force: bool = False):
+
+        if not bool(getattr(self, "_memory_state_dirty", False)) and not bool(force):
+            return None
+
+        now_ts = float(time.time())
+        cooldown = max(
+            0.0,
+            float(getattr(Config, "MCM_MEMORY_SAVE_COOLDOWN_SECONDS", 1.25) or 1.25),
+        )
+
+        if not force and (now_ts - float(getattr(self, "_memory_state_last_save_ts", 0.0) or 0.0)) < cooldown:
+            return None
+
+        return self._save_memory_state(force=True)
+
+    def _save_memory_state(self, force: bool = False):
+
+        if not bool(force) and not bool(getattr(self, "_memory_state_dirty", False)):
+            return None
+
+        payload = save_memory_state(
+            self,
+            include_runtime_state=bool(getattr(Config, "MCM_SAVE_RUNTIME_STATE", False)),
+        )
 
         if payload is None:
             return None
 
         self._memory_state_payload = payload
         self._memory_state_mcm_loaded = isinstance(self.mcm_brain, dict)
+        self._memory_state_dirty = False
+        self._memory_state_last_save_ts = float(time.time())
         return payload
             
     # ==================================================
     # INTERNE PIPELINE (NUR WINDOW → LOGIK)
     # ==================================================
+
     def _process_market_packet(self, packet):
 
         item = dict(packet or {})

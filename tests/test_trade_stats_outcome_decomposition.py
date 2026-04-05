@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
+ROOT_DIR = Path(__file__).resolve().parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
@@ -114,14 +114,19 @@ class TradeStatsOutcomeDecompositionTests(unittest.TestCase):
 
             saved = json.loads(stats_path.read_text(encoding="utf-8"))
             self.assertEqual(saved.get("last_outcome_decomposition"), decomposition)
+
     def test_on_attempt_persists_detailed_attempt_record(self):
         with tempfile.TemporaryDirectory() as tmp:
             stats_path = Path(tmp) / "trade_stats.json"
             csv_path = Path(tmp) / "trade_equity.csv"
+            attempt_path = Path(tmp) / "attempt_records.jsonl"
+            outcome_path = Path(tmp) / "outcome_records.jsonl"
 
             stats = TradeStats(
                 path=str(stats_path),
                 csv_path=str(csv_path),
+                attempt_path=str(attempt_path),
+                outcome_path=str(outcome_path),
                 reset=True,
             )
             stats.data["current_timestamp"] = 1712345678901
@@ -151,8 +156,13 @@ class TradeStatsOutcomeDecompositionTests(unittest.TestCase):
             )
 
             saved = json.loads(stats_path.read_text(encoding="utf-8"))
-            records = list(saved.get("attempt_records", []) or [])
+            records = [
+                json.loads(line)
+                for line in attempt_path.read_text(encoding="utf-8").splitlines()
+                if str(line).strip()
+            ]
 
+            self.assertNotIn("attempt_records", saved)
             self.assertEqual(len(records), 1)
             self.assertEqual(records[0].get("event"), "attempt")
             self.assertEqual(records[0].get("status"), "submitted")
@@ -168,10 +178,14 @@ class TradeStatsOutcomeDecompositionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             stats_path = Path(tmp) / "trade_stats.json"
             csv_path = Path(tmp) / "trade_equity.csv"
+            attempt_path = Path(tmp) / "attempt_records.jsonl"
+            outcome_path = Path(tmp) / "outcome_records.jsonl"
 
             stats = TradeStats(
                 path=str(stats_path),
                 csv_path=str(csv_path),
+                attempt_path=str(attempt_path),
+                outcome_path=str(outcome_path),
                 reset=True,
             )
             stats.data["current_timestamp"] = 1719999999000
@@ -215,8 +229,13 @@ class TradeStatsOutcomeDecompositionTests(unittest.TestCase):
             )
 
             saved = json.loads(stats_path.read_text(encoding="utf-8"))
-            records = list(saved.get("outcome_records", []) or [])
+            records = [
+                json.loads(line)
+                for line in outcome_path.read_text(encoding="utf-8").splitlines()
+                if str(line).strip()
+            ]
 
+            self.assertNotIn("outcome_records", saved)
             self.assertEqual(len(records), 1)
             self.assertEqual(records[0].get("event"), "trade_exit")
             self.assertEqual(records[0].get("reason"), "tp_hit")

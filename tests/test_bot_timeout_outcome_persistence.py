@@ -34,15 +34,20 @@ from trade_stats import TradeStats
 
 
 class BotTimeoutOutcomePersistenceTests(unittest.TestCase):
+    
     def test_backtest_timeout_passes_outcome_decomposition_to_cancel_stats(self):
         with tempfile.TemporaryDirectory() as tmp:
             stats_path = Path(tmp) / "trade_stats.json"
             csv_path = Path(tmp) / "trade_equity.csv"
+            attempt_path = Path(tmp) / "attempt_records.jsonl"
+            outcome_path = Path(tmp) / "outcome_records.jsonl"
 
             bot = bot_module.Bot(filepath=str(Path(tmp) / "dummy.csv"))
             bot.stats = TradeStats(
                 path=str(stats_path),
                 csv_path=str(csv_path),
+                attempt_path=str(attempt_path),
+                outcome_path=str(outcome_path),
                 reset=True,
             )
             bot.processed = 10
@@ -100,13 +105,19 @@ class BotTimeoutOutcomePersistenceTests(unittest.TestCase):
                 bot_module.apply_outcome_stimulus = original_apply
 
             saved = json.loads(stats_path.read_text(encoding="utf-8"))
+            records = [
+                json.loads(line)
+                for line in outcome_path.read_text(encoding="utf-8").splitlines()
+                if str(line).strip()
+            ]
+
             self.assertEqual(saved.get("last_outcome_decomposition"), {"reason": "timeout", "execution_quality": 0.25})
             self.assertEqual(int(saved.get("cancels", 0)), 1)
-            self.assertEqual(len(saved.get("outcome_records", [])), 1)
-            self.assertEqual(saved.get("outcome_records", [])[0].get("cause"), "backtest_timeout")
-            self.assertEqual(saved.get("outcome_records", [])[0].get("outcome_decomposition"), {"reason": "timeout", "execution_quality": 0.25})
+            self.assertNotIn("outcome_records", saved)
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0].get("cause"), "backtest_timeout")
+            self.assertEqual(records[0].get("outcome_decomposition"), {"reason": "timeout", "execution_quality": 0.25})
             self.assertTrue(bool(saved_calls))
-
 
 if __name__ == "__main__":
     unittest.main()

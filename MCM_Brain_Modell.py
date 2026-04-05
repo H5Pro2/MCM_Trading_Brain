@@ -9,7 +9,6 @@ from MCM_KI_Modell import MCMField, ClusterDetector, Memory, SelfModel, Attracto
 from bot_engine.strukture_engine import StructureEngine
 import numpy as np
 
-
 # --------------------------------------------------
 class MCMBrainRuntime:
 
@@ -287,7 +286,16 @@ def step_mcm_runtime(window, candle_state, bot=None):
         )
 
     runtime.ingest_market_impulse(window, candle_state)
-    runtime_cycles = int(getattr(Config, "MCM_RUNTIME_TICKS_PER_WINDOW", 3) or 3)
+    runtime_cycles = max(
+        1,
+        int(
+            getattr(
+                Config,
+                "MCM_RUNTIME_TICKS_PER_WINDOW",
+                getattr(Config, "MCM_INNER_TICKS_PER_WORLD_TICK", 1),
+            ) or 1
+        ),
+    )
     return runtime.advance(runtime_cycles)
 
 # --------------------------------------------------
@@ -318,7 +326,42 @@ def _experience_reward_delta(summary):
     if event_name == "filled":
         return 0.12
 
+    if event_name in ("pending_update", "position_update", "in_trade_update", "monitor_update"):
+        return float(0.04 + (execution_quality * 0.04) + (risk_fit_quality * 0.03))
+
     return 0.0
+
+# --------------------------------------------------
+def _build_experience_similarity_axes(summary):
+
+    item = dict(summary or {})
+    decision_tendency = str(item.get("decision_tendency", "hold") or "hold").strip().lower()
+    proposed_decision = str(item.get("proposed_decision", "WAIT") or "WAIT").strip().upper()
+
+    direction_value = 0.0
+    if proposed_decision == "LONG":
+        direction_value = 1.0
+    elif proposed_decision == "SHORT":
+        direction_value = -1.0
+
+    tendency_value = {
+        "act": 1.0,
+        "replan": 0.35,
+        "observe": -0.35,
+        "hold": -0.15,
+    }.get(decision_tendency, 0.0)
+
+    return {
+        "direction_axis": float(direction_value),
+        "tendency_axis": float(tendency_value),
+        "confidence_axis": float(item.get("focus_confidence", 0.0) or 0.0),
+        "observation_axis": float(item.get("observation_quality", 0.0) or 0.0),
+        "uncertainty_axis": float(item.get("uncertainty_recognition_quality", 0.0) or 0.0),
+        "correction_axis": float(item.get("correction_timing_quality", 0.0) or 0.0),
+        "bearing_axis": float(item.get("structural_bearing_quality", 0.0) or 0.0),
+        "path_axis": float(item.get("decision_path_quality", 0.0) or 0.0),
+        "reward_axis": float(_experience_reward_delta(item) or 0.0),
+    }
 
 # --------------------------------------------------
 def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event_name=None):
@@ -403,12 +446,20 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     if previous_self_state not in ("", "-") and current_self_state not in ("", "-") and previous_self_state != current_self_state:
         relocation_count += 1
 
+    similarity_axes = _build_experience_similarity_axes(summary_item)
+    previous_similarity_axes = dict(item.get("similarity_axes", {}) or {})
+
     drift_value = float(item.get("drift", 0.0) or 0.0)
     drift_input = abs(float(summary_item.get("competition_bias", 0.0) or 0.0))
 
     if summary_item.get("non_action_type"):
         drift_input += 0.12
 
+    axis_shift = 0.0
+    for axis_name, axis_value in similarity_axes.items():
+        axis_shift += abs(float(axis_value or 0.0) - float(previous_similarity_axes.get(axis_name, 0.0) or 0.0))
+
+    drift_input += min(0.45, axis_shift * 0.08)
     drift_value = float((drift_value * 0.74) + drift_input)
 
     reinforcement = float(item.get("reinforcement", 0.0) or 0.0)
@@ -429,6 +480,19 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
         "decision_tendency": str(summary_item.get("decision_tendency", "hold") or "hold"),
         "outcome_reason": str(summary_item.get("outcome_reason", "-") or "-"),
         "non_action_type": summary_item.get("non_action_type", None),
+        "review_label": str(summary_item.get("review_label", "-") or "-"),
+        "review_score": float(summary_item.get("review_score", 0.0) or 0.0),
+        "decision_path_quality": float(summary_item.get("decision_path_quality", 0.0) or 0.0),
+        "uncertainty_recognition_quality": float(summary_item.get("uncertainty_recognition_quality", 0.0) or 0.0),
+        "observation_quality": float(summary_item.get("observation_quality", 0.0) or 0.0),
+        "correction_timing_quality": float(summary_item.get("correction_timing_quality", 0.0) or 0.0),
+        "structural_bearing_quality": float(summary_item.get("structural_bearing_quality", 0.0) or 0.0),
+        "in_trade_update_count": int(summary_item.get("in_trade_update_count", 0) or 0),
+        "in_trade_max_mfe": float(summary_item.get("in_trade_max_mfe", 0.0) or 0.0),
+        "in_trade_max_mae": float(summary_item.get("in_trade_max_mae", 0.0) or 0.0),
+        "in_trade_last_bars_open": int(summary_item.get("in_trade_last_bars_open", 0) or 0),
+        "in_trade_avg_fill_ratio": float(summary_item.get("in_trade_avg_fill_ratio", 0.0) or 0.0),
+        "in_trade_direction_stability": float(summary_item.get("in_trade_direction_stability", 0.0) or 0.0),
     })
 
     item["link_key"] = str(normalized_key)
@@ -441,6 +505,15 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     item["last_context_cluster_id"] = str(current_context)
     item["last_self_state"] = str(current_self_state)
     item["last_attractor"] = str(summary_item.get("attractor", "neutral") or "neutral")
+    item["last_review_label"] = str(summary_item.get("review_label", "-") or "-")
+    item["last_review_score"] = float(summary_item.get("review_score", 0.0) or 0.0)
+    item["decision_path_quality"] = float((float(item.get("decision_path_quality", 0.0) or 0.0) * 0.72) + (float(summary_item.get("decision_path_quality", 0.0) or 0.0) * 0.28))
+    item["uncertainty_recognition_quality"] = float((float(item.get("uncertainty_recognition_quality", 0.0) or 0.0) * 0.72) + (float(summary_item.get("uncertainty_recognition_quality", 0.0) or 0.0) * 0.28))
+    item["observation_quality"] = float((float(item.get("observation_quality", 0.0) or 0.0) * 0.72) + (float(summary_item.get("observation_quality", 0.0) or 0.0) * 0.28))
+    item["correction_timing_quality"] = float((float(item.get("correction_timing_quality", 0.0) or 0.0) * 0.72) + (float(summary_item.get("correction_timing_quality", 0.0) or 0.0) * 0.28))
+    item["structural_bearing_quality"] = float((float(item.get("structural_bearing_quality", 0.0) or 0.0) * 0.72) + (float(summary_item.get("structural_bearing_quality", 0.0) or 0.0) * 0.28))
+    item["similarity_axes"] = dict(similarity_axes)
+    item["axis_shift"] = float((float(item.get("axis_shift", 0.0) or 0.0) * 0.68) + (axis_shift * 0.32))
     item["drift"] = float(drift_value)
     item["reinforcement"] = float(reinforcement)
     item["attenuation"] = float(attenuation)
@@ -480,6 +553,20 @@ def _append_experience_episode(space, summary):
         "context_cluster_id": str((summary or {}).get("context_cluster_id", "-") or "-"),
         "outcome_reason": str((summary or {}).get("outcome_reason", "-") or "-"),
         "non_action_type": (summary or {}).get("non_action_type", None),
+        "review_label": str((summary or {}).get("review_label", "-") or "-"),
+        "review_score": float((summary or {}).get("review_score", 0.0) or 0.0),
+        "decision_path_quality": float((summary or {}).get("decision_path_quality", 0.0) or 0.0),
+        "uncertainty_recognition_quality": float((summary or {}).get("uncertainty_recognition_quality", 0.0) or 0.0),
+        "observation_quality": float((summary or {}).get("observation_quality", 0.0) or 0.0),
+        "correction_timing_quality": float((summary or {}).get("correction_timing_quality", 0.0) or 0.0),
+        "structural_bearing_quality": float((summary or {}).get("structural_bearing_quality", 0.0) or 0.0),
+        "in_trade_update_count": int((summary or {}).get("in_trade_update_count", 0) or 0),
+        "in_trade_max_mfe": float((summary or {}).get("in_trade_max_mfe", 0.0) or 0.0),
+        "in_trade_max_mae": float((summary or {}).get("in_trade_max_mae", 0.0) or 0.0),
+        "in_trade_last_bars_open": int((summary or {}).get("in_trade_last_bars_open", 0) or 0),
+        "in_trade_avg_fill_ratio": float((summary or {}).get("in_trade_avg_fill_ratio", 0.0) or 0.0),
+        "in_trade_direction_stability": float((summary or {}).get("in_trade_direction_stability", 0.0) or 0.0),
+        "similarity_axes": _build_experience_similarity_axes(summary),
     })
     experience_space["episode_links"] = list(history[-32:])
     return dict(experience_space)
@@ -490,6 +577,9 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
     episode = dict(getattr(bot, "mcm_decision_episode", {}) or {}) if bot is not None else {}
     episode_internal = dict(getattr(bot, "mcm_decision_episode_internal", {}) or {}) if bot is not None else {}
     outcome_decomposition = dict(getattr(bot, "last_outcome_decomposition", {}) or {}) if bot is not None else {}
+    review_notes = dict(episode_internal.get("review_notes", {}) or {})
+    in_trade_updates = list(episode_internal.get("in_trade_updates", []) or [])
+    in_trade_summary = _summarize_in_trade_updates(in_trade_updates)
 
     signal = dict(episode_internal.get("signal", {}) or {})
     inner_field = dict(episode_internal.get("inner_field_perception_state", {}) or {})
@@ -529,6 +619,19 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
         "plan_quality": float(outcome_decomposition.get("plan_quality", 0.0) or 0.0),
         "execution_quality": float(outcome_decomposition.get("execution_quality", 0.0) or 0.0),
         "risk_fit_quality": float(outcome_decomposition.get("risk_fit_quality", 0.0) or 0.0),
+        "review_label": str(review_notes.get("review_label", "-") or "-"),
+        "review_score": float(review_notes.get("review_score", 0.0) or 0.0),
+        "decision_path_quality": float(review_notes.get("decision_path_quality", 0.0) or 0.0),
+        "uncertainty_recognition_quality": float(review_notes.get("uncertainty_recognition_quality", 0.0) or 0.0),
+        "observation_quality": float(review_notes.get("observation_quality", 0.0) or 0.0),
+        "correction_timing_quality": float(review_notes.get("correction_timing_quality", 0.0) or 0.0),
+        "structural_bearing_quality": float(review_notes.get("structural_bearing_quality", 0.0) or 0.0),
+        "in_trade_update_count": int(in_trade_summary.get("in_trade_update_count", 0) or 0),
+        "in_trade_max_mfe": float(in_trade_summary.get("in_trade_max_mfe", 0.0) or 0.0),
+        "in_trade_max_mae": float(in_trade_summary.get("in_trade_max_mae", 0.0) or 0.0),
+        "in_trade_last_bars_open": int(in_trade_summary.get("in_trade_last_bars_open", 0) or 0),
+        "in_trade_avg_fill_ratio": float(in_trade_summary.get("in_trade_avg_fill_ratio", 0.0) or 0.0),
+        "in_trade_direction_stability": float(in_trade_summary.get("in_trade_direction_stability", 0.0) or 0.0),
     }
 
 # --------------------------------------------------
@@ -563,6 +666,7 @@ def mark_runtime_episode_event(bot, event_name, payload=None):
             "timestamp": timestamp,
             "learning_state": "open",
             "internal_events": [],
+            "in_trade_updates": [],
             "review_notes": {},
         }
 
@@ -575,6 +679,10 @@ def mark_runtime_episode_event(bot, event_name, payload=None):
         "abandoned": ("abandoned", "abandoned"),
         "cancelled": ("cancelled", "cancelled"),
         "filled": ("filled", "filled"),
+        "pending_update": ("tracking", "in_trade_updates"),
+        "position_update": ("tracking", "in_trade_updates"),
+        "in_trade_update": ("tracking", "in_trade_updates"),
+        "monitor_update": ("tracking", "in_trade_updates"),
         "timeout": ("timeout", "timeout"),
         "resolved": ("resolved", "resolved"),
         "reviewed": ("reviewed", "reviewed"),
@@ -596,6 +704,14 @@ def mark_runtime_episode_event(bot, event_name, payload=None):
         "payload": dict(payload_dict or {}),
     })
 
+    in_trade_updates = list(episode_internal.get("in_trade_updates", []) or [])
+    if event_key in ("pending_update", "position_update", "in_trade_update", "monitor_update"):
+        in_trade_updates.append({
+            "event": str(event_key),
+            "timestamp": timestamp,
+            "payload": _compact_in_trade_update_payload(payload_dict),
+        })
+
     episode["timestamp"] = timestamp
     episode["action_status"] = str(action_status)
     episode["lifecycle_state"] = str(lifecycle_state)
@@ -607,16 +723,17 @@ def mark_runtime_episode_event(bot, event_name, payload=None):
     episode_internal["episode_id"] = str(episode.get("episode_id", "") or "")
     episode_internal["visible_episode_id"] = str(episode.get("episode_id", "") or "")
     episode_internal["timestamp"] = timestamp
-    episode_internal["learning_state"] = "ready_for_review" if event_key in ("resolved", "cancelled", "timeout", "blocked_value_gate", "observed_only", "withheld", "replanned", "abandoned") else str(episode_internal.get("learning_state", "open") or "open")
+    episode_internal["learning_state"] = "ready_for_review" if event_key in ("resolved", "cancelled", "timeout", "blocked_value_gate", "observed_only", "withheld", "replanned", "abandoned") else ("tracking" if event_key in ("pending_update", "position_update", "in_trade_update", "monitor_update") else str(episode_internal.get("learning_state", "open") or "open"))
     episode_internal["last_event"] = str(event_key)
     episode_internal["last_payload"] = dict(payload_dict or {})
     episode_internal["internal_events"] = list(internal_events[-24:])
+    episode_internal["in_trade_updates"] = list(in_trade_updates[-24:])
     episode_internal[f"{event_key}_at"] = timestamp
 
     if event_key in ("observed_only", "withheld", "replanned", "abandoned"):
         episode_internal["non_action_type"] = str(event_key)
 
-    if event_key in ("blocked_value_gate", "observed_only", "withheld", "replanned", "abandoned", "cancelled", "timeout", "resolved", "reviewed"):
+    if event_key in ("blocked_value_gate", "observed_only", "withheld", "replanned", "abandoned", "cancelled", "timeout", "resolved", "reviewed", "pending_update", "position_update", "in_trade_update", "monitor_update"):
         episode_internal["review_notes"] = _build_episode_review_notes(
             bot,
             episode=episode,
@@ -643,16 +760,13 @@ def _mcm_state_debug(msg):
     if bool(getattr(Config, "MCM_DEBUG", False)):
         dbr_debug(msg, "mcm_state_debug.csv")
 
-
 def _mcm_decision_debug(msg):
     if bool(getattr(Config, "MCM_DEBUG", False)):
         dbr_debug(msg, "mcm_decision_debug.csv")
 
-
 def _mcm_outcome_debug(msg):
     if bool(getattr(Config, "MCM_OUTCOME_DEBUG", False)):
         dbr_debug(msg, "mcm_outcome_debug.csv")
-
 
 STRUCTURE_ENGINE = StructureEngine()
 
@@ -677,7 +791,6 @@ def create_mcm_brain():
         "attractor": AttractorSystem(),
         "regulation": RegulationLayer(),
     }
-
 
 # --------------------------------------------------
 # STIMULUS
@@ -715,7 +828,6 @@ def build_market_vision(candle_state, tension_state):
         "orientation_drive": float(max(-2.5, min(2.5, orientation_drive))),
         "vision_contrast": float(max(0.0, min(2.5, vision_contrast))),
     }
-
 
 def build_focus_projection(candle_state, tension_state, vision, pause_mode=False, bot=None):
 
@@ -812,7 +924,6 @@ def build_focus_projection(candle_state, tension_state, vision, pause_mode=False
         "signal_relevance": float(max(0.0, min(1.0, signal_relevance))),
     }
 
-
 def apply_focus_filter(candle_state, tension_state, vision, focus, pause_mode=False):
 
     left_eye_field = float(vision.get("left_eye_field", 0.0) or 0.0)
@@ -877,7 +988,6 @@ def apply_focus_filter(candle_state, tension_state, vision, focus, pause_mode=Fa
         "opportunity_bias": float(max(-2.5, min(2.5, opportunity_bias))),
     }
 
-
 def build_mcm_stimulus(candle_state, tension_state, pause_mode=False, bot=None):
 
     vision = build_market_vision(candle_state, tension_state)
@@ -901,7 +1011,6 @@ def build_mcm_stimulus(candle_state, tension_state, pause_mode=False, bot=None):
         "risk_impulse": float(filtered.get("risk_impulse", 0.0) or 0.0),
         "opportunity_bias": float(filtered.get("opportunity_bias", 0.0) or 0.0),
     }
-
 
 def build_neural_modulation(bot, stimulus):
 
@@ -975,7 +1084,6 @@ def build_neural_modulation(bot, stimulus):
         "observation_mode": bool(observation_mode),
         "signal_relevance": float(signal_relevance),
     }
-
 
 def build_outcome_stimulus(outcome_reason, position=None):
 
@@ -1057,6 +1165,7 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     replay_impulse = float(memory.replay_impulse(replay_scale=replay_scale) or 0.0)
 
     mode_value = str(mode or stimulus.get("mode", "market") or "market").strip().lower()
+    is_outcome_mode = bool(mode_value == "outcome")
 
     raw_impulse = float(stimulus.get("impulse", 0.0) or 0.0)
     motivation_impulse = float(stimulus.get("motivation_impulse", 0.0) or 0.0)
@@ -1065,7 +1174,7 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     memory_boost = float(stimulus.get("memory_boost", 0.0) or 0.0)
     outcome_label = str(stimulus.get("outcome_label", "-") or "-")
 
-    if mode_value == "outcome":
+    if is_outcome_mode:
         total_energy_impulse = (raw_impulse * 1.10) + (replay_impulse * 0.18)
         motivation_impulse = (motivation_impulse * 0.95)
         risk_impulse = (risk_impulse * 0.95) - (max(0.0, abs(raw_impulse) - 0.5) * 0.15)
@@ -1074,14 +1183,15 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         motivation_impulse = (motivation_impulse * 0.55) - (abs(replay_impulse) * 0.08)
         risk_impulse = (risk_impulse * 0.85) - (max(0.0, abs(raw_impulse) - 1.0) * 0.10)
 
-    for _ in range(max(1, internal_cycles)):
+    replay_cycles = max(0, internal_cycles - 1)
+    for _ in range(replay_cycles):
         field.step(replay_impulse * 0.35)
 
     field.energy *= 0.94
     field.velocity *= 0.88
 
     field.energy[:, 0] += total_energy_impulse
-    if mode_value == "outcome":
+    if is_outcome_mode:
         field.energy[:, 1] += motivation_impulse
         field.energy[:, 2] += risk_impulse
     else:
@@ -1092,7 +1202,7 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     field.step(total_energy_impulse * 0.55)
     field.energy = np.clip(field.energy, -2.2, 2.2)
 
-    clusters = cluster.detect(field.energy)
+    clusters = cluster.detect(field.energy, force=is_outcome_mode)
 
     memory_store_clusters = []
     for item in clusters:
@@ -1256,7 +1366,6 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
 
     return snapshot
 
-
 def build_world_state(candle_state, tension_state, stimulus, structure_perception_state=None):
     return {
         "candle_state": dict(candle_state or {}),
@@ -1266,7 +1375,6 @@ def build_world_state(candle_state, tension_state, stimulus, structure_perceptio
         "focus": dict((stimulus or {}).get("focus", {}) or {}),
         "structure_perception_state": dict(structure_perception_state or {}),
     }
-
 
 def build_outer_visual_perception_state(world_state):
     world = dict(world_state or {})
@@ -1287,7 +1395,6 @@ def build_outer_visual_perception_state(world_state):
         "visual_contrast": float(vision.get("vision_contrast", 0.0) or 0.0),
     }
 
-
 def build_inner_field_perception_state(snapshot, bot=None):
     snap = dict(snapshot or {})
     prior_regulation = float(getattr(bot, "experience_regulation", 0.0) or 0.0) if bot is not None else 0.0
@@ -1302,7 +1409,6 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "attractor": str(snap.get("attractor", "neutral") or "neutral"),
         "prior_experience_regulation": float(prior_regulation),
     }
-
 
 def build_processing_state(outer_visual_perception_state, inner_field_perception_state, perception_state):
     outer = dict(outer_visual_perception_state or {})
@@ -1327,7 +1433,6 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
         "processing_stability": float(processing_stability),
         "processing_readiness": float(processing_readiness),
     }
-
 
 def build_outcome_decomposition(bot, outcome_reason, position=None, experience_state=None):
     reason = str(outcome_reason or "").strip().lower()
@@ -1402,6 +1507,7 @@ def build_outcome_decomposition(bot, outcome_reason, position=None, experience_s
         "context_quality": float(context_quality),
         "reason": str(reason or "-"),
     }
+
 # --------------------------------------------------
 # PRICE BUILD
 # --------------------------------------------------
@@ -1620,7 +1726,6 @@ def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, 
         "reward_model_score": float(reward_model_score),
     }
 
-
 # --------------------------------------------------
 # FUSION
 # --------------------------------------------------
@@ -1819,7 +1924,6 @@ def update_target_model(bot, candle_state, focus):
         "target_drift": float(bot.target_drift),
     }
 
-
 # --------------------------------------------------
 def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, decision="WAIT"):
 
@@ -1961,7 +2065,6 @@ def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, dec
         "protective_courage": float(bot.protective_courage),
     }
 
-
 # --------------------------------------------------
 def update_experience_state(bot, outcome_reason):
 
@@ -2070,7 +2173,6 @@ def update_experience_state(bot, outcome_reason):
         "blocked_ratio": float(blocked_ratio),
         "timeout_ratio": float(timeout_ratio),
     }
-
 
 # --------------------------------------------------
 def build_state_signature(candle_state, tension_state, snapshot, stimulus, bot=None):
@@ -2228,7 +2330,6 @@ def decay_weak_cluster(bot):
     bot.context_clusters = updated_clusters
     return updated_clusters
 
-
 # --------------------------------------------------
 def classify_state_cluster(bot, state_signature):
 
@@ -2333,7 +2434,6 @@ def classify_state_cluster(bot, state_signature):
         "last_outcome": nearest_cluster.get("last_outcome"),
     }
 
-
 # --------------------------------------------------
 def merge_similar_signatures(bot):
 
@@ -2416,7 +2516,6 @@ def merge_similar_signatures(bot):
     bot.context_clusters = merged_clusters
     return merged_clusters
 
-
 # --------------------------------------------------
 def split_unstable_cluster(bot):
 
@@ -2493,7 +2592,6 @@ def split_unstable_cluster(bot):
 
     bot.context_clusters = updated_clusters
     return updated_clusters
-
 
 # --------------------------------------------------
 def update_context_cluster_outcome(bot, cluster_id, outcome=None):
@@ -3207,6 +3305,7 @@ def register_pending_learning_context(bot, state_signature):
         "signature_key": str(signature_key),
         "context_cluster_id": cluster_id or None,
     }
+
 # --------------------------------------------------
 # commit pending learning context
 # --------------------------------------------------
@@ -3869,6 +3968,7 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
     visible_episode = dict(episode or {})
     internal_episode = dict(episode_internal or {})
     outcome_decomposition = dict(getattr(bot, "last_outcome_decomposition", {}) or {}) if bot is not None else {}
+    in_trade_summary = _summarize_in_trade_updates(internal_episode.get("in_trade_updates", []))
 
     thought_state = dict(internal_episode.get("thought_state", visible_episode.get("thought_state", {})) or {})
     meta_regulation_state = dict(internal_episode.get("meta_regulation_state", visible_episode.get("meta_regulation_state", {})) or {})
@@ -3885,31 +3985,31 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
     context_cluster_quality = float(signal.get("context_cluster_quality", 0.0) or 0.0)
     signature_quality = float(signal.get("signature_quality", 0.0) or 0.0)
     expectation_alignment = float(expectation_state.get("experience_regulation", 0.0) or 0.0)
-
-    review_score = (
-        (plan_quality * 0.18)
-        + (execution_quality * 0.22)
-        + (risk_fit_quality * 0.18)
-        + (readiness * 0.16)
-        + (maturity * 0.14)
-        + (context_cluster_quality * 0.06)
-        + (signature_quality * 0.06)
-        + (expectation_alignment * 0.06)
-        - (uncertainty * 0.12)
-        - (conflict * 0.08)
-    )
-    review_score = float(max(0.0, min(1.0, review_score)))
+    observation_mode = bool(signal.get("observation_mode", False))
+    in_trade_update_count = int(in_trade_summary.get("in_trade_update_count", 0) or 0)
+    in_trade_max_mfe = float(in_trade_summary.get("in_trade_max_mfe", 0.0) or 0.0)
+    in_trade_max_mae = float(in_trade_summary.get("in_trade_max_mae", 0.0) or 0.0)
+    in_trade_avg_fill_ratio = float(in_trade_summary.get("in_trade_avg_fill_ratio", 0.0) or 0.0)
+    in_trade_direction_stability = float(in_trade_summary.get("in_trade_direction_stability", 0.0) or 0.0)
 
     outcome_reason = str(outcome_decomposition.get("reason", (internal_episode.get("last_payload", {}) or {}).get("reason", "-")) or "-").strip().lower() or "-"
     event_key = str(event_name or internal_episode.get("last_event", visible_episode.get("last_event", "-")) or "-").strip().lower() or "-"
+    decision_tendency_value = str(internal_episode.get("decision_tendency", visible_episode.get("decision_tendency", "hold")) or "hold").strip().lower() or "hold"
 
-    if outcome_reason == "tp_hit":
+    uncertainty_recognition_quality = max(0.0, min(1.0, 0.52 + (uncertainty * 0.34) + (conflict * 0.10) + (0.12 if event_key in ("observed_only", "withheld", "replanned", "abandoned") else 0.0) - (0.08 if outcome_reason == "tp_hit" and uncertainty > 0.72 else 0.0)))
+    observation_quality = max(0.0, min(1.0, 0.42 + (0.26 if event_key in ("observed_only", "withheld", "replanned", "abandoned", "blocked_value_gate") else 0.0) + (0.18 if observation_mode else 0.0) + (uncertainty * 0.10) + (conflict * 0.06) - (0.14 if outcome_reason == "tp_hit" and event_key in ("observed_only", "withheld") else 0.0)))
+    correction_timing_quality = max(0.0, min(1.0, 0.46 + (0.24 if event_key in ("replanned", "abandoned", "blocked_value_gate", "cancelled", "timeout") else 0.0) + (uncertainty * 0.08) + (conflict * 0.08) + min(0.18, in_trade_update_count * 0.03) + (min(0.22, in_trade_max_mfe) * 0.22) - (min(0.22, in_trade_max_mae) * 0.28) - (0.16 if outcome_reason == "sl_hit" and readiness >= 0.60 else 0.0) - (0.10 if outcome_reason == "tp_hit" and event_key in ("replanned", "abandoned") else 0.0)))
+    structural_bearing_quality = max(0.0, min(1.0, 0.30 + (readiness * 0.18) + (maturity * 0.20) + (plan_quality * 0.12) + (signature_quality * 0.08) + (context_cluster_quality * 0.08) + (expectation_alignment * 0.08) + (in_trade_direction_stability * 0.08) + (in_trade_avg_fill_ratio * 0.06) - (uncertainty * 0.08) - (conflict * 0.10)))
+    decision_path_quality = max(0.0, min(1.0, (plan_quality * 0.16) + (execution_quality * 0.14) + (risk_fit_quality * 0.12) + (readiness * 0.12) + (maturity * 0.12) + (uncertainty_recognition_quality * 0.12) + (observation_quality * 0.08) + (correction_timing_quality * 0.08) + (structural_bearing_quality * 0.10) + (in_trade_direction_stability * 0.03) + (in_trade_avg_fill_ratio * 0.03) - (uncertainty * 0.08) - (conflict * 0.06)))
+    review_score = max(0.0, min(1.0, (decision_path_quality * 0.28) + (uncertainty_recognition_quality * 0.16) + (observation_quality * 0.14) + (correction_timing_quality * 0.18) + (structural_bearing_quality * 0.24)))
+
+    if outcome_reason == "tp_hit" and decision_path_quality >= 0.62:
         review_label = "reinforce"
-    elif outcome_reason in ("sl_hit", "cancel", "timeout", "rr_too_low", "reward_too_small", "sl_distance_too_high"):
-        review_label = "caution"
-    elif event_key in ("observed_only", "withheld", "replanned", "abandoned", "blocked_value_gate"):
+    elif event_key in ("observed_only", "withheld", "replanned", "abandoned", "blocked_value_gate") and observation_quality >= 0.56:
         review_label = "observe"
-    elif review_score >= 0.62:
+    elif outcome_reason in ("sl_hit", "cancel", "timeout", "rr_too_low", "reward_too_small", "sl_distance_too_high") and correction_timing_quality < 0.48:
+        review_label = "caution"
+    elif structural_bearing_quality >= 0.62 and decision_path_quality >= 0.58:
         review_label = "stabilize"
     else:
         review_label = "reconsider"
@@ -3920,7 +4020,7 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
         "review_label": str(review_label),
         "review_score": float(review_score),
         "outcome_reason": str(outcome_reason),
-        "decision_tendency": str(internal_episode.get("decision_tendency", visible_episode.get("decision_tendency", "hold")) or "hold"),
+        "decision_tendency": str(decision_tendency_value),
         "proposed_decision": str(internal_episode.get("proposed_decision", visible_episode.get("proposed_decision", "WAIT")) or "WAIT"),
         "non_action_type": internal_episode.get("non_action_type", None),
         "readiness": float(readiness),
@@ -3932,5 +4032,83 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
         "risk_fit_quality": float(risk_fit_quality),
         "signature_quality": float(signature_quality),
         "context_cluster_quality": float(context_cluster_quality),
-        "observation_mode": bool(signal.get("observation_mode", False)),
+        "observation_mode": bool(observation_mode),
+        "decision_path_quality": float(decision_path_quality),
+        "uncertainty_recognition_quality": float(uncertainty_recognition_quality),
+        "observation_quality": float(observation_quality),
+        "correction_timing_quality": float(correction_timing_quality),
+        "structural_bearing_quality": float(structural_bearing_quality),
+        "in_trade_update_count": int(in_trade_update_count),
+        "in_trade_max_mfe": float(in_trade_max_mfe),
+        "in_trade_max_mae": float(in_trade_max_mae),
+        "in_trade_avg_fill_ratio": float(in_trade_avg_fill_ratio),
+        "in_trade_direction_stability": float(in_trade_direction_stability),
+    }
+
+# --------------------------------------------------
+def _compact_in_trade_update_payload(payload):
+
+    item = dict(payload or {})
+
+    compact = {
+        "entry": float(item.get("entry", 0.0) or 0.0),
+        "tp": float(item.get("tp", 0.0) or 0.0),
+        "sl": float(item.get("sl", 0.0) or 0.0),
+        "risk": float(item.get("risk", 0.0) or 0.0),
+        "rr": float(item.get("rr", 0.0) or 0.0),
+        "mfe": float(item.get("mfe", 0.0) or 0.0),
+        "mae": float(item.get("mae", 0.0) or 0.0),
+        "bars_open": int(item.get("bars_open", 0) or 0),
+        "fill_ratio": float(item.get("fill_ratio", 0.0) or 0.0),
+        "decision_tendency": str(item.get("decision_tendency", "hold") or "hold"),
+        "proposed_decision": str(item.get("proposed_decision", "WAIT") or "WAIT"),
+        "reason": str(item.get("reason", "-") or "-"),
+    }
+
+    return dict(compact)
+
+# --------------------------------------------------
+def _summarize_in_trade_updates(in_trade_updates):
+
+    updates = [dict(item or {}) for item in list(in_trade_updates or []) if isinstance(item, dict)]
+
+    if not updates:
+        return {
+            "in_trade_update_count": 0,
+            "in_trade_max_mfe": 0.0,
+            "in_trade_max_mae": 0.0,
+            "in_trade_last_bars_open": 0,
+            "in_trade_avg_fill_ratio": 0.0,
+            "in_trade_direction_stability": 0.0,
+        }
+
+    payloads = [dict(item.get("payload", {}) or {}) for item in updates]
+
+    mfe_values = [float(item.get("mfe", 0.0) or 0.0) for item in payloads]
+    mae_values = [float(item.get("mae", 0.0) or 0.0) for item in payloads]
+    bars_open_values = [int(item.get("bars_open", 0) or 0) for item in payloads]
+    fill_ratio_values = [float(item.get("fill_ratio", 0.0) or 0.0) for item in payloads]
+
+    direction_values = []
+    for item in payloads:
+        proposed_decision = str(item.get("proposed_decision", "WAIT") or "WAIT").strip().upper()
+
+        if proposed_decision == "LONG":
+            direction_values.append(1.0)
+        elif proposed_decision == "SHORT":
+            direction_values.append(-1.0)
+        else:
+            direction_values.append(0.0)
+
+    direction_stability = 0.0
+    if direction_values:
+        direction_stability = abs(sum(direction_values) / max(1, len(direction_values)))
+
+    return {
+        "in_trade_update_count": int(len(updates)),
+        "in_trade_max_mfe": float(max(mfe_values) if mfe_values else 0.0),
+        "in_trade_max_mae": float(max(mae_values) if mae_values else 0.0),
+        "in_trade_last_bars_open": int(bars_open_values[-1] if bars_open_values else 0),
+        "in_trade_avg_fill_ratio": float(sum(fill_ratio_values) / max(1, len(fill_ratio_values))),
+        "in_trade_direction_stability": float(direction_stability),
     }

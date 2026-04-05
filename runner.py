@@ -106,8 +106,12 @@ if __name__ == "__main__":
 
         buffer = []
         bot.processed = 0
+        world_replay_loop_seconds = max(
+            0.0,
+            float(getattr(Config, "WORLD_REPLAY_LOOP_SECONDS", 0.0) or 0.0),
+        )
 
-        for row in bot.feed.rows(delay_seconds=0.0):
+        for row in bot.feed.rows(delay_seconds=world_replay_loop_seconds):
             buffer.append(row)
 
             if len(buffer) < Config.WINDOW_SIZE:
@@ -172,11 +176,11 @@ if __name__ == "__main__":
         symbol = Config.SYMBOL
 
         # --------------------------------------------------
-        # Polling-Intervall
+        # Chart-Loop Intervall
         # --------------------------------------------------
-        poll_interval = max(
+        world_time_loop_seconds = max(
             0.25,
-            float(getattr(Config, "LIVE_POLL_INTERVAL_SECONDS", 1.0) or 1.0),
+            float(getattr(Config, "WORLD_TIME_LOOP_SECONDS", 1.0) or 1.0),
         )
 
         exchange = create_exchange()
@@ -247,7 +251,7 @@ if __name__ == "__main__":
 
                 bot.publish_market_window(buffer)
                 last_processed_ts = buffer[-1]["timestamp"]
-                time.sleep(poll_interval)
+                time.sleep(world_time_loop_seconds)
                 continue
 
             # --------------------------------------------------
@@ -259,7 +263,7 @@ if __name__ == "__main__":
             ]
 
             if not new_candles:
-                time.sleep(poll_interval)
+                time.sleep(world_time_loop_seconds)
                 continue
 
             # --------------------------------------------------
@@ -288,4 +292,4 @@ if __name__ == "__main__":
 
                 last_processed_ts = int(ts)
 
-            time.sleep(poll_interval)
+            time.sleep(world_time_loop_seconds)
