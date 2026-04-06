@@ -15,7 +15,7 @@ from config import Config
 from csv_feed import CSVFeed
 from trade_stats import TradeStats
 from bot_engine.exit_engine import ExitEngine
-from bot_engine.mcm_core_engine import build_tension_state_from_window
+from bot_engine.mcm_core_engine import build_tension_state_from_window, build_visual_market_state
 from bot_engine.strukture_engine import StructureEngine
 from bot_gates.trade_value_gate import TradeValueGate
 
@@ -33,7 +33,7 @@ STRUCTURE_ENGINE = StructureEngine()
 
 
 class Bot:
-
+    # --------------------------------------------------
     def __init__(self, filepath: str):
         self.feed = CSVFeed(filepath)
         self.exit_engine = ExitEngine()
@@ -55,6 +55,12 @@ class Bot:
         self.mcm_last_attractor = None
         self.mcm_snapshot = None
         self.mcm_pause_left = 0
+        self.field_density = 0.0
+        self.field_stability = 0.0
+        self.regulatory_load = 0.0
+        self.action_capacity = 0.0
+        self.recovery_need = 0.0
+        self.survival_pressure = 0.0
 
         self.focus_point = None
         self.focus_confidence = 0.0
@@ -87,6 +93,7 @@ class Bot:
         self.observation_mode = False
         self.last_signal_relevance = 0.0
 
+        self.visual_market_state = {}
         self.structure_perception_state = {}
         self.perception_state = {}
         self.outer_visual_perception_state = {}
@@ -168,7 +175,6 @@ class Bot:
                     "last_checked_ts": snapshot.get("entry_ts"),
                     "meta": {},
                 }
-
     # ==================================================
     # ENTSCHEIDUNGSBAHN
     # ==================================================
@@ -198,8 +204,7 @@ class Bot:
                 "expectation_state": dict(result.get("expectation_state", {}) or {}),
             },
         )
-        return True
-                    
+        return True                   
     # ==================================================
     # HANDLUNGSBAHN
     # ==================================================
@@ -210,6 +215,7 @@ class Bot:
 
         entry_price = float(self.position.get("entry", 0.0) or 0.0)
         side = str(self.position.get("side", "")).upper().strip()
+        risk_value = abs(float(self.position.get("risk", 0.0) or 0.0))
 
         self.current_timestamp = window[-1]["timestamp"]
 
@@ -226,13 +232,61 @@ class Bot:
         self.position["mfe"] = max(float(self.position.get("mfe", 0.0) or 0.0), favorable)
         self.position["mae"] = max(float(self.position.get("mae", 0.0) or 0.0), adverse)
 
+        bars_open = 0
+        entry_index = self.position.get("entry_index")
+        if isinstance(entry_index, int):
+            bars_open = max(0, int(self.processed) - int(entry_index))
+
+        rr_value = 0.0
+        if risk_value > 0.0:
+            if side == "LONG":
+                rr_value = max(
+                    0.0,
+                    float(self.position.get("tp", 0.0) or 0.0) - entry_price,
+                ) / risk_value
+            else:
+                rr_value = max(
+                    0.0,
+                    entry_price - float(self.position.get("tp", 0.0) or 0.0),
+                ) / risk_value
+
+        fill_ratio = 0.0
+        if risk_value > 0.0:
+            fill_ratio = max(0.0, min(2.0, favorable / risk_value))
+
+        meta_regulation_state = dict(getattr(self, "meta_regulation_state", {}) or {})
+        runtime_state = dict(getattr(self, "mcm_runtime_decision_state", {}) or {})
+
+        pressure_to_capacity = 0.0
+        if float(getattr(self, "action_capacity", 0.0) or 0.0) > 0.0:
+            pressure_to_capacity = float(getattr(self, "regulatory_load", 0.0) or 0.0) / max(0.05, float(getattr(self, "action_capacity", 0.0) or 0.0))
+
         mark_runtime_episode_event(
             self,
-            "in_trade_updates",
+            "position_update",
             {
                 "position": dict(self.position or {}),
+                "entry": float(self.position.get("entry", 0.0) or 0.0),
+                "tp": float(self.position.get("tp", 0.0) or 0.0),
+                "sl": float(self.position.get("sl", 0.0) or 0.0),
+                "risk": float(risk_value),
+                "rr": float(rr_value),
                 "mfe": float(self.position.get("mfe", 0.0) or 0.0),
                 "mae": float(self.position.get("mae", 0.0) or 0.0),
+                "bars_open": int(bars_open),
+                "fill_ratio": float(fill_ratio),
+                "regulatory_load": float(getattr(self, "regulatory_load", 0.0) or 0.0),
+                "action_capacity": float(getattr(self, "action_capacity", 0.0) or 0.0),
+                "recovery_need": float(getattr(self, "recovery_need", 0.0) or 0.0),
+                "survival_pressure": float(getattr(self, "survival_pressure", 0.0) or 0.0),
+                "pressure_to_capacity": float(pressure_to_capacity),
+                "regulated_courage": float(meta_regulation_state.get("regulated_courage", 0.0) or 0.0),
+                "courage_gap": float(meta_regulation_state.get("courage_gap", 0.0) or 0.0),
+                "decision_tendency": str(runtime_state.get("decision_tendency", "hold") or "hold"),
+                "proposed_decision": str(runtime_state.get("proposed_decision", "WAIT") or "WAIT"),
+                "pre_action_phase": str(meta_regulation_state.get("pre_action_phase", "hold") or "hold"),
+                "dominant_tension_cause": str(meta_regulation_state.get("dominant_tension_cause", "-") or "-"),
+                "reason": "position_watch",
             },
         )
 
@@ -306,9 +360,214 @@ class Bot:
 
         self.position = None
         return True
-
-    # ==================================================
+    # --------------------------------------------------
     def _handle_pending_entry(self, window, last, live_mode: bool):
+
+        if self.pending_entry is None or self.position is not None:
+            return False
+
+        pending_meta = dict(self.pending_entry.get("meta", {}) or {})
+        side = self.pending_entry["side"]
+        entry_price = self.pending_entry["entry"]
+        tp_price = self.pending_entry["tp"]
+        sl_price = self.pending_entry["sl"]
+        created = self.pending_entry["created_index"]
+        max_wait = self.pending_entry["max_wait_bars"]
+
+        high = float(last["high"])
+        low = float(last["low"])
+        trade_plan = dict(pending_meta.get("trade_plan", {}) or {})
+        entry_validity_band = dict(trade_plan.get("entry_validity_band", {}) or {})
+
+        validity_lower = entry_validity_band.get("lower")
+        validity_upper = entry_validity_band.get("upper")
+
+        try:
+            validity_lower = float(validity_lower) if validity_lower is not None else None
+        except Exception:
+            validity_lower = None
+
+        try:
+            validity_upper = float(validity_upper) if validity_upper is not None else None
+        except Exception:
+            validity_upper = None
+
+        entry_touched = low <= entry_price <= high
+        validity_touched = False
+
+        if validity_lower is not None and validity_upper is not None:
+            validity_touched = high >= validity_lower and low <= validity_upper
+
+        bars_open = max(0, int(self.processed) - int(created))
+        pending_risk = abs(float(entry_price) - float(sl_price))
+        rr_value = 0.0
+        if pending_risk > 0.0:
+            if side == "LONG":
+                rr_value = max(
+                    0.0,
+                    float(tp_price) - float(entry_price),
+                ) / pending_risk
+            else:
+                rr_value = max(
+                    0.0,
+                    float(entry_price) - float(tp_price),
+                ) / pending_risk
+
+        distance_to_entry = 0.0
+        if low <= entry_price <= high:
+            distance_to_entry = 0.0
+        elif entry_price < low:
+            distance_to_entry = low - entry_price
+        elif entry_price > high:
+            distance_to_entry = entry_price - high
+
+        fill_ratio = 0.0
+        if pending_risk > 0.0:
+            fill_ratio = max(0.0, min(2.0, 1.0 - (distance_to_entry / max(pending_risk, 1e-9))))
+
+        meta_regulation_state = dict(getattr(self, "meta_regulation_state", {}) or {})
+        runtime_state = dict(getattr(self, "mcm_runtime_decision_state", {}) or {})
+
+        pressure_to_capacity = 0.0
+        if float(getattr(self, "action_capacity", 0.0) or 0.0) > 0.0:
+            pressure_to_capacity = float(getattr(self, "regulatory_load", 0.0) or 0.0) / max(0.05, float(getattr(self, "action_capacity", 0.0) or 0.0))
+
+        mark_runtime_episode_event(
+            self,
+            "pending_update",
+            {
+                "pending_entry": dict(self.pending_entry or {}),
+                "entry": float(entry_price),
+                "tp": float(tp_price),
+                "sl": float(sl_price),
+                "risk": float(pending_risk),
+                "rr": float(rr_value),
+                "mfe": 0.0,
+                "mae": 0.0,
+                "bars_open": int(bars_open),
+                "fill_ratio": float(fill_ratio),
+                "regulatory_load": float(getattr(self, "regulatory_load", 0.0) or 0.0),
+                "action_capacity": float(getattr(self, "action_capacity", 0.0) or 0.0),
+                "recovery_need": float(getattr(self, "recovery_need", 0.0) or 0.0),
+                "survival_pressure": float(getattr(self, "survival_pressure", 0.0) or 0.0),
+                "pressure_to_capacity": float(pressure_to_capacity),
+                "regulated_courage": float(meta_regulation_state.get("regulated_courage", 0.0) or 0.0),
+                "courage_gap": float(meta_regulation_state.get("courage_gap", 0.0) or 0.0),
+                "decision_tendency": str(runtime_state.get("decision_tendency", "hold") or "hold"),
+                "proposed_decision": str(runtime_state.get("proposed_decision", "WAIT") or "WAIT"),
+                "pre_action_phase": str(meta_regulation_state.get("pre_action_phase", "hold") or "hold"),
+                "dominant_tension_cause": str(meta_regulation_state.get("dominant_tension_cause", "-") or "-"),
+                "reason": "pending_watch",
+            },
+        )
+
+        if live_mode:
+            return True
+
+        fill_price = float(entry_price)
+
+        if (not entry_touched) and validity_touched:
+            fill_price = float(min(max(entry_price, low), high))
+
+        if side == "LONG" and (entry_touched or validity_touched):
+
+            risk = abs(fill_price - sl_price)
+
+            self.position = {
+                "side": side,
+                "entry": float(fill_price),
+                "tp": tp_price,
+                "sl": sl_price,
+                "mfe": 0.0,
+                "mae": 0.0,
+                "risk": float(risk),
+                "order_id": None,
+                "entry_ts": last.get("timestamp"),
+                "entry_index": self.processed,
+                "last_checked_ts": last.get("timestamp"),
+                "meta": pending_meta,
+            }
+
+            self.pending_entry = None
+            self.stats.on_attempt(
+                status="filled",
+                context=pending_meta,
+            )
+            mark_runtime_episode_event(
+                self,
+                "filled",
+                {
+                    "position": dict(self.position or {}),
+                    "reason": "backtest_fill",
+                },
+            )
+            self._save_memory_state()
+            return True
+
+        if side == "SHORT" and (entry_touched or validity_touched):
+
+            risk = abs(fill_price - sl_price)
+
+            self.position = {
+                "side": side,
+                "entry": float(fill_price),
+                "tp": tp_price,
+                "sl": sl_price,
+                "mfe": 0.0,
+                "mae": 0.0,
+                "risk": float(risk),
+                "order_id": None,
+                "entry_ts": last.get("timestamp"),
+                "entry_index": self.processed,
+                "last_checked_ts": last.get("timestamp"),
+                "meta": pending_meta,
+            }
+
+            self.pending_entry = None
+            self.stats.on_attempt(
+                status="filled",
+                context=pending_meta,
+            )
+            mark_runtime_episode_event(
+                self,
+                "filled",
+                {
+                    "position": dict(self.position or {}),
+                    "reason": "backtest_fill",
+                },
+            )
+            self._save_memory_state()
+            return True
+
+        if (self.processed - created) > max_wait:
+
+            pending_snapshot = dict(self.pending_entry or {})
+            apply_outcome_stimulus(self, "timeout", self.pending_entry)
+            self.stats.on_attempt(
+                status="timeout",
+                context=pending_meta,
+            )
+            mark_runtime_episode_event(
+                self,
+                "timeout",
+                {
+                    "pending_entry": dict(pending_snapshot or {}),
+                    "reason": "backtest_timeout",
+                },
+            )
+            self.stats.on_cancel(
+                order_id=None,
+                cause="backtest_timeout",
+                exploration_trade=False,
+                outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
+                context=pending_meta,
+            )
+
+            self._save_memory_state()
+            self.pending_entry = None
+            return True
+
+        return True
 
         if self.pending_entry is None or self.position is not None:
             return False
@@ -316,7 +575,7 @@ class Bot:
         pending_meta = dict(self.pending_entry.get("meta", {}) or {})
         mark_runtime_episode_event(
             self,
-            "in_trade_updates",
+            "pending_update",
             {
                 "pending_entry": dict(self.pending_entry or {}),
                 "reason": "pending_watch",
@@ -462,8 +721,7 @@ class Bot:
             return True
 
         return True
-
-    # ==================================================
+    # --------------------------------------------------
     def _handle_entry_attempt(self, window, candle_state, last, live_mode: bool, external_order_active: bool):
 
         if self.position is not None or self.pending_entry is not None:
@@ -589,7 +847,6 @@ class Bot:
 
         self._save_memory_state()
         return True
-
     # ==================================================
     # MCM RUNTIME
     # ==================================================
@@ -610,7 +867,7 @@ class Bot:
             self._runtime_thread.start()
 
         return self._runtime_thread
-
+    # --------------------------------------------------
     def stop_runtime_thread(self):
 
         self._runtime_stop_event.set()
@@ -621,11 +878,11 @@ class Bot:
 
         self._save_memory_state(force=True)
         return thread
-
+    # --------------------------------------------------
     def wait_until_runtime_idle(self):
 
         self._market_packet_queue.join()
-
+    # --------------------------------------------------
     def _build_market_packet(self, window):
 
         if not window:
@@ -639,6 +896,7 @@ class Bot:
         prev_close = local_window[-2].get("close") if len(local_window) > 1 else None
         candle_state = _build_candle_state(last, prev_close=prev_close)
         tension_state = build_tension_state_from_window(local_window)
+        visual_market_state = build_visual_market_state(local_window)
         structure_perception_state = STRUCTURE_ENGINE.build_structure_perception_state(local_window)
 
         return {
@@ -646,9 +904,10 @@ class Bot:
             "window": local_window,
             "candle_state": dict(candle_state or {}),
             "tension_state": dict(tension_state or {}),
+            "visual_market_state": dict(visual_market_state or {}),
             "structure_perception_state": dict(structure_perception_state or {}),
         }
-    
+    # --------------------------------------------------
     def publish_market_window(self, window):
 
         packet = self._build_market_packet(window)
@@ -657,7 +916,7 @@ class Bot:
 
         self._market_packet_queue.put(dict(packet))
         return dict(packet)
-
+    # --------------------------------------------------
     def _runtime_loop(self):
 
         while True:
@@ -678,24 +937,18 @@ class Bot:
 
             try:
                 self._process_market_packet(packet)
+
+                market_cycles = self._runtime_market_followup_cycles()
+                if self._runtime_seeded and market_cycles > 0:
+                    self._step_runtime_idle(
+                        cycles=market_cycles,
+                    )
+
                 self._flush_memory_state_if_due()
             finally:
                 self._market_packet_queue.task_done()
-
-    def _runtime_idle_sleep_seconds(self):
-
-        min_sleep = max(
-            0.01,
-            float(getattr(Config, "MCM_RUNTIME_IDLE_SLEEP_MIN_SECONDS", 0.05) or 0.05),
-        )
-        max_sleep = max(
-            min_sleep,
-            float(getattr(Config, "MCM_RUNTIME_IDLE_SLEEP_MAX_SECONDS", 0.35) or 0.35),
-        )
-
-        queue_depth = int(self._market_packet_queue.qsize() or 0)
-        if queue_depth > 0:
-            return float(min_sleep)
+    # --------------------------------------------------
+    def _runtime_dynamic_load(self):
 
         dynamic_load = max(
             float(getattr(self, "focus_confidence", 0.0) or 0.0),
@@ -711,27 +964,63 @@ class Bot:
         elif bool(getattr(self, "observation_mode", False)):
             dynamic_load = max(dynamic_load, 0.68)
 
-        dynamic_load = max(0.0, min(1.0, float(dynamic_load)))
+        return float(max(0.0, min(1.0, float(dynamic_load))))
+    # --------------------------------------------------
+    def _runtime_idle_sleep_seconds(self):
+
+        min_sleep = max(
+            0.01,
+            float(
+                getattr(
+                    Config,
+                    "MCM_INNER_IDLE_SLEEP_MIN_SECONDS",
+                    getattr(Config, "MCM_RUNTIME_IDLE_SLEEP_MIN_SECONDS", 0.05),
+                ) or 0.05
+            ),
+        )
+        max_sleep = max(
+            min_sleep,
+            float(
+                getattr(
+                    Config,
+                    "MCM_INNER_IDLE_SLEEP_MAX_SECONDS",
+                    getattr(Config, "MCM_RUNTIME_IDLE_SLEEP_MAX_SECONDS", 0.35),
+                ) or 0.35
+            ),
+        )
+
+        queue_depth = int(self._market_packet_queue.qsize() or 0)
+        if queue_depth > 0:
+            return float(min_sleep)
+
+        dynamic_load = self._runtime_dynamic_load()
         sleep_span = max_sleep - min_sleep
         return float(max_sleep - (sleep_span * dynamic_load))
-
+    # --------------------------------------------------
     def _runtime_idle_cycles(self):
 
         base_cycles = max(
             1,
-            int(getattr(Config, "MCM_RUNTIME_IDLE_TICKS", 1) or 1),
+            int(
+                getattr(
+                    Config,
+                    "MCM_INNER_IDLE_BASE_TICKS",
+                    getattr(Config, "MCM_RUNTIME_IDLE_TICKS", 1),
+                ) or 1
+            ),
         )
         max_cycles = max(
             base_cycles,
-            int(getattr(Config, "MCM_RUNTIME_IDLE_TICKS_MAX", base_cycles) or base_cycles),
+            int(
+                getattr(
+                    Config,
+                    "MCM_INNER_IDLE_MAX_TICKS",
+                    getattr(Config, "MCM_RUNTIME_IDLE_TICKS_MAX", base_cycles),
+                ) or base_cycles
+            ),
         )
 
-        dynamic_load = max(
-            float(getattr(self, "focus_confidence", 0.0) or 0.0),
-            float(getattr(self, "target_lock", 0.0) or 0.0),
-            float(getattr(self, "last_signal_relevance", 0.0) or 0.0),
-            abs(float(getattr(self, "competition_bias", 0.0) or 0.0)),
-        )
+        dynamic_load = self._runtime_dynamic_load()
 
         cycle_boost = 0
 
@@ -743,9 +1032,9 @@ class Bot:
         if bool(getattr(self, "observation_mode", False)):
             cycle_boost += 1
 
-        cycle_boost += int(round(max(0.0, min(1.0, float(dynamic_load))) * max(0, max_cycles - base_cycles)))
+        cycle_boost += int(round(dynamic_load * max(0, max_cycles - base_cycles)))
         return int(min(max_cycles, base_cycles + cycle_boost))
-
+    # --------------------------------------------------
     def _step_runtime_idle(self, cycles=None):
 
         self._ensure_memory_state_loaded()
@@ -758,8 +1047,8 @@ class Bot:
             bot=self,
             cycles=max(1, int(idle_cycles or 1)),
         )
-
-    def _seed_runtime_window(self, window, candle_state=None):
+    # --------------------------------------------------
+    def _seed_runtime_window(self, window, candle_state=None, visual_market_state=None, structure_perception_state=None):
 
         self._ensure_memory_state_loaded()
 
@@ -776,103 +1065,30 @@ class Bot:
             candle_state = _build_candle_state(last, prev_close=prev_close)
 
         self.current_timestamp = local_window[-1].get("timestamp")
-        result = step_mcm_runtime(
+        runtime_result = step_mcm_runtime(
             local_window,
             dict(candle_state or {}),
             bot=self,
+            visual_market_state=dict(visual_market_state or {}),
+            structure_perception_state=dict(structure_perception_state or {}),
         )
         self._runtime_seeded = True
-        return result
 
-    # ==================================================
-    # MEMORY STATE
-    # ==================================================
-    def _ensure_memory_state_loaded(self):
-
-        if self._memory_state_mcm_loaded:
-            return
-
-        if not isinstance(self.mcm_brain, dict):
-            return
-
-        apply_memory_state(self, self._memory_state_payload)
-
-        if getattr(self, "mcm_runtime", None) is not None:
-            self.mcm_runtime.restore_from_bot()
-
-        self._memory_state_mcm_loaded = True
-
-    def _mark_memory_state_dirty(self):
-
-        self._memory_state_dirty = True
-        return True
-
-    def _flush_memory_state_if_due(self, force: bool = False):
-
-        if not bool(getattr(self, "_memory_state_dirty", False)) and not bool(force):
-            return None
-
-        now_ts = float(time.time())
-        cooldown = max(
-            0.0,
-            float(getattr(Config, "MCM_MEMORY_SAVE_COOLDOWN_SECONDS", 1.25) or 1.25),
+        action_result = self._run_runtime_action_cycle(
+            local_window,
+            dict(candle_state or {}),
         )
+        if action_result is None:
+            return runtime_result
 
-        if not force and (now_ts - float(getattr(self, "_memory_state_last_save_ts", 0.0) or 0.0)) < cooldown:
-            return None
+        return action_result
+    # --------------------------------------------------
+    def _run_runtime_action_cycle(self, window, candle_state):
 
-        return self._save_memory_state(force=True)
-
-    def _save_memory_state(self, force: bool = False):
-
-        if not bool(force) and not bool(getattr(self, "_memory_state_dirty", False)):
-            return None
-
-        payload = save_memory_state(
-            self,
-            include_runtime_state=bool(getattr(Config, "MCM_SAVE_RUNTIME_STATE", False)),
-        )
-
-        if payload is None:
-            return None
-
-        self._memory_state_payload = payload
-        self._memory_state_mcm_loaded = isinstance(self.mcm_brain, dict)
-        self._memory_state_dirty = False
-        self._memory_state_last_save_ts = float(time.time())
-        return payload
-            
-    # ==================================================
-    # INTERNE PIPELINE (NUR WINDOW → LOGIK)
-    # ==================================================
-
-    def _process_market_packet(self, packet):
-
-        item = dict(packet or {})
-        window = [dict(entry or {}) for entry in list(item.get("window", []) or []) if isinstance(entry, dict)]
+        self._ensure_memory_state_loaded()
 
         if not window:
             return None
-
-        candle_state = dict(item.get("candle_state", {}) or {})
-        if not candle_state:
-            last = window[-1]
-            prev_close = window[-2].get("close") if len(window) > 1 else None
-            candle_state = _build_candle_state(last, prev_close=prev_close)
-
-        if not self._runtime_seeded:
-            return self._seed_runtime_window(window, candle_state=candle_state)
-
-        result = self._process_runtime_packet(
-            window,
-            candle_state,
-        )
-        self.processed += 1
-        return result
-
-    def _process_runtime_packet(self, window, candle_state):
-
-        self._ensure_memory_state_loaded()
 
         # --------------------------------------------------
         # Restart Recovery → Timestamp initialisieren
@@ -898,12 +1114,6 @@ class Bot:
 
         last = window[-1]
 
-        step_mcm_runtime(
-            window,
-            candle_state,
-            bot=self,
-        )
-
         if self._handle_active_position(window, last, live_mode):
             return True
 
@@ -914,15 +1124,152 @@ class Bot:
             return True
 
         return True
+    # --------------------------------------------------
+    def _runtime_market_followup_cycles(self):
 
+        configured_cycles = max(
+            1,
+            int(
+                getattr(
+                    Config,
+                    "MCM_RUNTIME_TICKS_PER_WINDOW",
+                    getattr(Config, "MCM_INNER_TICKS_PER_WORLD_TICK", 1),
+                ) or 1
+            ),
+        )
+
+        followup_cycles = max(0, configured_cycles - 1)
+        if followup_cycles <= 0:
+            return 0
+
+        dynamic_load = self._runtime_dynamic_load()
+        scaled_cycles = int(round(dynamic_load * followup_cycles))
+        return int(max(0, min(followup_cycles, scaled_cycles if followup_cycles > 1 else followup_cycles)))
+    # ==================================================
+    # MEMORY STATE
+    # ==================================================
+    def _ensure_memory_state_loaded(self):
+
+        if self._memory_state_mcm_loaded:
+            return
+
+        if not isinstance(self.mcm_brain, dict):
+            return
+
+        apply_memory_state(self, self._memory_state_payload)
+
+        if getattr(self, "mcm_runtime", None) is not None:
+            self.mcm_runtime.restore_from_bot()
+
+        self._memory_state_mcm_loaded = True
+    # --------------------------------------------------
+    def _mark_memory_state_dirty(self):
+
+        self._memory_state_dirty = True
+        return True
+    # --------------------------------------------------
+    def _flush_memory_state_if_due(self, force: bool = False):
+
+        if not bool(getattr(self, "_memory_state_dirty", False)) and not bool(force):
+            return None
+
+        now_ts = float(time.time())
+        cooldown = max(
+            0.0,
+            float(getattr(Config, "MCM_MEMORY_SAVE_COOLDOWN_SECONDS", 1.25) or 1.25),
+        )
+
+        if not force and (now_ts - float(getattr(self, "_memory_state_last_save_ts", 0.0) or 0.0)) < cooldown:
+            return None
+
+        return self._save_memory_state(force=True)
+    # --------------------------------------------------
+    def _save_memory_state(self, force: bool = False):
+
+        if not bool(force) and not bool(getattr(self, "_memory_state_dirty", False)):
+            return None
+
+        payload = save_memory_state(
+            self,
+            include_runtime_state=bool(getattr(Config, "MCM_SAVE_RUNTIME_STATE", False)),
+        )
+
+        if payload is None:
+            return None
+
+        self._memory_state_payload = payload
+        self._memory_state_mcm_loaded = isinstance(self.mcm_brain, dict)
+        self._memory_state_dirty = False
+        self._memory_state_last_save_ts = float(time.time())
+        return payload           
+    # ==================================================
+    # INTERNE PIPELINE (NUR WINDOW → LOGIK)
+    # ==================================================
+    def _process_market_packet(self, packet):
+
+        item = dict(packet or {})
+        window = [dict(entry or {}) for entry in list(item.get("window", []) or []) if isinstance(entry, dict)]
+
+        if not window:
+            return None
+
+        candle_state = dict(item.get("candle_state", {}) or {})
+        visual_market_state = dict(item.get("visual_market_state", {}) or {})
+        structure_perception_state = dict(item.get("structure_perception_state", {}) or {})
+        if not candle_state:
+            last = window[-1]
+            prev_close = window[-2].get("close") if len(window) > 1 else None
+            candle_state = _build_candle_state(last, prev_close=prev_close)
+
+        if not self._runtime_seeded:
+            result = self._seed_runtime_window(
+                window,
+                candle_state=candle_state,
+                visual_market_state=visual_market_state,
+                structure_perception_state=structure_perception_state,
+            )
+        else:
+            result = self._process_runtime_packet(
+                window,
+                candle_state,
+                visual_market_state=visual_market_state,
+                structure_perception_state=structure_perception_state,
+            )
+
+        self.processed += 1
+        return result
+    # --------------------------------------------------
+    def _process_runtime_packet(self, window, candle_state, visual_market_state=None, structure_perception_state=None):
+
+        step_mcm_runtime(
+            window,
+            candle_state,
+            bot=self,
+            visual_market_state=dict(visual_market_state or {}),
+            structure_perception_state=dict(structure_perception_state or {}),
+        )
+
+        return self._run_runtime_action_cycle(
+            window,
+            candle_state,
+        )
+    # --------------------------------------------------
     def _process_window(self, window):
 
         packet = self._build_market_packet(window)
         if packet is None:
             return None
 
-        return self._process_market_packet(packet)
+        result = self._process_market_packet(packet)
 
+        market_cycles = self._runtime_market_followup_cycles()
+        if self._runtime_seeded and market_cycles > 0:
+            self._step_runtime_idle(
+                cycles=market_cycles,
+            )
+
+        self._flush_memory_state_if_due()
+        return result
     # ==================================================
     # MODUS 1: ROW-MODUS (internes Rolling)
     # ==================================================
@@ -940,7 +1287,6 @@ class Bot:
                 buffer.pop(0)
 
             self._process_window(buffer)
-
     # ==================================================
     # MODUS 2: WINDOW-MODUS (direkt vom Feed)
     # ==================================================
@@ -955,7 +1301,6 @@ class Bot:
             processed += 1
 
         return processed
-    
 # --------------------------------------------------
 # ATTEMPT CONTEXT
 # --------------------------------------------------

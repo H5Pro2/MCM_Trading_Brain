@@ -304,6 +304,12 @@ def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
         "mcm_memory": mcm_memory,
         "mcm_last_attractor": _to_str(getattr(bot, "mcm_last_attractor", None), None),
         "mcm_last_action": _to_str(getattr(bot, "mcm_last_action", None), None),
+        "field_density": _to_float(getattr(bot, "field_density", 0.0), 0.0),
+        "field_stability": _to_float(getattr(bot, "field_stability", 0.0), 0.0),
+        "regulatory_load": _to_float(getattr(bot, "regulatory_load", 0.0), 0.0),
+        "action_capacity": _to_float(getattr(bot, "action_capacity", 0.0), 0.0),
+        "recovery_need": _to_float(getattr(bot, "recovery_need", 0.0), 0.0),
+        "survival_pressure": _to_float(getattr(bot, "survival_pressure", 0.0), 0.0),
     }
 
     if bool(include_runtime_state):
@@ -378,6 +384,12 @@ def apply_memory_state(bot, state: dict | None) -> dict:
     bot.mcm_last_observe_timestamp = payload.get("mcm_last_observe_timestamp", None)
     bot.mcm_last_attractor = _to_str(payload.get("mcm_last_attractor"), None)
     bot.mcm_last_action = _to_str(payload.get("mcm_last_action"), None)
+    bot.field_density = _to_float(payload.get("field_density", 0.0), 0.0)
+    bot.field_stability = _to_float(payload.get("field_stability", 0.0), 0.0)
+    bot.regulatory_load = _to_float(payload.get("regulatory_load", 0.0), 0.0)
+    bot.action_capacity = _to_float(payload.get("action_capacity", 0.0), 0.0)
+    bot.recovery_need = _to_float(payload.get("recovery_need", 0.0), 0.0)
+    bot.survival_pressure = _to_float(payload.get("survival_pressure", 0.0), 0.0)
 
     mcm_brain = getattr(bot, "mcm_brain", None)
     if isinstance(mcm_brain, dict):
@@ -443,6 +455,12 @@ def read_memory_state(path: str | None = None) -> dict:
         "mcm_memory": [],
         "mcm_last_attractor": None,
         "mcm_last_action": None,
+        "field_density": 0.0,
+        "field_stability": 0.0,
+        "regulatory_load": 0.0,
+        "action_capacity": 0.0,
+        "recovery_need": 0.0,
+        "survival_pressure": 0.0,
     }
 
     if not os.path.exists(filepath):
@@ -502,6 +520,12 @@ def read_memory_state(path: str | None = None) -> dict:
         "mcm_memory": normalize_mcm_memory((raw or {}).get("mcm_memory", [])),
         "mcm_last_attractor": _to_str((raw or {}).get("mcm_last_attractor"), None),
         "mcm_last_action": _to_str((raw or {}).get("mcm_last_action"), None),
+        "field_density": _to_float((raw or {}).get("field_density", 0.0), 0.0),
+        "field_stability": _to_float((raw or {}).get("field_stability", 0.0), 0.0),
+        "regulatory_load": _to_float((raw or {}).get("regulatory_load", 0.0), 0.0),
+        "action_capacity": _to_float((raw or {}).get("action_capacity", 0.0), 0.0),
+        "recovery_need": _to_float((raw or {}).get("recovery_need", 0.0), 0.0),
+        "survival_pressure": _to_float((raw or {}).get("survival_pressure", 0.0), 0.0),
     }
 
 

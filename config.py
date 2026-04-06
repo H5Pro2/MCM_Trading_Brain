@@ -27,8 +27,9 @@ class Config:
     TIMEFRAME = "5m"
     MECHANIK = "swap"
     ORDER_SIZE = 0.5
-    WORLD_TIME_LOOP_SECONDS = 1.0
-    WORLD_REPLAY_LOOP_SECONDS = 0.0
+    WORLD_TIME_LOOP_SECONDS = 1.0 # Live-Loop-Wartezeit für den äußeren Welt-/Chart-Loop.
+    # WORLD_TIME_LOOP_SECONDS sollte fachlich  eher Polling-Intervall heißen, nicht Weltzeit. !!!!!
+    WORLD_REPLAY_LOOP_SECONDS = 0.01 # Replay-Verzögerung im Backtest/CSV-Feed.
     # ==================================================
     # WORKSPACE
     # ==================================================

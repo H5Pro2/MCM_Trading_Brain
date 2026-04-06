@@ -562,7 +562,7 @@ class TradeStatsGUI:
         self.vars[name] = (var, lbl)
 
     # ─────────────────────────────────────────────
-    # HEADER (zentriert, sauber strukturiert)
+    # HEADER (3 BLÖCKE · BILD-LAYOUT)
     # ─────────────────────────────────────────────
     def _build_ui(self, parent):
 
@@ -572,10 +572,13 @@ class TradeStatsGUI:
         main.grid_anchor("center")
         main.grid_columnconfigure(0, weight=1)
         main.grid_columnconfigure(1, weight=1)
+        main.grid_columnconfigure(2, weight=1)
 
         # LEFT BLOCK
         left = ttk.Frame(main)
         left.grid(row=0, column=0, sticky="n", padx=20)
+        left.grid_columnconfigure(0, weight=1)
+        left.grid_columnconfigure(1, weight=1)
 
         ttk.Label(
             left,
@@ -590,42 +593,83 @@ class TradeStatsGUI:
             "TP_COUNT",
             "SL_COUNT",
             "WINRATE",
-            "EXPECTANCY",
             "PROFIT_FACTOR",
-            "MAX_DD_PCT",
         ]
 
-        for i, f in enumerate(left_fields, start=1):
-            self._field(left, i, f)
+        for row_index, field_name in enumerate(left_fields, start=1):
+            self._field(left, row_index, field_name)
 
-        # RIGHT BLOCK
-        right = ttk.Frame(main)
-        right.grid(row=0, column=1, sticky="n", padx=20)
-        right.grid_columnconfigure(0, weight=1)
-        right.grid_columnconfigure(1, weight=1)
+        # CENTER BLOCK
+        center = ttk.Frame(main)
+        center.grid(row=0, column=1, sticky="n", padx=20)
+        center.grid_columnconfigure(0, weight=1)
+        center.grid_columnconfigure(1, weight=1)
 
         ttk.Label(
-            right,
+            center,
             text="PNL / KPI",
             style="Title.TLabel",
             anchor="center",
             justify="center"
         ).grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
-        right_fields = [
+        center_fields = [
             "PNL_NETTO",
             "PNL_TP",
             "PNL_SL",
-            "ATTEMPT_DENSITY",
-            "CONTEXT_QUALITY",
-            "OVERTRADE_PRESSURE",
             "ZONE_SHARE",
             "Time_Range",
+        ]
+
+        for row_index, field_name in enumerate(center_fields, start=1):
+            self._field(center, row_index, field_name)
+
+        # RIGHT BLOCK
+        right = ttk.Frame(main)
+        right.grid(row=0, column=2, sticky="n", padx=20)
+        right.grid_columnconfigure(0, weight=1)
+        right.grid_columnconfigure(1, weight=1)
+
+        ttk.Label(
+            right,
+            text="MCM STATE",
+            style="Title.TLabel",
+            anchor="center",
+            justify="center"
+        ).grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
+
+        right_fields = [
+            "FIELD_DENSITY",
+            "FIELD_STABILITY",
+            "REGULATORY_LOAD",
+            "ACTION_CAPACITY",
+            "RECOVERY_NEED",
+            "SURVIVAL_PRESSURE",
+            "EXPECTANCY",            
+            "MAX_DD_PCT",
+            "ATTEMPT_DENSITY",
+            "CONTEXT_QUALITY",
+            "OVERTRADE_PRESSURE",                        
         ]
 
         for row_index, field_name in enumerate(right_fields, start=1):
             self._field(right, row_index, field_name)
 
+    # ─────────────────────────────────────────────
+    # READ MEMORY STATE
+    # ─────────────────────────────────────────────
+    def _read_memory_state(self):
+        path = self._resolve_memory_state_path()
+
+        if not os.path.exists(path):
+            return {}
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+        
     # ─────────────────────────────────────────────
     # EQUITY RESET (bei Bot-Neustart / CSV Reset)
     # ─────────────────────────────────────────────
@@ -786,6 +830,7 @@ class TradeStatsGUI:
 
         kpi_summary = dict(stats.get("kpi_summary", {}) or {})
         proof = dict(kpi_summary.get("proof", {}) or {})
+        memory_state = dict(self._read_memory_state() or {})
 
         winrate = float(proof.get("winrate", 0.0) or 0.0) * 100.0
         expectancy = float(proof.get("expectancy", 0.0) or 0.0)
@@ -795,6 +840,12 @@ class TradeStatsGUI:
         overtrade_pressure = float(proof.get("overtrade_pressure", 0.0) or 0.0)
         zone_share = float(proof.get("attempt_zone_share", 0.0) or 0.0)
         max_dd_pct = float(proof.get("max_drawdown_pct", 0.0) or 0.0) * 100.0
+        field_density = float(memory_state.get("field_density", 0.0) or 0.0)
+        field_stability = float(memory_state.get("field_stability", 0.0) or 0.0)
+        regulatory_load = float(memory_state.get("regulatory_load", 0.0) or 0.0)
+        action_capacity = float(memory_state.get("action_capacity", 0.0) or 0.0)
+        recovery_need = float(memory_state.get("recovery_need", 0.0) or 0.0)
+        survival_pressure = float(memory_state.get("survival_pressure", 0.0) or 0.0)
 
         self.vars["TRADES"][0].set(trades)
         self.vars["TP_COUNT"][0].set(tp)
@@ -811,6 +862,12 @@ class TradeStatsGUI:
         self.vars["CONTEXT_QUALITY"][0].set(f"{context_quality:.3f}")
         self.vars["OVERTRADE_PRESSURE"][0].set(f"{overtrade_pressure:.3f}")
         self.vars["ZONE_SHARE"][0].set(f"{zone_share * 100.0:.2f} %")
+        self.vars["FIELD_DENSITY"][0].set(f"{field_density:.3f}")
+        self.vars["FIELD_STABILITY"][0].set(f"{field_stability:.3f}")
+        self.vars["REGULATORY_LOAD"][0].set(f"{regulatory_load:.3f}")
+        self.vars["ACTION_CAPACITY"][0].set(f"{action_capacity:.3f}")
+        self.vars["RECOVERY_NEED"][0].set(f"{recovery_need:.3f}")
+        self.vars["SURVIVAL_PRESSURE"][0].set(f"{survival_pressure:.3f}")
 
         ws_range = self.print_Time_Range(WORKSPACE_PATH)
         self.vars["Time_Range"][0].set(ws_range)

@@ -121,6 +121,7 @@ if __name__ == "__main__":
                 buffer.pop(0)
 
             bot.publish_market_window(buffer)
+            bot.wait_until_runtime_idle()
 
         bot.stop_runtime_thread()
         save_memory_state(bot)
@@ -158,6 +159,16 @@ if __name__ == "__main__":
             f"CONTEXT_QUALITY: {float(proof.get('context_quality', 0.0) or 0.0):.3f} | "
             f"OVERTRADE_PRESSURE: {float(proof.get('overtrade_pressure', 0.0) or 0.0):.3f} | "
             f"MAX_DD_PCT: {float(proof.get('max_drawdown_pct', 0.0) or 0.0) * 100.0:.2f}%"
+        )
+
+        print(
+            f"MCM RAUM | "
+            f"FIELD_DENSITY: {float(getattr(bot, 'field_density', 0.0) or 0.0):.3f} | "
+            f"FIELD_STABILITY: {float(getattr(bot, 'field_stability', 0.0) or 0.0):.3f} | "
+            f"REGULATORY_LOAD: {float(getattr(bot, 'regulatory_load', 0.0) or 0.0):.3f} | "
+            f"ACTION_CAPACITY: {float(getattr(bot, 'action_capacity', 0.0) or 0.0):.3f} | "
+            f"RECOVERY_NEED: {float(getattr(bot, 'recovery_need', 0.0) or 0.0):.3f} | "
+            f"SURVIVAL_PRESSURE: {float(getattr(bot, 'survival_pressure', 0.0) or 0.0):.3f}"
         )
 
         print(

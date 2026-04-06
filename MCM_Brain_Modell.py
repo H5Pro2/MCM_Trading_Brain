@@ -4,7 +4,7 @@
 # ==================================================
 from config import Config
 from debug_reader import dbr_debug
-from bot_engine.mcm_core_engine import build_tension_state_from_window
+from bot_engine.mcm_core_engine import build_tension_state_from_window, build_visual_market_state
 from MCM_KI_Modell import MCMField, ClusterDetector, Memory, SelfModel, AttractorSystem, RegulationLayer
 from bot_engine.strukture_engine import StructureEngine
 import numpy as np
@@ -16,6 +16,8 @@ class MCMBrainRuntime:
         self.bot = bot
         self.window = []
         self.candle_state = {}
+        self.visual_market_state = {}
+        self.structure_perception_state = {}
         self.timestamp = None
         self.runtime_tick_seq = 0
         self.last_result = None
@@ -42,12 +44,19 @@ class MCMBrainRuntime:
 
         world_state = dict(runtime_brain_snapshot.get("world_state", {}) or {})
         impulse_candle_state = dict(world_state.get("candle_state", {}) or {})
+        impulse_visual_market_state = dict(world_state.get("visual_market_state", {}) or {})
+        impulse_structure_perception_state = dict(world_state.get("structure_perception_state", {}) or {})
 
-        if impulse_candle_state:
+        self.visual_market_state = dict(impulse_visual_market_state or {})
+        self.structure_perception_state = dict(impulse_structure_perception_state or {})
+
+        if impulse_candle_state or impulse_visual_market_state or impulse_structure_perception_state:
             self.last_impulse = {
                 "timestamp": self.timestamp,
                 "window": [],
                 "candle_state": dict(impulse_candle_state),
+                "visual_market_state": dict(impulse_visual_market_state),
+                "structure_perception_state": dict(impulse_structure_perception_state),
             }
         else:
             self.last_impulse = {}
@@ -68,12 +77,20 @@ class MCMBrainRuntime:
         if dict(last_impulse.get("candle_state", {}) or {}):
             return True
 
+        if dict(last_impulse.get("visual_market_state", {}) or {}):
+            return True
+
+        if dict(last_impulse.get("structure_perception_state", {}) or {}):
+            return True
+
         return False
 
-    def ingest_market_impulse(self, window, candle_state):
+    def ingest_market_impulse(self, window, candle_state, visual_market_state=None, structure_perception_state=None):
 
         self.window = [dict(item or {}) for item in list(window or []) if isinstance(item, dict)]
         self.candle_state = dict(candle_state or {})
+        self.visual_market_state = dict(visual_market_state or {})
+        self.structure_perception_state = dict(structure_perception_state or {})
 
         next_timestamp = (self.window[-1] or {}).get("timestamp") if self.window else None
         self._market_tick_pending = bool(next_timestamp != self.timestamp)
@@ -83,6 +100,8 @@ class MCMBrainRuntime:
             "timestamp": self.timestamp,
             "window": [dict(item or {}) for item in list(self.window or []) if isinstance(item, dict)],
             "candle_state": dict(self.candle_state or {}),
+            "visual_market_state": dict(self.visual_market_state or {}),
+            "structure_perception_state": dict(self.structure_perception_state or {}),
         }
 
         self.pending_impulse = dict(impulse)
@@ -97,6 +116,8 @@ class MCMBrainRuntime:
         impulse = dict(self.pending_impulse or self.last_impulse or {})
         window = [dict(item or {}) for item in list(impulse.get("window", []) or []) if isinstance(item, dict)]
         candle_state = dict(impulse.get("candle_state", {}) or {})
+        visual_market_state = dict(impulse.get("visual_market_state", {}) or {})
+        structure_perception_state = dict(impulse.get("structure_perception_state", {}) or {})
 
         if not window:
             return None
@@ -105,6 +126,8 @@ class MCMBrainRuntime:
             window,
             candle_state,
             bot=self.bot,
+            visual_market_state=visual_market_state,
+            structure_perception_state=structure_perception_state,
         )
 
         if runtime_result is None:
@@ -182,6 +205,7 @@ def _build_runtime_hold_decision(bot, candle_state=None, tension_state=None, dec
     tension = dict(tension_state or {})
     snapshot = dict(getattr(bot, "mcm_snapshot", {}) or {}) if bot is not None else {}
     expectation_state = dict(getattr(bot, "expectation_state", {}) or {}) if bot is not None else {}
+    visual_market_state = dict(getattr(bot, "visual_market_state", {}) or {}) if bot is not None else {}
     structure_perception_state = dict(getattr(bot, "structure_perception_state", {}) or {}) if bot is not None else {}
     outer_visual_perception_state = dict(getattr(bot, "outer_visual_perception_state", {}) or {}) if bot is not None else {}
     inner_field_perception_state = dict(getattr(bot, "inner_field_perception_state", {}) or {}) if bot is not None else {}
@@ -194,6 +218,11 @@ def _build_runtime_hold_decision(bot, candle_state=None, tension_state=None, dec
 
     strongest_memory = dict(snapshot.get("strongest_memory", {}) or {})
     proposed_decision = str(meta_regulation_state.get("decision", "WAIT") or "WAIT").upper().strip()
+    field_state = _derive_runtime_field_state(
+        bot=bot,
+        tension_state=tension,
+        snapshot=snapshot,
+    )
 
     return {
         "decision": "WAIT",
@@ -226,6 +255,7 @@ def _build_runtime_hold_decision(bot, candle_state=None, tension_state=None, dec
         "world_state": {
             "candle_state": dict(candle or {}),
             "tension_state": dict(tension or {}),
+            "visual_market_state": dict(visual_market_state or {}),
             "structure_perception_state": dict(structure_perception_state or {}),
         },
         "structure_perception_state": dict(structure_perception_state or {}),
@@ -253,13 +283,19 @@ def _build_runtime_hold_decision(bot, candle_state=None, tension_state=None, dec
         "observation_mode": bool(getattr(bot, "observation_mode", False)) if bot is not None else False,
         "long_score": 0.0,
         "short_score": 0.0,
+        "field_density": float(field_state.get("field_density", 0.0) or 0.0),
+        "field_stability": float(field_state.get("field_stability", 0.0) or 0.0),
+        "regulatory_load": float(field_state.get("regulatory_load", 0.0) or 0.0),
+        "action_capacity": float(field_state.get("action_capacity", 0.0) or 0.0),
+        "recovery_need": float(field_state.get("recovery_need", 0.0) or 0.0),
+        "survival_pressure": float(field_state.get("survival_pressure", 0.0) or 0.0),
         "decision_tendency": str(decision_tendency or "hold"),
         "proposed_decision": str(proposed_decision or "WAIT"),
         "rejection_reason": str(reason or "runtime_hold"),
     }
 
 # --------------------------------------------------
-def step_mcm_runtime(window, candle_state, bot=None):
+def step_mcm_runtime(window, candle_state, bot=None, visual_market_state=None, structure_perception_state=None):
 
     if bot is None or not window:
         return None
@@ -271,6 +307,8 @@ def step_mcm_runtime(window, candle_state, bot=None):
             window,
             candle_state,
             bot=bot,
+            visual_market_state=dict(visual_market_state or {}),
+            structure_perception_state=dict(structure_perception_state or {}),
         )
 
         if runtime_result is None:
@@ -285,18 +323,13 @@ def step_mcm_runtime(window, candle_state, bot=None):
             market_tick_advanced=True,
         )
 
-    runtime.ingest_market_impulse(window, candle_state)
-    runtime_cycles = max(
-        1,
-        int(
-            getattr(
-                Config,
-                "MCM_RUNTIME_TICKS_PER_WINDOW",
-                getattr(Config, "MCM_INNER_TICKS_PER_WORLD_TICK", 1),
-            ) or 1
-        ),
+    runtime.ingest_market_impulse(
+        window,
+        candle_state,
+        visual_market_state=dict(visual_market_state or {}),
+        structure_perception_state=dict(structure_perception_state or {}),
     )
-    return runtime.advance(runtime_cycles)
+    return runtime.advance(1)
 
 # --------------------------------------------------
 def _experience_reward_delta(summary):
@@ -304,9 +337,14 @@ def _experience_reward_delta(summary):
     item = dict(summary or {})
     event_name = str(item.get("event_name", "") or "").strip().lower()
     outcome_reason = str(item.get("outcome_reason", "") or "").strip().lower()
+    decision_tendency = str(item.get("decision_tendency", "hold") or "hold").strip().lower()
     plan_quality = float(item.get("plan_quality", 0.0) or 0.0)
     execution_quality = float(item.get("execution_quality", 0.0) or 0.0)
     risk_fit_quality = float(item.get("risk_fit_quality", 0.0) or 0.0)
+    observation_quality = float(item.get("observation_quality", 0.0) or 0.0)
+    correction_timing_quality = float(item.get("correction_timing_quality", 0.0) or 0.0)
+    structural_bearing_quality = float(item.get("structural_bearing_quality", 0.0) or 0.0)
+    review_score = float(item.get("review_score", 0.0) or 0.0)
 
     if outcome_reason == "tp_hit":
         return float(0.85 + (plan_quality * 0.10) + (execution_quality * 0.10))
@@ -318,7 +356,21 @@ def _experience_reward_delta(summary):
         return float(-0.35 - ((1.0 - max(plan_quality, execution_quality)) * 0.10))
 
     if event_name in ("observed_only", "withheld", "replanned", "abandoned"):
-        return -0.12
+        non_action_quality = (
+            (observation_quality * 0.38)
+            + (correction_timing_quality * 0.24)
+            + (structural_bearing_quality * 0.20)
+            + (review_score * 0.18)
+        )
+        non_action_delta = -0.04 + (non_action_quality * 0.18)
+
+        if event_name in ("replanned", "abandoned"):
+            non_action_delta += correction_timing_quality * 0.06
+
+        if decision_tendency in ("observe", "replan", "hold"):
+            non_action_delta += 0.02
+
+        return float(max(-0.08, min(0.18, non_action_delta)))
 
     if event_name == "submitted":
         return 0.08
@@ -1366,13 +1418,14 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
 
     return snapshot
 
-def build_world_state(candle_state, tension_state, stimulus, structure_perception_state=None):
+def build_world_state(candle_state, tension_state, stimulus, visual_market_state=None, structure_perception_state=None):
     return {
         "candle_state": dict(candle_state or {}),
         "tension_state": dict(tension_state or {}),
         "vision": dict((stimulus or {}).get("vision", {}) or {}),
         "filtered_vision": dict((stimulus or {}).get("filtered_vision", {}) or {}),
         "focus": dict((stimulus or {}).get("focus", {}) or {}),
+        "visual_market_state": dict(visual_market_state or {}),
         "structure_perception_state": dict(structure_perception_state or {}),
     }
 
@@ -1381,6 +1434,47 @@ def build_outer_visual_perception_state(world_state):
     focus = dict(world.get("focus", {}) or {})
     filtered_vision = dict(world.get("filtered_vision", {}) or {})
     vision = dict(world.get("vision", {}) or {})
+    visual_market_state = dict(world.get("visual_market_state", {}) or {})
+
+    spatial_bias = float(visual_market_state.get("spatial_bias", 0.0) or 0.0)
+    directional_bias = float(visual_market_state.get("directional_bias", 0.0) or 0.0)
+    range_position = float(visual_market_state.get("range_position", 0.0) or 0.0)
+    range_width = float(visual_market_state.get("range_width", 0.0) or 0.0)
+    short_impulse = float(visual_market_state.get("short_impulse", 0.0) or 0.0)
+    mid_impulse = float(visual_market_state.get("mid_impulse", 0.0) or 0.0)
+    compression = float(visual_market_state.get("compression", 0.0) or 0.0)
+    expansion = float(visual_market_state.get("expansion", 0.0) or 0.0)
+    body_pressure = float(visual_market_state.get("body_pressure", 0.0) or 0.0)
+    wick_pressure = float(visual_market_state.get("wick_pressure", 0.0) or 0.0)
+    volume_bias = float(visual_market_state.get("volume_bias", 0.0) or 0.0)
+    market_balance = float(visual_market_state.get("market_balance", 0.0) or 0.0)
+    breakout_tension = float(visual_market_state.get("breakout_tension", 0.0) or 0.0)
+    visual_coherence = float(visual_market_state.get("visual_coherence", 0.0) or 0.0)
+
+    signal_relevance = max(
+        0.0,
+        min(
+            1.0,
+            (float(focus.get("signal_relevance", 0.0) or 0.0) * 0.42)
+            + (visual_coherence * 0.20)
+            + (market_balance * 0.16)
+            + (max(0.0, 1.0 - wick_pressure) * 0.10)
+            + (max(0.0, 1.0 - min(1.0, abs(volume_bias))) * 0.12),
+        ),
+    )
+
+    visual_contrast = max(
+        0.0,
+        min(
+            1.0,
+            (abs(spatial_bias - directional_bias) * 0.24)
+            + (abs(range_position) * 0.18)
+            + (expansion * 0.18)
+            + (wick_pressure * 0.12)
+            + (abs(volume_bias) * 0.10)
+            + (float(vision.get("vision_contrast", 0.0) or 0.0) * 0.12),
+        ),
+    )
 
     return {
         "focus_direction": float(focus.get("focus_direction", 0.0) or 0.0),
@@ -1388,11 +1482,25 @@ def build_outer_visual_perception_state(world_state):
         "focus_confidence": float(focus.get("focus_confidence", 0.0) or 0.0),
         "target_lock": float(focus.get("target_lock", 0.0) or 0.0),
         "noise_damp": float(focus.get("noise_damp", 0.0) or 0.0),
-        "signal_relevance": float(focus.get("signal_relevance", 0.0) or 0.0),
+        "signal_relevance": float(signal_relevance),
         "visual_target_map": float(filtered_vision.get("target_map", 0.0) or 0.0),
         "visual_threat_map": float(filtered_vision.get("threat_map", 0.0) or 0.0),
         "visual_optic_flow": float(filtered_vision.get("optic_flow", 0.0) or 0.0),
-        "visual_contrast": float(vision.get("vision_contrast", 0.0) or 0.0),
+        "visual_contrast": float(visual_contrast),
+        "spatial_bias": float(spatial_bias),
+        "directional_bias": float(directional_bias),
+        "range_position": float(range_position),
+        "range_width": float(range_width),
+        "short_impulse": float(short_impulse),
+        "mid_impulse": float(mid_impulse),
+        "compression": float(compression),
+        "expansion": float(expansion),
+        "body_pressure": float(body_pressure),
+        "wick_pressure": float(wick_pressure),
+        "volume_bias": float(volume_bias),
+        "market_balance": float(market_balance),
+        "breakout_tension": float(breakout_tension),
+        "visual_coherence": float(visual_coherence),
     }
 
 def build_inner_field_perception_state(snapshot, bot=None):
@@ -1417,6 +1525,12 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
 
     signal_relevance = float(outer.get("signal_relevance", 0.0) or 0.0)
     visual_contrast = float(outer.get("visual_contrast", 0.0) or 0.0)
+    visual_coherence = float(outer.get("visual_coherence", perception.get("visual_coherence", 0.0)) or 0.0)
+    market_balance = float(outer.get("market_balance", perception.get("market_balance", 0.0)) or 0.0)
+    breakout_tension = float(outer.get("breakout_tension", perception.get("breakout_tension", 0.0)) or 0.0)
+    spatial_bias = float(outer.get("spatial_bias", perception.get("spatial_bias", 0.0)) or 0.0)
+    directional_bias = float(outer.get("directional_bias", perception.get("directional_bias", 0.0)) or 0.0)
+    zone_proximity = float(perception.get("zone_proximity", 0.0) or 0.0)
     field_risk = abs(float(inner.get("field_mean_risk", 0.0) or 0.0))
     field_pressure = float(inner.get("field_regulation_pressure", 0.0) or 0.0)
     uncertainty = float(perception.get("uncertainty_score", 0.0) or 0.0)
@@ -1424,14 +1538,83 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
     structure_quality = float(perception.get("structure_quality", 0.0) or 0.0)
     structure_stability = float(perception.get("structure_stability", 0.0) or 0.0)
 
-    processing_load = max(0.0, min(1.0, (uncertainty * 0.35) + (novelty * 0.20) + (field_pressure * 0.20) + (field_risk * 0.15) + (visual_contrast * 0.10) - (structure_stability * 0.08)))
-    processing_stability = max(0.0, min(1.0, signal_relevance * 0.40 + max(0.0, 1.0 - uncertainty) * 0.30 + max(0.0, 1.0 - min(1.0, field_risk)) * 0.18 + (structure_quality * 0.12)))
-    processing_readiness = max(0.0, min(1.0, (processing_stability * 0.58) + (max(0.0, 1.0 - processing_load) * 0.42)))
+    visual_alignment = max(0.0, min(1.0, 1.0 - abs(spatial_bias - directional_bias)))
+
+    processing_tension = max(
+        0.0,
+        min(
+            1.0,
+            (breakout_tension * 0.34)
+            + (visual_contrast * 0.18)
+            + (uncertainty * 0.16)
+            + (field_pressure * 0.14)
+            + (max(0.0, abs(spatial_bias) - market_balance) * 0.10)
+            - (visual_coherence * 0.10),
+        ),
+    )
+
+    processing_load = max(
+        0.0,
+        min(
+            1.0,
+            (uncertainty * 0.26)
+            + (novelty * 0.14)
+            + (field_pressure * 0.16)
+            + (field_risk * 0.10)
+            + (visual_contrast * 0.08)
+            + (breakout_tension * 0.14)
+            + (max(0.0, 1.0 - visual_alignment) * 0.08)
+            - (structure_stability * 0.04)
+            - (market_balance * 0.08)
+            - (visual_coherence * 0.10),
+        ),
+    )
+
+    processing_alignment = max(
+        0.0,
+        min(
+            1.0,
+            (visual_alignment * 0.34)
+            + (market_balance * 0.22)
+            + (visual_coherence * 0.18)
+            + (signal_relevance * 0.10)
+            + (zone_proximity * 0.06)
+            + (structure_quality * 0.10),
+        ),
+    )
+
+    processing_stability = max(
+        0.0,
+        min(
+            1.0,
+            (signal_relevance * 0.22)
+            + (max(0.0, 1.0 - uncertainty) * 0.18)
+            + (max(0.0, 1.0 - min(1.0, field_risk)) * 0.12)
+            + (structure_quality * 0.08)
+            + (structure_stability * 0.08)
+            + (market_balance * 0.16)
+            + (visual_coherence * 0.12)
+            + (processing_alignment * 0.12)
+            - (processing_tension * 0.12),
+        ),
+    )
+
+    processing_readiness = max(
+        0.0,
+        min(
+            1.0,
+            (processing_stability * 0.52)
+            + (max(0.0, 1.0 - processing_load) * 0.28)
+            + (processing_alignment * 0.20),
+        ),
+    )
 
     return {
         "processing_load": float(processing_load),
         "processing_stability": float(processing_stability),
         "processing_readiness": float(processing_readiness),
+        "processing_alignment": float(processing_alignment),
+        "processing_tension": float(processing_tension),
     }
 
 def build_outcome_decomposition(bot, outcome_reason, position=None, experience_state=None):
@@ -1925,7 +2108,7 @@ def update_target_model(bot, candle_state, focus):
     }
 
 # --------------------------------------------------
-def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, decision="WAIT"):
+def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, decision="WAIT", visual_market_state=None):
 
     if bot is None:
         return None
@@ -1934,6 +2117,7 @@ def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, dec
     filtered_vision = dict((stimulus or {}).get("filtered_vision", {}) or {})
     snapshot_state = dict(snapshot or {})
     candle = dict(candle_state or {})
+    visual = dict(visual_market_state or {})
 
     focus_confidence = float(focus.get("focus_confidence", 0.0) or 0.0)
     target_lock = float(focus.get("target_lock", 0.0) or 0.0)
@@ -1944,6 +2128,11 @@ def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, dec
     filtered_optic_flow = float(filtered_vision.get("optic_flow", 0.0) or 0.0)
     return_intensity = float(candle.get("return_intensity", 0.0) or 0.0)
     close_position = float(candle.get("close_position", 0.0) or 0.0)
+    directional_bias = float(visual.get("directional_bias", 0.0) or 0.0)
+    range_position = float(visual.get("range_position", 0.0) or 0.0)
+    market_balance = float(visual.get("market_balance", 0.0) or 0.0)
+    breakout_tension = float(visual.get("breakout_tension", 0.0) or 0.0)
+    visual_coherence = float(visual.get("visual_coherence", 0.0) or 0.0)
 
     prior_entry_expectation = float(getattr(bot, "entry_expectation", 0.0) or 0.0)
     prior_target_expectation = float(getattr(bot, "target_expectation", 0.0) or 0.0)
@@ -1968,17 +2157,30 @@ def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, dec
     has_position = isinstance(getattr(bot, "position", None), dict)
     has_pending_entry = isinstance(getattr(bot, "pending_entry", None), dict)
 
+    if decision_value == "LONG":
+        directional_entry_bias = max(0.0, directional_bias)
+    elif decision_value == "SHORT":
+        directional_entry_bias = max(0.0, -directional_bias)
+    else:
+        directional_entry_bias = max(0.0, abs(directional_bias) - 0.12)
+
+    range_drive = max(0.0, abs(range_position) - 0.15)
+
     entry_anchor = max(
         0.0,
         min(
             1.0,
-            (target_lock * 0.34)
-            + (focus_confidence * 0.28)
-            + (signal_relevance * 0.20)
-            + (max(0.0, filtered_target_map) * 0.10)
-            + (max(0.0, filtered_optic_flow) * 0.05)
-            - (noise_damp * 0.08)
-            - (filtered_threat_map * 0.06),
+            (target_lock * 0.26)
+            + (focus_confidence * 0.22)
+            + (signal_relevance * 0.16)
+            + (max(0.0, filtered_target_map) * 0.08)
+            + (max(0.0, filtered_optic_flow) * 0.04)
+            + (directional_entry_bias * 0.10)
+            + (market_balance * 0.08)
+            + (visual_coherence * 0.08)
+            - (noise_damp * 0.06)
+            - (filtered_threat_map * 0.04)
+            - (breakout_tension * 0.02),
         ),
     )
 
@@ -1986,12 +2188,17 @@ def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, dec
         0.0,
         min(
             1.0,
-            (target_lock * 0.38)
-            + (focus_confidence * 0.18)
-            + (signal_relevance * 0.16)
-            + (max(0.0, filtered_target_map) * 0.16)
-            + (max(0.0, abs(close_position)) * 0.06)
-            - (noise_damp * 0.06),
+            (target_lock * 0.28)
+            + (focus_confidence * 0.14)
+            + (signal_relevance * 0.12)
+            + (max(0.0, filtered_target_map) * 0.10)
+            + (max(0.0, abs(close_position)) * 0.04)
+            + (directional_entry_bias * 0.08)
+            + (range_drive * 0.08)
+            + (market_balance * 0.08)
+            + (visual_coherence * 0.08)
+            - (noise_damp * 0.04)
+            - (breakout_tension * 0.02),
         ),
     )
 
@@ -2012,11 +2219,15 @@ def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, dec
     expectation_bias = max(entry_expectation_target, target_expectation_target)
     approach_gain = max(
         0.0,
-        (expectation_bias * 0.32)
-        + (max(0.0, 0.45 - abs(float(getattr(bot, "target_drift", 0.0) or 0.0))) * 0.40)
-        + (max(0.0, abs(return_intensity)) * 0.10)
-        - (inhibition_level * 0.12)
-        - (experience_regulation * 0.08),
+        (expectation_bias * 0.24)
+        + (max(0.0, 0.45 - abs(float(getattr(bot, "target_drift", 0.0) or 0.0))) * 0.28)
+        + (max(0.0, abs(return_intensity)) * 0.08)
+        + (directional_entry_bias * 0.10)
+        + (market_balance * 0.08)
+        + (visual_coherence * 0.06)
+        + (breakout_tension * 0.08)
+        - (inhibition_level * 0.10)
+        - (experience_regulation * 0.06),
     )
 
     missed_release = 0.0
@@ -2035,22 +2246,28 @@ def update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, dec
     bot.load_bearing_capacity = float(max(0.0, min(1.0, (load_bearing_capacity * 0.82) + (bot.experience_regulation * 0.11) + (bot.reflection_maturity * 0.08) - (bot.pressure_release * 0.03))))
     bot.protective_width_regulation = float(max(0.0, min(
         1.0,
-        (protective_width_regulation * 0.68)
-        + (bot.approach_pressure * 0.24)
-        + (bot.pressure_release * 0.34)
-        + (bot.experience_regulation * 0.26)
-        + (bot.reflection_maturity * 0.14)
+        (protective_width_regulation * 0.66)
+        + (bot.approach_pressure * 0.18)
+        + (bot.pressure_release * 0.26)
+        + (bot.experience_regulation * 0.22)
+        + (bot.reflection_maturity * 0.12)
         + (stress_pressure * 0.10)
-        - (inhibition_level * 0.08),
+        + (breakout_tension * 0.16)
+        + (max(0.0, 1.0 - market_balance) * 0.10)
+        - (visual_coherence * 0.06)
+        - (inhibition_level * 0.06),
     )))
     bot.protective_courage = float(max(0.0, min(
         0.86,
-        (protective_courage * 0.72)
-        + (bot.load_bearing_capacity * 0.20)
-        + (bot.reflection_maturity * 0.12)
-        + (max(0.0, 1.0 - noise_damp) * 0.06)
-        - (bot.pressure_release * 0.14)
-        - (filtered_threat_map * 0.10),
+        (protective_courage * 0.70)
+        + (bot.load_bearing_capacity * 0.18)
+        + (bot.reflection_maturity * 0.10)
+        + (max(0.0, 1.0 - noise_damp) * 0.05)
+        + (market_balance * 0.06)
+        + (visual_coherence * 0.08)
+        - (bot.pressure_release * 0.12)
+        - (filtered_threat_map * 0.08)
+        - (breakout_tension * 0.08),
     )))
 
     return {
@@ -3038,31 +3255,251 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
 # --------------------------------------------------
 # felt_state
 # --------------------------------------------------
-def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, decision="WAIT", expectation_state=None):
+def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, decision="WAIT", processing_state=None, expectation_state=None):
 
     if expectation_state is None:
-        expectation_state = update_expectation_pressure_state(bot, candle_state, stimulus, snapshot, decision=decision)
+        expectation_state = update_expectation_pressure_state(
+            bot,
+            candle_state,
+            stimulus,
+            snapshot,
+            decision=decision,
+            visual_market_state=dict(getattr(bot, "visual_market_state", {}) or {}) if bot is not None else {},
+        )
     filtered_vision = dict((stimulus or {}).get("filtered_vision", {}) or {})
     perception = dict(perception_state or {})
+    processing = dict(processing_state or {})
     competition_abs = abs(float(getattr(bot, "competition_bias", 0.0) or 0.0)) if bot is not None else 0.0
+    habituation_level = float(getattr(bot, "habituation_level", 0.0) or 0.0) if bot is not None else 0.0
 
     structure_quality = float(perception.get("structure_quality", 0.0) or 0.0)
     stress_relief_potential = float(perception.get("stress_relief_potential", 0.0) or 0.0)
     context_confidence = float(perception.get("context_confidence", 0.0) or 0.0)
+    market_balance = float(perception.get("market_balance", 0.0) or 0.0)
+    breakout_tension = float(perception.get("breakout_tension", 0.0) or 0.0)
+    visual_coherence = float(perception.get("visual_coherence", 0.0) or 0.0)
+    spatial_bias = float(perception.get("spatial_bias", 0.0) or 0.0)
+    directional_bias = float(perception.get("directional_bias", 0.0) or 0.0)
+    signal_quality = float(perception.get("signal_quality", 0.0) or 0.0)
+    uncertainty_score = float(perception.get("uncertainty_score", 0.0) or 0.0)
+    processing_load = float(processing.get("processing_load", 0.0) or 0.0)
+    processing_stability = float(processing.get("processing_stability", 0.0) or 0.0)
+    processing_alignment = float(processing.get("processing_alignment", 0.0) or 0.0)
+    processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
 
-    felt_risk = max(0.0, min(1.0, (float(filtered_vision.get("threat_map", 0.0) or 0.0) * 0.34) + (float(perception.get("uncertainty_score", 0.0) or 0.0) * 0.24) + (float(perception.get("noise_damp", 0.0) or 0.0) * 0.16) - (stress_relief_potential * 0.14)))
-    felt_opportunity = max(0.0, min(1.0, (float(filtered_vision.get("target_map", 0.0) or 0.0) * 0.34) + (float(perception.get("signal_quality", 0.0) or 0.0) * 0.26) + (float(perception.get("target_lock", 0.0) or 0.0) * 0.18) + (structure_quality * 0.14)))
-    felt_conflict = max(0.0, min(1.0, abs(felt_opportunity - felt_risk) * 0.18 + min(felt_opportunity, felt_risk) * 0.64 + (competition_abs * 0.10)))
-    felt_pressure = max(0.0, min(1.0, (float((expectation_state or {}).get("approach_pressure", 0.0) or 0.0) * 0.44) + (float((expectation_state or {}).get("entry_expectation", 0.0) or 0.0) * 0.18) + (felt_opportunity * 0.12) + (felt_risk * 0.10) - (stress_relief_potential * 0.16)))
-    felt_stability = max(0.0, min(1.0, 1.0 - (float(perception.get("uncertainty_score", 0.0) or 0.0) * 0.38) - (felt_conflict * 0.24) - (float((expectation_state or {}).get("pressure_release", 0.0) or 0.0) * 0.12) + (float((expectation_state or {}).get("experience_regulation", 0.0) or 0.0) * 0.18) + (context_confidence * 0.14)))
+    entry_expectation = float((expectation_state or {}).get("entry_expectation", 0.0) or 0.0)
+    target_expectation = float((expectation_state or {}).get("target_expectation", 0.0) or 0.0)
+    approach_pressure = float((expectation_state or {}).get("approach_pressure", 0.0) or 0.0)
+    pressure_release = float((expectation_state or {}).get("pressure_release", 0.0) or 0.0)
+    experience_regulation = float((expectation_state or {}).get("experience_regulation", 0.0) or 0.0)
+    reflection_maturity = float((expectation_state or {}).get("reflection_maturity", 0.0) or 0.0)
+    load_bearing_capacity = float((expectation_state or {}).get("load_bearing_capacity", 0.0) or 0.0)
+    protective_width_regulation = float((expectation_state or {}).get("protective_width_regulation", 0.0) or 0.0)
+    protective_courage = float((expectation_state or {}).get("protective_courage", 0.0) or 0.0)
+
+    felt_risk = max(
+        0.0,
+        min(
+            1.0,
+            (float(filtered_vision.get("threat_map", 0.0) or 0.0) * 0.24)
+            + (uncertainty_score * 0.18)
+            + (float(perception.get("noise_damp", 0.0) or 0.0) * 0.10)
+            + (breakout_tension * 0.18)
+            + (max(0.0, 1.0 - market_balance) * 0.10)
+            + (max(0.0, 1.0 - visual_coherence) * 0.08)
+            + (processing_tension * 0.08)
+            - (stress_relief_potential * 0.10),
+        ),
+    )
+
+    felt_opportunity = max(
+        0.0,
+        min(
+            1.0,
+            (float(filtered_vision.get("target_map", 0.0) or 0.0) * 0.24)
+            + (signal_quality * 0.18)
+            + (float(perception.get("target_lock", 0.0) or 0.0) * 0.10)
+            + (structure_quality * 0.08)
+            + (market_balance * 0.14)
+            + (visual_coherence * 0.12)
+            + (processing_alignment * 0.14)
+            - (processing_tension * 0.06),
+        ),
+    )
+
+    felt_conflict = max(
+        0.0,
+        min(
+            1.0,
+            (abs(felt_opportunity - felt_risk) * 0.16)
+            + (min(felt_opportunity, felt_risk) * 0.56)
+            + (competition_abs * 0.08)
+            + (abs(spatial_bias - directional_bias) * 0.08)
+            + (max(0.0, processing_tension - processing_alignment) * 0.12),
+        ),
+    )
+
+    felt_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (approach_pressure * 0.30)
+            + (entry_expectation * 0.12)
+            + (felt_opportunity * 0.08)
+            + (felt_risk * 0.08)
+            + (breakout_tension * 0.16)
+            + (processing_load * 0.12)
+            + (processing_tension * 0.10)
+            - (stress_relief_potential * 0.08)
+            - (market_balance * 0.06),
+        ),
+    )
+
+    felt_stability = max(
+        0.0,
+        min(
+            1.0,
+            1.0
+            - (uncertainty_score * 0.22)
+            - (felt_conflict * 0.18)
+            - (pressure_release * 0.08)
+            - (felt_pressure * 0.10)
+            + (experience_regulation * 0.12)
+            + (context_confidence * 0.08)
+            + (market_balance * 0.12)
+            + (visual_coherence * 0.12)
+            + (processing_stability * 0.14),
+        ),
+    )
+
+    felt_alignment = max(
+        0.0,
+        min(
+            1.0,
+            (processing_alignment * 0.38)
+            + (market_balance * 0.18)
+            + (visual_coherence * 0.16)
+            + (context_confidence * 0.10)
+            + (structure_quality * 0.08)
+            + (max(0.0, 1.0 - felt_conflict) * 0.10),
+        ),
+    )
+
+    external_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (breakout_tension * 0.28)
+            + (max(0.0, 1.0 - market_balance) * 0.18)
+            + (max(0.0, 1.0 - visual_coherence) * 0.14)
+            + (uncertainty_score * 0.10)
+            + (processing_tension * 0.12)
+            + (float(filtered_vision.get("threat_map", 0.0) or 0.0) * 0.12)
+            + (max(0.0, 1.0 - context_confidence) * 0.06),
+        ),
+    )
+
+    inner_conflict_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (felt_conflict * 0.42)
+            + (competition_abs * 0.14)
+            + (abs(spatial_bias - directional_bias) * 0.10)
+            + (max(0.0, processing_tension - processing_alignment) * 0.16)
+            + (max(0.0, 1.0 - felt_alignment) * 0.10)
+            + (max(0.0, 1.0 - processing_stability) * 0.08),
+        ),
+    )
+
+    repetition_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (habituation_level * 0.28)
+            + (approach_pressure * 0.18)
+            + (entry_expectation * 0.16)
+            + (competition_abs * 0.08)
+            + (max(0.0, 1.0 - experience_regulation) * 0.12)
+            + (max(0.0, 1.0 - reflection_maturity) * 0.08)
+            + (pressure_release * 0.10),
+        ),
+    )
+
+    expectation_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (approach_pressure * 0.42)
+            + (entry_expectation * 0.20)
+            + (target_expectation * 0.14)
+            + (felt_pressure * 0.10)
+            + (max(0.0, 1.0 - protective_width_regulation) * 0.06)
+            + (max(0.0, 1.0 - load_bearing_capacity) * 0.08),
+        ),
+    )
+
+    uncertainty_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (uncertainty_score * 0.38)
+            + (processing_load * 0.16)
+            + (processing_tension * 0.10)
+            + (max(0.0, 1.0 - context_confidence) * 0.10)
+            + (max(0.0, 1.0 - signal_quality) * 0.10)
+            + (max(0.0, 1.0 - visual_coherence) * 0.10),
+        ),
+    )
+
+    aftereffect_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (pressure_release * 0.30)
+            + (max(0.0, 1.0 - experience_regulation) * 0.22)
+            + (max(0.0, 1.0 - reflection_maturity) * 0.18)
+            + (max(0.0, 1.0 - load_bearing_capacity) * 0.12)
+            + (felt_risk * 0.08)
+            + (max(0.0, 1.0 - protective_courage) * 0.10),
+        ),
+    )
+
+    tension_cause_map = {
+        "external_pressure": float(external_pressure),
+        "inner_conflict_pressure": float(inner_conflict_pressure),
+        "repetition_pressure": float(repetition_pressure),
+        "expectation_pressure": float(expectation_pressure),
+        "uncertainty_pressure": float(uncertainty_pressure),
+        "aftereffect_pressure": float(aftereffect_pressure),
+    }
+    dominant_tension_cause = max(tension_cause_map, key=tension_cause_map.get)
+    dominant_tension_value = float(tension_cause_map.get(dominant_tension_cause, 0.0) or 0.0)
+
+    pre_action_observation_need = max(
+        0.0,
+        min(
+            1.0,
+            (external_pressure * 0.22)
+            + (uncertainty_pressure * 0.22)
+            + (aftereffect_pressure * 0.16)
+            + (felt_pressure * 0.10)
+            + (processing_load * 0.08)
+            + (max(0.0, 1.0 - felt_stability) * 0.10)
+            + (max(0.0, 1.0 - context_confidence) * 0.06)
+            + (max(0.0, 1.0 - signal_quality) * 0.06),
+        ),
+    )
 
     market_feel_state = "balanced"
-    if felt_risk > felt_opportunity and felt_risk >= 0.58:
+    if felt_risk > felt_opportunity and felt_risk >= 0.56:
         market_feel_state = "threatened"
-    elif felt_opportunity > felt_risk and felt_opportunity >= 0.58:
+    elif felt_opportunity > felt_risk and felt_opportunity >= 0.56:
         market_feel_state = "drawn"
-    elif felt_conflict >= 0.52:
+    elif felt_conflict >= 0.50:
         market_feel_state = "conflicted"
+    elif felt_pressure >= 0.58 and breakout_tension >= 0.54:
+        market_feel_state = "tense"
     elif felt_stability < 0.34:
         market_feel_state = "unstable"
 
@@ -3073,26 +3510,40 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         "felt_conflict": float(felt_conflict),
         "felt_pressure": float(felt_pressure),
         "felt_stability": float(felt_stability),
+        "felt_alignment": float(felt_alignment),
         "structure_quality": float(structure_quality),
         "stress_relief_potential": float(stress_relief_potential),
         "context_confidence": float(context_confidence),
-        "entry_expectation": float((expectation_state or {}).get("entry_expectation", 0.0) or 0.0),
-        "target_expectation": float((expectation_state or {}).get("target_expectation", 0.0) or 0.0),
-        "approach_pressure": float((expectation_state or {}).get("approach_pressure", 0.0) or 0.0),
-        "pressure_release": float((expectation_state or {}).get("pressure_release", 0.0) or 0.0),
-        "experience_regulation": float((expectation_state or {}).get("experience_regulation", 0.0) or 0.0),
-        "reflection_maturity": float((expectation_state or {}).get("reflection_maturity", 0.0) or 0.0),
-        "load_bearing_capacity": float((expectation_state or {}).get("load_bearing_capacity", 0.0) or 0.0),
-        "protective_width_regulation": float((expectation_state or {}).get("protective_width_regulation", 0.0) or 0.0),
-        "protective_courage": float((expectation_state or {}).get("protective_courage", 0.0) or 0.0),
+        "market_balance": float(market_balance),
+        "breakout_tension": float(breakout_tension),
+        "visual_coherence": float(visual_coherence),
+        "entry_expectation": float(entry_expectation),
+        "target_expectation": float(target_expectation),
+        "approach_pressure": float(approach_pressure),
+        "pressure_release": float(pressure_release),
+        "experience_regulation": float(experience_regulation),
+        "reflection_maturity": float(reflection_maturity),
+        "load_bearing_capacity": float(load_bearing_capacity),
+        "protective_width_regulation": float(protective_width_regulation),
+        "protective_courage": float(protective_courage),
+        "external_pressure": float(external_pressure),
+        "inner_conflict_pressure": float(inner_conflict_pressure),
+        "repetition_pressure": float(repetition_pressure),
+        "expectation_pressure": float(expectation_pressure),
+        "uncertainty_pressure": float(uncertainty_pressure),
+        "aftereffect_pressure": float(aftereffect_pressure),
+        "dominant_tension_cause": str(dominant_tension_cause),
+        "dominant_tension_value": float(dominant_tension_value),
+        "pre_action_observation_need": float(pre_action_observation_need),
     }
 
 # --------------------------------------------------
 # meta_regulation_state
 # --------------------------------------------------
-def build_meta_regulation_state(perception_state, felt_state, thought_state, fused, pause_mode=False):
+def build_meta_regulation_state(perception_state, processing_state, felt_state, thought_state, fused, pause_mode=False):
 
     perception = dict(perception_state or {})
+    processing = dict(processing_state or {})
     felt = dict(felt_state or {})
     thought = dict(thought_state or {})
     fused_state = dict(fused or {})
@@ -3100,8 +3551,24 @@ def build_meta_regulation_state(perception_state, felt_state, thought_state, fus
     uncertainty_score = float(perception.get("uncertainty_score", 0.0) or 0.0)
     observe_priority = float(perception.get("observe_priority", 0.0) or 0.0)
     signal_quality = float(perception.get("signal_quality", 0.0) or 0.0)
+    processing_load = float(processing.get("processing_load", 0.0) or 0.0)
+    processing_alignment = float(processing.get("processing_alignment", 0.0) or 0.0)
+    processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
     felt_conflict = float(felt.get("felt_conflict", 0.0) or 0.0)
     felt_pressure = float(felt.get("felt_pressure", 0.0) or 0.0)
+    felt_alignment = float(felt.get("felt_alignment", 0.0) or 0.0)
+    market_balance = float(felt.get("market_balance", perception.get("market_balance", 0.0)) or 0.0)
+    breakout_tension = float(felt.get("breakout_tension", perception.get("breakout_tension", 0.0)) or 0.0)
+    visual_coherence = float(felt.get("visual_coherence", perception.get("visual_coherence", 0.0)) or 0.0)
+    external_pressure = float(felt.get("external_pressure", 0.0) or 0.0)
+    inner_conflict_pressure = float(felt.get("inner_conflict_pressure", 0.0) or 0.0)
+    repetition_pressure = float(felt.get("repetition_pressure", 0.0) or 0.0)
+    expectation_pressure = float(felt.get("expectation_pressure", 0.0) or 0.0)
+    uncertainty_pressure = float(felt.get("uncertainty_pressure", 0.0) or 0.0)
+    aftereffect_pressure = float(felt.get("aftereffect_pressure", 0.0) or 0.0)
+    dominant_tension_cause = str(felt.get("dominant_tension_cause", "-") or "-")
+    dominant_tension_value = float(felt.get("dominant_tension_value", 0.0) or 0.0)
+    pre_action_observation_need = float(felt.get("pre_action_observation_need", 0.0) or 0.0)
     state_maturity = float(thought.get("state_maturity", 0.0) or 0.0)
     decision_conflict = float(thought.get("decision_conflict", 0.0) or 0.0)
     rumination_depth = float(thought.get("rumination_depth", 0.0) or 0.0)
@@ -3111,6 +3578,10 @@ def build_meta_regulation_state(perception_state, felt_state, thought_state, fus
     decision_strength = max(long_hypothesis, short_hypothesis)
     observation_mode = bool(fused_state.get("observation_mode", False))
     decision = str(thought.get("decision", fused_state.get("decision", "WAIT")) or "WAIT")
+    experience_regulation = float(felt.get("experience_regulation", 0.0) or 0.0)
+    load_bearing_capacity = float(felt.get("load_bearing_capacity", 0.0) or 0.0)
+    protective_width_regulation = float(felt.get("protective_width_regulation", 0.0) or 0.0)
+    protective_courage = float(felt.get("protective_courage", 0.0) or 0.0)
 
     observe_priority_threshold = float(getattr(Config, "MCM_META_OBSERVE_PRIORITY_ALLOW", 0.66) or 0.66)
     uncertainty_threshold = float(getattr(Config, "MCM_META_UNCERTAINTY_ALLOW", 0.72) or 0.72)
@@ -3120,45 +3591,154 @@ def build_meta_regulation_state(perception_state, felt_state, thought_state, fus
     readiness_min = float(getattr(Config, "MCM_META_READINESS_MIN", 0.38) or 0.38)
     signal_quality_min = float(getattr(Config, "MCM_META_SIGNAL_QUALITY_MIN", 0.24) or 0.24)
 
+    regulated_courage = max(
+        0.0,
+        min(
+            1.0,
+            (protective_courage * 0.34)
+            + (load_bearing_capacity * 0.22)
+            + (state_maturity * 0.12)
+            + (decision_readiness * 0.12)
+            + (felt_alignment * 0.08)
+            + (experience_regulation * 0.08)
+            + (max(0.0, 1.0 - uncertainty_score) * 0.04),
+        ),
+    )
+
+    courage_gap = max(
+        0.0,
+        min(
+            1.0,
+            max(0.0, expectation_pressure - regulated_courage),
+        ),
+    )
+
+    action_inhibition = max(
+        0.0,
+        min(
+            1.0,
+            (felt_pressure * 0.18)
+            + (decision_conflict * 0.14)
+            + (processing_tension * 0.12)
+            + (uncertainty_pressure * 0.12)
+            + (aftereffect_pressure * 0.10)
+            + (courage_gap * 0.20)
+            + (max(0.0, 1.0 - protective_width_regulation) * 0.08)
+            + (max(0.0, 1.0 - load_bearing_capacity) * 0.06),
+        ),
+    )
+
+    action_clearance = max(
+        0.0,
+        min(
+            1.0,
+            (regulated_courage * 0.34)
+            + (decision_readiness * 0.18)
+            + (state_maturity * 0.16)
+            + (signal_quality * 0.12)
+            + (processing_alignment * 0.10)
+            + (max(0.0, 1.0 - action_inhibition) * 0.10),
+        ),
+    )
+
     allow_observe = False
     allow_ruminate = False
     allow_plan = False
     allow_block = False
     rejection_reason = None
+    pre_action_phase = "hold"
 
     if bool(pause_mode):
         allow_block = True
         rejection_reason = "pause_mode"
+        pre_action_phase = "hold"
     elif decision not in ("LONG", "SHORT"):
         allow_block = True
         rejection_reason = str(fused_state.get("reject_reason", "decision_wait") or "decision_wait")
+        pre_action_phase = "hold"
     elif observation_mode and decision_strength < 1.10:
         allow_observe = True
         rejection_reason = "observe_state"
+        pre_action_phase = "observe"
+    elif dominant_tension_cause in ("external_pressure", "uncertainty_pressure", "aftereffect_pressure") and dominant_tension_value >= 0.56 and decision_strength < 1.14:
+        allow_observe = True
+        rejection_reason = f"{dominant_tension_cause}_observe"
+        pre_action_phase = "observe"
+    elif pre_action_observation_need >= max(0.58, observe_priority_threshold - 0.04) and decision_strength < 1.10:
+        allow_observe = True
+        rejection_reason = "pre_action_observe"
+        pre_action_phase = "observe"
     elif observe_priority >= observe_priority_threshold and decision_strength < 1.06:
         allow_observe = True
         rejection_reason = "observe_state"
+        pre_action_phase = "observe"
     elif uncertainty_score >= uncertainty_threshold and decision_strength < 1.12:
         allow_observe = True
         rejection_reason = "observe_state"
+        pre_action_phase = "observe"
+    elif processing_load >= 0.66 and breakout_tension >= 0.56 and processing_alignment < 0.54 and decision_strength < 1.14:
+        allow_observe = True
+        rejection_reason = "visual_overload_observe"
+        pre_action_phase = "observe"
+    elif expectation_pressure >= 0.58 and courage_gap >= 0.12 and decision_strength < 1.16:
+        allow_ruminate = True
+        rejection_reason = "expectation_courage_replan"
+        pre_action_phase = "replan"
+    elif repetition_pressure >= 0.56 and courage_gap >= 0.10 and decision_strength < 1.16:
+        allow_ruminate = True
+        rejection_reason = "repetition_courage_replan"
+        pre_action_phase = "replan"
+    elif action_inhibition >= 0.62 and action_clearance < 0.52 and decision_strength < 1.18:
+        allow_observe = True
+        rejection_reason = "action_inhibition_observe"
+        pre_action_phase = "observe"
+    elif action_inhibition >= 0.70 and courage_gap >= 0.16 and decision_strength < 1.18:
+        allow_ruminate = True
+        rejection_reason = "action_inhibition_replan"
+        pre_action_phase = "replan"
+    elif regulated_courage < 0.28 and decision_strength < 1.10:
+        allow_block = True
+        rejection_reason = "courage_hold"
+        pre_action_phase = "hold"
+    elif action_clearance < 0.34 and decision_strength < 1.08:
+        allow_observe = True
+        rejection_reason = "clearance_observe"
+        pre_action_phase = "observe"
+    elif dominant_tension_cause in ("inner_conflict_pressure", "repetition_pressure", "expectation_pressure") and dominant_tension_value >= 0.58 and decision_strength < 1.16:
+        allow_ruminate = True
+        rejection_reason = f"{dominant_tension_cause}_replan"
+        pre_action_phase = "replan"
     elif decision_conflict >= conflict_threshold or rumination_depth >= rumination_threshold or felt_conflict >= 0.58:
         allow_ruminate = True
         rejection_reason = "ruminate_state"
+        pre_action_phase = "replan"
     elif ((state_maturity < maturity_min) and decision_strength < 1.10) or ((decision_readiness < readiness_min) and decision_strength < 1.02) or ((signal_quality < signal_quality_min) and decision_strength < 1.08):
         allow_block = True
         rejection_reason = "maturity_block"
+        pre_action_phase = "hold"
+    elif processing_load >= 0.78 and processing_tension >= 0.62 and decision_strength < 1.18:
+        allow_block = True
+        rejection_reason = "processing_block"
+        pre_action_phase = "hold"
     elif felt_pressure > 0.94 and state_maturity < 0.50 and decision_strength < 1.18:
         allow_block = True
         rejection_reason = "pressure_block"
+        pre_action_phase = "hold"
+    elif market_balance < 0.18 and visual_coherence < 0.20 and breakout_tension >= 0.62 and decision_strength < 1.16:
+        allow_block = True
+        rejection_reason = "market_instability_block"
+        pre_action_phase = "hold"
     else:
         allow_plan = True
         rejection_reason = "plan_allowed"
+        pre_action_phase = "act"
 
     return {
         "allow_observe": bool(allow_observe),
         "allow_ruminate": bool(allow_ruminate),
         "allow_plan": bool(allow_plan),
         "allow_block": bool(allow_block),
+        "pre_action_phase": str(pre_action_phase),
         "rejection_reason": str(rejection_reason or "-"),
         "decision": str(decision),
         "uncertainty_score": float(uncertainty_score),
@@ -3171,26 +3751,154 @@ def build_meta_regulation_state(perception_state, felt_state, thought_state, fus
         "decision_readiness": float(decision_readiness),
         "signal_quality": float(signal_quality),
         "decision_strength": float(decision_strength),
+        "processing_load": float(processing_load),
+        "processing_alignment": float(processing_alignment),
+        "processing_tension": float(processing_tension),
+        "market_balance": float(market_balance),
+        "breakout_tension": float(breakout_tension),
+        "visual_coherence": float(visual_coherence),
+        "external_pressure": float(external_pressure),
+        "inner_conflict_pressure": float(inner_conflict_pressure),
+        "repetition_pressure": float(repetition_pressure),
+        "expectation_pressure": float(expectation_pressure),
+        "uncertainty_pressure": float(uncertainty_pressure),
+        "aftereffect_pressure": float(aftereffect_pressure),
+        "dominant_tension_cause": str(dominant_tension_cause),
+        "dominant_tension_value": float(dominant_tension_value),
+        "observation_need": float(pre_action_observation_need),
+        "regulated_courage": float(regulated_courage),
+        "courage_gap": float(courage_gap),
+        "action_inhibition": float(action_inhibition),
+        "action_clearance": float(action_clearance),
+        "readiness": float(decision_readiness),
+        "maturity": float(state_maturity),
+        "uncertainty": float(uncertainty_score),
+        "conflict": float(decision_conflict),
     }
 
 # --------------------------------------------------
 # pthought_state
 # --------------------------------------------------
-def build_thought_state(candle_state, tension_state, fused, perception_state, felt_state, snapshot, bot=None):
+def build_thought_state(candle_state, tension_state, fused, perception_state, felt_state, snapshot, processing_state=None, bot=None):
 
     fused_state = dict(fused or {})
     perception = dict(perception_state or {})
     felt = dict(felt_state or {})
+    processing = dict(processing_state or {})
 
     long_score = float(fused_state.get("long_score", 0.0) or 0.0)
     short_score = float(fused_state.get("short_score", 0.0) or 0.0)
     decision = str(fused_state.get("decision", "WAIT") or "WAIT")
+    market_balance = float(felt.get("market_balance", perception.get("market_balance", 0.0)) or 0.0)
+    breakout_tension = float(felt.get("breakout_tension", perception.get("breakout_tension", 0.0)) or 0.0)
+    visual_coherence = float(felt.get("visual_coherence", perception.get("visual_coherence", 0.0)) or 0.0)
+    felt_alignment = float(felt.get("felt_alignment", 0.0) or 0.0)
+    processing_load = float(processing.get("processing_load", 0.0) or 0.0)
+    processing_stability = float(processing.get("processing_stability", 0.0) or 0.0)
+    processing_readiness = float(processing.get("processing_readiness", 0.0) or 0.0)
+    processing_alignment = float(processing.get("processing_alignment", 0.0) or 0.0)
+    processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
+    uncertainty_score = float(perception.get("uncertainty_score", 0.0) or 0.0)
 
-    decision_conflict = max(0.0, min(1.0, 1.0 - min(1.0, abs(long_score - short_score) / 1.2) + (float(felt.get("felt_conflict", 0.0) or 0.0) * 0.24)))
-    state_maturity = max(0.0, min(1.0, (float(felt.get("reflection_maturity", 0.0) or 0.0) * 0.28) + (float(felt.get("experience_regulation", 0.0) or 0.0) * 0.20) + (float(felt.get("felt_stability", 0.0) or 0.0) * 0.18) + (float(perception.get("signal_quality", 0.0) or 0.0) * 0.18) + (max(0.0, 1.0 - float(perception.get("uncertainty_score", 0.0) or 0.0)) * 0.16) - (decision_conflict * 0.16)))
-    rumination_depth = max(0.0, min(1.0, (decision_conflict * 0.42) + (float(perception.get("observe_priority", 0.0) or 0.0) * 0.22) + (float(felt.get("felt_pressure", 0.0) or 0.0) * 0.14) + (0.14 if bool(fused_state.get("observation_mode", False)) else 0.0)))
-    inner_time_scale = max(0.0, min(1.0, (state_maturity * 0.36) + (float(felt.get("load_bearing_capacity", 0.0) or 0.0) * 0.18) + (max(0.0, 1.0 - float(perception.get("novelty_score", 0.0) or 0.0)) * 0.14) + max(0.0, 1.0 - (abs(float((tension_state or {}).get("coherence", 0.0) or 0.0)) * 0.25))))
-    decision_readiness = max(0.0, min(1.0, (state_maturity * 0.40) + (max(0.0, 1.0 - decision_conflict) * 0.24) + (float(perception.get("signal_quality", 0.0) or 0.0) * 0.16) + (float(felt.get("felt_stability", 0.0) or 0.0) * 0.12) - (rumination_depth * 0.14)))
+    decision_conflict = max(
+        0.0,
+        min(
+            1.0,
+            1.0
+            - min(1.0, abs(long_score - short_score) / 1.2)
+            + (float(felt.get("felt_conflict", 0.0) or 0.0) * 0.18)
+            + (processing_tension * 0.12)
+            + (max(0.0, 1.0 - processing_alignment) * 0.10),
+        ),
+    )
+
+    state_maturity = max(
+        0.0,
+        min(
+            1.0,
+            (float(felt.get("reflection_maturity", 0.0) or 0.0) * 0.22)
+            + (float(felt.get("experience_regulation", 0.0) or 0.0) * 0.16)
+            + (float(felt.get("felt_stability", 0.0) or 0.0) * 0.12)
+            + (float(perception.get("signal_quality", 0.0) or 0.0) * 0.10)
+            + (max(0.0, 1.0 - uncertainty_score) * 0.10)
+            + (processing_stability * 0.12)
+            + (processing_alignment * 0.08)
+            + (felt_alignment * 0.10)
+            + (market_balance * 0.08)
+            + (visual_coherence * 0.08)
+            - (decision_conflict * 0.16),
+        ),
+    )
+
+    rumination_depth = max(
+        0.0,
+        min(
+            1.0,
+            (decision_conflict * 0.34)
+            + (float(perception.get("observe_priority", 0.0) or 0.0) * 0.18)
+            + (float(felt.get("felt_pressure", 0.0) or 0.0) * 0.10)
+            + (processing_load * 0.14)
+            + (processing_tension * 0.10)
+            + (breakout_tension * 0.08)
+            + (0.12 if bool(fused_state.get("observation_mode", False)) else 0.0),
+        ),
+    )
+
+    inner_time_scale = max(
+        0.0,
+        min(
+            1.0,
+            (state_maturity * 0.26)
+            + (float(felt.get("load_bearing_capacity", 0.0) or 0.0) * 0.12)
+            + (max(0.0, 1.0 - float(perception.get("novelty_score", 0.0) or 0.0)) * 0.10)
+            + (processing_alignment * 0.16)
+            + (processing_stability * 0.14)
+            + (visual_coherence * 0.10)
+            + (market_balance * 0.08)
+            - (processing_tension * 0.08)
+            + max(0.0, 1.0 - (abs(float((tension_state or {}).get("coherence", 0.0) or 0.0)) * 0.18)),
+        ),
+    )
+
+    decision_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (float(felt.get("felt_pressure", 0.0) or 0.0) * 0.30)
+            + (breakout_tension * 0.18)
+            + (processing_tension * 0.16)
+            + (max(0.0, abs(long_score - short_score)) * 0.08)
+            - (market_balance * 0.08)
+            - (visual_coherence * 0.08),
+        ),
+    )
+
+    decision_readiness = max(
+        0.0,
+        min(
+            1.0,
+            (state_maturity * 0.28)
+            + (max(0.0, 1.0 - decision_conflict) * 0.16)
+            + (float(perception.get("signal_quality", 0.0) or 0.0) * 0.10)
+            + (float(felt.get("felt_stability", 0.0) or 0.0) * 0.08)
+            + (processing_readiness * 0.24)
+            + (felt_alignment * 0.08)
+            - (rumination_depth * 0.10)
+            - (decision_pressure * 0.08),
+        ),
+    )
+
+    thought_alignment = max(
+        0.0,
+        min(
+            1.0,
+            (processing_alignment * 0.36)
+            + (felt_alignment * 0.24)
+            + (market_balance * 0.14)
+            + (visual_coherence * 0.12)
+            + (max(0.0, 1.0 - decision_conflict) * 0.14),
+        ),
+    )
 
     return {
         "long_hypothesis": float(long_score),
@@ -3202,6 +3910,13 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         "rumination_depth": float(rumination_depth),
         "inner_time_scale": float(inner_time_scale),
         "decision_readiness": float(decision_readiness),
+        "thought_alignment": float(thought_alignment),
+        "decision_pressure": float(decision_pressure),
+        "uncertainty": float(uncertainty_score),
+        "conflict": float(decision_conflict),
+        "maturity": float(state_maturity),
+        "readiness": float(decision_readiness),
+        "dominant_tension_cause": str(felt.get("dominant_tension_cause", "-") or "-"),
     }
 
 # --------------------------------------------------
@@ -3214,6 +3929,7 @@ def build_perception_state(world_state, bot=None):
     tension_state = dict(world.get("tension_state", {}) or {})
     focus = dict(world.get("focus", {}) or {})
     filtered_vision = dict(world.get("filtered_vision", {}) or {})
+    visual_market_state = dict(world.get("visual_market_state", {}) or {})
     structure_perception_state = dict(world.get("structure_perception_state", {}) or {})
 
     focus_direction = float(focus.get("focus_direction", 0.0) or 0.0)
@@ -3225,6 +3941,14 @@ def build_perception_state(world_state, bot=None):
     filtered_target_map = float(filtered_vision.get("target_map", 0.0) or 0.0)
     filtered_threat_map = float(filtered_vision.get("threat_map", 0.0) or 0.0)
     filtered_optic_flow = float(filtered_vision.get("optic_flow", 0.0) or 0.0)
+    spatial_bias = float(visual_market_state.get("spatial_bias", 0.0) or 0.0)
+    directional_bias = float(visual_market_state.get("directional_bias", 0.0) or 0.0)
+    range_position = float(visual_market_state.get("range_position", 0.0) or 0.0)
+    short_impulse = float(visual_market_state.get("short_impulse", 0.0) or 0.0)
+    mid_impulse = float(visual_market_state.get("mid_impulse", 0.0) or 0.0)
+    market_balance = float(visual_market_state.get("market_balance", 0.0) or 0.0)
+    breakout_tension = float(visual_market_state.get("breakout_tension", 0.0) or 0.0)
+    visual_coherence = float(visual_market_state.get("visual_coherence", 0.0) or 0.0)
 
     coherence = float((tension_state or {}).get("coherence", 0.0) or 0.0)
     energy = float((tension_state or {}).get("energy", 0.0) or 0.0)
@@ -3245,10 +3969,10 @@ def build_perception_state(world_state, bot=None):
         ),
     )
 
-    uncertainty_score = max(0.0, min(1.0, (noise_damp * 0.24) + (filtered_threat_map * 0.18) + max(0.0, abs(focus_direction) - focus_confidence) * 0.18 + max(0.0, 1.0 - signal_relevance) * 0.20 + max(0.0, abs(coherence - close_position)) * 0.10 - (perception_settle * 0.18)))
-    novelty_score = max(0.0, min(1.0, abs(signal_relevance - prev_signal_relevance) * 0.46 + abs(return_intensity) * 0.22 + abs(filtered_optic_flow) * 0.14 + abs(energy - coherence) * 0.10 + abs(close_position) * 0.08 - (perception_settle * 0.16)))
-    signal_quality = max(0.0, min(1.0, (signal_relevance * 0.34) + (focus_confidence * 0.24) + (target_lock * 0.18) + (focus_strength * 0.10) + (max(0.0, filtered_target_map) * 0.10) + (perception_settle * 0.16) - (uncertainty_score * 0.18)))
-    observe_priority = max(0.0, min(1.0, (uncertainty_score * 0.46) + (novelty_score * 0.18) + (max(0.0, 1.0 - signal_quality) * 0.24) + (0.12 if observation_mode else 0.0) - (perception_settle * 0.24)))
+    uncertainty_score = max(0.0, min(1.0, (noise_damp * 0.20) + (filtered_threat_map * 0.16) + max(0.0, abs(focus_direction) - focus_confidence) * 0.16 + max(0.0, 1.0 - signal_relevance) * 0.16 + max(0.0, abs(coherence - close_position)) * 0.08 + (breakout_tension * 0.12) + (abs(spatial_bias - directional_bias) * 0.12) - (perception_settle * 0.16) - (market_balance * 0.10)))
+    novelty_score = max(0.0, min(1.0, abs(signal_relevance - prev_signal_relevance) * 0.32 + abs(return_intensity) * 0.16 + abs(filtered_optic_flow) * 0.12 + abs(energy - coherence) * 0.08 + abs(close_position) * 0.06 + abs(short_impulse - mid_impulse) * 0.16 + abs(range_position) * 0.10 - (perception_settle * 0.12)))
+    signal_quality = max(0.0, min(1.0, (signal_relevance * 0.24) + (focus_confidence * 0.18) + (target_lock * 0.14) + (focus_strength * 0.08) + (max(0.0, filtered_target_map) * 0.08) + (visual_coherence * 0.12) + (market_balance * 0.10) + (max(0.0, 1.0 - breakout_tension) * 0.06) + (perception_settle * 0.14) - (uncertainty_score * 0.14)))
+    observe_priority = max(0.0, min(1.0, (uncertainty_score * 0.42) + (novelty_score * 0.16) + (max(0.0, 1.0 - signal_quality) * 0.20) + (breakout_tension * 0.08) + (0.12 if observation_mode else 0.0) - (perception_settle * 0.20) - (market_balance * 0.08)))
 
     return {
         "focus_direction": float(focus_direction),
@@ -3261,6 +3985,14 @@ def build_perception_state(world_state, bot=None):
         "novelty_score": float(novelty_score),
         "signal_quality": float(signal_quality),
         "observe_priority": float(observe_priority),
+        "spatial_bias": float(spatial_bias),
+        "directional_bias": float(directional_bias),
+        "range_position": float(range_position),
+        "short_impulse": float(short_impulse),
+        "mid_impulse": float(mid_impulse),
+        "market_balance": float(market_balance),
+        "breakout_tension": float(breakout_tension),
+        "visual_coherence": float(visual_coherence),
         "structure_seen": float(structure_perception_state.get("structure_seen", 0.0) or 0.0),
         "structure_high": float(structure_perception_state.get("structure_high", 0.0) or 0.0),
         "structure_low": float(structure_perception_state.get("structure_low", 0.0) or 0.0),
@@ -3359,12 +4091,14 @@ def commit_pending_learning_context(bot, outcome=None):
 # --------------------------------------------------
 # ENTRY API
 # --------------------------------------------------
-def _compute_runtime_entry_result(window, candle_state, bot=None):
+def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_state=None, structure_perception_state=None):
 
     if not window:
         return None
 
     tension_state = build_tension_state_from_window(window)
+    visual_market_state = dict(visual_market_state or {})
+    structure_perception_state = dict(structure_perception_state or {})
 
     energy = float(tension_state.get("energy", 0.0) or 0.0)
     coherence = float(tension_state.get("coherence", 0.0) or 0.0)
@@ -3395,6 +4129,11 @@ def _compute_runtime_entry_result(window, candle_state, bot=None):
     bot.mcm_last_action = str(snapshot.get("self_state", "stable"))
     bot.mcm_last_attractor = str(snapshot.get("attractor", "neutral"))
     bot.mcm_snapshot = dict(snapshot)
+    field_state = _derive_runtime_field_state(
+        bot=bot,
+        tension_state=tension_state,
+        snapshot=snapshot,
+    )
 
     update_target_model(
         bot,
@@ -3409,11 +4148,17 @@ def _compute_runtime_entry_result(window, candle_state, bot=None):
 
     fused_preview = resolve_fused_decision(candle_state, tension_state, snapshot, bot=bot)
 
-    structure_perception_state = STRUCTURE_ENGINE.build_structure_perception_state(window)
+    if not visual_market_state:
+        visual_market_state = build_visual_market_state(window)
+
+    if not structure_perception_state:
+        structure_perception_state = STRUCTURE_ENGINE.build_structure_perception_state(window)
+
     world_state = build_world_state(
         candle_state,
         tension_state,
         stimulus,
+        visual_market_state=visual_market_state,
         structure_perception_state=structure_perception_state,
     )
     outer_visual_perception_state = build_outer_visual_perception_state(world_state)
@@ -3430,6 +4175,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None):
         stimulus,
         snapshot,
         decision=str(fused_preview.get("decision", "WAIT") or "WAIT"),
+        visual_market_state=visual_market_state,
     )
     felt_state = build_felt_state(
         bot,
@@ -3438,6 +4184,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None):
         snapshot,
         perception_state,
         decision=str(fused_preview.get("decision", "WAIT") or "WAIT"),
+        processing_state=processing_state,
         expectation_state=expectation_state,
     )
 
@@ -3451,9 +4198,26 @@ def _compute_runtime_entry_result(window, candle_state, bot=None):
     fused = dict(fused_preview or {})
     fused = reinterpret_focus_by_signature(bot, fused, state_signature)
 
-    thought_state = build_thought_state(candle_state, tension_state, fused, perception_state, felt_state, snapshot, bot=bot)
-    meta_regulation_state = build_meta_regulation_state(perception_state, felt_state, thought_state, fused, pause_mode=pause_mode)
+    thought_state = build_thought_state(
+        candle_state,
+        tension_state,
+        fused,
+        perception_state,
+        felt_state,
+        snapshot,
+        processing_state=processing_state,
+        bot=bot,
+    )
+    meta_regulation_state = build_meta_regulation_state(
+        perception_state,
+        processing_state,
+        felt_state,
+        thought_state,
+        fused,
+        pause_mode=pause_mode,
+    )
 
+    bot.visual_market_state = dict(visual_market_state)
     bot.perception_state = dict(perception_state)
     bot.outer_visual_perception_state = dict(outer_visual_perception_state)
     bot.inner_field_perception_state = dict(inner_field_perception_state)
@@ -3465,6 +4229,13 @@ def _compute_runtime_entry_result(window, candle_state, bot=None):
     bot.meta_regulation_state = dict(meta_regulation_state)
 
     decision = str(meta_regulation_state.get("decision", fused.get("decision", "WAIT")) or "WAIT")
+
+    field_density = float(field_state.get("field_density", 0.0) or 0.0)
+    field_stability = float(field_state.get("field_stability", 0.0) or 0.0)
+    regulatory_load = float(field_state.get("regulatory_load", 0.0) or 0.0)
+    action_capacity = float(field_state.get("action_capacity", 0.0) or 0.0)
+    recovery_need = float(field_state.get("recovery_need", 0.0) or 0.0)
+    survival_pressure = float(field_state.get("survival_pressure", 0.0) or 0.0)
 
     if not bool(meta_regulation_state.get("allow_plan", False)):
         return {
@@ -3564,6 +4335,12 @@ def _compute_runtime_entry_result(window, candle_state, bot=None):
         "observation_mode": bool(neural_state.get("observation_mode", False)),
         "long_score": float(fused.get("long_score", 0.0) or 0.0),
         "short_score": float(fused.get("short_score", 0.0) or 0.0),
+        "field_density": float(field_density),
+        "field_stability": float(field_stability),
+        "regulatory_load": float(regulatory_load),
+        "action_capacity": float(action_capacity),
+        "recovery_need": float(recovery_need),
+        "survival_pressure": float(survival_pressure),
     }
 
 # --------------------------------------------------
@@ -3645,6 +4422,12 @@ def build_runtime_decision_tendency(window, candle_state, bot=None):
             "competition_bias": float(hold_result.get("competition_bias", 0.0) or 0.0),
             "long_score": float(hold_result.get("long_score", 0.0) or 0.0),
             "short_score": float(hold_result.get("short_score", 0.0) or 0.0),
+            "field_density": float(hold_result.get("field_density", 0.0) or 0.0),
+            "field_stability": float(hold_result.get("field_stability", 0.0) or 0.0),
+            "regulatory_load": float(hold_result.get("regulatory_load", 0.0) or 0.0),
+            "action_capacity": float(hold_result.get("action_capacity", 0.0) or 0.0),
+            "recovery_need": float(hold_result.get("recovery_need", 0.0) or 0.0),
+            "survival_pressure": float(hold_result.get("survival_pressure", 0.0) or 0.0),
             "rejection_reason": str(hold_result.get("rejection_reason", "runtime_timestamp_miss") or "runtime_timestamp_miss"),
         }
 
@@ -3688,6 +4471,12 @@ def build_runtime_decision_tendency(window, candle_state, bot=None):
         "competition_bias": float(signal_state.get("competition_bias", entry_result.get("competition_bias", 0.0)) or 0.0),
         "long_score": float(signal_state.get("long_score", entry_result.get("long_score", 0.0)) or 0.0),
         "short_score": float(signal_state.get("short_score", entry_result.get("short_score", 0.0)) or 0.0),
+        "field_density": float(signal_state.get("field_density", entry_result.get("field_density", 0.0)) or 0.0),
+        "field_stability": float(signal_state.get("field_stability", entry_result.get("field_stability", 0.0)) or 0.0),
+        "regulatory_load": float(signal_state.get("regulatory_load", entry_result.get("regulatory_load", 0.0)) or 0.0),
+        "action_capacity": float(signal_state.get("action_capacity", entry_result.get("action_capacity", 0.0)) or 0.0),
+        "recovery_need": float(signal_state.get("recovery_need", entry_result.get("recovery_need", 0.0)) or 0.0),
+        "survival_pressure": float(signal_state.get("survival_pressure", entry_result.get("survival_pressure", 0.0)) or 0.0),
         "rejection_reason": str(entry_result.get("rejection_reason", "runtime_tendency_only") or "runtime_tendency_only"),
     }
 
@@ -3731,17 +4520,25 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
             "observation_mode": bool(result.get("observation_mode", False)),
             "long_score": float(result.get("long_score", 0.0) or 0.0),
             "short_score": float(result.get("short_score", 0.0) or 0.0),
+            "field_density": float(result.get("field_density", 0.0) or 0.0),
+            "field_stability": float(result.get("field_stability", 0.0) or 0.0),
+            "regulatory_load": float(result.get("regulatory_load", 0.0) or 0.0),
+            "action_capacity": float(result.get("action_capacity", 0.0) or 0.0),
+            "recovery_need": float(result.get("recovery_need", 0.0) or 0.0),
+            "survival_pressure": float(result.get("survival_pressure", 0.0) or 0.0),
         },
     }
 
 # --------------------------------------------------
-def _compute_runtime_result(window, candle_state, bot=None):
+def _compute_runtime_result(window, candle_state, bot=None, visual_market_state=None, structure_perception_state=None):
 
     if bot is None or not window:
         return None, None, None
 
     timestamp = (window[-1] or {}).get("timestamp")
     tension_state = build_tension_state_from_window(window)
+    visual_market_state = dict(visual_market_state or {})
+    structure_perception_state = dict(structure_perception_state or {})
     active_position = bool(getattr(bot, "position", None))
     active_pending = bool(getattr(bot, "pending_entry", None))
 
@@ -3763,6 +4560,8 @@ def _compute_runtime_result(window, candle_state, bot=None):
             window=window,
             candle_state=candle_state,
             bot=bot,
+            visual_market_state=visual_market_state,
+            structure_perception_state=structure_perception_state,
         )
 
         if runtime_result is None:
@@ -3777,8 +4576,15 @@ def _compute_runtime_result(window, candle_state, bot=None):
             )
         else:
             proposed_decision = str(runtime_result.get("decision", "WAIT") or "WAIT").upper().strip()
+            meta_regulation_state = dict(runtime_result.get("meta_regulation_state", {}) or {})
+            pre_action_phase = str(meta_regulation_state.get("pre_action_phase", "hold") or "hold").strip().lower()
+
             if proposed_decision in ("LONG", "SHORT"):
                 decision_tendency = "act"
+            elif pre_action_phase == "observe" or bool(meta_regulation_state.get("allow_observe", False)):
+                decision_tendency = "observe"
+            elif pre_action_phase == "replan" or bool(meta_regulation_state.get("allow_ruminate", False)):
+                decision_tendency = "replan"
             elif bool(runtime_result.get("observation_mode", False)):
                 decision_tendency = "observe"
             else:
@@ -3812,6 +4618,12 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
         "focus_confidence": float(((runtime_result.get("focus", {}) or {}).get("focus_confidence", getattr(bot, "focus_confidence", 0.0)) or 0.0)),
         "observation_mode": bool(runtime_result.get("observation_mode", False)),
         "allow_plan": bool(((runtime_result.get("meta_regulation_state", {}) or {}).get("allow_plan", False))),
+        "field_density": float(runtime_result.get("field_density", 0.0) or 0.0),
+        "field_stability": float(runtime_result.get("field_stability", 0.0) or 0.0),
+        "regulatory_load": float(runtime_result.get("regulatory_load", 0.0) or 0.0),
+        "action_capacity": float(runtime_result.get("action_capacity", 0.0) or 0.0),
+        "recovery_need": float(runtime_result.get("recovery_need", 0.0) or 0.0),
+        "survival_pressure": float(runtime_result.get("survival_pressure", 0.0) or 0.0),
         "brain_snapshot_ready": bool(brain_snapshot),
     }
 
@@ -3982,6 +4794,10 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
     maturity = float(meta_regulation_state.get("maturity", thought_state.get("maturity", 0.0)) or 0.0)
     uncertainty = float(thought_state.get("uncertainty", 0.0) or 0.0)
     conflict = float(thought_state.get("conflict", 0.0) or 0.0)
+    regulated_courage = float(meta_regulation_state.get("regulated_courage", 0.0) or 0.0)
+    courage_gap = float(meta_regulation_state.get("courage_gap", 0.0) or 0.0)
+    action_inhibition = float(meta_regulation_state.get("action_inhibition", 0.0) or 0.0)
+    action_clearance = float(meta_regulation_state.get("action_clearance", 0.0) or 0.0)
     context_cluster_quality = float(signal.get("context_cluster_quality", 0.0) or 0.0)
     signature_quality = float(signal.get("signature_quality", 0.0) or 0.0)
     expectation_alignment = float(expectation_state.get("experience_regulation", 0.0) or 0.0)
@@ -3991,48 +4807,133 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
     in_trade_max_mae = float(in_trade_summary.get("in_trade_max_mae", 0.0) or 0.0)
     in_trade_avg_fill_ratio = float(in_trade_summary.get("in_trade_avg_fill_ratio", 0.0) or 0.0)
     in_trade_direction_stability = float(in_trade_summary.get("in_trade_direction_stability", 0.0) or 0.0)
+    in_trade_avg_regulatory_load = float(in_trade_summary.get("in_trade_avg_regulatory_load", 0.0) or 0.0)
+    in_trade_avg_action_capacity = float(in_trade_summary.get("in_trade_avg_action_capacity", 0.0) or 0.0)
+    in_trade_avg_recovery_need = float(in_trade_summary.get("in_trade_avg_recovery_need", 0.0) or 0.0)
+    in_trade_avg_pressure_to_capacity = float(in_trade_summary.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0)
+    in_trade_avg_regulated_courage = float(in_trade_summary.get("in_trade_avg_regulated_courage", 0.0) or 0.0)
 
-    outcome_reason = str(outcome_decomposition.get("reason", (internal_episode.get("last_payload", {}) or {}).get("reason", "-")) or "-").strip().lower() or "-"
-    event_key = str(event_name or internal_episode.get("last_event", visible_episode.get("last_event", "-")) or "-").strip().lower() or "-"
-    decision_tendency_value = str(internal_episode.get("decision_tendency", visible_episode.get("decision_tendency", "hold")) or "hold").strip().lower() or "hold"
+    outcome_reason = str(outcome_decomposition.get("reason", visible_episode.get("reason", "-")) or "-").strip().lower()
+    event_key = str(event_name or internal_episode.get("last_event", visible_episode.get("last_event", "-")) or "-").strip().lower()
 
-    uncertainty_recognition_quality = max(0.0, min(1.0, 0.52 + (uncertainty * 0.34) + (conflict * 0.10) + (0.12 if event_key in ("observed_only", "withheld", "replanned", "abandoned") else 0.0) - (0.08 if outcome_reason == "tp_hit" and uncertainty > 0.72 else 0.0)))
-    observation_quality = max(0.0, min(1.0, 0.42 + (0.26 if event_key in ("observed_only", "withheld", "replanned", "abandoned", "blocked_value_gate") else 0.0) + (0.18 if observation_mode else 0.0) + (uncertainty * 0.10) + (conflict * 0.06) - (0.14 if outcome_reason == "tp_hit" and event_key in ("observed_only", "withheld") else 0.0)))
-    correction_timing_quality = max(0.0, min(1.0, 0.46 + (0.24 if event_key in ("replanned", "abandoned", "blocked_value_gate", "cancelled", "timeout") else 0.0) + (uncertainty * 0.08) + (conflict * 0.08) + min(0.18, in_trade_update_count * 0.03) + (min(0.22, in_trade_max_mfe) * 0.22) - (min(0.22, in_trade_max_mae) * 0.28) - (0.16 if outcome_reason == "sl_hit" and readiness >= 0.60 else 0.0) - (0.10 if outcome_reason == "tp_hit" and event_key in ("replanned", "abandoned") else 0.0)))
-    structural_bearing_quality = max(0.0, min(1.0, 0.30 + (readiness * 0.18) + (maturity * 0.20) + (plan_quality * 0.12) + (signature_quality * 0.08) + (context_cluster_quality * 0.08) + (expectation_alignment * 0.08) + (in_trade_direction_stability * 0.08) + (in_trade_avg_fill_ratio * 0.06) - (uncertainty * 0.08) - (conflict * 0.10)))
-    decision_path_quality = max(0.0, min(1.0, (plan_quality * 0.16) + (execution_quality * 0.14) + (risk_fit_quality * 0.12) + (readiness * 0.12) + (maturity * 0.12) + (uncertainty_recognition_quality * 0.12) + (observation_quality * 0.08) + (correction_timing_quality * 0.08) + (structural_bearing_quality * 0.10) + (in_trade_direction_stability * 0.03) + (in_trade_avg_fill_ratio * 0.03) - (uncertainty * 0.08) - (conflict * 0.06)))
-    review_score = max(0.0, min(1.0, (decision_path_quality * 0.28) + (uncertainty_recognition_quality * 0.16) + (observation_quality * 0.14) + (correction_timing_quality * 0.18) + (structural_bearing_quality * 0.24)))
+    decision_tendency_value = str(visible_episode.get("decision_tendency", "hold") or "hold").strip().lower()
+
+    uncertainty_recognition_quality = max(
+        0.0,
+        min(
+            1.0,
+            (1.0 - uncertainty) * 0.22
+            + (1.0 - conflict) * 0.12
+            + (readiness * 0.10)
+            + (maturity * 0.12)
+            + (context_cluster_quality * 0.10)
+            + (signature_quality * 0.08)
+            + (expectation_alignment * 0.08)
+            + (regulated_courage * 0.08)
+            + (action_clearance * 0.10),
+        ),
+    )
+
+    observation_quality = max(
+        0.0,
+        min(
+            1.0,
+            (uncertainty_recognition_quality * 0.24)
+            + (context_cluster_quality * 0.10)
+            + (signature_quality * 0.08)
+            + (expectation_alignment * 0.06)
+            + (max(0.0, 1.0 - action_inhibition) * 0.08)
+            + (regulated_courage * 0.08)
+            + (0.12 if observation_mode else 0.0)
+            + (0.08 if decision_tendency_value in ("observe", "hold") else 0.0)
+            + (0.10 if event_key in ("observed_only", "withheld") else 0.0)
+            + (0.06 if courage_gap <= 0.08 else 0.0),
+        ),
+    )
+
+    correction_timing_quality = max(
+        0.0,
+        min(
+            1.0,
+            (plan_quality * 0.14)
+            + (execution_quality * 0.10)
+            + (readiness * 0.10)
+            + (maturity * 0.12)
+            + (context_cluster_quality * 0.08)
+            + (expectation_alignment * 0.10)
+            + (regulated_courage * 0.10)
+            + (max(0.0, 1.0 - courage_gap) * 0.10)
+            + (max(0.0, 1.0 - in_trade_avg_pressure_to_capacity) * 0.08)
+            + (0.10 if event_key in ("replanned", "abandoned", "cancelled") else 0.0),
+        ),
+    )
+
+    structural_bearing_quality = max(
+        0.0,
+        min(
+            1.0,
+            (plan_quality * 0.14)
+            + (risk_fit_quality * 0.14)
+            + (context_cluster_quality * 0.12)
+            + (signature_quality * 0.10)
+            + (in_trade_direction_stability * 0.08)
+            + (in_trade_avg_fill_ratio * 0.06)
+            + (max(0.0, 1.0 - in_trade_avg_regulatory_load) * 0.08)
+            + (in_trade_avg_action_capacity * 0.10)
+            + (max(0.0, 1.0 - in_trade_avg_recovery_need) * 0.08)
+            + (in_trade_avg_regulated_courage * 0.10)
+            + (0.10 if in_trade_max_mfe >= in_trade_max_mae else 0.0),
+        ),
+    )
+
+    decision_path_quality = max(
+        0.0,
+        min(
+            1.0,
+            (plan_quality * 0.14)
+            + (execution_quality * 0.12)
+            + (risk_fit_quality * 0.10)
+            + (observation_quality * 0.10)
+            + (correction_timing_quality * 0.12)
+            + (structural_bearing_quality * 0.10)
+            + (expectation_alignment * 0.08)
+            + (regulated_courage * 0.08)
+            + (action_clearance * 0.08)
+            + (max(0.0, 1.0 - courage_gap) * 0.08)
+            + (0.10 if outcome_reason == "tp_hit" else 0.0)
+            - (0.10 if outcome_reason == "sl_hit" else 0.0),
+        ),
+    )
+
+    review_score = max(
+        0.0,
+        min(
+            1.0,
+            (decision_path_quality * 0.28)
+            + (uncertainty_recognition_quality * 0.14)
+            + (observation_quality * 0.14)
+            + (correction_timing_quality * 0.14)
+            + (structural_bearing_quality * 0.16)
+            + (regulated_courage * 0.08)
+            + (max(0.0, 1.0 - action_inhibition) * 0.06),
+        ),
+    )
 
     if outcome_reason == "tp_hit" and decision_path_quality >= 0.62:
         review_label = "reinforce"
-    elif event_key in ("observed_only", "withheld", "replanned", "abandoned", "blocked_value_gate") and observation_quality >= 0.56:
-        review_label = "observe"
-    elif outcome_reason in ("sl_hit", "cancel", "timeout", "rr_too_low", "reward_too_small", "sl_distance_too_high") and correction_timing_quality < 0.48:
-        review_label = "caution"
-    elif structural_bearing_quality >= 0.62 and decision_path_quality >= 0.58:
-        review_label = "stabilize"
+    elif outcome_reason == "sl_hit" and review_score < 0.46:
+        review_label = "deepen_reflection"
+    elif event_key in ("observed_only", "withheld") and observation_quality >= 0.54:
+        review_label = "observe_was_correct"
+    elif event_key in ("replanned", "abandoned", "cancelled") and correction_timing_quality >= 0.52:
+        review_label = "correction_was_correct"
     else:
-        review_label = "reconsider"
+        review_label = "mixed"
 
     return {
         "review_timestamp": timestamp,
-        "review_event": str(event_key),
         "review_label": str(review_label),
         "review_score": float(review_score),
-        "outcome_reason": str(outcome_reason),
-        "decision_tendency": str(decision_tendency_value),
-        "proposed_decision": str(internal_episode.get("proposed_decision", visible_episode.get("proposed_decision", "WAIT")) or "WAIT"),
-        "non_action_type": internal_episode.get("non_action_type", None),
-        "readiness": float(readiness),
-        "maturity": float(maturity),
-        "uncertainty": float(uncertainty),
-        "conflict": float(conflict),
-        "plan_quality": float(plan_quality),
-        "execution_quality": float(execution_quality),
-        "risk_fit_quality": float(risk_fit_quality),
-        "signature_quality": float(signature_quality),
-        "context_cluster_quality": float(context_cluster_quality),
-        "observation_mode": bool(observation_mode),
         "decision_path_quality": float(decision_path_quality),
         "uncertainty_recognition_quality": float(uncertainty_recognition_quality),
         "observation_quality": float(observation_quality),
@@ -4043,6 +4944,11 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
         "in_trade_max_mae": float(in_trade_max_mae),
         "in_trade_avg_fill_ratio": float(in_trade_avg_fill_ratio),
         "in_trade_direction_stability": float(in_trade_direction_stability),
+        "in_trade_avg_regulatory_load": float(in_trade_avg_regulatory_load),
+        "in_trade_avg_action_capacity": float(in_trade_avg_action_capacity),
+        "in_trade_avg_recovery_need": float(in_trade_avg_recovery_need),
+        "in_trade_avg_pressure_to_capacity": float(in_trade_avg_pressure_to_capacity),
+        "in_trade_avg_regulated_courage": float(in_trade_avg_regulated_courage),
     }
 
 # --------------------------------------------------
@@ -4060,6 +4966,15 @@ def _compact_in_trade_update_payload(payload):
         "mae": float(item.get("mae", 0.0) or 0.0),
         "bars_open": int(item.get("bars_open", 0) or 0),
         "fill_ratio": float(item.get("fill_ratio", 0.0) or 0.0),
+        "regulatory_load": float(item.get("regulatory_load", 0.0) or 0.0),
+        "action_capacity": float(item.get("action_capacity", 0.0) or 0.0),
+        "recovery_need": float(item.get("recovery_need", 0.0) or 0.0),
+        "survival_pressure": float(item.get("survival_pressure", 0.0) or 0.0),
+        "pressure_to_capacity": float(item.get("pressure_to_capacity", 0.0) or 0.0),
+        "regulated_courage": float(item.get("regulated_courage", 0.0) or 0.0),
+        "courage_gap": float(item.get("courage_gap", 0.0) or 0.0),
+        "pre_action_phase": str(item.get("pre_action_phase", "hold") or "hold"),
+        "dominant_tension_cause": str(item.get("dominant_tension_cause", "-") or "-"),
         "decision_tendency": str(item.get("decision_tendency", "hold") or "hold"),
         "proposed_decision": str(item.get("proposed_decision", "WAIT") or "WAIT"),
         "reason": str(item.get("reason", "-") or "-"),
@@ -4080,6 +4995,13 @@ def _summarize_in_trade_updates(in_trade_updates):
             "in_trade_last_bars_open": 0,
             "in_trade_avg_fill_ratio": 0.0,
             "in_trade_direction_stability": 0.0,
+            "in_trade_avg_regulatory_load": 0.0,
+            "in_trade_avg_action_capacity": 0.0,
+            "in_trade_avg_recovery_need": 0.0,
+            "in_trade_avg_survival_pressure": 0.0,
+            "in_trade_avg_pressure_to_capacity": 0.0,
+            "in_trade_avg_regulated_courage": 0.0,
+            "in_trade_avg_courage_gap": 0.0,
         }
 
     payloads = [dict(item.get("payload", {}) or {}) for item in updates]
@@ -4088,6 +5010,13 @@ def _summarize_in_trade_updates(in_trade_updates):
     mae_values = [float(item.get("mae", 0.0) or 0.0) for item in payloads]
     bars_open_values = [int(item.get("bars_open", 0) or 0) for item in payloads]
     fill_ratio_values = [float(item.get("fill_ratio", 0.0) or 0.0) for item in payloads]
+    regulatory_load_values = [float(item.get("regulatory_load", 0.0) or 0.0) for item in payloads]
+    action_capacity_values = [float(item.get("action_capacity", 0.0) or 0.0) for item in payloads]
+    recovery_need_values = [float(item.get("recovery_need", 0.0) or 0.0) for item in payloads]
+    survival_pressure_values = [float(item.get("survival_pressure", 0.0) or 0.0) for item in payloads]
+    pressure_to_capacity_values = [float(item.get("pressure_to_capacity", 0.0) or 0.0) for item in payloads]
+    regulated_courage_values = [float(item.get("regulated_courage", 0.0) or 0.0) for item in payloads]
+    courage_gap_values = [float(item.get("courage_gap", 0.0) or 0.0) for item in payloads]
 
     direction_values = []
     for item in payloads:
@@ -4111,4 +5040,182 @@ def _summarize_in_trade_updates(in_trade_updates):
         "in_trade_last_bars_open": int(bars_open_values[-1] if bars_open_values else 0),
         "in_trade_avg_fill_ratio": float(sum(fill_ratio_values) / max(1, len(fill_ratio_values))),
         "in_trade_direction_stability": float(direction_stability),
+        "in_trade_avg_regulatory_load": float(sum(regulatory_load_values) / max(1, len(regulatory_load_values))),
+        "in_trade_avg_action_capacity": float(sum(action_capacity_values) / max(1, len(action_capacity_values))),
+        "in_trade_avg_recovery_need": float(sum(recovery_need_values) / max(1, len(recovery_need_values))),
+        "in_trade_avg_survival_pressure": float(sum(survival_pressure_values) / max(1, len(survival_pressure_values))),
+        "in_trade_avg_pressure_to_capacity": float(sum(pressure_to_capacity_values) / max(1, len(pressure_to_capacity_values))),
+        "in_trade_avg_regulated_courage": float(sum(regulated_courage_values) / max(1, len(regulated_courage_values))),
+        "in_trade_avg_courage_gap": float(sum(courage_gap_values) / max(1, len(courage_gap_values))),
     }
+
+# --------------------------------------------------
+def _clip01(value):
+
+    try:
+        value = float(value)
+    except Exception:
+        value = 0.0
+
+    if value < 0.0:
+        return 0.0
+    if value > 1.0:
+        return 1.0
+    return float(value)
+
+# --------------------------------------------------
+def _derive_runtime_field_state(bot=None, tension_state=None, snapshot=None):
+
+    tension = dict(tension_state or {})
+    mcm_snapshot = dict(snapshot or {})
+
+    if bot is None:
+        return {
+            "field_density": 0.0,
+            "field_stability": 0.0,
+            "regulatory_load": 0.0,
+            "action_capacity": 0.0,
+            "recovery_need": 0.0,
+            "survival_pressure": 0.0,
+        }
+
+    field = None
+    mcm_brain = getattr(bot, "mcm_brain", None)
+    if isinstance(mcm_brain, dict):
+        field = mcm_brain.get("field")
+
+    energy_mean_abs = 0.0
+    velocity_mean_abs = 0.0
+    energy_variance = 0.0
+
+    if field is not None:
+        try:
+            energy_array = np.asarray(getattr(field, "energy", []), dtype=float)
+            if energy_array.size > 0:
+                energy_mean_abs = float(np.mean(np.abs(energy_array)))
+                energy_variance = float(np.var(energy_array))
+        except Exception:
+            pass
+
+        try:
+            velocity_array = np.asarray(getattr(field, "velocity", []), dtype=float)
+            if velocity_array.size > 0:
+                velocity_mean_abs = float(np.mean(np.abs(velocity_array)))
+        except Exception:
+            pass
+
+    strongest_memory = dict(mcm_snapshot.get("strongest_memory", {}) or {})
+    memory_strength = float(strongest_memory.get("strength", 0.0) or 0.0)
+    memory_pressure = _clip01(memory_strength / 14.0)
+
+    tension_stability = _clip01(tension.get("stability", 0.0) or 0.0)
+    coherence_balance = 1.0 - min(1.0, abs(float(tension.get("coherence", 0.0) or 0.0)))
+
+    inhibition_level = _clip01(getattr(bot, "inhibition_level", 0.0) or 0.0)
+    habituation_level = _clip01(getattr(bot, "habituation_level", 0.0) or 0.0)
+    observation_mode = bool(getattr(bot, "observation_mode", False))
+    pressure_release = _clip01(getattr(bot, "pressure_release", 0.0) or 0.0)
+    experience_regulation = _clip01(getattr(bot, "experience_regulation", 0.0) or 0.0)
+    load_bearing_capacity = _clip01(getattr(bot, "load_bearing_capacity", 0.0) or 0.0)
+
+    attempt_feedback = {}
+    stats_obj = getattr(bot, "stats", None)
+    if stats_obj is not None:
+        try:
+            attempt_feedback = dict(stats_obj.get_attempt_feedback() or {})
+        except Exception:
+            attempt_feedback = {}
+
+    attempt_density = _clip01(attempt_feedback.get("attempt_density", 0.0) or 0.0)
+    overtrade_pressure = _clip01(attempt_feedback.get("overtrade_pressure", 0.0) or 0.0)
+    context_quality = _clip01(attempt_feedback.get("context_quality", 0.0) or 0.0)
+
+    pnl_netto = 0.0
+    max_drawdown_pct = 0.0
+    sl_count = 0.0
+    trade_count = 0.0
+    if stats_obj is not None:
+        data = dict(getattr(stats_obj, "data", {}) or {})
+        pnl_netto = float(data.get("pnl_netto", 0.0) or 0.0)
+        max_drawdown_pct = max(0.0, float(data.get("max_drawdown_pct", 0.0) or 0.0))
+        sl_count = float(data.get("sl", 0.0) or 0.0)
+        trade_count = float(data.get("trades", 0.0) or 0.0)
+
+    negative_pnl_pressure = _clip01(abs(min(0.0, pnl_netto)) / 100.0)
+    drawdown_pressure = _clip01(max_drawdown_pct / 0.25)
+    loss_pressure = _clip01(sl_count / max(1.0, trade_count + 1.0))
+
+    field_density = _clip01(
+        (min(1.0, energy_mean_abs / 1.6) * 0.30)
+        + (min(1.0, velocity_mean_abs / 0.45) * 0.22)
+        + (min(1.0, energy_variance / 0.90) * 0.12)
+        + (memory_pressure * 0.08)
+        + (attempt_density * 0.10)
+        + (overtrade_pressure * 0.10)
+        + (inhibition_level * 0.08)
+    )
+
+    field_stability = _clip01(
+        (tension_stability * 0.38)
+        + (coherence_balance * 0.12)
+        + (pressure_release * 0.18)
+        + (experience_regulation * 0.16)
+        + (load_bearing_capacity * 0.16)
+        - (min(1.0, velocity_mean_abs / 0.45) * 0.12)
+    )
+
+    survival_pressure = _clip01(
+        (negative_pnl_pressure * 0.34)
+        + (drawdown_pressure * 0.34)
+        + (loss_pressure * 0.12)
+        + (overtrade_pressure * 0.10)
+        + ((1.0 - context_quality) * 0.10)
+    )
+
+    regulatory_load = _clip01(
+        (field_density * 0.34)
+        + ((1.0 - field_stability) * 0.18)
+        + (survival_pressure * 0.22)
+        + (inhibition_level * 0.10)
+        + (habituation_level * 0.08)
+        + (attempt_density * 0.08)
+        + (0.06 if observation_mode else 0.0)
+    )
+
+    action_capacity = _clip01(
+        (field_stability * 0.30)
+        + (experience_regulation * 0.18)
+        + (load_bearing_capacity * 0.16)
+        + (pressure_release * 0.12)
+        + (context_quality * 0.10)
+        + ((1.0 - regulatory_load) * 0.22)
+        - (survival_pressure * 0.18)
+    )
+
+    recovery_need = _clip01(
+        (regulatory_load * 0.46)
+        + (survival_pressure * 0.22)
+        + ((1.0 - field_stability) * 0.14)
+        + ((1.0 - action_capacity) * 0.14)
+        + (0.08 if observation_mode else 0.0)
+    )
+
+    bot.field_density = float(field_density)
+    bot.field_stability = float(field_stability)
+    bot.regulatory_load = float(regulatory_load)
+    bot.action_capacity = float(action_capacity)
+    bot.recovery_need = float(recovery_need)
+    bot.survival_pressure = float(survival_pressure)
+
+    return {
+        "field_density": float(field_density),
+        "field_stability": float(field_stability),
+        "regulatory_load": float(regulatory_load),
+        "action_capacity": float(action_capacity),
+        "recovery_need": float(recovery_need),
+        "survival_pressure": float(survival_pressure),
+    }
+
+
+
+

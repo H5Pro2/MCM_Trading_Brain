@@ -55,6 +55,12 @@ def evaluate_entry_decision(bot, window, candle_state):
             "observation_mode": bool(tendency_state.get("observation_mode", False)),
             "long_score": float(tendency_state.get("long_score", 0.0) or 0.0),
             "short_score": float(tendency_state.get("short_score", 0.0) or 0.0),
+            "field_density": float(tendency_state.get("field_density", 0.0) or 0.0),
+            "field_stability": float(tendency_state.get("field_stability", 0.0) or 0.0),
+            "regulatory_load": float(tendency_state.get("regulatory_load", 0.0) or 0.0),
+            "action_capacity": float(tendency_state.get("action_capacity", 0.0) or 0.0),
+            "recovery_need": float(tendency_state.get("recovery_need", 0.0) or 0.0),
+            "survival_pressure": float(tendency_state.get("survival_pressure", 0.0) or 0.0),
             "rejection_reason": str(tendency_state.get("rejection_reason", "runtime_non_action") or "runtime_non_action"),
         }
 
@@ -97,6 +103,12 @@ def evaluate_entry_decision(bot, window, candle_state):
             "observation_mode": bool(tendency_state.get("observation_mode", False)),
             "long_score": float(tendency_state.get("long_score", 0.0) or 0.0),
             "short_score": float(tendency_state.get("short_score", 0.0) or 0.0),
+            "field_density": float(tendency_state.get("field_density", 0.0) or 0.0),
+            "field_stability": float(tendency_state.get("field_stability", 0.0) or 0.0),
+            "regulatory_load": float(tendency_state.get("regulatory_load", 0.0) or 0.0),
+            "action_capacity": float(tendency_state.get("action_capacity", 0.0) or 0.0),
+            "recovery_need": float(tendency_state.get("recovery_need", 0.0) or 0.0),
+            "survival_pressure": float(tendency_state.get("survival_pressure", 0.0) or 0.0),
             "rejection_reason": "decision_plan_missing",
         }
 

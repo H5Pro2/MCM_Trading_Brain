@@ -3,7 +3,7 @@ from sklearn.cluster import DBSCAN
 import random
 from config import Config
 # --------------------------------------------------
-N_AGENTS = 80
+N_AGENTS = 160
 DIMS = 3
 # --------------------------------------------------
 # Wahrnehmung
