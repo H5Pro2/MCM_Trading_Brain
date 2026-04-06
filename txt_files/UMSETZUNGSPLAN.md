@@ -1,6 +1,7 @@
-# ==================================================
-# UMSETZUNGSPLAN – MCM TRADING BRAIN SYSTEMBAUPLAN
-# ==================================================
+# =======================================
+# UMSETZUNGSPLAN – 
+# MCM TRADING BRAIN SYSTEMBAUPLAN
+# =======================================
 
 Dieses Dokument ist der **Bauplan des Systems**.
 
@@ -885,8 +886,7 @@ sondern als MCM-basiertes Wahrnehmungs-, Verarbeitungs-, Regulations- und Entwic
 ---
 
 # --------------------------------------------------
-# ERWEITERUNG für die – 
-# VISUALISIERUNG (AUßEN / INNEN)
+# ERWEITERUNG – der VISUALISIERUNG (AUßEN / INNEN)
 # --------------------------------------------------
 
 ## Ziel
