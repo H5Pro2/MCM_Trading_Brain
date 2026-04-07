@@ -1,5 +1,5 @@
 # MCM Trading Brain
-
+![alt text](image.png)
 MCM Trading Brain ist ein experimentelles Trading-System mit MCM-Architektur.
 
 Ziel ist nicht ein klassischer Bot mit starren Regeln, sondern ein System, das:
