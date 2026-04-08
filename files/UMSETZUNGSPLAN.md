@@ -1213,6 +1213,246 @@ sondern als MCM-basiertes Wahrnehmungs-, Verarbeitungs-, Regulations- und Entwic
 
 ---
 
+  # --------------------------------------------------
+
+  # Erweiterung Umsetzungsplan
+
+  # Affective Pattern Layer / Muster-Feeling
+
+  # --------------------------------------------------
+
+  ## Ziel
+
+  Erweiterung des Systems von:
+
+  * Einzelzustand / Einzelereignis
+
+  zu:
+
+  * **Musterbasierter Erfahrungsraum mit gefühlstechnischer Gesamtbewertung**
+
+  Fokus:
+
+  * ähnliche, aber nicht identische Situationen
+  * unterschiedliche Gefühlsverläufe
+  * daraus eine **durchschnittliche Tragfähigkeit eines Musters** ableiten
+
+  # --------------------------------------------------
+
+  # Leitprinzip
+
+  # --------------------------------------------------
+
+  * Muster ≠ identische Struktur
+
+  * Muster = **ähnlicher Erfahrungsraum mit Variation**
+
+  * Gefühl ≠ Einzelwert
+
+  * Gefühl = **Verteilung über mehrere Episoden**
+
+  * Erfahrung =
+    → **Verdichtung von Verlauf + Gefühl + Regulation**
+
+  # --------------------------------------------------
+
+  # PRIO 1 – Episode → Feeling Summary
+
+  # --------------------------------------------------
+
+  ## Neuer Baustein
+
+  `episode_felt_summary`
+
+  ## Inhalte
+
+  * valence
+  * bearing
+  * overactivation
+  * burden
+  * regulation_quality
+  * stability
+  * confidence
+  * conflict
+  * recovery_cost
+  * felt_label
+
+  # --------------------------------------------------
+
+  # PRIO 2 – Musteraggregation
+
+  # --------------------------------------------------
+
+  ## Bezug
+
+  * `context_cluster_id` (primär)
+  * `signature_key` (sekundär)
+
+  ## Neuer Baustein
+
+  `affective_structure_profile`
+
+  ## Inhalte
+
+  ### Verteilung
+
+  * positive_ratio
+  * negative_ratio
+  * neutral_ratio
+  * euphoric_ratio
+  * burden_ratio
+
+  ### Mittelwerte
+
+  * felt_valence_avg
+  * felt_bearing_avg
+  * felt_regulation_quality_avg
+  * felt_recovery_cost_avg
+
+  ### Streuung
+
+  * felt_valence_variance
+  * felt_bearing_variance
+
+  ### Stabilität
+
+  * felt_stability
+  * felt_coherence_avg
+  * felt_conflict_ratio
+
+  ### Dynamik
+
+  * felt_drift_avg
+  * felt_trend
+
+  # --------------------------------------------------
+
+  # PRIO 3 – Gesamtbewertung
+
+  # --------------------------------------------------
+
+  ## Neue Kennzahl
+
+  `felt_bearing_score`
+
+  ## Klassifikation
+
+  `felt_profile_label`
+
+  Werte:
+
+  * stable_bearing
+  * volatile_bearing
+  * euphoric_risk
+  * burdened
+  * mixed_unclear
+  * recovering
+
+  # --------------------------------------------------
+
+  # PRIO 4 – Verlauf / History
+
+  # --------------------------------------------------
+
+  ## Neuer Baustein
+
+  `felt_history`
+
+  ## Inhalte
+
+  * timestamp
+  * valence
+  * bearing
+  * regulation_quality
+  * burden
+  * overactivation
+  * label
+
+  # --------------------------------------------------
+
+  # PRIO 5 – Variation als Kern
+
+  # --------------------------------------------------
+
+  * Nutzung von:
+
+    * distance
+    * variance
+    * drift
+    * axis_shift
+
+  → Muster = **Erfahrungsraum**, nicht exakte Struktur
+
+  # --------------------------------------------------
+
+  # PRIO 6 – Integration
+
+  # --------------------------------------------------
+
+  ## Einbauort
+
+  `context_links[context_cluster_id]`
+
+  ## Neue Felder
+
+  * felt_profile
+  * felt_bearing_score
+  * felt_profile_label
+  * felt_distribution
+  * felt_history
+
+  # --------------------------------------------------
+
+  # PRIO 7 – Aktivierung
+
+  # --------------------------------------------------
+
+  * keine Gates
+
+  * nur Modulation:
+
+  * tragfähig → ruhig
+
+  * euphorisch → dämpfen
+
+  * belastend → beobachten
+
+  # --------------------------------------------------
+
+  # PRIO 8 – Parameter
+
+  # --------------------------------------------------
+
+  * min_samples_for_profile
+  * recency_weight
+  * max_drift_for_same_pattern
+
+  # --------------------------------------------------
+
+  # Ergebnis
+
+  # --------------------------------------------------
+
+  System bewertet:
+
+  * nicht einzelne Events
+  * sondern:
+
+  → **gefühlstechnische Tragfähigkeit eines Musters**
+
+  # --------------------------------------------------
+
+  # Essenz
+
+  # --------------------------------------------------
+
+  * Muster statt Zustand
+  * Verteilung statt Einzelwert
+  * Gefühl statt Outcome
+  * Tragfähigkeit statt Gewinn
+
+---
+
 # --------------------------------------------------
 # ERWEITERUNG – der VISUALISIERUNG (AUßEN / INNEN)
 # --------------------------------------------------
