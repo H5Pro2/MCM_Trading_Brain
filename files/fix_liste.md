@@ -1,169 +1,166 @@
+from pathlib import Path
+
+content = """# ==================================================
+# BEREINIGTE FIX-LISTE – NUR NOCH OFFENE PUNKTE
 # ==================================================
-# FIX_LISTE.md (bereinigt)
-# ==================================================
+
+Diese Liste enthält nur noch Punkte, die im aktuellen Ist-Stand noch offen sind.
+Bereits umgesetzte Basismechanik wurde entfernt.
+
+---
 
 # --------------------------------------------------
-# Beobachtung
+# 1. STATUS
 # --------------------------------------------------
 
-- PRIO 1 Kernumbau ist umgesetzt:
-  - Zustandsdelta (`state_before / state_after / state_delta`)
-  - Experience-Kopplung (Struktur × Zustand × Wirkung)
-  - Nicht-Handlung integriert (`observe / replan / withheld`)
-  - Wahrnehmung vollständig aus `window` ableitbar
+Das Projekt ist nicht mehr in einer frühen Fix- oder Basisphase.
 
-- System befindet sich nicht mehr in der Fixphase,
-  sondern im Architektur-Endausbau
+Offen ist nicht mehr die Grundmechanik,
+sondern der weitere Ausbau.
+
+---
 
 # --------------------------------------------------
-# Schlussfolgerung
+# 2. OFFENE PUNKTE
 # --------------------------------------------------
 
-- PRIO 1 wird geschlossen
-- Fokus liegt auf Architektur, Review-Verfeinerung und Tests
-
-
-# ==================================================
-# PRIO 2 – RUNTIME / ENTSCHEIDUNGSBAHN
-# ==================================================
-
-- Trenne strikt:
-  - Ebene 1 = Wahrnehmung
-  - Ebene 2 = Innenprozess
-  - Entscheidungstendenz
-  - technische Ausführung
-
-- Runtime entkoppeln von:
-  - Bot-State Vermischung
-  - direkten Seiteneffekten
-
-- Entscheidung:
-  - zuerst intern (`act / observe / hold / replan`)
-  - danach technische Umsetzung
-
-
-# ==================================================
-# PRIO 2 – REVIEW / EXPERIENCE
-# ==================================================
-
-- Tragfähigkeit als zentrale Bewertungsgröße etablieren:
-  - Bewertung von Situationen nach Belastung / Entlastung
-  - Bewertung nach Handlungsfähigkeit des Systems
-  - nicht nach Ergebnis (kein PnL-Fokus)
-
-- Lernen definieren als Umgangsfähigkeit:
-  - womit kann das System stabil umgehen
-  - in welchen Situationen bleibt es handlungsfähig
-  - nicht: was ist „richtig“ oder profitabel
-
-- Zustandswirkung weiter schärfen:
-  - Belastung / Entlastung
-  - Veränderung von `action_capacity`
-  - Veränderung von `recovery_need`
-
-- Experience stärker koppeln an:
-  - Zustandsverlauf über Zeit
-  - nicht nur Einzel-Events
-  - Entwicklung der Tragfähigkeit innerhalb eines Clusters
-
-- Energie-/Reibungsmodell integrieren:
-  - Abweichung = erhöhter Energieverbrauch / regulatorische Last
-  - Kohärenz = geringe Reibung / hohe Effizienz
-  - Ziel: minimale Reibung bei aktiver Interaktion
-
-- Cluster neu interpretieren:
-  - nicht nur Kontextgruppen
-  - sondern Erfahrungsräume über Tragfähigkeit
-  - Struktur + Zustand + Wirkung → Cluster
-
-- Outcome neu interpretieren:
-  - kein PnL als Bewertung
-  - sondern Zustandswirkung:
-    - TP → Entlastung / Stabilisierung / evtl. Euphorie
-    - SL → Belastung / Rückzug / Erhöhter Recovery-Bedarf
-
-- Positive Zustände regulieren:
-  - Euphorie als Überaktivierung erkennen
-  - keine unkontrollierte Verstärkung positiver Outcomes
-
-- Review stabilisieren:
-  - keine impliziten Bewertungsreste (z. B. PnL)
-  - Fokus vollständig auf Zustand und Tragfähigkeit
-
-
-# ==================================================
-# PRIO 3 – KPI / AUSWERTUNG
-# ==================================================
-
-- Entferne PnL als zentrale KPI
-
-- Neue KPI:
-  - Zustandsstabilität
-  - Handlungsfähigkeit
-  - regulatorische Last
-  - Regeneration
-
-- Strukturbezogene KPI:
-  - Tragfähigkeit je Strukturfeld
-
-
-# ==================================================
-# PRIO 3 – VISUALISIERUNG
-# ==================================================
-
-- Visualisierung hinzufügen:
-
-  Ebene 1:
-  - Chart (OHLC)
-  - Wahrnehmung (`candle_state`, `tension_state`, etc.)
-
-  Ebene 2:
-  - Innenzustand:
-    - field_density
-    - regulatory_load
-    - action_capacity
-    - recovery_need
-    - survival_pressure
-
-- Ziel:
-  - Außenwelt und Innenwelt getrennt sichtbar machen
-
-
-# ==================================================
-# PRIO 4 – TESTS
-# ==================================================
-
-- dedizierte Tests für:
-  - `bot_gate_funktions.py`
-  - `mcm_core_engine.py`
-
-- Fokus:
-  - Zustandsentwicklung
-  - nicht Trade-Ergebnis
-
-
-# ==================================================
-# OPTIONAL – EXTERNES GATE
-# ==================================================
-
-- optional:
-  - PnL als technisches ValueGate (Notbremse)
-
-- nicht erlaubt:
-  - Teil der Entscheidungslogik
-  - Teil der Experience
-
-
-# ==================================================
-# STATUS
-# ==================================================
-
-- Fixphase abgeschlossen
-- Architekturphase aktiv
-
 # --------------------------------------------------
-# Schlussfolgerung
+# 2.1 Experience / Review vertiefen
 # --------------------------------------------------
 
-- dedizierte Tests für `bot_gate_funktions.py`
-- dedizierte Tests für `mcm_core_engine.py`y
+Noch offen:
+
+- Tragfähigkeit als explizite Bewertungsgröße sauber durchziehen
+- Lernen explizit als Umgangsfähigkeit modellieren
+- Reibung / Energie als Experience-Kosten klarer technisch verankern
+- Cluster-Bewertung stärker auf Tragfähigkeit statt Ergebnis ausrichten
+- Profitlogik weiter von Experience entkoppeln
+- Outcome stärker als Zustandswirkung statt Geldwirkung ausformen
+
+---
+
+# --------------------------------------------------
+# 2.2 Runtime / Architektur weiter trennen
+# --------------------------------------------------
+
+Noch offen:
+
+- Ebene 1 weiter als reine Außenwahrnehmung schärfen
+- Ebene 2 weiter als reinen Innenprozess schärfen
+- Ebene 3 weiter als reine Entwicklung / Experience schärfen
+- Vermischung von Runtime und Bot-State weiter reduzieren
+- strukturelle Trennung der Ebenen weiter verhärten
+
+---
+
+# --------------------------------------------------
+# 2.3 KPI / Auswertung umbauen
+# --------------------------------------------------
+
+Noch offen:
+
+- klassische Trade-KPIs als Hauptbewertung zurückbauen oder umordnen
+- Tragfähigkeit, innere Reibung, Belastung, Entlastung und Handlungsfähigkeit stärker als Nachweisgrößen aufbauen
+- alte Ergebnislogik in der Bewertung weiter zurückdrängen
+
+Aktuell noch alt geprägt sind insbesondere:
+
+- pnl_netto
+- pnl_tp
+- pnl_sl
+- equity_peak
+- max_drawdown_abs
+- max_drawdown_pct
+- winrate
+- profit_factor
+- expectancy
+
+---
+
+# --------------------------------------------------
+# 2.4 GUI / Visualisierung umbauen
+# --------------------------------------------------
+
+Noch offen:
+
+- GUI stärker von alten Trade-Nachweisen lösen
+- Außenwelt sauber darstellen
+- Innenwelt sauber darstellen
+- Zustandsachsen sauber darstellen
+- Experience- / Tragfähigkeitsverlauf sichtbar machen
+- alte Equity- / PnL-Zentrierung weiter zurückbauen
+- umgesetzt daten Puffer - fertig
+
+Aktuell noch alt geprägt:
+
+- trade_stats.json
+- trade_equity.csv
+
+---
+
+# --------------------------------------------------
+# 2.5 Tests ergänzen
+# --------------------------------------------------
+
+Noch offen:
+
+- dedizierte Tests für bot_gate_funktions.py
+- dedizierte Tests für mcm_core_engine.py
+
+---
+
+# --------------------------------------------------
+# 3. PRIORISIERTE RESTREIHENFOLGE
+# --------------------------------------------------
+
+# --------------------------------------------------
+# PRIO 1
+# --------------------------------------------------
+
+- Experience / Review vertiefen
+- Runtime / Architektur weiter trennen
+
+# --------------------------------------------------
+# PRIO 2
+# --------------------------------------------------
+
+- KPI / Auswertung umbauen
+- GUI / Visualisierung umbauen
+
+# --------------------------------------------------
+# PRIO 3
+# --------------------------------------------------
+
+- dedizierte Tests ergänzen
+
+---
+
+# --------------------------------------------------
+# 4. ENTFERNT AUS DER ALTEN FIX-LISTE
+# --------------------------------------------------
+
+Nicht mehr als offene Fix-Punkte führen:
+
+- äußere Wahrnehmungsbasis
+- MCM-Runtime-Grundmechanik
+- Entscheidungstendenz
+- technische Handlungsbahn
+- Nicht-Handlung als echter Pfad
+- Episode / Review / Experience-Basis
+- Persistenz der Memory- und Runtime-Zustände
+- Grundkopplung von Wahrnehmung → Runtime → Handlung → Experience
+
+---
+
+# --------------------------------------------------
+# 5. AKTUELLER KERNSATZ
+# --------------------------------------------------
+
+Offen ist nicht mehr die Basislogik.
+
+Offen ist der Architektur-Endausbau.
+"""
+
+path = Path("/mnt/data/bereinigte_fix_liste.md")
+path.write_text(content, encoding="utf-8")
+print(f"Wrote {path}")

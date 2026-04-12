@@ -7,6 +7,8 @@
 # -> TradeValueGate
 # -> Order / Pending Entry
 # ==================================================
+import json
+import os
 import queue
 import threading
 import time
@@ -97,6 +99,7 @@ class Bot:
         self.tension_state = {}
         self.visual_market_state = {}
         self.structure_perception_state = {}
+        self.temporal_perception_state = {}
         self.outer_market_state = {}
         self.perception_state = {}
         self.outer_visual_perception_state = {}
@@ -106,6 +109,8 @@ class Bot:
         self.felt_state = {}
         self.thought_state = {}
         self.meta_regulation_state = {}
+        self.action_intent_state = {}
+        self.execution_state = {}
         self.last_outcome_decomposition = {}
 
         self.mcm_runtime_snapshot = {}
@@ -176,7 +181,12 @@ class Bot:
                     "entry_ts": snapshot.get("entry_ts"),
                     "entry_index": None,
                     "last_checked_ts": snapshot.get("entry_ts"),
-                    "meta": {},
+                    "meta": {
+                        "felt_bearing_score": 0.0,
+                        "felt_profile_label": "mixed_unclear",
+                        "episode_felt_summary": {},
+                        "restart_recovery": True,
+                    },
                 }
     # ==================================================
     # ENTSCHEIDUNGSBAHN
@@ -185,6 +195,9 @@ class Bot:
 
         result = dict(entry_result or {})
         decision_tendency = str(result.get("decision_tendency", "") or "").strip().lower()
+
+        self.action_intent_state = dict(result.get("action_intent_state", {}) or {})
+        self.execution_state = dict(result.get("execution_state", {}) or {})
 
         if decision_tendency == "act":
             return False
@@ -203,8 +216,7 @@ class Bot:
             state_after,
         )
 
-        non_action_context = _build_entry_attempt_context(
-            self,
+        non_action_context = self._build_entry_attempt_context(
             result,
         )
         self.stats.on_attempt(
@@ -221,6 +233,9 @@ class Bot:
                 "reason": str(result.get("rejection_reason", "runtime_non_action") or "runtime_non_action"),
                 "meta_regulation_state": dict(result.get("meta_regulation_state", {}) or {}),
                 "expectation_state": dict(result.get("expectation_state", {}) or {}),
+                "bearing_context": dict((non_action_context.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(non_action_context.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(non_action_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
                 "state_before": dict(state_before or {}),
                 "state_after": dict(state_after or {}),
                 "state_delta": dict(state_delta or {}),
@@ -289,6 +304,8 @@ class Bot:
         if float(getattr(self, "action_capacity", 0.0) or 0.0) > 0.0:
             pressure_to_capacity = float(getattr(self, "regulatory_load", 0.0) or 0.0) / max(0.05, float(getattr(self, "action_capacity", 0.0) or 0.0))
 
+        position_context = dict(self.position.get("meta", {}) or {})
+
         mark_runtime_episode_event(
             self,
             "position_update",
@@ -314,6 +331,9 @@ class Bot:
                 "proposed_decision": str(runtime_state.get("proposed_decision", "WAIT") or "WAIT"),
                 "pre_action_phase": str(meta_regulation_state.get("pre_action_phase", "hold") or "hold"),
                 "dominant_tension_cause": str(meta_regulation_state.get("dominant_tension_cause", "-") or "-"),
+                "bearing_context": dict((position_context.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(position_context.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(position_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
                 "reason": "position_watch",
                 "state_before": dict(position_state_before or {}),
                 "state_after": dict(position_state_after or {}),
@@ -333,7 +353,6 @@ class Bot:
         if reason is None:
             return True
 
-        position_context = dict(self.position.get("meta", {}) or {})
         resolved_position = dict(self.position or {})
         state_before = self._build_regulation_state_snapshot()
 
@@ -351,6 +370,9 @@ class Bot:
                     {
                         "position": dict(resolved_position or {}),
                         "reason": "exchange_cancel",
+                        "bearing_context": dict((position_context.get("bearing_context", {}) or {})),
+                        "felt_bearing_score": float(position_context.get("felt_bearing_score", 0.0) or 0.0),
+                        "felt_profile_label": str(position_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
                     },
                 )
                 self.stats.on_cancel(
@@ -392,6 +414,9 @@ class Bot:
             {
                 "position": dict(resolved_position or {}),
                 "reason": str(reason or "-"),
+                "bearing_context": dict((position_context.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(position_context.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(position_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
                 "state_before": dict(state_before or {}),
                 "state_after": dict(state_after or {}),
                 "state_delta": dict(state_delta or {}),
@@ -503,6 +528,9 @@ class Bot:
                 "proposed_decision": str(runtime_state.get("proposed_decision", "WAIT") or "WAIT"),
                 "pre_action_phase": str(meta_regulation_state.get("pre_action_phase", "hold") or "hold"),
                 "dominant_tension_cause": str(meta_regulation_state.get("dominant_tension_cause", "-") or "-"),
+                "bearing_context": dict((pending_meta.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(pending_meta.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(pending_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
                 "reason": "pending_watch",
                 "state_before": dict(pending_state_before or {}),
                 "state_after": dict(pending_state_after or {}),
@@ -523,6 +551,11 @@ class Bot:
             risk = abs(fill_price - sl_price)
             fill_state_before = self._build_regulation_state_snapshot()
 
+            position_meta = dict(pending_meta or {})
+            position_meta["felt_bearing_score"] = float(position_meta.get("felt_bearing_score", 0.0) or 0.0)
+            position_meta["felt_profile_label"] = str(position_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear")
+            position_meta["bearing_context"] = dict(position_meta.get("bearing_context", {}) or {})
+
             self.position = {
                 "side": side,
                 "entry": float(fill_price),
@@ -535,7 +568,7 @@ class Bot:
                 "entry_ts": last.get("timestamp"),
                 "entry_index": self.processed,
                 "last_checked_ts": last.get("timestamp"),
-                "meta": pending_meta,
+                "meta": position_meta,
             }
 
             fill_state_after = self._build_regulation_state_snapshot()
@@ -547,7 +580,7 @@ class Bot:
             self.pending_entry = None
             self.stats.on_attempt(
                 status="filled",
-                context=pending_meta,
+                context=position_meta,
             )
             mark_runtime_episode_event(
                 self,
@@ -555,6 +588,9 @@ class Bot:
                 {
                     "position": dict(self.position or {}),
                     "reason": "backtest_fill",
+                    "bearing_context": dict((position_meta.get("bearing_context", {}) or {})),
+                    "felt_bearing_score": float(position_meta.get("felt_bearing_score", 0.0) or 0.0),
+                    "felt_profile_label": str(position_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
                     "state_before": dict(fill_state_before or {}),
                     "state_after": dict(fill_state_after or {}),
                     "state_delta": dict(fill_state_delta or {}),
@@ -583,6 +619,9 @@ class Bot:
                 {
                     "pending_entry": dict(pending_snapshot or {}),
                     "reason": "backtest_timeout",
+                    "bearing_context": dict((pending_meta.get("bearing_context", {}) or {})),
+                    "felt_bearing_score": float(pending_meta.get("felt_bearing_score", 0.0) or 0.0),
+                    "felt_profile_label": str(pending_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
                     "state_before": dict(timeout_state_before or {}),
                     "state_after": dict(timeout_state_after or {}),
                     "state_delta": dict(timeout_state_delta or {}),
@@ -622,8 +661,18 @@ class Bot:
         if entry_result is None:
             return True
 
+        self.action_intent_state = dict(entry_result.get("action_intent_state", {}) or {})
+        self.execution_state = dict(entry_result.get("execution_state", {}) or {})
+
         if self._handle_decision_tendency(entry_result):
             return True
+
+        self.execution_state = {
+            **dict(self.execution_state or {}),
+            "execution_phase": "value_check",
+            "execution_ready": True,
+            "execution_blocked": False,
+        }
 
         value_check = self.value_gate.evaluate(entry_result)
 
@@ -631,8 +680,13 @@ class Bot:
             dbr_debug(f"VALUE_GATE: {value_check}", "value_check_debug.csv")
 
         if not value_check.get("trade_allowed", False):
-            blocked_context = _build_entry_attempt_context(
-                self,
+            self.execution_state = {
+                **dict(self.execution_state or {}),
+                "execution_phase": "blocked_value_gate",
+                "execution_ready": False,
+                "execution_blocked": True,
+            }
+            blocked_context = self._build_entry_attempt_context(
                 entry_result,
             )
 
@@ -646,6 +700,9 @@ class Bot:
                 {
                     "trade_plan": dict((blocked_context.get("trade_plan", {}) or {})),
                     "reason": str(value_check.get("reason") or "blocked_value_gate"),
+                    "bearing_context": dict((blocked_context.get("bearing_context", {}) or {})),
+                    "felt_bearing_score": float(blocked_context.get("felt_bearing_score", 0.0) or 0.0),
+                    "felt_profile_label": str(blocked_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
                 },
             )
             apply_outcome_stimulus(
@@ -674,6 +731,13 @@ class Bot:
         is_memory_trade = False
         rr_exec_min = float(getattr(Config, "RR_EXECUTION_MIN", 1.2) or 1.2)
 
+        self.execution_state = {
+            **dict(self.execution_state or {}),
+            "execution_phase": "execution_prepare",
+            "execution_ready": True,
+            "execution_blocked": False,
+        }
+
         if live_mode and Config.AKTIV_ORDER and float(entry_result.get("rr_value", 0.0) or 0.0) < rr_exec_min:
             is_memory_trade = True
 
@@ -696,10 +760,16 @@ class Bot:
             if order_id is None:
                 return True
 
-        attempt_meta = _build_entry_attempt_context(
-            self,
+        attempt_meta = self._build_entry_attempt_context(
             entry_result,
         )
+
+        self.execution_state = {
+            **dict(self.execution_state or {}),
+            "execution_phase": "pending_submitted",
+            "execution_ready": True,
+            "execution_blocked": False,
+        }
 
         self.pending_entry = {
             "side": side,
@@ -710,11 +780,17 @@ class Bot:
             "order_id": order_id,
             "created_index": self.processed,
             "max_wait_bars": int(getattr(Config, "PENDING_ENTRY_MAX_WAIT_BARS", 20) or 20),
-            "meta": attempt_meta,
+            "meta": {
+                **dict(attempt_meta or {}),
+                "felt_bearing_score": float(entry_result.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(entry_result.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+                "episode_felt_summary": dict(entry_result.get("episode_felt_summary", {}) or {}),
+                "bearing_context": dict((attempt_meta.get("bearing_context", {}) or {})),
+            },
         }
         self.stats.on_attempt(
             status="submitted",
-            context=attempt_meta,
+            context=dict(self.pending_entry.get("meta", {}) or {}),
         )
         mark_runtime_episode_event(
             self,
@@ -722,6 +798,9 @@ class Bot:
             {
                 "trade_plan": dict((attempt_meta.get("trade_plan", {}) or {})),
                 "reason": str(side or "-").lower(),
+                "bearing_context": dict((attempt_meta.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(attempt_meta.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(attempt_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
             },
         )
 
@@ -787,6 +866,8 @@ class Bot:
                 "recovery_need": float(after.get("field", {}).get("recovery_need", 0.0) - before.get("field", {}).get("recovery_need", 0.0)),
                 "survival_pressure": float(after.get("field", {}).get("survival_pressure", 0.0) - before.get("field", {}).get("survival_pressure", 0.0)),
                 "pressure_to_capacity": float(after.get("field", {}).get("pressure_to_capacity", 0.0) - before.get("field", {}).get("pressure_to_capacity", 0.0)),
+                "capacity_reserve": float(after.get("field", {}).get("capacity_reserve", 0.0) - before.get("field", {}).get("capacity_reserve", 0.0)),
+                "recovery_balance": float(after.get("field", {}).get("recovery_balance", 0.0) - before.get("field", {}).get("recovery_balance", 0.0)),
             },
             "experience": {
                 "approach_pressure": float(after.get("experience", {}).get("approach_pressure", 0.0) - before.get("experience", {}).get("approach_pressure", 0.0)),
@@ -794,7 +875,10 @@ class Bot:
                 "experience_regulation": float(after.get("experience", {}).get("experience_regulation", 0.0) - before.get("experience", {}).get("experience_regulation", 0.0)),
                 "reflection_maturity": float(after.get("experience", {}).get("reflection_maturity", 0.0) - before.get("experience", {}).get("reflection_maturity", 0.0)),
                 "load_bearing_capacity": float(after.get("experience", {}).get("load_bearing_capacity", 0.0) - before.get("experience", {}).get("load_bearing_capacity", 0.0)),
+                "protective_width_regulation": float(after.get("experience", {}).get("protective_width_regulation", 0.0) - before.get("experience", {}).get("protective_width_regulation", 0.0)),
                 "protective_courage": float(after.get("experience", {}).get("protective_courage", 0.0) - before.get("experience", {}).get("protective_courage", 0.0)),
+                "carrying_balance": float(after.get("experience", {}).get("carrying_balance", 0.0) - before.get("experience", {}).get("carrying_balance", 0.0)),
+                "bearing_pressure_gap": float(after.get("experience", {}).get("bearing_pressure_gap", 0.0) - before.get("experience", {}).get("bearing_pressure_gap", 0.0)),
             },
         }
     # --------------------------------------------------
@@ -954,6 +1038,7 @@ class Bot:
         resolved_visual_market_state = dict(perception_packet.get("visual_market_state", {}) or {})
         resolved_structure_perception_state = dict(perception_packet.get("structure_perception_state", {}) or {})
         resolved_tension_state = dict(perception_packet.get("tension_state", {}) or {})
+        resolved_temporal_perception_state = dict(perception_packet.get("temporal_perception_state", {}) or {})
 
         if candle_state is not None:
             resolved_candle_state = dict(candle_state or {})
@@ -968,6 +1053,7 @@ class Bot:
         self.tension_state = dict(resolved_tension_state or {})
         self.visual_market_state = dict(resolved_visual_market_state or {})
         self.structure_perception_state = dict(resolved_structure_perception_state or {})
+        self.temporal_perception_state = dict(resolved_temporal_perception_state or {})
         self.outer_market_state = dict(perception_packet.get("outer_market_state", {}) or {})
 
         runtime_result = step_mcm_runtime(
@@ -977,6 +1063,7 @@ class Bot:
             tension_state=dict(resolved_tension_state or {}),
             visual_market_state=dict(resolved_visual_market_state or {}),
             structure_perception_state=dict(resolved_structure_perception_state or {}),
+            temporal_perception_state=dict(resolved_temporal_perception_state or {}),
         )
         self._runtime_seeded = True
 
@@ -1113,6 +1200,101 @@ class Bot:
         dynamic_load = self._runtime_dynamic_load()
         scaled_cycles = int(round(dynamic_load * followup_cycles))
         return int(max(0, min(followup_cycles, scaled_cycles if followup_cycles > 1 else followup_cycles)))
+    # --------------------------------------------------
+    def _build_temporal_perception_state(self, window):
+
+        previous_state = dict(getattr(self, "temporal_perception_state", {}) or {})
+        candles = [dict(item or {}) for item in list(window or []) if isinstance(item, dict)]
+        if len(candles) < 3:
+            return {
+                "flow_direction": float(previous_state.get("flow_direction", 0.0) or 0.0),
+                "flow_strength": float(previous_state.get("flow_strength", 0.0) or 0.0),
+                "flow_stability": float(previous_state.get("flow_stability", 0.0) or 0.0),
+                "acceleration": 0.0,
+                "swing_pressure": float(previous_state.get("swing_pressure", 0.0) or 0.0),
+                "sequence_bias": str(previous_state.get("sequence_bias", "neutral") or "neutral"),
+                "flow_memory": float(previous_state.get("flow_memory", 0.0) or 0.0),
+                "transition_pressure": float(previous_state.get("transition_pressure", 0.0) or 0.0),
+                "continuation_readiness": float(previous_state.get("continuation_readiness", 0.0) or 0.0),
+                "temporal_exhaustion": float(previous_state.get("temporal_exhaustion", 0.0) or 0.0),
+                "temporal_coherence": float(previous_state.get("temporal_coherence", 0.0) or 0.0),
+                "state_drift": 0.0,
+            }
+
+        tail = candles[-12:]
+        closes = [float(item.get("close", 0.0) or 0.0) for item in tail]
+        highs = [float(item.get("high", 0.0) or 0.0) for item in tail]
+        lows = [float(item.get("low", 0.0) or 0.0) for item in tail]
+
+        deltas = []
+        for index in range(1, len(closes)):
+            deltas.append(float(closes[index] - closes[index - 1]))
+
+        move_sum = sum(deltas)
+        abs_sum = sum(abs(value) for value in deltas)
+        raw_flow_direction = float(move_sum / max(abs_sum, 1e-9))
+        raw_flow_strength = float(min(1.0, abs_sum / max(abs(closes[-1]) * 0.02, 1e-9)))
+
+        direction_hits = 0
+        for value in deltas:
+            if move_sum >= 0.0 and value >= 0.0:
+                direction_hits += 1
+            elif move_sum < 0.0 and value <= 0.0:
+                direction_hits += 1
+
+        raw_flow_stability = float(direction_hits / max(1, len(deltas)))
+
+        raw_acceleration = 0.0
+        if len(deltas) >= 2:
+            raw_acceleration = float(deltas[-1] - deltas[-2])
+
+        range_span = max(max(highs) - min(lows), 1e-9)
+        raw_swing_pressure = float(min(1.0, abs(raw_acceleration) / range_span))
+
+        previous_direction = float(previous_state.get("flow_direction", 0.0) or 0.0)
+        previous_strength = float(previous_state.get("flow_strength", 0.0) or 0.0)
+        previous_stability = float(previous_state.get("flow_stability", 0.0) or 0.0)
+        previous_swing_pressure = float(previous_state.get("swing_pressure", 0.0) or 0.0)
+        previous_flow_memory = float(previous_state.get("flow_memory", 0.0) or 0.0)
+        previous_transition_pressure = float(previous_state.get("transition_pressure", 0.0) or 0.0)
+        previous_continuation_readiness = float(previous_state.get("continuation_readiness", 0.0) or 0.0)
+        previous_temporal_exhaustion = float(previous_state.get("temporal_exhaustion", 0.0) or 0.0)
+        previous_temporal_coherence = float(previous_state.get("temporal_coherence", 0.0) or 0.0)
+
+        flow_direction = float((previous_direction * 0.34) + (raw_flow_direction * 0.66))
+        flow_strength = float(min(1.0, max(0.0, (previous_strength * 0.26) + (raw_flow_strength * 0.74))))
+        flow_stability = float(min(1.0, max(0.0, (previous_stability * 0.30) + (raw_flow_stability * 0.70))))
+        swing_pressure = float(min(1.0, max(0.0, (previous_swing_pressure * 0.28) + (raw_swing_pressure * 0.72))))
+        acceleration = float(raw_acceleration)
+
+        state_drift = float(abs(flow_direction - previous_direction))
+        direction_alignment = 1.0 - min(1.0, abs(flow_direction - previous_direction) / 2.0)
+        flow_memory = float(max(-1.0, min(1.0, (previous_flow_memory * 0.58) + (flow_direction * 0.42))))
+        transition_pressure = float(min(1.0, max(0.0, (previous_transition_pressure * 0.52) + (state_drift * 0.34) + (swing_pressure * 0.24) + (max(0.0, 1.0 - flow_stability) * 0.12))))
+        continuation_readiness = float(min(1.0, max(0.0, (previous_continuation_readiness * 0.48) + (flow_strength * 0.24) + (flow_stability * 0.24) + (max(0.0, direction_alignment) * 0.16) - (transition_pressure * 0.18))))
+        temporal_exhaustion = float(min(1.0, max(0.0, (previous_temporal_exhaustion * 0.62) + (swing_pressure * 0.20) + (max(0.0, abs(acceleration) / range_span) * 0.18) - (flow_stability * 0.10))))
+        temporal_coherence = float(min(1.0, max(0.0, (previous_temporal_coherence * 0.34) + (flow_stability * 0.30) + (max(0.0, 1.0 - transition_pressure) * 0.22) + (max(0.0, 1.0 - temporal_exhaustion) * 0.14))))
+
+        sequence_bias = "neutral"
+        if flow_direction >= 0.18:
+            sequence_bias = "up"
+        elif flow_direction <= -0.18:
+            sequence_bias = "down"
+
+        return {
+            "flow_direction": float(flow_direction),
+            "flow_strength": float(flow_strength),
+            "flow_stability": float(flow_stability),
+            "acceleration": float(acceleration),
+            "swing_pressure": float(swing_pressure),
+            "sequence_bias": str(sequence_bias),
+            "flow_memory": float(flow_memory),
+            "transition_pressure": float(transition_pressure),
+            "continuation_readiness": float(continuation_readiness),
+            "temporal_exhaustion": float(temporal_exhaustion),
+            "temporal_coherence": float(temporal_coherence),
+            "state_drift": float(state_drift),
+        }    
     # ==================================================
     # MARKET PACKET BUILDERS
     # ==================================================
@@ -1168,12 +1350,14 @@ class Bot:
         tension_state = self._build_tension_state_packet(local_window)
         visual_market_state = self._build_visual_market_state_packet(local_window)
         structure_perception_state = self._build_structure_perception_packet(local_window)
+        temporal_perception_state = self._build_temporal_perception_state(local_window)
         outer_market_state = {
             "timestamp": last.get("timestamp"),
             "candle_state": dict(candle_state or {}),
             "tension_state": dict(tension_state or {}),
             "visual_market_state": dict(visual_market_state or {}),
             "structure_perception_state": dict(structure_perception_state or {}),
+            "temporal_perception_state": dict(temporal_perception_state or {}),
         }
 
         return {
@@ -1183,8 +1367,163 @@ class Bot:
             "tension_state": dict(tension_state or {}),
             "visual_market_state": dict(visual_market_state or {}),
             "structure_perception_state": dict(structure_perception_state or {}),
+            "temporal_perception_state": dict(temporal_perception_state or {}),
             "outer_market_state": dict(outer_market_state or {}),
-        }    
+        }  
+    # --------------------------------------------------
+    def _snapshot_write_path(self, snapshot_kind):
+
+        snapshot_key = str(snapshot_kind or "visual").strip().lower()
+
+        if snapshot_key == "inner":
+            configured = str(getattr(Config, "MCM_INNER_SNAPSHOT_PATH", "debug/bot_inner_snapshot.json") or "debug/bot_inner_snapshot.json")
+        else:
+            configured = str(getattr(Config, "MCM_VISUAL_SNAPSHOT_PATH", "debug/bot_visual_snapshot.json") or "debug/bot_visual_snapshot.json")
+
+        return configured
+    # --------------------------------------------------
+    def _write_json_snapshot(self, snapshot_kind, payload):
+
+        path = self._snapshot_write_path(snapshot_kind)
+
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(dict(payload or {}), f, indent=2)
+        except Exception:
+            return None
+
+        return path
+    # --------------------------------------------------
+    def _build_visual_chart_snapshot(self, window):
+
+        local_window = [dict(item or {}) for item in list(window or []) if isinstance(item, dict)]
+        if not local_window:
+            return {
+                "visible_window_size": 0,
+                "price_bounds": {
+                    "low": 0.0,
+                    "high": 0.0,
+                    "span": 0.0,
+                },
+                "candles": [],
+                "close_trace": [],
+            }
+
+        visible_window_size = min(120, len(local_window))
+        visible_window = local_window[-visible_window_size:]
+
+        lows = []
+        highs = []
+        candles = []
+        close_trace = []
+
+        for index, candle in enumerate(visible_window):
+            open_price = float(candle.get("open", 0.0) or 0.0)
+            high_price = float(candle.get("high", open_price) or open_price)
+            low_price = float(candle.get("low", open_price) or open_price)
+            close_price = float(candle.get("close", open_price) or open_price)
+            volume_value = float(candle.get("volume", 0.0) or 0.0)
+            timestamp = candle.get("timestamp")
+
+            lows.append(low_price)
+            highs.append(high_price)
+            close_trace.append(close_price)
+            candles.append({
+                "index": int(index),
+                "timestamp": timestamp,
+                "open": float(open_price),
+                "high": float(high_price),
+                "low": float(low_price),
+                "close": float(close_price),
+                "volume": float(volume_value),
+                "direction": "up" if close_price >= open_price else "down",
+                "body": float(close_price - open_price),
+                "range": float(high_price - low_price),
+            })
+
+        price_low = min(lows) if lows else 0.0
+        price_high = max(highs) if highs else 0.0
+        price_span = max(price_high - price_low, 1e-9)
+
+        normalized_close_trace = []
+        for close_price in close_trace:
+            normalized_close_trace.append(float((close_price - price_low) / price_span))
+
+        return {
+            "visible_window_size": int(visible_window_size),
+            "price_bounds": {
+                "low": float(price_low),
+                "high": float(price_high),
+                "span": float(price_high - price_low),
+            },
+            "candles": list(candles or []),
+            "close_trace": list(close_trace or []),
+            "normalized_close_trace": list(normalized_close_trace or []),
+        }
+    # --------------------------------------------------
+    def _build_inner_pipeline_snapshot(self):
+
+        meta_regulation_state = dict(getattr(self, "meta_regulation_state", {}) or {})
+        review_feedback_state = dict(meta_regulation_state.get("review_feedback_state", {}) or {})
+
+        return {
+            "outer_visual_perception_state": dict(getattr(self, "outer_visual_perception_state", {}) or {}),
+            "inner_field_perception_state": dict(getattr(self, "inner_field_perception_state", {}) or {}),
+            "temporal_perception_state": dict(getattr(self, "temporal_perception_state", {}) or {}),
+            "perception_state": dict(getattr(self, "perception_state", {}) or {}),
+            "processing_state": dict(getattr(self, "processing_state", {}) or {}),
+            "felt_state": dict(getattr(self, "felt_state", {}) or {}),
+            "thought_state": dict(getattr(self, "thought_state", {}) or {}),
+            "meta_regulation_state": dict(meta_regulation_state or {}),
+            "review_feedback_state": dict(review_feedback_state or {}),
+            "review_carry_capacity": float(meta_regulation_state.get("review_carry_capacity", review_feedback_state.get("carry_capacity", 0.0)) or 0.0),
+            "review_caution_load": float(meta_regulation_state.get("review_caution_load", review_feedback_state.get("caution_load", 0.0)) or 0.0),
+            "review_tendency_hint": str(meta_regulation_state.get("review_tendency_hint", review_feedback_state.get("tendency_hint", "hold")) or "hold"),
+            "expectation_state": dict(getattr(self, "expectation_state", {}) or {}),
+            "action_intent_state": dict(getattr(self, "action_intent_state", {}) or {}),
+            "execution_state": dict(getattr(self, "execution_state", {}) or {}),
+            "field_state": {
+                "field_density": float(getattr(self, "field_density", 0.0) or 0.0),
+                "field_stability": float(getattr(self, "field_stability", 0.0) or 0.0),
+                "regulatory_load": float(getattr(self, "regulatory_load", 0.0) or 0.0),
+                "action_capacity": float(getattr(self, "action_capacity", 0.0) or 0.0),
+                "recovery_need": float(getattr(self, "recovery_need", 0.0) or 0.0),
+                "survival_pressure": float(getattr(self, "survival_pressure", 0.0) or 0.0),
+            },
+            "runtime_state": {
+                "decision_tendency": str((getattr(self, "mcm_runtime_decision_state", {}) or {}).get("decision_tendency", "hold") or "hold"),
+                "proposed_decision": str((getattr(self, "mcm_runtime_decision_state", {}) or {}).get("proposed_decision", "WAIT") or "WAIT"),
+                "self_state": str((getattr(self, "mcm_runtime_decision_state", {}) or {}).get("self_state", "stable") or "stable"),
+                "attractor": str((getattr(self, "mcm_runtime_decision_state", {}) or {}).get("attractor", "neutral") or "neutral"),
+                "observation_mode": bool(getattr(self, "observation_mode", False)),
+            },
+        }
+    # --------------------------------------------------
+    def _write_visualization_snapshots(self, window, candle_state):
+
+        local_window = [dict(item or {}) for item in list(window or []) if isinstance(item, dict)]
+        timestamp = local_window[-1].get("timestamp") if local_window else None
+        chart_snapshot = self._build_visual_chart_snapshot(local_window)
+        inner_pipeline_snapshot = self._build_inner_pipeline_snapshot()
+
+        visual_payload = {
+            "timestamp": timestamp,
+            "window": list(local_window or []),
+            "candle_state": dict(candle_state or {}),
+            "tension_state": dict(getattr(self, "tension_state", {}) or {}),
+            "visual_market_state": dict(getattr(self, "visual_market_state", {}) or {}),
+            "structure_perception_state": dict(getattr(self, "structure_perception_state", {}) or {}),
+            "chart_snapshot": dict(chart_snapshot or {}),
+        }
+
+        inner_payload = {
+            "timestamp": timestamp,
+            **dict(inner_pipeline_snapshot or {}),
+        }
+
+        self._write_json_snapshot("visual", visual_payload)
+        self._write_json_snapshot("inner", inner_payload)   
     # ==================================================
     # MEMORY STATE
     # ==================================================
@@ -1261,6 +1600,8 @@ class Bot:
                     "recovery_need": 0.0,
                     "survival_pressure": 0.0,
                     "pressure_to_capacity": 0.0,
+                    "capacity_reserve": 0.0,
+                    "recovery_balance": 0.0,
                 },
                 "experience": {
                     "approach_pressure": 0.0,
@@ -1268,17 +1609,51 @@ class Bot:
                     "experience_regulation": 0.0,
                     "reflection_maturity": 0.0,
                     "load_bearing_capacity": 0.0,
+                    "protective_width_regulation": 0.0,
                     "protective_courage": 0.0,
+                    "carrying_balance": 0.0,
+                    "bearing_pressure_gap": 0.0,
                 },
             }
 
         tension_state = dict(getattr(self, "tension_state", {}) or {})
         regulatory_load = float(getattr(self, "regulatory_load", 0.0) or 0.0)
         action_capacity = float(getattr(self, "action_capacity", 0.0) or 0.0)
+        recovery_need = float(getattr(self, "recovery_need", 0.0) or 0.0)
+        survival_pressure = float(getattr(self, "survival_pressure", 0.0) or 0.0)
+        pressure_release = float(getattr(self, "pressure_release", 0.0) or 0.0)
+        experience_regulation = float(getattr(self, "experience_regulation", 0.0) or 0.0)
+        reflection_maturity = float(getattr(self, "reflection_maturity", 0.0) or 0.0)
+        load_bearing_capacity = float(getattr(self, "load_bearing_capacity", 0.0) or 0.0)
+        protective_width_regulation = float(getattr(self, "protective_width_regulation", 0.0) or 0.0)
+        protective_courage = float(getattr(self, "protective_courage", 0.0) or 0.0)
 
         pressure_to_capacity = 0.0
         if action_capacity > 0.0:
             pressure_to_capacity = regulatory_load / max(0.05, action_capacity)
+
+        capacity_reserve = float(max(0.0, action_capacity - regulatory_load))
+        recovery_balance = float(max(-1.0, min(1.0, pressure_release - recovery_need)))
+        carrying_balance = float(
+            max(
+                -1.0,
+                min(
+                    1.0,
+                    (load_bearing_capacity + action_capacity + protective_courage)
+                    - (regulatory_load + recovery_need + survival_pressure),
+                ),
+            )
+        )
+        bearing_pressure_gap = float(
+            max(
+                -1.0,
+                min(
+                    1.0,
+                    (load_bearing_capacity + protective_width_regulation + protective_courage)
+                    - (pressure_to_capacity + survival_pressure),
+                ),
+            )
+        )
 
         return {
             "tension": {
@@ -1292,17 +1667,22 @@ class Bot:
             "field": {
                 "regulatory_load": float(regulatory_load),
                 "action_capacity": float(action_capacity),
-                "recovery_need": float(getattr(self, "recovery_need", 0.0) or 0.0),
-                "survival_pressure": float(getattr(self, "survival_pressure", 0.0) or 0.0),
+                "recovery_need": float(recovery_need),
+                "survival_pressure": float(survival_pressure),
                 "pressure_to_capacity": float(pressure_to_capacity),
+                "capacity_reserve": float(capacity_reserve),
+                "recovery_balance": float(recovery_balance),
             },
             "experience": {
                 "approach_pressure": float(getattr(self, "approach_pressure", 0.0) or 0.0),
-                "pressure_release": float(getattr(self, "pressure_release", 0.0) or 0.0),
-                "experience_regulation": float(getattr(self, "experience_regulation", 0.0) or 0.0),
-                "reflection_maturity": float(getattr(self, "reflection_maturity", 0.0) or 0.0),
-                "load_bearing_capacity": float(getattr(self, "load_bearing_capacity", 0.0) or 0.0),
-                "protective_courage": float(getattr(self, "protective_courage", 0.0) or 0.0),
+                "pressure_release": float(pressure_release),
+                "experience_regulation": float(experience_regulation),
+                "reflection_maturity": float(reflection_maturity),
+                "load_bearing_capacity": float(load_bearing_capacity),
+                "protective_width_regulation": float(protective_width_regulation),
+                "protective_courage": float(protective_courage),
+                "carrying_balance": float(carrying_balance),
+                "bearing_pressure_gap": float(bearing_pressure_gap),
             },
         }    
     # ==================================================
@@ -1341,7 +1721,11 @@ class Bot:
         self.tension_state = dict(tension_state or {})
         self.visual_market_state = dict(visual_market_state or {})
         self.structure_perception_state = dict(structure_perception_state or {})
-        self.outer_market_state = dict(item.get("outer_market_state", {}) or {})
+        self.temporal_perception_state = self._build_temporal_perception_state(window)
+        self.outer_market_state = {
+            **dict(item.get("outer_market_state", {}) or {}),
+            "temporal_perception_state": dict(self.temporal_perception_state or {}),
+        }
 
         if not candle_state:
             last = window[-1]
@@ -1363,6 +1747,11 @@ class Bot:
                 structure_perception_state=structure_perception_state,
             )
 
+        self._write_visualization_snapshots(
+            window,
+            candle_state,
+        )
+
         self.processed += 1
         return result
     # --------------------------------------------------
@@ -1372,8 +1761,10 @@ class Bot:
             window,
             candle_state,
             bot=self,
+            tension_state=dict(getattr(self, "tension_state", {}) or {}),
             visual_market_state=dict(visual_market_state or {}),
             structure_perception_state=dict(structure_perception_state or {}),
+            temporal_perception_state=dict(getattr(self, "temporal_perception_state", {}) or {}),
         )
 
         return self._run_runtime_action_cycle(
@@ -1428,70 +1819,45 @@ class Bot:
             processed += 1
 
         return processed
-# --------------------------------------------------
-# ATTEMPT CONTEXT
-# --------------------------------------------------
-def _build_entry_attempt_context(bot, entry_result: dict) -> dict:
+    # --------------------------------------------------
+    # ATTEMPT CONTEXT
+    # --------------------------------------------------
+    def _build_entry_attempt_context(self, entry_result: dict) -> dict:
 
-    result = dict(entry_result or {})
-    action_capacity = float(result.get("action_capacity", 0.0) or 0.0)
-    pressure_to_capacity = 0.0
-    regulation_snapshot = bot._build_regulation_state_snapshot() if bot is not None else {
-        "tension": {
-            "energy": 0.0,
-            "coherence": 0.0,
-            "stability": 0.0,
-            "momentum": 0.0,
-            "perceived_pressure": 0.0,
-            "volume_pressure": 0.0,
-        },
-        "field": {
-            "regulatory_load": 0.0,
-            "action_capacity": 0.0,
-            "recovery_need": 0.0,
-            "survival_pressure": 0.0,
-            "pressure_to_capacity": 0.0,
-        },
-        "experience": {
-            "approach_pressure": 0.0,
-            "pressure_release": 0.0,
-            "experience_regulation": 0.0,
-            "reflection_maturity": 0.0,
-            "load_bearing_capacity": 0.0,
-            "protective_courage": 0.0,
-        },
-    }
+        result = dict(entry_result or {})
+        action_capacity = float(result.get("action_capacity", 0.0) or 0.0)
+        pressure_to_capacity = 0.0
+        regulation_snapshot = self._build_regulation_state_snapshot() if self is not None else {
+            "tension": {
+                "energy": 0.0,
+                "coherence": 0.0,
+                "stability": 0.0,
+                "momentum": 0.0,
+                "perceived_pressure": 0.0,
+                "volume_pressure": 0.0,
+            },
+            "field": {
+                "regulatory_load": 0.0,
+                "action_capacity": 0.0,
+                "recovery_need": 0.0,
+                "survival_pressure": 0.0,
+                "pressure_to_capacity": 0.0,
+            },
+            "experience": {
+                "approach_pressure": 0.0,
+                "pressure_release": 0.0,
+                "experience_regulation": 0.0,
+                "reflection_maturity": 0.0,
+                "load_bearing_capacity": 0.0,
+                "protective_courage": 0.0,
+            },
+        }
 
-    if action_capacity > 0.0:
-        pressure_to_capacity = float(result.get("regulatory_load", 0.0) or 0.0) / max(0.05, action_capacity)
+        if action_capacity > 0.0:
+            pressure_to_capacity = float(result.get("regulatory_load", 0.0) or 0.0) / max(0.05, action_capacity)
 
-    return {
-        "state": {
-            "energy": float(result.get("energy", 0.0) or 0.0),
-            "coherence": float(result.get("coherence", 0.0) or 0.0),
-            "asymmetry": int(result.get("asymmetry", 0) or 0),
-            "coh_zone": float(result.get("coh_zone", 0.0) or 0.0),
-            "self_state": str(result.get("self_state", "stable") or "stable"),
-            "attractor": str(result.get("attractor", "neutral") or "neutral"),
-        },
-        "focus": {
-            "focus_point": float(getattr(bot, "focus_point", 0.0) or 0.0) if bot is not None else 0.0,
-            "focus_confidence": float(result.get("focus", {}).get("focus_confidence", getattr(bot, "focus_confidence", 0.0) if bot is not None else 0.0) or 0.0),
-            "target_lock": float(getattr(bot, "target_lock", 0.0) or 0.0) if bot is not None else 0.0,
-            "target_drift": float(getattr(bot, "target_drift", 0.0) or 0.0) if bot is not None else 0.0,
-        },
-        "experience": {
-            "entry_expectation": float(getattr(bot, "entry_expectation", 0.0) or 0.0) if bot is not None else 0.0,
-            "target_expectation": float(getattr(bot, "target_expectation", 0.0) or 0.0) if bot is not None else 0.0,
-            "approach_pressure": float(getattr(bot, "approach_pressure", 0.0) or 0.0) if bot is not None else 0.0,
-            "pressure_release": float(getattr(bot, "pressure_release", 0.0) or 0.0) if bot is not None else 0.0,
-            "experience_regulation": float(getattr(bot, "experience_regulation", 0.0) or 0.0) if bot is not None else 0.0,
-            "reflection_maturity": float(getattr(bot, "reflection_maturity", 0.0) or 0.0) if bot is not None else 0.0,
-            "load_bearing_capacity": float(getattr(bot, "load_bearing_capacity", 0.0) or 0.0) if bot is not None else 0.0,
-            "protective_width_regulation": float(getattr(bot, "protective_width_regulation", 0.0) or 0.0) if bot is not None else 0.0,
-            "protective_courage": float(getattr(bot, "protective_courage", 0.0) or 0.0) if bot is not None else 0.0,
-        },
-        "field_state": {
+        structure_perception_state = dict(result.get("structure_perception_state", {}) or {})
+        field_state = {
             "field_density": float(result.get("field_density", 0.0) or 0.0),
             "field_stability": float(result.get("field_stability", 0.0) or 0.0),
             "regulatory_load": float(result.get("regulatory_load", 0.0) or 0.0),
@@ -1499,46 +1865,96 @@ def _build_entry_attempt_context(bot, entry_result: dict) -> dict:
             "recovery_need": float(result.get("recovery_need", 0.0) or 0.0),
             "survival_pressure": float(result.get("survival_pressure", 0.0) or 0.0),
             "pressure_to_capacity": float(pressure_to_capacity),
-        },
-        "regulation_snapshot": dict(regulation_snapshot or {}),
-        "vision": dict(result.get("vision", {}) or {}),
-        "filtered_vision": dict(result.get("filtered_vision", {}) or {}),
-        "world_state": dict(result.get("world_state", {}) or {}),
-        "structure_perception_state": dict(result.get("structure_perception_state", {}) or {}),
-        "outer_visual_perception_state": dict(result.get("outer_visual_perception_state", {}) or {}),
-        "inner_field_perception_state": dict(result.get("inner_field_perception_state", {}) or {}),
-        "perception_state": dict(result.get("perception_state", {}) or {}),
-        "processing_state": dict(result.get("processing_state", {}) or {}),
-        "felt_state": dict(result.get("felt_state", {}) or {}),
-        "thought_state": dict(result.get("thought_state", {}) or {}),
-        "meta_regulation_state": dict(result.get("meta_regulation_state", {}) or {}),
-        "expectation_state": dict(result.get("expectation_state", {}) or {}),
-        "state_signature": dict(result.get("state_signature", {}) or {}),
-        "trade_plan": {
-            "decision": str(result.get("decision", "WAIT") or "WAIT"),
-            "entry_price": float(result.get("entry_price", 0.0) or 0.0),
-            "sl_price": float(result.get("sl_price", 0.0) or 0.0),
-            "tp_price": float(result.get("tp_price", 0.0) or 0.0),
-            "rr_value": float(result.get("rr_value", 0.0) or 0.0),
-            "risk_model_score": float(result.get("risk_model_score", 0.0) or 0.0),
-            "reward_model_score": float(result.get("reward_model_score", 0.0) or 0.0),
-            "entry_validity_band": dict(result.get("entry_validity_band", {}) or {}),
-        },
-        "signal": {
-            "signature_bias": float(result.get("signature_bias", 0.0) or 0.0),
-            "signature_block": bool(result.get("signature_block", False)),
-            "signature_quality": float(result.get("signature_quality", 0.0) or 0.0),
-            "signature_distance": float(result.get("signature_distance", 0.0) or 0.0),
-            "context_cluster_id": str(result.get("context_cluster_id", "-") or "-"),
-            "context_cluster_bias": float(result.get("context_cluster_bias", 0.0) or 0.0),
-            "context_cluster_quality": float(result.get("context_cluster_quality", 0.0) or 0.0),
-            "context_cluster_distance": float(result.get("context_cluster_distance", 0.0) or 0.0),
-            "context_cluster_block": bool(result.get("context_cluster_block", False)),
-            "inhibition_level": float(result.get("inhibition_level", 0.0) or 0.0),
-            "habituation_level": float(result.get("habituation_level", 0.0) or 0.0),
-            "competition_bias": float(result.get("competition_bias", 0.0) or 0.0),
-            "observation_mode": bool(result.get("observation_mode", False)),
-            "long_score": float(result.get("long_score", 0.0) or 0.0),
-            "short_score": float(result.get("short_score", 0.0) or 0.0),
-        },
-    }
+        }
+        experience_state = {
+            "entry_expectation": float(getattr(self, "entry_expectation", 0.0) or 0.0) if self is not None else 0.0,
+            "target_expectation": float(getattr(self, "target_expectation", 0.0) or 0.0) if self is not None else 0.0,
+            "approach_pressure": float(getattr(self, "approach_pressure", 0.0) or 0.0) if self is not None else 0.0,
+            "pressure_release": float(getattr(self, "pressure_release", 0.0) or 0.0) if self is not None else 0.0,
+            "experience_regulation": float(getattr(self, "experience_regulation", 0.0) or 0.0) if self is not None else 0.0,
+            "reflection_maturity": float(getattr(self, "reflection_maturity", 0.0) or 0.0) if self is not None else 0.0,
+            "load_bearing_capacity": float(getattr(self, "load_bearing_capacity", 0.0) or 0.0) if self is not None else 0.0,
+            "protective_width_regulation": float(getattr(self, "protective_width_regulation", 0.0) or 0.0) if self is not None else 0.0,
+            "protective_courage": float(getattr(self, "protective_courage", 0.0) or 0.0) if self is not None else 0.0,
+        }
+
+        return {
+            "state": {
+                "energy": float(result.get("energy", 0.0) or 0.0),
+                "coherence": float(result.get("coherence", 0.0) or 0.0),
+                "asymmetry": int(result.get("asymmetry", 0) or 0),
+                "coh_zone": float(result.get("coh_zone", 0.0) or 0.0),
+                "self_state": str(result.get("self_state", "stable") or "stable"),
+                "attractor": str(result.get("attractor", "neutral") or "neutral"),
+            },
+            "focus": {
+                "focus_point": float(getattr(self, "focus_point", 0.0) or 0.0) if self is not None else 0.0,
+                "focus_confidence": float(result.get("focus", {}).get("focus_confidence", getattr(self, "focus_confidence", 0.0) if self is not None else 0.0) or 0.0),
+                "target_lock": float(getattr(self, "target_lock", 0.0) or 0.0) if self is not None else 0.0,
+                "target_drift": float(getattr(self, "target_drift", 0.0) or 0.0) if self is not None else 0.0,
+            },
+            "experience": dict(experience_state or {}),
+            "field_state": dict(field_state or {}),
+            "bearing_context": {
+                "felt_bearing_score": float(result.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(result.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+                "structure_quality": float(structure_perception_state.get("structure_quality", 0.0) or 0.0),
+                "stress_relief_potential": float(structure_perception_state.get("stress_relief_potential", 0.0) or 0.0),
+                "context_confidence": float(structure_perception_state.get("context_confidence", 0.0) or 0.0),
+                "pressure_to_capacity": float(field_state.get("pressure_to_capacity", 0.0) or 0.0),
+                "regulatory_load": float(field_state.get("regulatory_load", 0.0) or 0.0),
+                "action_capacity": float(field_state.get("action_capacity", 0.0) or 0.0),
+                "recovery_need": float(field_state.get("recovery_need", 0.0) or 0.0),
+                "survival_pressure": float(field_state.get("survival_pressure", 0.0) or 0.0),
+                "pressure_release": float(experience_state.get("pressure_release", 0.0) or 0.0),
+                "experience_regulation": float(experience_state.get("experience_regulation", 0.0) or 0.0),
+                "reflection_maturity": float(experience_state.get("reflection_maturity", 0.0) or 0.0),
+                "load_bearing_capacity": float(experience_state.get("load_bearing_capacity", 0.0) or 0.0),
+                "protective_width_regulation": float(experience_state.get("protective_width_regulation", 0.0) or 0.0),
+                "protective_courage": float(experience_state.get("protective_courage", 0.0) or 0.0),
+            },
+            "regulation_snapshot": dict(regulation_snapshot or {}),
+            "vision": dict(result.get("vision", {}) or {}),
+            "filtered_vision": dict(result.get("filtered_vision", {}) or {}),
+            "world_state": dict(result.get("world_state", {}) or {}),
+            "structure_perception_state": dict(structure_perception_state or {}),
+            "outer_visual_perception_state": dict(result.get("outer_visual_perception_state", {}) or {}),
+            "inner_field_perception_state": dict(result.get("inner_field_perception_state", {}) or {}),
+            "perception_state": dict(result.get("perception_state", {}) or {}),
+            "processing_state": dict(result.get("processing_state", {}) or {}),
+            "felt_state": dict(result.get("felt_state", {}) or {}),
+            "thought_state": dict(result.get("thought_state", {}) or {}),
+            "meta_regulation_state": dict(result.get("meta_regulation_state", {}) or {}),
+            "expectation_state": dict(result.get("expectation_state", {}) or {}),
+            "state_signature": dict(result.get("state_signature", {}) or {}),
+            "trade_plan": {
+                "decision": str(result.get("decision", "WAIT") or "WAIT"),
+                "entry_price": float(result.get("entry_price", 0.0) or 0.0),
+                "sl_price": float(result.get("sl_price", 0.0) or 0.0),
+                "tp_price": float(result.get("tp_price", 0.0) or 0.0),
+                "rr_value": float(result.get("rr_value", 0.0) or 0.0),
+                "risk_model_score": float(result.get("risk_model_score", 0.0) or 0.0),
+                "reward_model_score": float(result.get("reward_model_score", 0.0) or 0.0),
+                "entry_validity_band": dict(result.get("entry_validity_band", {}) or {}),
+            },
+            "signal": {
+                "signature_bias": float(result.get("signature_bias", 0.0) or 0.0),
+                "signature_block": bool(result.get("signature_block", False)),
+                "signature_quality": float(result.get("signature_quality", 0.0) or 0.0),
+                "signature_distance": float(result.get("signature_distance", 0.0) or 0.0),
+                "context_cluster_id": str(result.get("context_cluster_id", "-") or "-"),
+                "context_cluster_bias": float(result.get("context_cluster_bias", 0.0) or 0.0),
+                "context_cluster_quality": float(result.get("context_cluster_quality", 0.0) or 0.0),
+                "context_cluster_distance": float(result.get("context_cluster_distance", 0.0) or 0.0),
+                "context_cluster_block": bool(result.get("context_cluster_block", False)),
+                "inhibition_level": float(result.get("inhibition_level", 0.0) or 0.0),
+                "habituation_level": float(result.get("habituation_level", 0.0) or 0.0),
+                "competition_bias": float(result.get("competition_bias", 0.0) or 0.0),
+                "observation_mode": bool(result.get("observation_mode", False)),
+                "long_score": float(result.get("long_score", 0.0) or 0.0),
+                "short_score": float(result.get("short_score", 0.0) or 0.0),
+            },
+            "felt_bearing_score": float(result.get("felt_bearing_score", 0.0) or 0.0),
+            "felt_profile_label": str(result.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+            "episode_felt_summary": dict(result.get("episode_felt_summary", {}) or {}),
+        }

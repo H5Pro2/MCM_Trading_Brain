@@ -25,6 +25,17 @@ def evaluate_entry_decision(bot, window, candle_state):
     if decision_tendency != "act":
         return {
             "decision_tendency": str(decision_tendency or "hold"),
+            "action_intent_state": {
+                "intent_state": "non_action",
+                "intent_direction": str(tendency_state.get("proposed_decision", "WAIT") or "WAIT"),
+                "intent_strength": float(tendency_state.get("focus", {}).get("focus_strength", 0.0) or 0.0),
+                "intent_ready": False,
+            },
+            "execution_state": {
+                "execution_phase": "idle",
+                "execution_ready": False,
+                "execution_blocked": True,
+            },
             "proposed_decision": str(tendency_state.get("proposed_decision", "WAIT") or "WAIT"),
             "self_state": str(tendency_state.get("self_state", "stable") or "stable"),
             "attractor": str(tendency_state.get("attractor", "neutral") or "neutral"),
@@ -61,6 +72,8 @@ def evaluate_entry_decision(bot, window, candle_state):
             "action_capacity": float(tendency_state.get("action_capacity", 0.0) or 0.0),
             "recovery_need": float(tendency_state.get("recovery_need", 0.0) or 0.0),
             "survival_pressure": float(tendency_state.get("survival_pressure", 0.0) or 0.0),
+            "felt_bearing_score": float(tendency_state.get("felt_bearing_score", 0.0) or 0.0),
+            "felt_profile_label": str(tendency_state.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
             "rejection_reason": str(tendency_state.get("rejection_reason", "runtime_non_action") or "runtime_non_action"),
         }
 
@@ -69,6 +82,20 @@ def evaluate_entry_decision(bot, window, candle_state):
         candle_state=candle_state,
         bot=bot,
     )
+    
+    if isinstance(decision, dict):
+        focus_state = dict(decision.get("focus", {}) or {})
+        decision["action_intent_state"] = {
+            "intent_state": "prepare_action",
+            "intent_direction": str(decision.get("decision", "WAIT") or "WAIT"),
+            "intent_strength": float(focus_state.get("focus_strength", 0.0) or 0.0),
+            "intent_ready": True,
+        }
+        decision["execution_state"] = {
+            "execution_phase": "planned",
+            "execution_ready": True,
+            "execution_blocked": False,
+        }
 
     if decision is None:
         return {
@@ -109,6 +136,8 @@ def evaluate_entry_decision(bot, window, candle_state):
             "action_capacity": float(tendency_state.get("action_capacity", 0.0) or 0.0),
             "recovery_need": float(tendency_state.get("recovery_need", 0.0) or 0.0),
             "survival_pressure": float(tendency_state.get("survival_pressure", 0.0) or 0.0),
+            "felt_bearing_score": float(tendency_state.get("felt_bearing_score", 0.0) or 0.0),
+            "felt_profile_label": str(tendency_state.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
             "rejection_reason": "decision_plan_missing",
         }
 
@@ -206,7 +235,6 @@ def evaluate_entry_decision(bot, window, candle_state):
         "thought_state": thought_state,
         "meta_regulation_state": meta_regulation_state,
         "expectation_state": expectation_state,
-        "state_signature": state_signature,
         "entry_expectation": float(expectation_state.get("entry_expectation", 0.0) or 0.0),
         "target_expectation": float(expectation_state.get("target_expectation", 0.0) or 0.0),
         "approach_pressure": float(expectation_state.get("approach_pressure", 0.0) or 0.0),
@@ -217,6 +245,7 @@ def evaluate_entry_decision(bot, window, candle_state):
         "target_conviction": float(decision.get("target_conviction", 0.0) or 0.0),
         "risk_model_score": float(decision.get("risk_model_score", 0.0) or 0.0),
         "reward_model_score": float(decision.get("reward_model_score", 0.0) or 0.0),
+        "state_signature": state_signature,
         "signature_bias": float(decision.get("signature_bias", 0.0) or 0.0),
         "signature_block": bool(decision.get("signature_block", False)),
         "signature_quality": float(decision.get("signature_quality", 0.0) or 0.0),
@@ -232,4 +261,6 @@ def evaluate_entry_decision(bot, window, candle_state):
         "observation_mode": bool(decision.get("observation_mode", False)),
         "long_score": float(decision.get("long_score", 0.0) or 0.0),
         "short_score": float(decision.get("short_score", 0.0) or 0.0),
+        "felt_bearing_score": float(decision.get("felt_bearing_score", 0.0) or 0.0),
+        "felt_profile_label": str(decision.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
     }

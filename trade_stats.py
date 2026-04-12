@@ -226,31 +226,80 @@ class TradeStats:
             payload["winrate"] = float(tp_count / count) if count > 0 else 0.0
             payload["avg_pnl"] = float(payload.get("pnl", 0.0) or 0.0) / count if count > 0 else 0.0
 
+        proof = {
+            "attempt_density": float(attempt_feedback.get("attempt_density", 0.0) or 0.0),
+            "context_quality": float(attempt_feedback.get("context_quality", 0.0) or 0.0),
+            "overtrade_pressure": float(attempt_feedback.get("overtrade_pressure", 0.0) or 0.0),
+            "observe_share": float(attempt_feedback.get("observe_share", 0.0) or 0.0),
+            "replan_share": float(attempt_feedback.get("replan_share", 0.0) or 0.0),
+            "withheld_share": float(attempt_feedback.get("withheld_share", 0.0) or 0.0),
+            "pressure_to_capacity": float(attempt_feedback.get("pressure_to_capacity", 0.0) or 0.0),
+            "regulatory_load": float(attempt_feedback.get("regulatory_load", 0.0) or 0.0),
+            "action_capacity": float(attempt_feedback.get("action_capacity", 0.0) or 0.0),
+            "recovery_need": float(attempt_feedback.get("recovery_need", 0.0) or 0.0),
+            "survival_pressure": float(attempt_feedback.get("survival_pressure", 0.0) or 0.0),
+            "pressure_release": float(attempt_feedback.get("pressure_release", 0.0) or 0.0),
+            "load_bearing_capacity": float(attempt_feedback.get("load_bearing_capacity", 0.0) or 0.0),
+            "state_stability": float(attempt_feedback.get("state_stability", 0.0) or 0.0),
+            "capacity_reserve": float(attempt_feedback.get("capacity_reserve", 0.0) or 0.0),
+            "recovery_balance": float(attempt_feedback.get("recovery_balance", 0.0) or 0.0),
+            "regulated_courage": float(attempt_feedback.get("regulated_courage", 0.0) or 0.0),
+            "courage_gap": float(attempt_feedback.get("courage_gap", 0.0) or 0.0),
+            "action_inhibition": float(attempt_feedback.get("action_inhibition", 0.0) or 0.0),
+            "action_clearance": float(attempt_feedback.get("action_clearance", 0.0) or 0.0),
+            "regulation_before_action": float(attempt_feedback.get("regulation_before_action", 0.0) or 0.0),
+            "attempt_fill_rate": float(self.data.get("attempts_filled", 0) or 0) / max(1, attempts),
+            "attempt_zone_share": float(self.data.get("attempt_structure_zone", 0) or 0) / max(1, attempts),
+            "attempts_per_trade": float(attempts / max(1, trades)),
+            "max_drawdown_abs": float(self.data.get("max_drawdown_abs", 0.0) or 0.0),
+            "max_drawdown_pct": float(self.data.get("max_drawdown_pct", 0.0) or 0.0),
+            "winrate": float(winrate),
+            "profit_factor": float(profit_factor),
+            "expectancy": float(expectancy),
+            "avg_win": float(avg_win),
+            "avg_loss": float(avg_loss),
+        }
+
         self.data["kpi_summary"] = {
-            "proof": {
-                "winrate": float(winrate),
-                "profit_factor": float(profit_factor),
-                "expectancy": float(expectancy),
-                "avg_win": float(avg_win),
-                "avg_loss": float(avg_loss),
-                "attempts_per_trade": float(attempts / max(1, trades)),
-                "attempt_fill_rate": float(self.data.get("attempts_filled", 0) or 0) / max(1, attempts),
-                "attempt_zone_share": float(self.data.get("attempt_structure_zone", 0) or 0) / max(1, attempts),
-                "attempt_density": float(attempt_feedback.get("attempt_density", 0.0) or 0.0),
-                "context_quality": float(attempt_feedback.get("context_quality", 0.0) or 0.0),
-                "overtrade_pressure": float(attempt_feedback.get("overtrade_pressure", 0.0) or 0.0),
-                "observe_share": float(attempt_feedback.get("observe_share", 0.0) or 0.0),
-                "replan_share": float(attempt_feedback.get("replan_share", 0.0) or 0.0),
-                "withheld_share": float(attempt_feedback.get("withheld_share", 0.0) or 0.0),
-                "pressure_to_capacity": float(attempt_feedback.get("pressure_to_capacity", 0.0) or 0.0),
-                "recovery_need": float(attempt_feedback.get("recovery_need", 0.0) or 0.0),
-                "regulated_courage": float(attempt_feedback.get("regulated_courage", 0.0) or 0.0),
-                "courage_gap": float(attempt_feedback.get("courage_gap", 0.0) or 0.0),
-                "action_inhibition": float(attempt_feedback.get("action_inhibition", 0.0) or 0.0),
-                "action_clearance": float(attempt_feedback.get("action_clearance", 0.0) or 0.0),
-                "regulation_before_action": float(attempt_feedback.get("regulation_before_action", 0.0) or 0.0),
-                "max_drawdown_abs": float(self.data.get("max_drawdown_abs", 0.0) or 0.0),
-                "max_drawdown_pct": float(self.data.get("max_drawdown_pct", 0.0) or 0.0),
+            "proof": dict(proof),
+            "state_core": {
+                "state_stability": float(proof.get("state_stability", 0.0) or 0.0),
+                "capacity_reserve": float(proof.get("capacity_reserve", 0.0) or 0.0),
+                "recovery_balance": float(proof.get("recovery_balance", 0.0) or 0.0),
+                "context_quality": float(proof.get("context_quality", 0.0) or 0.0),
+                "overtrade_pressure": float(proof.get("overtrade_pressure", 0.0) or 0.0),
+            },
+            "regulation_core": {
+                "regulatory_load": float(proof.get("regulatory_load", 0.0) or 0.0),
+                "action_capacity": float(proof.get("action_capacity", 0.0) or 0.0),
+                "recovery_need": float(proof.get("recovery_need", 0.0) or 0.0),
+                "survival_pressure": float(proof.get("survival_pressure", 0.0) or 0.0),
+                "pressure_release": float(proof.get("pressure_release", 0.0) or 0.0),
+                "load_bearing_capacity": float(proof.get("load_bearing_capacity", 0.0) or 0.0),
+                "pressure_to_capacity": float(proof.get("pressure_to_capacity", 0.0) or 0.0),
+                "regulated_courage": float(proof.get("regulated_courage", 0.0) or 0.0),
+                "courage_gap": float(proof.get("courage_gap", 0.0) or 0.0),
+                "action_inhibition": float(proof.get("action_inhibition", 0.0) or 0.0),
+                "action_clearance": float(proof.get("action_clearance", 0.0) or 0.0),
+                "regulation_before_action": float(proof.get("regulation_before_action", 0.0) or 0.0),
+            },
+            "flow": {
+                "attempt_density": float(proof.get("attempt_density", 0.0) or 0.0),
+                "attempt_fill_rate": float(proof.get("attempt_fill_rate", 0.0) or 0.0),
+                "attempt_zone_share": float(proof.get("attempt_zone_share", 0.0) or 0.0),
+                "attempts_per_trade": float(proof.get("attempts_per_trade", 0.0) or 0.0),
+                "observe_share": float(proof.get("observe_share", 0.0) or 0.0),
+                "replan_share": float(proof.get("replan_share", 0.0) or 0.0),
+                "withheld_share": float(proof.get("withheld_share", 0.0) or 0.0),
+            },
+            "economics": {
+                "winrate": float(proof.get("winrate", 0.0) or 0.0),
+                "profit_factor": float(proof.get("profit_factor", 0.0) or 0.0),
+                "expectancy": float(proof.get("expectancy", 0.0) or 0.0),
+                "avg_win": float(proof.get("avg_win", 0.0) or 0.0),
+                "avg_loss": float(proof.get("avg_loss", 0.0) or 0.0),
+                "max_drawdown_abs": float(proof.get("max_drawdown_abs", 0.0) or 0.0),
+                "max_drawdown_pct": float(proof.get("max_drawdown_pct", 0.0) or 0.0),
             },
             "structure_bands": {
                 "high": dict(band_stats["high"]),
@@ -447,7 +496,15 @@ class TradeStats:
                 "replan_share": 0.0,
                 "withheld_share": 0.0,
                 "pressure_to_capacity": 0.0,
+                "regulatory_load": 0.0,
+                "action_capacity": 0.0,
                 "recovery_need": 0.0,
+                "survival_pressure": 0.0,
+                "pressure_release": 0.0,
+                "load_bearing_capacity": 0.0,
+                "state_stability": 0.0,
+                "capacity_reserve": 0.0,
+                "recovery_balance": 0.0,
                 "regulated_courage": 0.0,
                 "courage_gap": 0.0,
                 "action_inhibition": 0.0,
@@ -466,7 +523,12 @@ class TradeStats:
         zone = 0.0
         structure_sum = 0.0
         pressure_sum = 0.0
+        regulatory_load_sum = 0.0
+        action_capacity_sum = 0.0
         recovery_sum = 0.0
+        survival_pressure_sum = 0.0
+        pressure_release_sum = 0.0
+        load_bearing_sum = 0.0
         regulated_courage_sum = 0.0
         courage_gap_sum = 0.0
         action_inhibition_sum = 0.0
@@ -635,6 +697,8 @@ class TradeStats:
         field_state = dict(compact_context.get("field_state", {}) or {})
         meta_regulation_state = dict(compact_context.get("meta_regulation_state", {}) or {})
 
+        experience_state = dict(compact_context.get("experience", {}) or {})
+
         recent = list(self.data.get("recent_attempts", []) or [])
         recent.append(
             {
@@ -642,7 +706,12 @@ class TradeStats:
                 "structure_quality": float(structure_quality),
                 "structure_bucket": structure_bucket,
                 "pressure_to_capacity": float(field_state.get("pressure_to_capacity", 0.0) or 0.0),
+                "regulatory_load": float(field_state.get("regulatory_load", 0.0) or 0.0),
+                "action_capacity": float(field_state.get("action_capacity", 0.0) or 0.0),
                 "recovery_need": float(field_state.get("recovery_need", 0.0) or 0.0),
+                "survival_pressure": float(field_state.get("survival_pressure", 0.0) or 0.0),
+                "pressure_release": float(experience_state.get("pressure_release", 0.0) or 0.0),
+                "load_bearing_capacity": float(experience_state.get("load_bearing_capacity", 0.0) or 0.0),
                 "regulated_courage": float(meta_regulation_state.get("regulated_courage", 0.0) or 0.0),
                 "courage_gap": float(meta_regulation_state.get("courage_gap", 0.0) or 0.0),
                 "action_inhibition": float(meta_regulation_state.get("action_inhibition", 0.0) or 0.0),
