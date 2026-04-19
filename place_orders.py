@@ -132,6 +132,9 @@ def get_active_order_snapshot():
 def consume_cancelled(order_id) -> bool:
     return of.consume_cancelled(order_id)
 
+def consume_cancelled_cause(order_id):
+    return of.consume_cancelled_cause(order_id)
+
 def get_cancel_count() -> int:
     return of.get_cancel_count()
 # --------------------------------------------------
@@ -227,13 +230,32 @@ def _order_monitor_loop():
             )
 
             if not exists:
-                gate_debug(f"🟢 Order {of._ACTIVE_ORDER_ID} ist NICHT mehr aktiv → Freigabe")
+                vanished_order_id = of._ACTIVE_ORDER_ID
+                vanished_side = of._ACTIVE_SIDE
+                vanished_tp = of._ACTIVE_TP
+
+                gate_debug(f"🟢 Order {vanished_order_id} ist NICHT mehr aktiv → Freigabe")
                 gate_debug("---------------------------------------")
+
                 of._ACTIVE_ORDER_ID = None
                 of._ACTIVE_TP = None
                 of._ACTIVE_SIDE = None
-                set_context()
+
                 of._sync_with_exchange(reason="order_disappeared_sync")
+
+                if of._POSITION_OPEN is True:
+                    if vanished_side is not None and of._ACTIVE_SIDE is None:
+                        of._ACTIVE_SIDE = vanished_side
+
+                    if vanished_tp is not None and of._ACTIVE_TP is None:
+                        of._ACTIVE_TP = vanished_tp
+
+                    gate_debug("🟢 LIVE FILL erkannt → Positionskontext bleibt für Bot-Handoff erhalten")
+                    gate_debug("---------------------------------------")
+                else:
+                    of.mark_order_cancelled(vanished_order_id, cause="exchange_disappeared")
+                    set_context()
+
                 continue
 
             price_data = ph_ohlcv.get_current_price(

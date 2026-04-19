@@ -7,8 +7,8 @@
 # ==================================================
 import json
 import os
+import time
 from config import Config
-
 
 # --------------------------------------------------
 # PATH
@@ -21,8 +21,6 @@ def _memory_state_path(path: str | None = None) -> str:
     configured = getattr(Config, "MCM_MEMORY_STATE_PATH", "bot_memory/memory_state.json")
     configured = str(configured or "bot_memory/memory_state.json")
     return configured
-
-
 # --------------------------------------------------
 # FS
 # --------------------------------------------------
@@ -31,8 +29,78 @@ def _ensure_dir(path: str):
     directory = os.path.dirname(path)
     if directory and not os.path.exists(directory):
         os.makedirs(directory, exist_ok=True)
+# --------------------------------------------------
+# DIRTY
+# --------------------------------------------------
+def mark_memory_state_dirty(bot=None) -> bool:
 
+    if bot is None:
+        return False
 
+    bot._memory_state_dirty = True
+    return True
+# --------------------------------------------------
+# FLUSH IF DUE
+# --------------------------------------------------
+def flush_memory_state_if_due(bot=None, force: bool = False):
+
+    if bot is None:
+        return None
+
+    if not bool(getattr(bot, "_memory_state_dirty", False)) and not bool(force):
+        return None
+
+    now_ts = float(time.time())
+    cooldown = max(
+        0.0,
+        float(getattr(Config, "MCM_MEMORY_SAVE_COOLDOWN_SECONDS", 1.25) or 1.25),
+    )
+
+    if not force and (now_ts - float(getattr(bot, "_memory_state_last_save_ts", 0.0) or 0.0)) < cooldown:
+        return None
+
+    return bot._save_memory_state(force=True)
+# --------------------------------------------------
+# FINALIZE SAVE
+# --------------------------------------------------
+def finalize_memory_state_save(bot=None, payload: dict | None = None):
+
+    if bot is None or not isinstance(payload, dict):
+        return None
+
+    saved_payload = dict(payload or {})
+    bot._memory_state_payload = dict(saved_payload or {})
+    bot._memory_state_mcm_loaded = isinstance(getattr(bot, "mcm_brain", None), dict)
+    bot._memory_state_dirty = False
+    bot._memory_state_last_save_ts = float(time.time())
+    return dict(saved_payload or {})
+# --------------------------------------------------
+# INITIALIZE BOOTSTRAP
+# --------------------------------------------------
+def initialize_memory_state_bootstrap(bot=None, payload: dict | None = None) -> dict:
+
+    if bot is None:
+        return {
+            "payload": {},
+            "loaded": False,
+        }
+
+    memory_payload = dict(payload or read_memory_state() or {})
+
+    bot._memory_state_payload = dict(memory_payload or {})
+    bot._memory_state_mcm_loaded = False
+
+    apply_memory_state(
+        bot,
+        memory_payload,
+    )
+
+    bot._memory_state_mcm_loaded = isinstance(getattr(bot, "mcm_brain", None), dict)
+
+    return {
+        "payload": dict(memory_payload or {}),
+        "loaded": bool(getattr(bot, "_memory_state_mcm_loaded", False)),
+    }
 # --------------------------------------------------
 # CAST HELPERS
 # --------------------------------------------------
@@ -42,7 +110,6 @@ def _to_int(value, default: int = 0) -> int:
         return int(value)
     except Exception:
         return int(default)
-
 # --------------------------------------------------
 def normalize_json_state(value):
 
@@ -64,7 +131,6 @@ def normalize_json_state(value):
         return value
 
     return _to_str(value, None)
-
 # --------------------------------------------------
 def _to_float(value, default: float = 0.0) -> float:
 
@@ -72,8 +138,6 @@ def _to_float(value, default: float = 0.0) -> float:
         return float(value)
     except Exception:
         return float(default)
-
-
 # --------------------------------------------------
 def _to_str(value, default: str | None = None) -> str | None:
 
@@ -84,8 +148,6 @@ def _to_str(value, default: str | None = None) -> str | None:
         return str(value)
     except Exception:
         return default
-
-
 # --------------------------------------------------
 def _to_float_list(values) -> list[float]:
 
@@ -98,8 +160,6 @@ def _to_float_list(values) -> list[float]:
             continue
 
     return cleaned
-
-
 # --------------------------------------------------
 def _to_str_list(values) -> list[str]:
 
@@ -115,8 +175,6 @@ def _to_str_list(values) -> list[str]:
             continue
 
     return cleaned
-
-
 # --------------------------------------------------
 # NORMALIZE SIGNATURE MEMORY
 # --------------------------------------------------
@@ -160,8 +218,6 @@ def normalize_signature_memory(signature_memory) -> dict:
         normalized = dict(sorted_items)
 
     return normalized
-
-
 # --------------------------------------------------
 # NORMALIZE CONTEXT CLUSTERS
 # --------------------------------------------------
@@ -200,8 +256,6 @@ def normalize_context_clusters(context_clusters) -> dict:
         }
 
     return normalized
-
-
 # --------------------------------------------------
 # NORMALIZE MCM MEMORY
 # --------------------------------------------------
@@ -227,8 +281,6 @@ def normalize_mcm_memory(memory_items) -> list[dict]:
     )[:24]
 
     return normalized
-
-
 # --------------------------------------------------
 # BUILD STATE
 # --------------------------------------------------
@@ -325,8 +377,6 @@ def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
         })
 
     return payload
-
-
 # --------------------------------------------------
 # APPLY STATE
 # --------------------------------------------------
@@ -398,8 +448,6 @@ def apply_memory_state(bot, state: dict | None) -> dict:
             memory_obj.memory = normalize_mcm_memory(payload.get("mcm_memory", []))
 
     return build_memory_state(bot)
-
-
 # --------------------------------------------------
 # READ
 # --------------------------------------------------
@@ -527,8 +575,6 @@ def read_memory_state(path: str | None = None) -> dict:
         "recovery_need": _to_float((raw or {}).get("recovery_need", 0.0), 0.0),
         "survival_pressure": _to_float((raw or {}).get("survival_pressure", 0.0), 0.0),
     }
-
-
 # --------------------------------------------------
 # LOAD
 # --------------------------------------------------
@@ -536,28 +582,90 @@ def load_memory_state(bot, path: str | None = None) -> dict:
 
     state = read_memory_state(path)
     return apply_memory_state(bot, state)
-
-
 # --------------------------------------------------
 # SAVE
 # --------------------------------------------------
 def save_memory_state(bot, path: str | None = None, include_runtime_state: bool | None = None) -> dict | None:
 
-    if bot is None:
+    payload = capture_memory_state(
+        bot,
+        include_runtime_state=include_runtime_state,
+    )
+
+    if payload is None:
         return None
 
-    filepath = _memory_state_path(path)
+    return write_memory_state_payload(
+        payload,
+        path=path,
+    )
+# --------------------------------------------------
+# CAPTURE
+# --------------------------------------------------
+def capture_memory_state(bot, include_runtime_state: bool | None = None) -> dict | None:
+
+    if bot is None:
+        return None
 
     if include_runtime_state is None:
         include_runtime_state = bool(getattr(Config, "MCM_SAVE_RUNTIME_STATE", True))
 
-    payload = build_memory_state(bot, include_runtime_state=bool(include_runtime_state))
+    return build_memory_state(
+        bot,
+        include_runtime_state=bool(include_runtime_state),
+    )
+# --------------------------------------------------
+# WRITE
+# --------------------------------------------------
+def write_memory_state_payload(payload: dict | None, path: str | None = None) -> dict | None:
+
+    if not isinstance(payload, dict):
+        return None
+
+    filepath = _memory_state_path(path)
 
     try:
         _ensure_dir(filepath)
         with open(filepath, "w", encoding="utf-8") as f:
-            json.dump(payload, f, indent=2)
+            json.dump(dict(payload or {}), f, indent=2)
     except Exception:
         return None
 
-    return payload
+    return dict(payload or {})
+# --------------------------------------------------
+# ENSURE LOADED
+# --------------------------------------------------
+def ensure_memory_state_loaded(bot, payload: dict | None = None) -> bool:
+
+    if bot is None:
+        return False
+
+    if bool(getattr(bot, "_memory_state_mcm_loaded", False)):
+        return True
+
+    if not isinstance(getattr(bot, "mcm_brain", None), dict):
+        return False
+
+    memory_payload = dict(payload or getattr(bot, "_memory_state_payload", {}) or {})
+
+    apply_memory_state(bot, memory_payload)
+
+    runtime = getattr(bot, "mcm_runtime", None)
+    if runtime is not None:
+        runtime.restore_from_bot()
+
+    bot._memory_state_payload = dict(memory_payload or {})
+    bot._memory_state_mcm_loaded = True
+    return True
+
+
+
+
+
+
+
+
+
+
+
+

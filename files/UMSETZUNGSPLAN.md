@@ -516,331 +516,405 @@ Dieses System soll lernen:
 
 ---
 
-  # ==================================================
+# --------------------------------------------------
+# 6.4 Experience als Tragfähigkeitslernen
+# --------------------------------------------------
 
-  # ERGÄNZUNG – EXPERIENCE / TRAGFÄHIGKEIT / CLUSTER
+## Grundsatz
 
-  # (für UMSETZUNGSPLAN.md)
+Experience soll im Zielsystem nicht nur Ergebnis speichern,
+sondern Tragfähigkeit des gesamten Verlaufs bewerten.
 
-  # ==================================================
+Lernen bedeutet daher nicht:
 
-  # --------------------------------------------------
+- die eine richtige Entscheidung zu finden
+- Profit maximal zu steigern
 
-  # Beobachtung
+Sondern:
 
-  # --------------------------------------------------
+- mit Situationen effizient umgehen zu können
+- bei möglichst geringer regulatorischer Last handlungsfähig zu bleiben
+- tragfähige Handlung von hektischer Handlung zu unterscheiden
 
-  * Das System verarbeitet bereits:
+---
 
-    * Wahrnehmung (Struktur, Spannung, Marktform)
-    * Innenzustand (regulatory_load, action_capacity, etc.)
-    * Handlung / Nicht-Handlung
-    * Outcome → Zustandsveränderung
+## Tragfähigkeit als Bewertungszentrum
 
-  * Experience ist bereits vorhanden:
+Jede Situation soll langfristig bewertet werden als:
 
-    * Episoden
-    * Kontext
-    * Zustand vor / nach Handlung
+- tragfähig
+- grenzwertig
+- überlastend
 
-  * Es fehlt jedoch eine klare Definition von:
+Tragfähigkeit ergibt sich dabei vor allem aus:
 
-    * Tragfähigkeit
-    * Erfahrungsclustern
-    * Lernen als Umgangsfähigkeit
+- `regulatory_load`
+- `action_capacity`
+- `recovery_need`
+- `survival_pressure`
 
-  # --------------------------------------------------
+In vereinfachter Lesart bedeutet das:
 
-  # Interpretation
+- niedriger `regulatory_load`
+- ausreichend hohe `action_capacity`
+- geringe `recovery_need`
+- begrenzter `survival_pressure`
 
-  # --------------------------------------------------
+führen eher zu tragfähiger Handlung.
 
-  ## 1. Lernen im MCM-System
+---
 
-  Lernen bedeutet nicht:
+## Energie- und Regulationsmodell
 
-  * richtige Entscheidung finden
-  * Profit maximieren
+Das Grundprinzip lautet:
 
-  Sondern:
+- Abweichung zwischen Innenzustand und Außenwelt erhöht regulatorische Last
+- Kohärenz reduziert regulatorische Last und Energieverbrauch
 
-  * effizient mit Situationen umgehen können
-  * bei möglichst geringer regulatorischer Last handeln
-  * handlungsfähig bleiben
+Hohe regulatorische Last bedeutet eher:
 
-  ---
+- Unsicherheit
+- Konflikt
+- Fehlanpassung
+- schlechte Tragfähigkeit
 
-  ## 2. Tragfähigkeit als zentrale Bewertungsgröße
+Geringe regulatorische Last bedeutet eher:
 
-  Jede Situation wird bewertet als:
+- klare Wahrnehmung
+- stimmige Handlung
+- stabile innere Lage
+- höhere Tragfähigkeit
 
-  * tragfähig
-  * grenzwertig
-  * überlastend
+Das Ziel ist daher nicht minimale Aktivität,
+sondern möglichst geringe regulatorische Last bei tragfähiger Aktivität.
 
-  Tragfähigkeit ergibt sich aus:
+---
 
-  * regulatorischer Last (regulatory_load)
-  * verfügbarer Handlungskapazität (action_capacity)
-  * Erholungsbedarf (recovery_need)
-  * innerem Druck (survival_pressure)
+# --------------------------------------------------
+# 6.5 Experience als Cluster-System
+# --------------------------------------------------
 
-  ---
+## Erfahrungscluster
 
-  Formale Betrachtung:
+Das System organisiert Erfahrung nicht als einzelne Events,
+sondern als Cluster ähnlicher Situationen und innerer Zustandslagen.
 
-  tragfähigkeit ≈
+Das Zielsystem trennt dabei zwei Erfahrungsräume:
 
-  * niedriger regulatory_load
-  * ausreichend hohe action_capacity
-  * geringe recovery_need
+- `context_clusters`
+- `inner_context_clusters`
 
-  ---
+Diese Trennung ist wichtig,
+weil äußere Situation und innere Lage **nicht identisch** sind.
 
-  ## 3. Energie- / Regulationsmodell
+Dasselbe äußere Marktbild kann vom System in verschiedenen inneren Lagen erlebt werden.
+Umgekehrt kann ein ähnlicher innerer Zustand in verschiedenen äußeren Situationen wiederkehren.
 
-  Grundprinzip:
+---
 
-  - Abweichung zwischen Innenzustand und Außenwelt erhöht regulatorische Last
-  - Kohärenz reduziert regulatorische Last und Energieverbrauch
+### `context_clusters`
 
-  ---
+`context_clusters` repräsentieren den äußeren bzw. gesamt-situativen Signaturraum.
 
-  Definition:
+Ein `context_cluster` enthält vor allem:
 
-  * hohe regulatorische Last:
+- Struktur (`structure_perception_state`)
+- Spannungszustand (`tension_state`)
+- äußere Marktform / Situationscharakter
+- Handlung / Nicht-Handlung
+- Zustandsdelta (Wirkung)
 
-    * Unsicherheit
-    * Konflikt
-    * Fehlanpassung
+`context_clusters` repräsentieren damit:
 
-  * geringe regulatorische Last:
+„Typen von Situationen, mit denen das System umgehen musste“
 
-    * klare Wahrnehmung
-    * stimmige Handlung
-    * stabile innere Lage
+---
 
-  ---
+### `inner_context_clusters`
 
-  Ziel des Systems:
+`inner_context_clusters` repräsentieren wiederkehrende innere Spannungs-, Drift- und Regulationsmuster.
 
-  * Energieeffiziente Interaktion mit der Umwelt
-  * nicht minimale Aktivität, sondern minimale regulatorische Last bei Aktivität
+Ein `inner_context_cluster` enthält vor allem:
 
-  # --------------------------------------------------
+- `felt_state`
+- `thought_state`
+- `meta_regulation_state`
+- `expectation_state`
+- `state_before` / `state_after` / `state_delta`
+- `episode_felt_summary`
+- Belastungs-, Entlastungs- und Tragfähigkeitsverlauf
 
-  # EXPERIENCE ALS CLUSTER-SYSTEM
+`inner_context_clusters` repräsentieren damit:
 
-  # --------------------------------------------------
+„Typen von inneren Zuständen, in denen das System wiederholt ähnlich reagieren oder leiden musste“
 
-  ## 4. Erfahrungscluster
+---
 
-  Das System organisiert Erfahrung nicht als einzelne Events,
-  sondern als Cluster ähnlicher Situationen.
+### Muster und Cluster-Kontext im Innenfeld
 
-  Ein Cluster enthält:
+Im Innenfeld soll nicht nur ein einzelner Cluster betrachtet werden.
 
-  * Struktur (structure_perception_state)
-  * Spannungszustand (tension_state)
-  * Innenzustand vor Handlung
-  * Handlung / Nicht-Handlung
-  * Zustandsdelta (Wirkung)
+Wichtig ist die **Gesamtorganisation des Feldes**.
 
-  ---
+Dabei gilt:
 
-  Cluster repräsentieren:
+- der `Cluster-Kontext` beschreibt,
+  wie Agenten im Feld aktuell organisiert, verteilt und verdichtet sind
+- das `Muster` beschreibt die Gesamtform,
+  die aus dieser Agentenorganisation entsteht
+- mehrere Cluster-Kontexte können zu ähnlichen Gesamtmustern gehören,
+  obwohl sich die lokale Feldverteilung unterscheidet
+- ähnliche Muster können deshalb unterschiedliche innere Tragfähigkeit haben,
+  wenn ihre innere Organisation verschieden ist
 
-  „Typen von Situationen, mit denen das System umgehen musste“
+Das Ziel ist also nicht nur:
 
-  ---
+- „wo ist ein Cluster?“
 
-  ## 5. Cluster-Bewertung
+Sondern vor allem:
 
-  Cluster werden nicht bewertet nach:
+- wie ist das gesamte Innenfeld organisiert?
+- welche lokalen Verdichtungen, Spannungen und Leerbereiche bestehen?
+- wie stabil oder fragil ist diese Organisation?
+- welche Musterfamilie liegt gerade vor?
 
-  * Profit
-  * Trefferquote
+---
 
-  Sondern nach:
+### Innere Bezeichnung und Zustandsidentität
 
-  * Tragfähigkeit der Situation
-  * Energieverbrauch
-  * Stabilität des Zustandsverlaufs
+Das System soll innere Zustände nicht nur numerisch tragen,
+sondern langfristig auch **wiedererkennbar verdichten**.
 
-  ---
+Das bedeutet:
 
-  Beispiele:
+Aus
 
-  * stabil / tragfähig
-  * vorsichtig / unsicher
-  * überlastend / problematisch
+- Agentenorganisation
+- Cluster-Kontext
+- Gesamtmuster
+- wiederkehrender Belastungs- oder Entlastungswirkung
 
-  # --------------------------------------------------
+entsteht mit der Zeit eine **innere Zustandsidentität**.
 
-  # OUTCOME → ZUSTANDSWIRKUNG
+Diese Zustandsidentität ist keine sprachliche Erklärung im menschlichen Sinn,
+sondern eine funktionale innere Bezeichnung wie:
 
-  # --------------------------------------------------
+- wiederkehrendes Muster
+- belastendes Muster
+- tragfähiges Muster
+- Übergangsmuster
+- dysreguliertes Muster
+- reguliertes Muster
 
-  ## 6. Outcome als Erlebnis
+Dadurch kann das System künftig nicht nur spüren:
 
-  Outcome wird nicht als Zahl verarbeitet,
-  sondern als Zustandsveränderung.
+- „ich stehe unter Druck“
 
-  ---
+Sondern eher wiedererkennen:
 
-  TP (Gewinn):
+- „ich befinde mich erneut in innerem Muster XY“
 
-  * Entlastung
-  * Stabilisierung
-  * ggf. Euphorie (Überaktivierung)
+Diese Wiedererkennung ist wichtig,
+weil sie die Brücke schlägt von bloßem Zustand zu erfahrungsbasiertem Umgang.
 
-  ---
+---
 
-  SL (Verlust):
+### Kopplung beider Clusterformen
 
-  * Belastung
-  * Erhöhung von recovery_need
-  * Reduktion von action_capacity
+Erst die Kopplung von `context_clusters` und `inner_context_clusters` erlaubt dem System,
+nicht nur Situationen wiederzuerkennen,
+sondern auch wiederkehrende innere Muster in diesen Situationen zu lernen.
 
-  ---
+Dadurch kann das System künftig unterscheiden:
 
-  ## 7. Kontextabhängige Verstärkung
+- welche äußeren Kontexte tragfähig sind
+- welche inneren Muster tragfähig sind
+- welche Kombination aus Kontext und Innenzustand eher gemieden,
+  entlastet oder anders organisiert werden sollte
 
-  Die Wirkung eines Outcomes hängt ab von:
+Die eigentliche Erfahrungsfrage lautet dann nicht nur:
 
-  * RR (Risk/Reward)
-  * Strukturqualität
-  * Zustand vor der Handlung
-  * Erwartung vs Ergebnis
+- „Was war das für eine Situation?“
 
-  ---
+Sondern auch:
 
-  Beispiel:
+- „In welchem inneren Muster war ich dabei?“
+- „Wie tragfähig war dieses Muster zuletzt?“
+- „Sollte ich darin wieder handeln, vorsichtiger werden oder mich davon wegbewegen?“
 
-  * hoher RR + saubere Struktur + TP
-    → starke positive Prägung
+---
 
-  * schlechter Kontext + TP
-    → geringe positive Wirkung
+### Inneres Muster-Replay und Reflexion
 
-  ---
+Sobald wiederkehrende innere Muster und ihre Bedeutungen gespeichert werden,
+kann das System diese auch **vorausschauend** nutzen.
 
-  ## 8. Euphorie als Sonderfall
+Das bedeutet:
 
-  Euphorie ist:
+- aktuelle Innenlage wird mit bekannten Mustern abgeglichen
+- frühere Belastungs- oder Entlastungserfahrungen werden mitgeführt
+- das System kann innerlich prüfen,
+  ob eine ähnliche Lage früher tragfähig oder problematisch war
+- daraus kann vor Handlung bereits eine innere Reflexion entstehen
 
-  * keine stabile Verbesserung
-  * sondern eine Form von Überaktivierung
+Dieses innere Muster-Replay dient nicht primär der Vorhersage von Marktpreisen,
+sondern der Vorprüfung des eigenen Zustandsraums.
 
-  Folge:
+Es beantwortet eher Fragen wie:
 
-  * Risiko von Fehlkalibrierung
-  * mögliche Abweichung vom Zentrum
+- ist dieses innere Muster aktuell tragfähig?
+- kippt das Feld eher in Überlast, Konflikt oder klare Tragfähigkeit?
+- sollte das System handeln, beobachten, umlernen oder sich entlasten?
 
-  ---
+Replay ist damit nicht bloß Rückblick,
+sondern ein regulatorischer Vorausvergleich des eigenen Innenraums.
 
-  Das System muss lernen:
+---
 
-  * positive Zustände zu regulieren
-  * nicht nur negative
+## Cluster-Bewertung
 
-  # --------------------------------------------------
+Cluster werden nicht bewertet nach:
 
-  # LERNEN ALS UMGANGSFÄHIGKEIT
+- Profit
+- Trefferquote
 
-  # --------------------------------------------------
+Sondern nach:
 
-  ## 9. Kernmechanismus
+- Tragfähigkeit der Situation
+- Energieverbrauch
+- Stabilität des Zustandsverlaufs
+- Regulationskosten des Innenraums
+- Entlastung oder Verschärfung innerer Muster
 
-  Das System lernt nicht:
+Beispiele für Clustercharakter:
 
-  * was „richtig“ ist
+- stabil / tragfähig
+- vorsichtig / unsicher
+- überlastend / problematisch
+- äußerlich ruhig, innerlich belastend
+- äußerlich anspruchsvoll, innerlich gut getragen
 
-  Sondern:
+---
 
-  * womit es gut umgehen kann
+# --------------------------------------------------
+# 6.6 Outcome als Zustandswirkung
+# --------------------------------------------------
 
-  ---
+## Grundsatz
 
-  Form:
+Outcome soll nicht primär als Geldzahl verarbeitet werden,
+sondern als Zustandsveränderung des Systems.
 
-  (Struktur + Zustand + Handlung + Wirkung)
-  → wird zu
-  → Erfahrungswissen über Tragfähigkeit
+---
 
-  ---
+## Typische Wirkungen
 
-  ## 10. Zielzustand
+TP (Gewinn) kann bedeuten:
 
-  Das System strebt:
+- Entlastung
+- Stabilisierung
+- im Grenzfall auch Euphorie / Überaktivierung
 
-  * hohe Kohärenz mit der Umwelt
-  * geringe regulatorische Last
-  * stabile Handlungsfähigkeit
+SL (Verlust) kann bedeuten:
 
-  ---
+- Belastung
+- Erhöhung von `recovery_need`
+- Reduktion von `action_capacity`
 
-  Nicht:
+---
 
-  * maximale Aktivität
-  * maximale Profitabilität
+## Kontextabhängige Verstärkung
 
-  ---
+Die Wirkung eines Outcomes hängt nicht nur vom formalen Ergebnis ab,
+sondern auch von:
 
-  ## 11. Dynamisches Gleichgewicht
+- RR (`Risk/Reward`)
+- Strukturqualität
+- Zustand vor der Handlung
+- Erwartung im Verhältnis zum Ergebnis
 
-  Der Nullpunkt der MCM ist:
+Beispiel:
 
-  * kein statischer Zustand
-  * kein Stillstand
+- hoher RR + saubere Struktur + TP
+  → stärkere positive Prägung
 
-  Sondern:
+- schlechter Kontext + TP
+  → geringere positive Wirkung
 
-  * bewegtes Gleichgewicht
-  * kontinuierliche Anpassung an die Umwelt
+---
 
-  ---
+## Positive Zustände müssen ebenfalls reguliert werden
 
-  ## 12. Systemziel (final)
+Euphorie ist keine stabile Verbesserung,
+sondern kann eine Form von Überaktivierung sein.
 
-  Das System optimiert:
+Das System muss daher lernen:
 
-  * Zeit in tragfähigen Zuständen
-  * Energieeffizienz der Interaktion
+- negative Zustände zu regulieren
+- positive Zustände ebenfalls zu regulieren
 
-  ---
+---
 
-  Profit ist:
+# --------------------------------------------------
+# 6.7 Lernen als Umgangsfähigkeit
+# --------------------------------------------------
 
-  * kein Ziel
-  * sondern ein mögliches Nebenprodukt stabiler Kohärenz
+## Kernmechanismus
 
-  # --------------------------------------------------
+Das System lernt nicht einfach,
+was abstrakt „richtig“ ist.
 
-  # Schlussfolgerung
+Es lernt vor allem,
+womit es gut umgehen kann.
 
-  # --------------------------------------------------
+Die Grundform lautet:
 
-  * Experience wird erweitert zu:
+`Struktur + Zustand + Handlung + Wirkung`
 
-    * tragfähigkeitsbasierter Bewertung
-    * clusterbasierter Organisation
+wird zu:
 
-  * Lernen wird definiert als:
+Erfahrungswissen über Tragfähigkeit.
 
-    * Verbesserung der Umgangsfähigkeit
+---
 
-  * Zustand ersetzt:
+## Zielzustand
 
-    * Profit als zentrale Bewertungsgröße
+Das System strebt an:
 
-  * Architektur bleibt:
+- hohe Kohärenz mit der Umwelt
+- geringe regulatorische Last
+- stabile Handlungsfähigkeit
 
-    * vollständig kompatibel mit bestehendem MCM-System
+Es strebt nicht an:
 
-  # ==================================================
-  # ende Ergenzung
-  # ==================================================
+- maximale Aktivität
+- maximale Profitabilität
+
+---
+
+## Dynamisches Gleichgewicht
+
+Der Nullpunkt der MCM ist:
+
+- kein statischer Zustand
+- kein Stillstand
+
+Sondern:
+
+- bewegtes Gleichgewicht
+- kontinuierliche Anpassung an die Umwelt
+
+---
+
+## Systemziel
+
+Das System optimiert langfristig:
+
+- Zeit in tragfähigen Zuständen
+- Energieeffizienz der Interaktion
+
+Profit ist dabei kein Primärziel,
+sondern ein mögliches Nebenprodukt stabiler Kohärenz.
 
 ---
 

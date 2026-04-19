@@ -2,6 +2,9 @@
 # MCM_Brain_Modell.py
 # Brain + MCM Bridge
 # ==================================================
+import json
+import os
+
 from config import Config
 from debug_reader import dbr_debug
 from bot_engine.mcm_core_engine import build_tension_state_from_window, build_visual_market_state
@@ -398,63 +401,107 @@ def _experience_reward_delta(summary):
     correction_timing_quality = float(item.get("correction_timing_quality", 0.0) or 0.0)
     structural_bearing_quality = float(item.get("structural_bearing_quality", 0.0) or 0.0)
     review_score = float(item.get("review_score", 0.0) or 0.0)
+    bearing_regulation_cost = float(item.get("bearing_regulation_cost", 0.0) or 0.0)
+    relief_quality = float(item.get("relief_quality", 0.0) or 0.0)
+    carrying_room = float(item.get("carrying_room", 0.0) or 0.0)
+    felt_bearing = float(item.get("felt_bearing", 0.0) or 0.0)
+    felt_regulation_quality = float(item.get("felt_regulation_quality", 0.0) or 0.0)
+    felt_recovery_cost = float(item.get("felt_recovery_cost", 0.0) or 0.0)
+    felt_burden = float(item.get("felt_burden", 0.0) or 0.0)
+    experience_friction_cost = float(item.get("experience_friction_cost", 0.0) or 0.0)
+    experience_energy_cost = float(item.get("experience_energy_cost", 0.0) or 0.0)
     bearing_delta = float(_experience_bearing_delta(item) or 0.0)
+
+    base_delta = float(
+        (bearing_delta * 0.34)
+        + (structural_bearing_quality * 0.16)
+        + (relief_quality * 0.12)
+        + (carrying_room * 0.10)
+        + (felt_bearing * 0.10)
+        + (felt_regulation_quality * 0.08)
+        + (review_score * 0.05)
+        - (bearing_regulation_cost * 0.12)
+        - (experience_friction_cost * 0.10)
+        - (experience_energy_cost * 0.07)
+        - (felt_recovery_cost * 0.08)
+        - (felt_burden * 0.08)
+    )
 
     if outcome_reason == "tp_hit":
         return float(
-            0.12
-            + (bearing_delta * 0.58)
-            + (plan_quality * 0.06)
-            + (execution_quality * 0.06)
-            + (structural_bearing_quality * 0.08)
+            max(
+                -0.28,
+                min(
+                    0.28,
+                    base_delta
+                    + (plan_quality * 0.04)
+                    + (execution_quality * 0.04)
+                    + (max(0.0, carrying_room - bearing_regulation_cost) * 0.06),
+                ),
+            )
         )
 
     if outcome_reason == "sl_hit":
         return float(
-            -0.12
-            + (bearing_delta * 0.62)
-            - ((1.0 - risk_fit_quality) * 0.08)
-            - ((1.0 - structural_bearing_quality) * 0.06)
+            max(
+                -0.28,
+                min(
+                    0.28,
+                    base_delta
+                    - 0.03
+                    - ((1.0 - risk_fit_quality) * 0.05)
+                    - (bearing_regulation_cost * 0.04),
+                ),
+            )
         )
 
     if outcome_reason in ("cancel", "timeout", "reward_too_small", "rr_too_low", "sl_distance_too_high"):
         return float(
-            -0.04
-            + (bearing_delta * 0.54)
-            - ((1.0 - max(plan_quality, execution_quality)) * 0.04)
+            max(
+                -0.28,
+                min(
+                    0.28,
+                    base_delta
+                    - 0.01
+                    + (correction_timing_quality * 0.06)
+                    + (observation_quality * 0.04),
+                ),
+            )
         )
 
     if event_name in ("observed_only", "withheld", "replanned", "abandoned"):
-        non_action_quality = (
-            (observation_quality * 0.38)
-            + (correction_timing_quality * 0.24)
-            + (structural_bearing_quality * 0.20)
-            + (review_score * 0.18)
+        non_action_delta = float(
+            base_delta
+            + (observation_quality * 0.08)
+            + (correction_timing_quality * 0.06)
+            + (structural_bearing_quality * 0.04)
         )
-        non_action_delta = (bearing_delta * 0.46) - 0.01 + (non_action_quality * 0.16)
-
-        if event_name in ("replanned", "abandoned"):
-            non_action_delta += correction_timing_quality * 0.05
 
         if decision_tendency in ("observe", "replan", "hold"):
             non_action_delta += 0.02
 
-        return float(max(-0.22, min(0.22, non_action_delta)))
+        return float(max(-0.28, min(0.28, non_action_delta)))
 
     if event_name == "submitted":
-        return float(0.02 + (bearing_delta * 0.18))
+        return float(max(-0.28, min(0.28, 0.01 + (base_delta * 0.32))))
 
     if event_name == "filled":
-        return float(0.04 + (bearing_delta * 0.22))
+        return float(max(-0.28, min(0.28, 0.02 + (base_delta * 0.40))))
 
     if event_name in ("pending_update", "position_update", "in_trade_update", "monitor_update"):
         return float(
-            (bearing_delta * 0.44)
-            + (execution_quality * 0.03)
-            + (risk_fit_quality * 0.03)
+            max(
+                -0.28,
+                min(
+                    0.28,
+                    (base_delta * 0.52)
+                    + (execution_quality * 0.03)
+                    + (risk_fit_quality * 0.03),
+                ),
+            )
         )
 
-    return float(bearing_delta * 0.30)
+    return float(max(-0.28, min(0.28, base_delta * 0.42)))
 
 # --------------------------------------------------
 def _build_experience_similarity_axes(summary):
@@ -538,6 +585,11 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
     experience_space["last_in_trade_avg_recovery_need"] = float(summary.get("in_trade_avg_recovery_need", 0.0) or 0.0)
     experience_space["last_in_trade_avg_survival_pressure"] = float(summary.get("in_trade_avg_survival_pressure", 0.0) or 0.0)
     experience_space["last_in_trade_avg_pressure_to_capacity"] = float(summary.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0)
+    experience_space["last_in_trade_avg_pressure_release"] = float(summary.get("in_trade_avg_pressure_release", 0.0) or 0.0)
+    experience_space["last_in_trade_avg_load_bearing_capacity"] = float(summary.get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0)
+    experience_space["last_in_trade_avg_state_stability"] = float(summary.get("in_trade_avg_state_stability", 0.0) or 0.0)
+    experience_space["last_in_trade_avg_capacity_reserve"] = float(summary.get("in_trade_avg_capacity_reserve", 0.0) or 0.0)
+    experience_space["last_in_trade_avg_recovery_balance"] = float(summary.get("in_trade_avg_recovery_balance", 0.0) or 0.0)
     experience_space["last_in_trade_avg_regulated_courage"] = float(summary.get("in_trade_avg_regulated_courage", 0.0) or 0.0)
     experience_space["last_in_trade_avg_courage_gap"] = float(summary.get("in_trade_avg_courage_gap", 0.0) or 0.0)
     experience_space["last_in_trade_pre_action_phase"] = str(summary.get("in_trade_last_pre_action_phase", "-") or "-")
@@ -656,6 +708,11 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
         "in_trade_avg_recovery_need": float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0),
         "in_trade_avg_survival_pressure": float(summary_item.get("in_trade_avg_survival_pressure", 0.0) or 0.0),
         "in_trade_avg_pressure_to_capacity": float(summary_item.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0),
+        "in_trade_avg_pressure_release": float(summary_item.get("in_trade_avg_pressure_release", 0.0) or 0.0),
+        "in_trade_avg_load_bearing_capacity": float(summary_item.get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0),
+        "in_trade_avg_state_stability": float(summary_item.get("in_trade_avg_state_stability", 0.0) or 0.0),
+        "in_trade_avg_capacity_reserve": float(summary_item.get("in_trade_avg_capacity_reserve", 0.0) or 0.0),
+        "in_trade_avg_recovery_balance": float(summary_item.get("in_trade_avg_recovery_balance", 0.0) or 0.0),
         "in_trade_avg_regulated_courage": float(summary_item.get("in_trade_avg_regulated_courage", 0.0) or 0.0),
         "in_trade_avg_courage_gap": float(summary_item.get("in_trade_avg_courage_gap", 0.0) or 0.0),
         "in_trade_last_pre_action_phase": str(summary_item.get("in_trade_last_pre_action_phase", "-") or "-"),
@@ -692,11 +749,16 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     item["avg_recovery_need"] = float((float(item.get("avg_recovery_need", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0) * 0.32))
     item["avg_survival_pressure"] = float((float(item.get("avg_survival_pressure", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_survival_pressure", 0.0) or 0.0) * 0.32))
     item["avg_pressure_to_capacity"] = float((float(item.get("avg_pressure_to_capacity", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0) * 0.32))
+    item["avg_pressure_release"] = float((float(item.get("avg_pressure_release", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_pressure_release", 0.0) or 0.0) * 0.32))
+    item["avg_load_bearing_capacity"] = float((float(item.get("avg_load_bearing_capacity", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0) * 0.32))
+    item["avg_state_stability"] = float((float(item.get("avg_state_stability", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_state_stability", 0.0) or 0.0) * 0.32))
+    item["avg_capacity_reserve"] = float((float(item.get("avg_capacity_reserve", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_capacity_reserve", 0.0) or 0.0) * 0.32))
+    item["avg_recovery_balance"] = float((float(item.get("avg_recovery_balance", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_recovery_balance", 0.0) or 0.0) * 0.32))
     item["avg_regulated_courage"] = float((float(item.get("avg_regulated_courage", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_regulated_courage", 0.0) or 0.0) * 0.32))
     item["avg_courage_gap"] = float((float(item.get("avg_courage_gap", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_courage_gap", 0.0) or 0.0) * 0.32))
     item["bearing_effect"] = float((float(item.get("bearing_effect", 0.0) or 0.0) * 0.70) + (float(_experience_bearing_delta(summary_item) or 0.0) * 0.30))
-    item["relief_score"] = float((float(item.get("relief_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("in_trade_avg_action_capacity", 0.0) or 0.0) + float(summary_item.get("state_delta", {}).get("experience", {}).get("pressure_release", 0.0) or 0.0)) * 0.30))
-    item["strain_score"] = float((float(item.get("strain_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("in_trade_avg_regulatory_load", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_survival_pressure", 0.0) or 0.0)) * 0.30))
+    item["relief_score"] = float((float(item.get("relief_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("in_trade_avg_action_capacity", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_pressure_release", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_capacity_reserve", 0.0) or 0.0)) * 0.30))
+    item["strain_score"] = float((float(item.get("strain_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("in_trade_avg_regulatory_load", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_survival_pressure", 0.0) or 0.0) + max(0.0, -float(summary_item.get("in_trade_avg_recovery_balance", 0.0) or 0.0))) * 0.30))
     item["similarity_axes"] = dict(similarity_axes)
     item["axis_shift"] = float((float(item.get("axis_shift", 0.0) or 0.0) * 0.68) + (axis_shift * 0.32))
     item["drift"] = float(drift_value)
@@ -776,6 +838,11 @@ def _append_experience_episode(space, summary):
         "in_trade_avg_recovery_need": float((summary or {}).get("in_trade_avg_recovery_need", 0.0) or 0.0),
         "in_trade_avg_survival_pressure": float((summary or {}).get("in_trade_avg_survival_pressure", 0.0) or 0.0),
         "in_trade_avg_pressure_to_capacity": float((summary or {}).get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0),
+        "in_trade_avg_pressure_release": float((summary or {}).get("in_trade_avg_pressure_release", 0.0) or 0.0),
+        "in_trade_avg_load_bearing_capacity": float((summary or {}).get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0),
+        "in_trade_avg_state_stability": float((summary or {}).get("in_trade_avg_state_stability", 0.0) or 0.0),
+        "in_trade_avg_capacity_reserve": float((summary or {}).get("in_trade_avg_capacity_reserve", 0.0) or 0.0),
+        "in_trade_avg_recovery_balance": float((summary or {}).get("in_trade_avg_recovery_balance", 0.0) or 0.0),
         "in_trade_avg_regulated_courage": float((summary or {}).get("in_trade_avg_regulated_courage", 0.0) or 0.0),
         "in_trade_avg_courage_gap": float((summary or {}).get("in_trade_avg_courage_gap", 0.0) or 0.0),
         "in_trade_last_pre_action_phase": str((summary or {}).get("in_trade_last_pre_action_phase", "-") or "-"),
@@ -847,6 +914,9 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
         "observation_quality": float(review_notes.get("observation_quality", 0.0) or 0.0),
         "correction_timing_quality": float(review_notes.get("correction_timing_quality", 0.0) or 0.0),
         "structural_bearing_quality": float(review_notes.get("structural_bearing_quality", 0.0) or 0.0),
+        "bearing_regulation_cost": float(review_notes.get("bearing_regulation_cost", 0.0) or 0.0),
+        "relief_quality": float(review_notes.get("relief_quality", 0.0) or 0.0),
+        "carrying_room": float(review_notes.get("carrying_room", 0.0) or 0.0),
         "action_inhibition": float(review_notes.get("action_inhibition", 0.0) or 0.0),
         "action_clearance": float(review_notes.get("action_clearance", 0.0) or 0.0),
         "in_trade_update_count": int(in_trade_summary.get("in_trade_update_count", 0) or 0),
@@ -860,6 +930,11 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
         "in_trade_avg_recovery_need": float(in_trade_summary.get("in_trade_avg_recovery_need", 0.0) or 0.0),
         "in_trade_avg_survival_pressure": float(in_trade_summary.get("in_trade_avg_survival_pressure", 0.0) or 0.0),
         "in_trade_avg_pressure_to_capacity": float(in_trade_summary.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0),
+        "in_trade_avg_pressure_release": float(in_trade_summary.get("in_trade_avg_pressure_release", 0.0) or 0.0),
+        "in_trade_avg_load_bearing_capacity": float(in_trade_summary.get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0),
+        "in_trade_avg_state_stability": float(in_trade_summary.get("in_trade_avg_state_stability", 0.0) or 0.0),
+        "in_trade_avg_capacity_reserve": float(in_trade_summary.get("in_trade_avg_capacity_reserve", 0.0) or 0.0),
+        "in_trade_avg_recovery_balance": float(in_trade_summary.get("in_trade_avg_recovery_balance", 0.0) or 0.0),
         "in_trade_avg_regulated_courage": float(in_trade_summary.get("in_trade_avg_regulated_courage", 0.0) or 0.0),
         "in_trade_avg_courage_gap": float(in_trade_summary.get("in_trade_avg_courage_gap", 0.0) or 0.0),
         "in_trade_last_pre_action_phase": str(in_trade_summary.get("in_trade_last_pre_action_phase", "-") or "-"),
@@ -883,6 +958,56 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
     summary["felt_conflict"] = float(episode_felt_summary.get("conflict", 0.0) or 0.0)
     summary["felt_recovery_cost"] = float(episode_felt_summary.get("recovery_cost", 0.0) or 0.0)
     summary["felt_label"] = str(episode_felt_summary.get("felt_label", "mixed") or "mixed")
+
+    field_delta = dict(state_delta.get("field", {}) or {})
+    tension_delta = dict(state_delta.get("tension", {}) or {})
+
+    pressure_cost = float(
+        min(
+            1.0,
+            max(0.0, float(summary.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0) / 2.0),
+        )
+    )
+    destabilization_cost = float(max(0.0, -float(tension_delta.get("stability", 0.0) or 0.0)))
+    energy_disturbance = float(min(1.0, abs(float(tension_delta.get("energy", 0.0) or 0.0))))
+    delta_pressure_cost = float(min(1.0, max(0.0, float(field_delta.get("regulatory_load", 0.0) or 0.0))))
+
+    summary["experience_friction_cost"] = float(
+        max(
+            0.0,
+            min(
+                1.0,
+                (float(summary.get("bearing_regulation_cost", 0.0) or 0.0) * 0.34)
+                + (float(summary.get("felt_recovery_cost", 0.0) or 0.0) * 0.24)
+                + (float(summary.get("felt_burden", 0.0) or 0.0) * 0.22)
+                + (pressure_cost * 0.10)
+                + (delta_pressure_cost * 0.10),
+            ),
+        )
+    )
+
+    summary["experience_energy_cost"] = float(
+        max(
+            0.0,
+            min(
+                1.0,
+                (energy_disturbance * 0.52)
+                + (min(1.0, destabilization_cost) * 0.48),
+            ),
+        )
+    )
+
+    summary["experience_bearing_room"] = float(
+        max(
+            0.0,
+            min(
+                1.0,
+                (float(summary.get("carrying_room", 0.0) or 0.0) * 0.52)
+                + (float(summary.get("felt_bearing", 0.0) or 0.0) * 0.28)
+                + (float(summary.get("relief_quality", 0.0) or 0.0) * 0.20),
+            ),
+        )
+    )
 
     return dict(summary)
 
@@ -1439,6 +1564,80 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
         "risk_shift": float(risk_shift),
         "rr_shift": float(rr_shift),
         "width_shift": float(width_shift),
+    }
+
+# --------------------------------------------------
+def build_runtime_pipeline_snapshot(bot=None):
+
+    if bot is None:
+        return {
+            "outer_visual_perception_state": {},
+            "inner_field_perception_state": {},
+            "temporal_perception_state": {},
+            "perception_state": {},
+            "processing_state": {},
+            "felt_state": {},
+            "thought_state": {},
+            "meta_regulation_state": {},
+            "review_feedback_state": {},
+            "review_carry_capacity": 0.0,
+            "review_caution_load": 0.0,
+            "review_tendency_hint": "hold",
+            "expectation_state": {},
+            "action_intent_state": {},
+            "execution_state": {},
+            "field_state": {
+                "field_density": 0.0,
+                "field_stability": 0.0,
+                "regulatory_load": 0.0,
+                "action_capacity": 0.0,
+                "recovery_need": 0.0,
+                "survival_pressure": 0.0,
+            },
+            "runtime_state": {
+                "decision_tendency": "hold",
+                "proposed_decision": "WAIT",
+                "self_state": "stable",
+                "attractor": "neutral",
+                "observation_mode": False,
+            },
+        }
+
+    meta_regulation_state = dict(getattr(bot, "meta_regulation_state", {}) or {})
+    review_feedback_state = dict(meta_regulation_state.get("review_feedback_state", {}) or {})
+    runtime_state = dict(getattr(bot, "mcm_runtime_decision_state", {}) or {})
+
+    return {
+        "outer_visual_perception_state": dict(getattr(bot, "outer_visual_perception_state", {}) or {}),
+        "inner_field_perception_state": dict(getattr(bot, "inner_field_perception_state", {}) or {}),
+        "temporal_perception_state": dict(getattr(bot, "temporal_perception_state", {}) or {}),
+        "perception_state": dict(getattr(bot, "perception_state", {}) or {}),
+        "processing_state": dict(getattr(bot, "processing_state", {}) or {}),
+        "felt_state": dict(getattr(bot, "felt_state", {}) or {}),
+        "thought_state": dict(getattr(bot, "thought_state", {}) or {}),
+        "meta_regulation_state": dict(meta_regulation_state or {}),
+        "review_feedback_state": dict(review_feedback_state or {}),
+        "review_carry_capacity": float(meta_regulation_state.get("review_carry_capacity", review_feedback_state.get("carry_capacity", 0.0)) or 0.0),
+        "review_caution_load": float(meta_regulation_state.get("review_caution_load", review_feedback_state.get("caution_load", 0.0)) or 0.0),
+        "review_tendency_hint": str(meta_regulation_state.get("review_tendency_hint", review_feedback_state.get("tendency_hint", "hold")) or "hold"),
+        "expectation_state": dict(getattr(bot, "expectation_state", {}) or {}),
+        "action_intent_state": dict(getattr(bot, "action_intent_state", {}) or {}),
+        "execution_state": dict(getattr(bot, "execution_state", {}) or {}),
+        "field_state": {
+            "field_density": float(getattr(bot, "field_density", 0.0) or 0.0),
+            "field_stability": float(getattr(bot, "field_stability", 0.0) or 0.0),
+            "regulatory_load": float(getattr(bot, "regulatory_load", 0.0) or 0.0),
+            "action_capacity": float(getattr(bot, "action_capacity", 0.0) or 0.0),
+            "recovery_need": float(getattr(bot, "recovery_need", 0.0) or 0.0),
+            "survival_pressure": float(getattr(bot, "survival_pressure", 0.0) or 0.0),
+        },
+        "runtime_state": {
+            "decision_tendency": str(runtime_state.get("decision_tendency", "hold") or "hold"),
+            "proposed_decision": str(runtime_state.get("proposed_decision", "WAIT") or "WAIT"),
+            "self_state": str(runtime_state.get("self_state", "stable") or "stable"),
+            "attractor": str(runtime_state.get("attractor", "neutral") or "neutral"),
+            "observation_mode": bool(getattr(bot, "observation_mode", False)),
+        },
     }
 
 # --------------------------------------------------
@@ -6043,9 +6242,7 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
     in_trade_avg_pressure_to_capacity = float(in_trade_summary.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0)
     in_trade_avg_regulated_courage = float(in_trade_summary.get("in_trade_avg_regulated_courage", 0.0) or 0.0)
 
-    outcome_reason = str(outcome_decomposition.get("reason", visible_episode.get("reason", "-")) or "-").strip().lower()
     event_key = str(event_name or internal_episode.get("last_event", visible_episode.get("last_event", "-")) or "-").strip().lower()
-
     decision_tendency_value = str(visible_episode.get("decision_tendency", "hold") or "hold").strip().lower()
 
     uncertainty_recognition_quality = max(
@@ -6116,22 +6313,65 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
         ),
     )
 
+    bearing_regulation_cost = max(
+        0.0,
+        min(
+            1.0,
+            (in_trade_avg_regulatory_load * 0.22)
+            + (in_trade_avg_recovery_need * 0.20)
+            + (min(1.0, in_trade_avg_pressure_to_capacity / 2.0) * 0.18)
+            + (max(0.0, 1.0 - in_trade_avg_action_capacity) * 0.14)
+            + (action_inhibition * 0.14)
+            + (courage_gap * 0.12),
+        ),
+    )
+
+    relief_quality = max(
+        0.0,
+        min(
+            1.0,
+            (expectation_alignment * 0.12)
+            + (structural_bearing_quality * 0.18)
+            + (in_trade_avg_action_capacity * 0.16)
+            + (max(0.0, 1.0 - in_trade_avg_regulatory_load) * 0.12)
+            + (max(0.0, 1.0 - in_trade_avg_recovery_need) * 0.12)
+            + (max(0.0, 1.0 - min(1.0, in_trade_avg_pressure_to_capacity / 2.0)) * 0.10)
+            + (regulated_courage * 0.10)
+            + (action_clearance * 0.10),
+        ),
+    )
+
+    carrying_room = max(
+        0.0,
+        min(
+            1.0,
+            (plan_quality * 0.10)
+            + (risk_fit_quality * 0.12)
+            + (structural_bearing_quality * 0.22)
+            + (readiness * 0.08)
+            + (maturity * 0.08)
+            + (relief_quality * 0.14)
+            + (max(0.0, 1.0 - bearing_regulation_cost) * 0.14)
+            + (in_trade_avg_regulated_courage * 0.12),
+        ),
+    )
+
     decision_path_quality = max(
         0.0,
         min(
             1.0,
-            (plan_quality * 0.14)
-            + (execution_quality * 0.12)
-            + (risk_fit_quality * 0.10)
+            (plan_quality * 0.12)
+            + (execution_quality * 0.10)
+            + (risk_fit_quality * 0.08)
             + (observation_quality * 0.10)
             + (correction_timing_quality * 0.12)
             + (structural_bearing_quality * 0.10)
             + (expectation_alignment * 0.08)
             + (regulated_courage * 0.08)
             + (action_clearance * 0.08)
-            + (max(0.0, 1.0 - courage_gap) * 0.08)
-            + (0.10 if outcome_reason == "tp_hit" else 0.0)
-            - (0.10 if outcome_reason == "sl_hit" else 0.0),
+            + (max(0.0, 1.0 - courage_gap) * 0.06)
+            + (relief_quality * 0.04)
+            + (carrying_room * 0.04),
         ),
     )
 
@@ -6139,24 +6379,25 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
         0.0,
         min(
             1.0,
-            (decision_path_quality * 0.28)
-            + (uncertainty_recognition_quality * 0.14)
-            + (observation_quality * 0.14)
-            + (correction_timing_quality * 0.14)
-            + (structural_bearing_quality * 0.16)
-            + (regulated_courage * 0.08)
-            + (max(0.0, 1.0 - action_inhibition) * 0.06),
+            (decision_path_quality * 0.22)
+            + (uncertainty_recognition_quality * 0.12)
+            + (observation_quality * 0.12)
+            + (correction_timing_quality * 0.12)
+            + (structural_bearing_quality * 0.14)
+            + (relief_quality * 0.10)
+            + (carrying_room * 0.10)
+            + (max(0.0, 1.0 - bearing_regulation_cost) * 0.08),
         ),
     )
 
-    if outcome_reason == "tp_hit" and decision_path_quality >= 0.62:
-        review_label = "reinforce"
-    elif outcome_reason == "sl_hit" and review_score < 0.46:
-        review_label = "deepen_reflection"
-    elif event_key in ("observed_only", "withheld") and observation_quality >= 0.54:
+    if event_key in ("observed_only", "withheld") and observation_quality >= 0.54 and bearing_regulation_cost <= 0.54:
         review_label = "observe_was_correct"
-    elif event_key in ("replanned", "abandoned", "cancelled") and correction_timing_quality >= 0.52:
+    elif event_key in ("replanned", "abandoned", "cancelled") and correction_timing_quality >= 0.52 and bearing_regulation_cost >= 0.42:
         review_label = "correction_was_correct"
+    elif carrying_room >= 0.60 and review_score >= 0.58 and bearing_regulation_cost <= 0.42:
+        review_label = "reinforce"
+    elif bearing_regulation_cost >= 0.58 and review_score < 0.50:
+        review_label = "deepen_reflection"
     else:
         review_label = "mixed"
 
@@ -6169,6 +6410,11 @@ def _build_episode_review_notes(bot, episode=None, episode_internal=None, event_
         "observation_quality": float(observation_quality),
         "correction_timing_quality": float(correction_timing_quality),
         "structural_bearing_quality": float(structural_bearing_quality),
+        "bearing_regulation_cost": float(bearing_regulation_cost),
+        "relief_quality": float(relief_quality),
+        "carrying_room": float(carrying_room),
+        "action_inhibition": float(action_inhibition),
+        "action_clearance": float(action_clearance),
         "in_trade_update_count": int(in_trade_update_count),
         "in_trade_max_mfe": float(in_trade_max_mfe),
         "in_trade_max_mae": float(in_trade_max_mae),
@@ -6188,6 +6434,9 @@ def _compact_in_trade_update_payload(payload):
     state_before = dict(item.get("state_before", {}) or {})
     state_after = dict(item.get("state_after", {}) or {})
     state_delta = dict(item.get("state_delta", {}) or {})
+    field_after = dict(state_after.get("field", {}) or {})
+    experience_after = dict(state_after.get("experience", {}) or {})
+    tension_after = dict(state_after.get("tension", {}) or {})
 
     compact = {
         "entry": float(item.get("entry", 0.0) or 0.0),
@@ -6199,11 +6448,16 @@ def _compact_in_trade_update_payload(payload):
         "mae": float(item.get("mae", 0.0) or 0.0),
         "bars_open": int(item.get("bars_open", 0) or 0),
         "fill_ratio": float(item.get("fill_ratio", 0.0) or 0.0),
-        "regulatory_load": float(item.get("regulatory_load", 0.0) or 0.0),
-        "action_capacity": float(item.get("action_capacity", 0.0) or 0.0),
-        "recovery_need": float(item.get("recovery_need", 0.0) or 0.0),
-        "survival_pressure": float(item.get("survival_pressure", 0.0) or 0.0),
-        "pressure_to_capacity": float(item.get("pressure_to_capacity", 0.0) or 0.0),
+        "regulatory_load": float(item.get("regulatory_load", field_after.get("regulatory_load", 0.0)) or 0.0),
+        "action_capacity": float(item.get("action_capacity", field_after.get("action_capacity", 0.0)) or 0.0),
+        "recovery_need": float(item.get("recovery_need", field_after.get("recovery_need", 0.0)) or 0.0),
+        "survival_pressure": float(item.get("survival_pressure", field_after.get("survival_pressure", 0.0)) or 0.0),
+        "pressure_to_capacity": float(item.get("pressure_to_capacity", field_after.get("pressure_to_capacity", 0.0)) or 0.0),
+        "pressure_release": float(item.get("pressure_release", experience_after.get("pressure_release", 0.0)) or 0.0),
+        "load_bearing_capacity": float(item.get("load_bearing_capacity", experience_after.get("load_bearing_capacity", 0.0)) or 0.0),
+        "state_stability": float(item.get("state_stability", tension_after.get("stability", 0.0)) or 0.0),
+        "capacity_reserve": float(item.get("capacity_reserve", field_after.get("capacity_reserve", 0.0)) or 0.0),
+        "recovery_balance": float(item.get("recovery_balance", field_after.get("recovery_balance", 0.0)) or 0.0),
         "regulated_courage": float(item.get("regulated_courage", 0.0) or 0.0),
         "courage_gap": float(item.get("courage_gap", 0.0) or 0.0),
         "pre_action_phase": str(item.get("pre_action_phase", "hold") or "hold"),
@@ -6235,6 +6489,11 @@ def _summarize_in_trade_updates(in_trade_updates):
             "in_trade_avg_recovery_need": 0.0,
             "in_trade_avg_survival_pressure": 0.0,
             "in_trade_avg_pressure_to_capacity": 0.0,
+            "in_trade_avg_pressure_release": 0.0,
+            "in_trade_avg_load_bearing_capacity": 0.0,
+            "in_trade_avg_state_stability": 0.0,
+            "in_trade_avg_capacity_reserve": 0.0,
+            "in_trade_avg_recovery_balance": 0.0,
             "in_trade_avg_regulated_courage": 0.0,
             "in_trade_avg_courage_gap": 0.0,
             "in_trade_last_pre_action_phase": "-",
@@ -6255,6 +6514,11 @@ def _summarize_in_trade_updates(in_trade_updates):
     recovery_need_values = [float(item.get("recovery_need", 0.0) or 0.0) for item in payloads]
     survival_pressure_values = [float(item.get("survival_pressure", 0.0) or 0.0) for item in payloads]
     pressure_to_capacity_values = [float(item.get("pressure_to_capacity", 0.0) or 0.0) for item in payloads]
+    pressure_release_values = [float(item.get("pressure_release", 0.0) or 0.0) for item in payloads]
+    load_bearing_capacity_values = [float(item.get("load_bearing_capacity", 0.0) or 0.0) for item in payloads]
+    state_stability_values = [float(item.get("state_stability", 0.0) or 0.0) for item in payloads]
+    capacity_reserve_values = [float(item.get("capacity_reserve", 0.0) or 0.0) for item in payloads]
+    recovery_balance_values = [float(item.get("recovery_balance", 0.0) or 0.0) for item in payloads]
     regulated_courage_values = [float(item.get("regulated_courage", 0.0) or 0.0) for item in payloads]
     courage_gap_values = [float(item.get("courage_gap", 0.0) or 0.0) for item in payloads]
 
@@ -6287,8 +6551,15 @@ def _summarize_in_trade_updates(in_trade_updates):
         "in_trade_avg_recovery_need": float(sum(recovery_need_values) / max(1, len(recovery_need_values))),
         "in_trade_avg_survival_pressure": float(sum(survival_pressure_values) / max(1, len(survival_pressure_values))),
         "in_trade_avg_pressure_to_capacity": float(sum(pressure_to_capacity_values) / max(1, len(pressure_to_capacity_values))),
+        "in_trade_avg_pressure_release": float(sum(pressure_release_values) / max(1, len(pressure_release_values))),
+        "in_trade_avg_load_bearing_capacity": float(sum(load_bearing_capacity_values) / max(1, len(load_bearing_capacity_values))),
+        "in_trade_avg_state_stability": float(sum(state_stability_values) / max(1, len(state_stability_values))),
+        "in_trade_avg_capacity_reserve": float(sum(capacity_reserve_values) / max(1, len(capacity_reserve_values))),
+        "in_trade_avg_recovery_balance": float(sum(recovery_balance_values) / max(1, len(recovery_balance_values))),
         "in_trade_avg_regulated_courage": float(sum(regulated_courage_values) / max(1, len(regulated_courage_values))),
         "in_trade_avg_courage_gap": float(sum(courage_gap_values) / max(1, len(courage_gap_values))),
+        "in_trade_last_pre_action_phase": str(last_payload.get("pre_action_phase", "-") or "-"),
+        "in_trade_last_dominant_tension_cause": str(last_payload.get("dominant_tension_cause", "-") or "-"),
         "in_trade_last_state_before": dict(last_payload.get("state_before", {}) or {}),
         "in_trade_last_state_after": dict(last_payload.get("state_after", {}) or {}),
         "in_trade_last_state_delta": dict(last_payload.get("state_delta", {}) or {}),
@@ -6461,6 +6732,198 @@ def _derive_runtime_field_state(bot=None, tension_state=None, snapshot=None):
         "survival_pressure": float(survival_pressure),
     }
 
+# --------------------------------------------------
+# SNAPSHOT HELPERS
+# --------------------------------------------------
+def _snapshot_write_path(snapshot_kind):
 
+    snapshot_key = str(snapshot_kind or "visual").strip().lower()
+
+    if snapshot_key == "inner":
+        configured = str(getattr(Config, "MCM_INNER_SNAPSHOT_PATH", "debug/bot_inner_snapshot.json") or "debug/bot_inner_snapshot.json")
+    else:
+        configured = str(getattr(Config, "MCM_VISUAL_SNAPSHOT_PATH", "debug/bot_visual_snapshot.json") or "debug/bot_visual_snapshot.json")
+
+    return configured
+
+# --------------------------------------------------
+def _write_runtime_snapshot_payload(snapshot_kind, payload):
+
+    path = _snapshot_write_path(snapshot_kind)
+
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(dict(payload or {}), f, indent=2)
+    except Exception:
+        return None
+
+    return path
+
+# --------------------------------------------------
+def write_visualization_snapshot_bundle(snapshot_bundle):
+
+    bundle = dict(snapshot_bundle or {})
+    if not bundle:
+        return None
+
+    visual_payload = dict(bundle.get("visual", {}) or {})
+    inner_payload = dict(bundle.get("inner", {}) or {})
+
+    _write_runtime_snapshot_payload("visual", visual_payload)
+    _write_runtime_snapshot_payload("inner", inner_payload)
+    return dict(bundle or {})
+
+# --------------------------------------------------
+# SNAPSHOT BUILD HELPERS
+# --------------------------------------------------
+def _build_visual_chart_snapshot(window):
+
+    local_window = [dict(item or {}) for item in list(window or []) if isinstance(item, dict)]
+    if not local_window:
+        return {
+            "visible_window_size": 0,
+            "price_bounds": {
+                "low": 0.0,
+                "high": 0.0,
+                "span": 0.0,
+            },
+            "candles": [],
+            "close_trace": [],
+        }
+
+    visible_window_size = min(120, len(local_window))
+    visible_window = local_window[-visible_window_size:]
+
+    lows = []
+    highs = []
+    candles = []
+    close_trace = []
+
+    for index, candle in enumerate(visible_window):
+        open_price = float(candle.get("open", 0.0) or 0.0)
+        high_price = float(candle.get("high", open_price) or open_price)
+        low_price = float(candle.get("low", open_price) or open_price)
+        close_price = float(candle.get("close", open_price) or open_price)
+        volume_value = float(candle.get("volume", 0.0) or 0.0)
+        timestamp = candle.get("timestamp")
+
+        lows.append(low_price)
+        highs.append(high_price)
+        close_trace.append(close_price)
+        candles.append({
+            "index": int(index),
+            "timestamp": timestamp,
+            "open": float(open_price),
+            "high": float(high_price),
+            "low": float(low_price),
+            "close": float(close_price),
+            "volume": float(volume_value),
+            "direction": "up" if close_price >= open_price else "down",
+            "body": float(close_price - open_price),
+            "range": float(high_price - low_price),
+        })
+
+    price_low = min(lows) if lows else 0.0
+    price_high = max(highs) if highs else 0.0
+    price_span = max(price_high - price_low, 1e-9)
+
+    normalized_close_trace = []
+    for close_price in close_trace:
+        normalized_close_trace.append(float((close_price - price_low) / price_span))
+
+    return {
+        "visible_window_size": int(visible_window_size),
+        "price_bounds": {
+            "low": float(price_low),
+            "high": float(price_high),
+            "span": float(price_high - price_low),
+        },
+        "candles": list(candles or []),
+        "close_trace": list(close_trace or []),
+        "normalized_close_trace": list(normalized_close_trace or []),
+    }
+
+# --------------------------------------------------
+def build_visualization_snapshot_bundle(bot=None, window=None, candle_state=None):
+
+    local_window = [dict(item or {}) for item in list(window or []) if isinstance(item, dict)]
+    timestamp = local_window[-1].get("timestamp") if local_window else None
+    chart_snapshot = _build_visual_chart_snapshot(local_window)
+    inner_pipeline_snapshot = build_runtime_pipeline_snapshot(bot)
+
+    visual_payload = {
+        "timestamp": timestamp,
+        "window": list(local_window or []),
+        "candle_state": dict(candle_state or {}),
+        "tension_state": dict(getattr(bot, "tension_state", {}) or {}) if bot is not None else {},
+        "visual_market_state": dict(getattr(bot, "visual_market_state", {}) or {}) if bot is not None else {},
+        "structure_perception_state": dict(getattr(bot, "structure_perception_state", {}) or {}) if bot is not None else {},
+        "chart_snapshot": dict(chart_snapshot or {}),
+    }
+
+    inner_payload = {
+        "timestamp": timestamp,
+        **dict(inner_pipeline_snapshot or {}),
+    }
+
+    return {
+        "visual": dict(visual_payload or {}),
+        "inner": dict(inner_payload or {}),
+    }
+
+# --------------------------------------------------
+def prepare_visualization_snapshot_state(bot=None, window=None, candle_state=None):
+
+    snapshot_bundle = build_visualization_snapshot_bundle(
+        bot=bot,
+        window=window,
+        candle_state=candle_state,
+    )
+    if snapshot_bundle is None:
+        return {
+            "snapshot_bundle": {},
+            "snapshot_dirty": False,
+        }
+
+    return {
+        "snapshot_bundle": dict(snapshot_bundle or {}),
+        "snapshot_dirty": True,
+    }
+
+# --------------------------------------------------
+def capture_runtime_regulation_transition(bot=None, state_before: dict | None = None, state_after: dict | None = None) -> tuple[dict, dict, dict]:
+
+    if bot is None:
+        current_state = dict(state_after or {})
+        previous_state = dict(state_before or {})
+
+        if not previous_state:
+            previous_state = dict(current_state or {})
+
+        return previous_state, current_state, {}
+
+    current_state = dict(state_after or {}) if state_after is not None else bot._build_regulation_state_snapshot()
+    previous_state = dict(state_before or {}) if state_before is not None else dict(getattr(bot, "_last_regulation_state_snapshot", {}) or {})
+
+    if not previous_state:
+        previous_state = dict(current_state or {})
+
+    state_delta = bot._build_regulation_state_delta(
+        previous_state,
+        current_state,
+    )
+
+    return previous_state, current_state, state_delta
+
+# --------------------------------------------------
+def commit_runtime_regulation_snapshot(bot=None, state_after: dict | None = None) -> dict:
+
+    if bot is None:
+        return dict(state_after or {})
+
+    committed_state = dict(state_after or {}) if state_after is not None else bot._build_regulation_state_snapshot()
+    bot._last_regulation_state_snapshot = dict(committed_state or {})
+    return dict(committed_state or {})
 
 

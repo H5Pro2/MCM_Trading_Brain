@@ -224,7 +224,6 @@ def num_color(val, lo=0.3, hi=0.7, invert=False) -> str:
 # ─────────────────────────────────────────────
 #  WIEDERVERWENDBARE WIDGET-BAUSTEINE
 # ─────────────────────────────────────────────
-
 class CardFrame(tk.Frame):
     """Dunkle Karte mit optionalem Titel."""
     def __init__(self, parent, title="", title_color=None, **kwargs):
@@ -238,7 +237,6 @@ class CardFrame(tk.Frame):
                      font=("Courier New", 7, "bold"),
                      anchor="w", padx=6, pady=3).pack(fill="x")
             tk.Frame(self, bg=C["border"], height=1).pack(fill="x")
-
 
 class KVRow(tk.Frame):
     """Key-Value Zeile."""
@@ -258,7 +256,6 @@ class KVRow(tk.Frame):
     def update(self, value: str, val_color=None):
         self.val_lbl.config(text=str(value),
                             fg=val_color or C["text_hi"])
-
 
 class GaugeArc(tk.Canvas):
     """Halbbogen-Gauge (0..1)."""
@@ -298,7 +295,6 @@ class GaugeArc(tk.Canvas):
         self.create_text(cx, cy + 2, text=self._label,
                          fill=C["text_label"], font=("Courier New", 6))
 
-
 class BarMeter(tk.Canvas):
     """Horizontaler Fortschrittsbalken."""
     def __init__(self, parent, width=120, height=10, bg=None, **kwargs):
@@ -325,7 +321,6 @@ class BarMeter(tk.Canvas):
             self.create_rectangle(0, 0, fw, self._bar_height,
                                    fill=color, outline="")
 
-
 class StatusDot(tk.Frame):
     """Farbiger Punkt + Label."""
     def __init__(self, parent, label: str, color: str = None, **kwargs):
@@ -349,11 +344,9 @@ class StatusDot(tk.Frame):
         self._lbl.config(text=label, fg=color)
         self._draw()
 
-
 # ─────────────────────────────────────────────
 #  HAUPT-GUI
 # ─────────────────────────────────────────────
-
 class MCMGui:
     def __init__(self, root: tk.Tk):
         self.root = root
@@ -1443,7 +1436,7 @@ class MCMGui:
     # --- UNTERER BEREICH ---
     def _update_bottom(self, s, eq):
         # KPI
-        pnl = s.get("pnl_netto", "–")
+        pnl = s.get("current_equity", "–")
         try:
             pf  = float(pnl)
             pc  = C["kpi_pos"] if pf >= 0 else C["kpi_neg"]
@@ -1495,7 +1488,7 @@ class MCMGui:
 
         values = []
         for row in eq_rows:
-            for key in ("pnl_netto", "equity", "value", "balance", "pnl_cumulative"):
+            for key in ("current_equity", "equity", "value", "balance", "pnl_cumulative"):
                 v = row.get(key)
                 if v is not None:
                     try:
@@ -1656,7 +1649,6 @@ class MCMGui:
             self.root.after_cancel(self._after_id)
         self.root.destroy()
 
-
 # ─────────────────────────────────────────────
 #  MAIN
 # ─────────────────────────────────────────────
@@ -1677,7 +1669,6 @@ def main():
         root.mainloop()
     except KeyboardInterrupt:
         pass
-
 
 if __name__ == "__main__":
     main()

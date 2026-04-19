@@ -345,6 +345,301 @@ Das System ist nicht:
 
 ---
 
+# --------------------------------------------------
+
+# Innenfeld, Musterbildung, emergente Zustandsidentität
+
+# --------------------------------------------------
+
+## 1. Ziel dieser Erweiterung
+
+Diese Erweiterung präzisiert die Zielarchitektur des Systems dort, wo das MCM-Feld nicht nur als interner Zustandsraum, sondern als **selbstorganisierende Wahrnehmungs-, Verarbeitungs- und Erfahrungsstruktur** verstanden wird.
+
+Das System soll die Außenwelt nicht direkt in Handelsentscheidungen übersetzen.
+Stattdessen soll ein inneres Feld aus Agenten die eingehenden Reize aufnehmen, sich daran organisieren, Muster bilden, sich unter Erfahrung reorganisieren und daraus eigene innere Zustandsidentitäten entwickeln.
+Damit wird Handlung zu einem möglichen Ergebnis innerer Organisation, nicht zu einem direkten Reflex auf Marktdaten.
+
+---
+
+## 2. Grundannahme der Architektur
+
+Die Außenwelt und die Innenwelt bleiben getrennt.
+
+Die Außenwelt liefert:
+
+* Marktbewegung
+* Candle-Form
+* Struktur
+* Spannungscharakter
+* zeitliche Veränderung
+
+Diese Außeninformationen sind noch **nicht** Handlung und noch **nicht** fertige innere Bedeutung.
+Sie bilden nur den Reizeingang für das System. Ebene 1 bleibt daher reine Wahrnehmung und liefert ein neutrales Wahrnehmungspaket.
+
+Die Innenwelt beginnt erst dort, wo diese Reize in ein Agentenfeld eingehen und dort lokale Reaktionen, Kopplungen, Verdichtungen, Drift, Konflikt oder Stabilisierung auslösen.
+
+---
+
+## 3. Das MCM-Feld als eigentliche Innenarchitektur
+
+Das MCM-Feld ist nicht nur ein Zustandscontainer.
+Es ist die eigentliche innere Organisationsschicht des Systems.
+
+Agenten im Feld sind dynamische Teilträger des Innenraums.
+Sie nehmen Reize auf, beeinflussen sich gegenseitig, bilden Gruppen, lösen sich wieder, reorganisieren sich und erzeugen dadurch ein Gesamtmuster.
+Dieses Gesamtmuster ist bedeutungsvoller als ein einzelner Agentenzustand.
+
+Im aktuellen Modell ist diese Richtung bereits angelegt durch:
+
+* Agentenfeld
+* Bewegungsanteile
+* Zentrumskraft
+* lokale Kopplung
+* Clusterbildung
+* Memory-Rückwirkung
+
+Die Zielarchitektur erweitert diese Basis fachlich:
+Nicht nur die Feldwerte selbst sollen gelesen werden, sondern die **Organisation des Feldes**.
+
+Dazu gehören künftig:
+
+* Verteilung der Agenten
+* lokale Verdichtungen
+* Feldtopologie
+* stabile und instabile Cluster
+* Verbindungsbahnen zwischen Teilmustern
+* Driftverläufe
+* Reorganisationsrichtungen
+* wiederkehrende Gesamtformen des Feldes
+
+---
+
+## 4. Wahrnehmung im Zielsystem
+
+Wahrnehmung entsteht im Zielsystem nicht erst am Ende als fertiges Label.
+Sie entsteht im Feld selbst.
+
+Das bedeutet:
+
+Ein Außenreiz wird nicht als starre Regel interpretiert, sondern löst im Innenfeld Reorganisation aus.
+Diese Reorganisation ist bereits Teil der Wahrnehmung.
+
+Damit wird Wahrnehmung nicht verstanden als:
+
+`Marktdatum -> feste Bedeutung`
+
+sondern als:
+
+`Marktreiz -> agentische Aufnahme -> lokale Wechselwirkung -> Feldorganisation -> entstehende innere Bedeutung`
+
+Das System „weiß“ also nicht zuerst und organisiert sich danach.
+Es organisiert sich, und daraus entsteht erst die Bedeutung.
+
+---
+
+## 5. Warum daraus ein neuronales System im weiteren Sinn entsteht
+
+Diese Architektur ist kein klassisches neuronales Netz im üblichen Sinn von festen Layern und Gewichten.
+Sie bildet aber funktional eine neuronale Innenstruktur.
+
+Die funktionale Entsprechung ist:
+
+Agent
+= lokaler Träger von Zustand, Reaktion und Richtung
+
+Verbindung zwischen Agenten
+= Träger von Reizweitergabe, Hemmung, Verstärkung, Modulation, Nachwirkung
+
+Cluster
+= funktionale Teilgruppe innerhalb des Innenraums
+
+Gesamtmuster des Feldes
+= globaler innerer Zustand
+
+Reorganisation
+= plastische Veränderung
+
+Erfahrungsrückwirkung
+= Langzeitmodulation
+
+Damit ergibt sich ein neuronales System im weiteren Sinn, weil Information nicht zentral, sondern **verteilt**, **kopplungsabhängig** und **musterbasiert** getragen wird.
+Nicht das einzelne Element entscheidet, sondern die Organisationsform des Gesamtsystems.
+Das entspricht dem im Bauplan angelegten Ansatz eines Agentensystems im MCM-Raum.
+
+---
+
+## 6. Innere Muster als eigentliche Informationseinheit
+
+Die eigentliche Information des Systems soll langfristig nicht nur in Einzelwerten liegen, sondern in **inneren Mustern**.
+
+Ein Muster ist dabei:
+
+* eine bestimmte Feldorganisation
+* eine bestimmte Clusterkonstellation
+* eine bestimmte Spannungs- und Regulationslage
+* eine bestimmte Tragfähigkeit
+* eine bestimmte Beziehung von Wahrnehmung, Innenzustand und Handlungsneigung
+
+Ein solches Muster kann wiederkehren.
+Es kann stabil sein oder labil.
+Es kann tragfähig sein oder belastend.
+Es kann Handlung erleichtern oder Beobachtung sinnvoller machen.
+
+Damit wird die Informationseinheit des Systems nicht bloß ein Score, sondern ein **wiedererkennbarer innerer Zustandszusammenhang**.
+
+---
+
+## 7. Erfahrung und Reorganisation
+
+Erfahrung soll im Zielsystem nicht nur als Ergebnisliste gespeichert werden.
+
+Sie soll auf den Innenraum zurückwirken.
+
+Dafür sind bereits reale Grundlagen vorhanden:
+
+* Episode
+* Review
+* Experience
+* Similarity-Achsen
+* Drift
+* Reinforcement
+* Verlinkung von Erlebnissen und Zuständen
+
+Die Architektur-Erweiterung präzisiert diesen Punkt:
+
+Erfahrung verändert nicht nur Bewertungen, sondern die **Organisation des Innenfeldes**.
+
+Das bedeutet:
+
+* gute oder schlechte Verläufe wirken auf Musterstabilität zurück
+* wiederkehrende Belastung verändert Reorganisationsneigung
+* tragfähige Muster werden leichter wieder aufgebaut
+* untragfähige Muster erzeugen Vorsicht, Hemmung oder Umstrukturierung
+* Reflexion verändert nicht nur Urteil, sondern Feldform
+
+Dadurch entsteht Lernen nicht als bloße Statistik, sondern als Änderung innerer Organisationsdynamik.
+
+---
+
+## 8. Emergenz neuer Muster
+
+Ein zentraler Zielpunkt dieser Architektur ist die Möglichkeit, dass das System aus Erfahrung **neue Muster selbst erarbeitet**.
+
+Wenn ähnliche, aber nicht identische Zustände unterschiedliche Erfahrungen getragen haben, kann aus Reflexion und Reorganisation eine neue innere Feldform entstehen.
+
+Diese neue Feldform ist dann:
+
+* nicht bloß Kopie einer alten Erfahrung
+* nicht bloß Mittelwert alter Muster
+* sondern eine neue emergente Organisationsform
+
+Damit kann das System eine neue Zustandsidentität bilden, die es vorher nicht hatte.
+
+Diese neue Identität trägt dann eigene Information:
+
+* eigener Regulationscharakter
+* eigene Tragfähigkeit
+* eigene Reaktionsneigung
+* eigene Erfahrungsbedeutung
+
+Das System erinnert sich dann nicht nur an „alte Fälle“, sondern entwickelt eigene neue innere Formen aus seiner Erfahrungsarbeit heraus.
+Das entspricht der im Projekt bereits angelegten Rückwirkung von Replay, Reflexion und Reifung auf den Innenraum.
+
+---
+
+## 9. Innere Bezeichnung und Zustandsidentität
+
+Wiederkehrende oder emergent entstandene innere Muster sollen eine eigene **innere Bezeichnung** erhalten.
+
+Diese Bezeichnung ist kein kosmetisches Label.
+Sie ist die verdichtete Wiedererkennbarkeit eines Zustandsmusters.
+
+Eine solche innere Zustandsidentität soll tragen:
+
+* Musterform
+* Regulationslage
+* Erfahrungsbedeutung
+* typische Reorganisationsrichtung
+* typische Tragfähigkeit
+* Erinnerung an frühere Konsequenzen
+
+Damit entsteht aus dem Innenfeld ein echter Erfahrungsraum:
+
+Nicht nur „Zustand vorhanden“, sondern
+„dies ist jenes innere Muster, das sich unter bestimmten Bedingungen gebildet hat und bestimmte Erfahrung trägt“.
+
+---
+
+## 10. Zielerweiterung der Persistenz
+
+Damit diese Architektur vollständig wird, reicht bestehendes Signature- und Context-Memory nicht aus.
+
+Zusätzlich erforderlich ist ein eigener Speicherbereich für Innenmuster.
+
+Dieser Ausbau ist im Stand bereits als offen markiert:
+
+* `inner_context_clusters`
+* Feldtopologie
+* Feldverlauf
+* Innenfeldspeicher
+
+Dieser Innenmusterspeicher soll künftig nicht nur Außenkontext oder Ergebnisbezug halten, sondern insbesondere:
+
+* Feldmuster
+* Topologie
+* Reorganisationspfade
+* Musterfusionen
+* emergente Zustandsidentitäten
+* deren Erfahrungsqualität
+
+Damit wird die Innenwelt nicht nur momenthaft lesbar, sondern über Zeit als eigener Entwicklungsraum haltbar.
+
+---
+
+## 11. Zielarchitektur als Gesamtablauf
+
+Die Architektur soll damit in folgender Form verstanden werden:
+
+`Außenwelt -> neutrales Wahrnehmungspaket -> Aufnahme durch Agenten -> lokale Wechselwirkung -> Feldorganisation -> Cluster / Topologie / Gesamtmuster -> innere Wahrnehmung -> Denken / Regulation / Handlungstendenz -> Episode / Review / Experience -> Reflexion / Replay / Reifung -> Reorganisation des Feldes -> Stabilisierung oder Entstehung neuer innerer Muster`
+
+Wichtig ist dabei:
+
+* Außenwelt bleibt Außenwelt
+* Innenwelt entsteht erst durch Organisation
+* Handlung ist nicht Primärmechanik, sondern Ausdruck innerer Tragfähigkeit
+* Erfahrung wirkt nicht nur auswertend, sondern umformend zurück
+* neue Muster können emergent entstehen und als eigene Erfahrungsidentität fortbestehen
+
+---
+
+## 12. Architektonische Schlussform
+
+Das Zielsystem ist damit kein klassischer Regelbot und auch kein bloßes Bewertungssystem.
+
+Es ist ein **selbstorganisierendes inneres Feldsystem** mit folgenden Kerneigenschaften:
+
+* getrennte Außen- und Innenwahrnehmung
+* Agenten als verteilte Träger innerer Dynamik
+* relationale Kopplung als funktionale neuronale Schicht
+* Musterbildung statt Einzelsignalzentrierung
+* Reorganisation als Kern von Lernen und Kreativität
+* emergente Zustandsidentitäten als neue Informationseinheiten
+* Erfahrungsrückwirkung auf Wahrnehmung, Regulation und Handlung
+* eigener Innenmusterspeicher als notwendiger Ausbau
+
+So erweitert, nähert sich die Architektur strukturell einem menschlicheren Entscheidungs- und Erfahrungsprozess an:
+Nicht starre Reaktion, sondern Wahrnehmung, innere Organisation, Reflexion, Reifung und daraus hervorgehende tragfähige Handlung.
+
+---
+## Zusammenfassung
+
+Der Markt wird nicht direkt zu einer Order.
+Er wird zuerst zu Wahrnehmung, innerer Verarbeitung, Regulation und Entscheidung.
+Handlung ist damit kein Reflex, sondern das mögliche Ergebnis eines tragfähigen inneren Zustands.
+Ein Trade entsteht nur dann, wenn Wahrnehmung, Innenlage und Handlungsfähigkeit zusammenpassen.
+
+---
+
 ## Setup
 
 ```bash
@@ -360,13 +655,3 @@ python runner.py
 Der Modus wird in `config.py` gesetzt (`BACKTEST` oder `LIVE`).
 
 ---
-
-## Zusammenfassung
-
-Das System tradet nicht einfach.
-
-Es nimmt wahr,
-verarbeitet,
-reguliert,
-entscheidet
-und manchmal entsteht daraus ein Trade.

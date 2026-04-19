@@ -12,6 +12,7 @@ import os
 from config import Config
 
 class TradeStats:
+
     def __init__(
         self,
         path="debug/trade_stats.json",
@@ -40,7 +41,9 @@ class TradeStats:
             "trades": 0,
             "tp": 0,
             "sl": 0,
-            "pnl_netto": start_equity,
+            "start_equity": float(start_equity),
+            "current_equity": float(start_equity),
+            "pnl_netto": 0.0,
             "pnl_tp": 0.0,
             "pnl_sl": 0.0,
             "cancels": 0,
@@ -64,7 +67,7 @@ class TradeStats:
             "exploration_sl": 0,
             "exploration_cancels": 0,
             "exploration_pnl": 0.0,
-            "equity_peak": start_equity,
+            "equity_peak": float(start_equity),
             "max_drawdown_abs": 0.0,
             "max_drawdown_pct": 0.0,
             "kpi_summary": {},
@@ -94,9 +97,8 @@ class TradeStats:
                     pass
         else:
             self._load()
-
-
     # ─────────────────────────────────────────────
+    
     def _load(self):
         if not os.path.exists(self.path):
             return
@@ -365,6 +367,8 @@ class TradeStats:
                 "load_bearing_capacity",
                 "protective_width_regulation",
                 "protective_courage",
+                "carrying_balance",
+                "bearing_pressure_gap",
             ]),
             "field_state": self._pick_fields(normalized_context.get("field_state", {}), [
                 "field_density",
@@ -374,7 +378,10 @@ class TradeStats:
                 "recovery_need",
                 "survival_pressure",
                 "pressure_to_capacity",
+                "capacity_reserve",
+                "recovery_balance",
             ]),
+            "bearing_context": self._normalize_record_value(normalized_context.get("bearing_context", {})),
             "regulation_snapshot": self._normalize_record_value(normalized_context.get("regulation_snapshot", {})),
             "state_before": self._normalize_record_value(normalized_context.get("state_before", {})),
             "state_after": self._normalize_record_value(normalized_context.get("state_after", {})),
@@ -420,6 +427,16 @@ class TradeStats:
                 "reward_model_score",
                 "entry_validity_band",
             ]),
+            "structure_perception_state": self._pick_fields(normalized_context.get("structure_perception_state", {}), [
+                "structure_seen",
+                "swing_high_strength",
+                "swing_low_strength",
+                "zone_proximity",
+                "structure_stability",
+                "structure_quality",
+                "stress_relief_potential",
+                "context_confidence",
+            ]),
             "signal": self._pick_fields(normalized_context.get("signal", {}), [
                 "signature_bias",
                 "signature_block",
@@ -453,12 +470,28 @@ class TradeStats:
         ctx = dict(context or {})
         world_state = dict(ctx.get("world_state", {}) or {})
         structure = dict(ctx.get("structure_perception_state", {}) or {})
+        bearing_context = dict(ctx.get("bearing_context", {}) or {})
+
         if not structure and isinstance(world_state.get("structure_perception_state"), dict):
             structure = dict(world_state.get("structure_perception_state", {}) or {})
+
         if not structure and isinstance(ctx.get("outer_visual_perception_state"), dict):
             structure = dict(ctx.get("outer_visual_perception_state", {}) or {})
+
+        if not structure and isinstance(ctx.get("context"), dict):
+            nested_context = dict(ctx.get("context", {}) or {})
+            structure = dict(nested_context.get("structure_perception_state", {}) or {})
+            if not structure:
+                bearing_context = dict(nested_context.get("bearing_context", {}) or {})
+
         try:
-            return float(structure.get("structure_quality", 0.0) or 0.0)
+            if "structure_quality" in structure:
+                return float(structure.get("structure_quality", 0.0) or 0.0)
+        except Exception:
+            pass
+
+        try:
+            return float(bearing_context.get("structure_quality", 0.0) or 0.0)
         except Exception:
             return 0.0
 
@@ -529,6 +562,9 @@ class TradeStats:
         survival_pressure_sum = 0.0
         pressure_release_sum = 0.0
         load_bearing_sum = 0.0
+        state_stability_sum = 0.0
+        capacity_reserve_sum = 0.0
+        recovery_balance_sum = 0.0
         regulated_courage_sum = 0.0
         courage_gap_sum = 0.0
         action_inhibition_sum = 0.0
@@ -540,7 +576,15 @@ class TradeStats:
             structure_quality = float((item or {}).get("structure_quality", 0.0) or 0.0)
             structure_bucket = str((item or {}).get("structure_bucket", "") or "").strip().lower()
             pressure_to_capacity = float((item or {}).get("pressure_to_capacity", 0.0) or 0.0)
+            regulatory_load = float((item or {}).get("regulatory_load", 0.0) or 0.0)
+            action_capacity = float((item or {}).get("action_capacity", 0.0) or 0.0)
             recovery_need = float((item or {}).get("recovery_need", 0.0) or 0.0)
+            survival_pressure = float((item or {}).get("survival_pressure", 0.0) or 0.0)
+            pressure_release = float((item or {}).get("pressure_release", 0.0) or 0.0)
+            load_bearing_capacity = float((item or {}).get("load_bearing_capacity", 0.0) or 0.0)
+            state_stability = float((item or {}).get("state_stability", 0.0) or 0.0)
+            capacity_reserve = float((item or {}).get("capacity_reserve", 0.0) or 0.0)
+            recovery_balance = float((item or {}).get("recovery_balance", 0.0) or 0.0)
             regulated_courage = float((item or {}).get("regulated_courage", 0.0) or 0.0)
             courage_gap = float((item or {}).get("courage_gap", 0.0) or 0.0)
             action_inhibition = float((item or {}).get("action_inhibition", 0.0) or 0.0)
@@ -549,7 +593,15 @@ class TradeStats:
 
             structure_sum += structure_quality
             pressure_sum += pressure_to_capacity
+            regulatory_load_sum += regulatory_load
+            action_capacity_sum += action_capacity
             recovery_sum += recovery_need
+            survival_pressure_sum += survival_pressure
+            pressure_release_sum += pressure_release
+            load_bearing_sum += load_bearing_capacity
+            state_stability_sum += state_stability
+            capacity_reserve_sum += capacity_reserve
+            recovery_balance_sum += recovery_balance
             regulated_courage_sum += regulated_courage
             courage_gap_sum += courage_gap
             action_inhibition_sum += action_inhibition
@@ -587,7 +639,15 @@ class TradeStats:
         zone_ratio = zone / total
         mean_structure_quality = structure_sum / total
         avg_pressure_to_capacity = pressure_sum / total
+        avg_regulatory_load = regulatory_load_sum / total
+        avg_action_capacity = action_capacity_sum / total
         avg_recovery_need = recovery_sum / total
+        avg_survival_pressure = survival_pressure_sum / total
+        avg_pressure_release = pressure_release_sum / total
+        avg_load_bearing_capacity = load_bearing_sum / total
+        avg_state_stability = state_stability_sum / total
+        avg_capacity_reserve = capacity_reserve_sum / total
+        avg_recovery_balance = recovery_balance_sum / total
         avg_regulated_courage = regulated_courage_sum / total
         avg_courage_gap = courage_gap_sum / total
         avg_action_inhibition = action_inhibition_sum / total
@@ -598,20 +658,27 @@ class TradeStats:
             0.0,
             min(
                 1.0,
-                (mean_structure_quality * 0.34)
-                + (zone_ratio * 0.16)
-                + (fill_ratio * 0.10)
-                + (avg_regulated_courage * 0.12)
-                + (avg_action_clearance * 0.12)
-                + (regulation_before_action * 0.10)
-                + (observe_share * 0.04)
-                + (replan_share * 0.04)
-                - (min(1.0, avg_pressure_to_capacity / 2.0) * 0.08)
-                - (avg_recovery_need * 0.06)
-                - (avg_courage_gap * 0.06)
-                - (avg_action_inhibition * 0.06)
-                - (cancel_ratio * 0.04)
-                - (timeout_ratio * 0.06),
+                (mean_structure_quality * 0.28)
+                + (zone_ratio * 0.12)
+                + (fill_ratio * 0.08)
+                + (avg_regulated_courage * 0.08)
+                + (avg_action_clearance * 0.08)
+                + (regulation_before_action * 0.08)
+                + (observe_share * 0.03)
+                + (replan_share * 0.03)
+                + (avg_load_bearing_capacity * 0.08)
+                + (avg_pressure_release * 0.05)
+                + (avg_state_stability * 0.04)
+                + (avg_capacity_reserve * 0.03)
+                + (avg_recovery_balance * 0.03)
+                - (min(1.0, avg_pressure_to_capacity / 2.0) * 0.06)
+                - (avg_regulatory_load * 0.05)
+                - (avg_recovery_need * 0.04)
+                - (avg_survival_pressure * 0.04)
+                - (avg_courage_gap * 0.04)
+                - (avg_action_inhibition * 0.04)
+                - (cancel_ratio * 0.03)
+                - (timeout_ratio * 0.04)
             ),
         )
 
@@ -619,14 +686,16 @@ class TradeStats:
             0.0,
             min(
                 1.0,
-                (attempt_density * 0.32)
-                + ((1.0 - context_quality) * 0.20)
-                + (blocked_ratio * 0.10)
-                + (cancel_ratio * 0.08)
-                + (timeout_ratio * 0.12)
-                + (min(1.0, avg_pressure_to_capacity / 2.0) * 0.10)
-                + (avg_recovery_need * 0.04)
-                + (avg_action_inhibition * 0.04),
+                (attempt_density * 0.26)
+                + ((1.0 - context_quality) * 0.18)
+                + (blocked_ratio * 0.08)
+                + (cancel_ratio * 0.06)
+                + (timeout_ratio * 0.08)
+                + (min(1.0, avg_pressure_to_capacity / 2.0) * 0.08)
+                + (avg_regulatory_load * 0.08)
+                + (avg_recovery_need * 0.05)
+                + (avg_survival_pressure * 0.05)
+                + (avg_action_inhibition * 0.04)
             ),
         )
 
@@ -645,7 +714,15 @@ class TradeStats:
             "replan_share": float(replan_share),
             "withheld_share": float(withheld_share),
             "pressure_to_capacity": float(avg_pressure_to_capacity),
+            "regulatory_load": float(avg_regulatory_load),
+            "action_capacity": float(avg_action_capacity),
             "recovery_need": float(avg_recovery_need),
+            "survival_pressure": float(avg_survival_pressure),
+            "pressure_release": float(avg_pressure_release),
+            "load_bearing_capacity": float(avg_load_bearing_capacity),
+            "state_stability": float(avg_state_stability),
+            "capacity_reserve": float(avg_capacity_reserve),
+            "recovery_balance": float(avg_recovery_balance),
             "regulated_courage": float(avg_regulated_courage),
             "courage_gap": float(avg_courage_gap),
             "action_inhibition": float(avg_action_inhibition),
@@ -654,7 +731,7 @@ class TradeStats:
         }
 
     # ─────────────────────────────────────────────
-    def on_attempt(self, *, status: str, context: dict = None): 
+    def on_attempt(self, *, status: str, context: dict = None):
         status_key = str(status or "").strip().lower()
         normalized_context = self._normalize_record_value(context or {})
         compact_context = self._compact_context(normalized_context)
@@ -695,9 +772,14 @@ class TradeStats:
         )
 
         field_state = dict(compact_context.get("field_state", {}) or {})
-        meta_regulation_state = dict(compact_context.get("meta_regulation_state", {}) or {})
-
         experience_state = dict(compact_context.get("experience", {}) or {})
+        meta_regulation_state = dict(compact_context.get("meta_regulation_state", {}) or {})
+        regulation_snapshot = dict(compact_context.get("regulation_snapshot", {}) or {})
+        state_after = dict(compact_context.get("state_after", {}) or {})
+
+        snapshot_tension = dict(regulation_snapshot.get("tension", {}) or state_after.get("tension", {}) or {})
+        snapshot_field = dict(regulation_snapshot.get("field", {}) or state_after.get("field", {}) or {})
+        snapshot_experience = dict(regulation_snapshot.get("experience", {}) or state_after.get("experience", {}) or {})
 
         recent = list(self.data.get("recent_attempts", []) or [])
         recent.append(
@@ -705,13 +787,16 @@ class TradeStats:
                 "status": status_key or "unknown",
                 "structure_quality": float(structure_quality),
                 "structure_bucket": structure_bucket,
-                "pressure_to_capacity": float(field_state.get("pressure_to_capacity", 0.0) or 0.0),
-                "regulatory_load": float(field_state.get("regulatory_load", 0.0) or 0.0),
-                "action_capacity": float(field_state.get("action_capacity", 0.0) or 0.0),
-                "recovery_need": float(field_state.get("recovery_need", 0.0) or 0.0),
-                "survival_pressure": float(field_state.get("survival_pressure", 0.0) or 0.0),
-                "pressure_release": float(experience_state.get("pressure_release", 0.0) or 0.0),
-                "load_bearing_capacity": float(experience_state.get("load_bearing_capacity", 0.0) or 0.0),
+                "pressure_to_capacity": float(field_state.get("pressure_to_capacity", snapshot_field.get("pressure_to_capacity", 0.0)) or 0.0),
+                "regulatory_load": float(field_state.get("regulatory_load", snapshot_field.get("regulatory_load", 0.0)) or 0.0),
+                "action_capacity": float(field_state.get("action_capacity", snapshot_field.get("action_capacity", 0.0)) or 0.0),
+                "recovery_need": float(field_state.get("recovery_need", snapshot_field.get("recovery_need", 0.0)) or 0.0),
+                "survival_pressure": float(field_state.get("survival_pressure", snapshot_field.get("survival_pressure", 0.0)) or 0.0),
+                "pressure_release": float(experience_state.get("pressure_release", snapshot_experience.get("pressure_release", 0.0)) or 0.0),
+                "load_bearing_capacity": float(experience_state.get("load_bearing_capacity", snapshot_experience.get("load_bearing_capacity", 0.0)) or 0.0),
+                "state_stability": float(snapshot_tension.get("stability", 0.0) or 0.0),
+                "capacity_reserve": float(field_state.get("capacity_reserve", snapshot_field.get("capacity_reserve", 0.0)) or 0.0),
+                "recovery_balance": float(field_state.get("recovery_balance", snapshot_field.get("recovery_balance", 0.0)) or 0.0),
                 "regulated_courage": float(meta_regulation_state.get("regulated_courage", 0.0) or 0.0),
                 "courage_gap": float(meta_regulation_state.get("courage_gap", 0.0) or 0.0),
                 "action_inhibition": float(meta_regulation_state.get("action_inhibition", 0.0) or 0.0),
@@ -769,10 +854,6 @@ class TradeStats:
         else:
             return
 
-        # Fees berücksichtigen
-        # pnl = pnl - Config.FEE_PER_TRADE
-
-        # Fees berücksichtigen (prozentual pro Seite + optional fixer Abzug)
         exit_price = tp if reason == "tp_hit" else sl
         fee_rate = getattr(Config, "FEE_RATE", 0.0) or 0.0
         fees = (
@@ -782,7 +863,8 @@ class TradeStats:
         )
         pnl = pnl - fees
 
-        compact_context = self._compact_context(context or {})
+        normalized_context = self._normalize_record_value(context or {})
+        compact_context = self._compact_context(normalized_context)
         normalized_decomposition = self._normalize_record_value(outcome_decomposition or {})
 
         self.data["trades"] += 1
@@ -792,18 +874,16 @@ class TradeStats:
             self.data["exploration_trades"] = int(self.data.get("exploration_trades", 0) or 0) + 1
             self.data["exploration_pnl"] = float(self.data.get("exploration_pnl", 0.0) or 0.0) + float(pnl)
 
-        # GESAMT = Summe aller Trades (Gewinn + Verlust)
-        self.data["pnl_netto"] += pnl
+        self.data["pnl_netto"] = float(self.data.get("pnl_netto", 0.0) or 0.0) + float(pnl)
+        self.data["current_equity"] = float(self.data.get("start_equity", 0.0) or 0.0) + float(self.data.get("pnl_netto", 0.0) or 0.0)
 
-        # GEWINN = Summe nur positiver Trades
         if pnl > 0:
             self.data["pnl_tp"] += pnl
 
-        # VERLUST = Summe nur negativer Trades
         if pnl < 0:
             self.data["pnl_sl"] += pnl
 
-        structure_quality = self._extract_structure_quality(compact_context)
+        structure_quality = self._extract_structure_quality(normalized_context)
         structure_bucket = "zone" if structure_quality >= 0.55 else "non_zone"
 
         outcome_record = {
@@ -824,13 +904,14 @@ class TradeStats:
 
         self._append_record_file(self.outcome_path, outcome_record)
 
+        current_equity = float(self.data.get("current_equity", self.data.get("start_equity", 0.0)) or 0.0)
         equity_peak = max(
-            float(self.data.get("equity_peak", self.data.get("pnl_netto", 0.0)) or self.data.get("pnl_netto", 0.0)),
-            float(self.data.get("pnl_netto", 0.0) or 0.0),
+            float(self.data.get("equity_peak", self.data.get("start_equity", 0.0)) or self.data.get("start_equity", 0.0)),
+            float(current_equity),
         )
         self.data["equity_peak"] = float(equity_peak)
 
-        drawdown_abs = max(0.0, equity_peak - float(self.data.get("pnl_netto", 0.0) or 0.0))
+        drawdown_abs = max(0.0, equity_peak - float(current_equity))
         drawdown_pct = (drawdown_abs / equity_peak) if equity_peak > 0.0 else 0.0
 
         self.data["max_drawdown_abs"] = float(max(float(self.data.get("max_drawdown_abs", 0.0) or 0.0), drawdown_abs))
@@ -839,7 +920,6 @@ class TradeStats:
         self._rebuild_kpi_summary()
         self._save()
 
-        # ---------------- CSV Equity Export ----------------
         try:
             os.makedirs(os.path.dirname(self.csv_path), exist_ok=True)
 
@@ -847,10 +927,11 @@ class TradeStats:
 
             with open(self.csv_path, "a", encoding="utf-8") as f:
                 if write_header:
-                    f.write("trade,pnl_netto,pnl_tp,pnl_sl\n")
+                    f.write("trade,current_equity,pnl_netto,pnl_tp,pnl_sl\n")
 
                 f.write(
                     f"{self.data['trades']},"
+                    f"{self.data.get('current_equity', self.data.get('start_equity', 0.0))},"
                     f"{self.data['pnl_netto']},"
                     f"{self.data['pnl_tp']},"
                     f"{self.data['pnl_sl']}\n"
@@ -942,7 +1023,8 @@ class TradeStats:
         })
 
         return data
-    # ─────────────────────────────────────────────
+    
+    # ───────────────────────────────────────────── 
     def on_cancel(self, *, order_id=None, cause: str = None, exploration_trade: bool = False, outcome_decomposition: dict = None, context: dict = None):
         """
         Order wurde gecancelt bevor ein Trade/Exit stattgefunden hat.

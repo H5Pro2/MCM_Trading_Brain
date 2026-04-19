@@ -26,6 +26,7 @@ _ENTRY_VALIDITY_UPPER = None
 # --------------------------------------------------
 _CANCEL_COUNT = 0
 _CANCELLED_ORDER_IDS = set()
+_CANCELLED_ORDER_CAUSES = {}
 # --------------------------------------------------
 # DEBUGGING
 # --------------------------------------------------
@@ -186,65 +187,102 @@ def _bootstrap_once():
 # - prüft, ob aktuell eine Order offen ist (über _ACTIVE_ORDER_ID oder _POSITION_OPEN) 
 # # --------------------------------------------------       
 def get_active_order_snapshot():
-    global _ACTIVE_ORDER_ID, _ACTIVE_SIDE
+    global _ACTIVE_ORDER_ID, _ACTIVE_SIDE, _ACTIVE_TP, _POSITION_OPEN
 
     exchange = _ensure_exchange()
     open_orders = _safe_fetch_open_orders(exchange)
 
-    if not open_orders:
-        return None
+    if open_orders and len(open_orders) == 1:
+        o = open_orders[0]
+        info = o.get("info", {})
 
-    if len(open_orders) != 1:
-        return None
+        try:
+            # --------------------------------------------------
+            # Exchange Timestamp (ms)
+            # --------------------------------------------------
+            order_ts = int(o.get("timestamp"))
 
-    o = open_orders[0]
-    info = o.get("info", {})
+            # --------------------------------------------------
+            # Timeframe → ms berechnen
+            # --------------------------------------------------
+            tf = str(Config.TIMEFRAME).lower().strip()
 
-    try:
-        # --------------------------------------------------
-        # Exchange Timestamp (ms)
-        # --------------------------------------------------
-        order_ts = int(o.get("timestamp"))
+            if tf.endswith("m"):
+                tf_minutes = int(tf[:-1])
+                timeframe_ms = tf_minutes * 60 * 1000
+            elif tf.endswith("h"):
+                tf_hours = int(tf[:-1])
+                timeframe_ms = tf_hours * 60 * 60 * 1000
+            else:
+                timeframe_ms = 5 * 60 * 1000  # fallback 5m
 
-        # --------------------------------------------------
-        # Timeframe → ms berechnen
-        # --------------------------------------------------
-        tf = str(Config.TIMEFRAME).lower().strip()
+            # --------------------------------------------------
+            # Floor auf Candle-Open
+            # --------------------------------------------------
+            entry_ts = (order_ts // timeframe_ms) * timeframe_ms
 
-        if tf.endswith("m"):
-            tf_minutes = int(tf[:-1])
-            timeframe_ms = tf_minutes * 60 * 1000
-        elif tf.endswith("h"):
-            tf_hours = int(tf[:-1])
-            timeframe_ms = tf_hours * 60 * 60 * 1000
-        else:
-            timeframe_ms = 5 * 60 * 1000  # fallback 5m
+            order_side = str(o.get("side") or "").strip().lower()
+            side = "LONG"
+            if order_side == "sell":
+                side = "SHORT"
 
-        # --------------------------------------------------
-        # Floor auf Candle-Open
-        # --------------------------------------------------
-        entry_ts = (order_ts // timeframe_ms) * timeframe_ms
+            return {
+                "id": o.get("id"),
+                "source": "open_order",
+                "side": str(side),
+                "entry": float(o.get("price")),
+                "tp": float(info.get("takeProfitRp")) if info.get("takeProfitRp") else None,
+                "sl": float(info.get("stopLossRp")) if info.get("stopLossRp") else None,
+                "entry_ts": entry_ts,
+            }
 
-        return {
-            "id": o.get("id"),
-            "side": str(o.get("side")).upper(),
-            "entry": float(o.get("price")),
-            "tp": float(info.get("takeProfitRp")) if info.get("takeProfitRp") else None,
-            "sl": float(info.get("stopLossRp")) if info.get("stopLossRp") else None,
-            "entry_ts": entry_ts,
-        }
+        except Exception:
+            return None
 
-    except Exception:
-        return None
+    if (not open_orders) and bool(_POSITION_OPEN):
+        try:
+            side = str(_ACTIVE_SIDE or "").strip().lower()
+            entry = float(_ENTRY_REFERENCE) if _ENTRY_REFERENCE is not None else None
+            tp = float(_ACTIVE_TP) if _ACTIVE_TP is not None else None
+            risk = float(_RISK_REFERENCE) if _RISK_REFERENCE is not None else None
+
+            if side not in ("buy", "sell"):
+                return None
+
+            if entry is None or tp is None or risk is None or risk <= 0.0:
+                return None
+
+            if side == "buy":
+                position_side = "LONG"
+                sl = float(entry - risk)
+            else:
+                position_side = "SHORT"
+                sl = float(entry + risk)
+
+            return {
+                "id": None,
+                "source": "position_context",
+                "side": str(position_side),
+                "entry": float(entry),
+                "tp": float(tp),
+                "sl": float(sl),
+                "entry_ts": None,
+            }
+        except Exception:
+            return None
+
+    return None
 # --------------------------------------------------
 def mark_order_cancelled(order_id, cause: str = None):
-    global _CANCEL_COUNT, _CANCELLED_ORDER_IDS
+    global _CANCEL_COUNT, _CANCELLED_ORDER_IDS, _CANCELLED_ORDER_CAUSES
 
     if order_id is None:
         return
 
+    oid = str(order_id)
     _CANCEL_COUNT += 1
-    _CANCELLED_ORDER_IDS.add(str(order_id))
+    _CANCELLED_ORDER_IDS.add(oid)
+    _CANCELLED_ORDER_CAUSES[oid] = str(cause or "exchange_cancel")
 
     if cause:
         try:
@@ -254,10 +292,13 @@ def mark_order_cancelled(order_id, cause: str = None):
             pass
 # --------------------------------------------------
 def consume_cancelled(order_id) -> bool:
-    global _CANCELLED_ORDER_IDS
+    return consume_cancelled_cause(order_id) is not None
+# --------------------------------------------------
+def consume_cancelled_cause(order_id):
+    global _CANCELLED_ORDER_IDS, _CANCELLED_ORDER_CAUSES
 
     if order_id is None:
-        return False
+        return None
 
     oid = str(order_id)
     if oid in _CANCELLED_ORDER_IDS:
@@ -265,9 +306,13 @@ def consume_cancelled(order_id) -> bool:
             _CANCELLED_ORDER_IDS.remove(oid)
         except Exception:
             pass
-        return True
 
-    return False
+        try:
+            return _CANCELLED_ORDER_CAUSES.pop(oid, None)
+        except Exception:
+            return None
+
+    return None
 # --------------------------------------------------
 def get_cancel_count() -> int:
     return int(_CANCEL_COUNT or 0)

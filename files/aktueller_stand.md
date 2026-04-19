@@ -1,6 +1,4 @@
-from pathlib import Path
-
-content = """# ==================================================
+# ==================================================
 # AKTUELLER STAND – MCM TRADING BRAIN
 # ==================================================
 
@@ -9,11 +7,12 @@ Dieses Dokument beschreibt den aktuellen realen Ist-Zustand des Systems.
 Es trennt sauber zwischen:
 
 - bereits real im Code umgesetzt
-- fachlich vorbereitet, aber noch nicht vollständig ausgebaut
-- nächsten sinnvollen Ausbauschritten
+- bereits korrigierten Fehlern
+- real noch offenen Ausbaublöcken
+- nächsten sinnvollen Schritten
 
 Der Bauplan bleibt in `UMSETZUNGSPLAN.md`.
-Dieses Dokument beschreibt nur den realen Stand des letzten Dateistands.
+Dieses Dokument beschreibt nur den realen Stand des aktuellen Dateistands.
 
 ---
 
@@ -40,7 +39,7 @@ sondern im Architektur-Endausbau und in der Experience-Vertiefung.
 ---
 
 # --------------------------------------------------
-# 2. Bereits fix umgesetzt
+# 2. Bereits real umgesetzt
 # --------------------------------------------------
 
 # --------------------------------------------------
@@ -247,179 +246,74 @@ sondern bereits in einer Übergangsform.
 ---
 
 # --------------------------------------------------
-# 3. Fachlich vorbereitet, aber noch nicht vollständig ausgebaut
+# 3. Bereits korrigierte Fehler aus dem früheren Fixblock
 # --------------------------------------------------
 
-Die Richtung der nächsten Vertiefung ist fachlich klar.
-Dieser Teil ist anschlussfähig,
-aber noch nicht vollständig in dieser Tiefe durchgezogen.
-
 # --------------------------------------------------
-# 3.1 Tragfähigkeit als zentrale Bewertungsgröße
+# 3.1 state_delta ist korrigiert
 # --------------------------------------------------
 
-Experience soll nicht primär bewerten:
+Bereits umgesetzt:
 
-- Profit
-- Trefferquote
-- klassische Trade-Kennzahlen
+- ereignislokale Bildung von `state_before`, `state_after`, `state_delta`
+- gemeinsamer Übergang für Stats-Kontext und Episode-Payload
+- Snapshot-Commit erst nach dem jeweiligen Event
+- alte Null-/Doppelsnapshot-Pfade im Entry-/Pending-/Nicht-Handlungs-Pfad bereinigt
 
-Sondern:
+Folge:
 
-- wie tragfähig eine Situation für das System war
-- wie viel innere Reibung sie erzeugt hat
-- ob Handlung in dieser Situation effizient tragbar war
-
-Damit verschiebt sich die Experience-Bewertung fachlich von Ergebnisbewertung
-zu Tragfähigkeitsbewertung.
+- Episode / Experience arbeiten an diesen Stellen wieder auf realen Zustandsübergängen
 
 ---
 
 # --------------------------------------------------
-# 3.2 Lernen als Umgangsfähigkeit
+# 3.2 Statistik-Semantik ist korrigiert
 # --------------------------------------------------
 
-Das System soll nicht lernen:
+Bereits umgesetzt:
 
-- was abstrakt „richtig“ ist
-- wie man maximal aggressiv tradet
+- `pnl_netto` startet als reiner Nettowert bei `0.0`
+- `current_equity` wird getrennt als `start_equity + pnl_netto` geführt
+- `expectancy` baut damit auf realem Nettowert statt auf Equity-Basis auf
 
-Sondern:
+Folge:
 
-- womit es gut umgehen kann
-- in welchen Situationen es handlungsfähig bleibt
-- welche Struktur-Zustands-Kombinationen effizient tragbar sind
-
-Lernen bedeutet damit:
-
-- effizienter mit Situationen umgehen können
-- nicht einfach mehr handeln
+- Nettoergebnis und Erwartungswert sind semantisch wieder sauber getrennt
 
 ---
 
 # --------------------------------------------------
-# 3.3 Energie / Reibung / Kohärenz
+# 3.3 Exit-Strukturdiagnose ist korrigiert
 # --------------------------------------------------
 
-Der Nullpunkt der MCM bedeutet fachlich nicht:
+Bereits umgesetzt:
 
-- Stillstand
-- Inaktivität
-- Handlungsunfähigkeit
+- Exit-/Cancel-Pfade nutzen aktuellen Exit-Kontext statt alten Entry-Kontext
+- aktuelle `structure_perception_state` läuft bis in `on_exit()` / `on_cancel()`
+- `outcome_records` tragen reale Exit-Strukturqualität
+- `structure_bands` werden daraus sauber neu aufgebaut
 
-Sondern:
+Folge:
 
-- hohe Kohärenz mit der Umwelt
-- geringe innere Reibung
-- geringe energetische Belastung
-- hohe Energieeffizienz bei aktiver Interaktion
-
-Abweichung vom Zentrum bedeutet:
-
-- mehr Reibung
-- mehr regulatorische Last
-- mehr Unsicherheit
-- mehr Energieverbrauch
+- Exit-KPI über Strukturqualität ist im aktuellen Backtest-/Bot-Pfad fachlich belastbar
 
 ---
 
 # --------------------------------------------------
-# 3.4 Erfahrungscluster
+# 3.4 attempt_feedback / proof-Felder sind korrigiert
 # --------------------------------------------------
 
-Experience soll fachlich stärker als Cluster-System gedacht werden.
+Bereits umgesetzt:
 
-Cluster repräsentieren nicht nur ähnliche Datenlagen,
-sondern:
+- Proof-/Regulationsfelder werden im Attempt-Feedback sauber aggregiert
+- Snapshot-Fallbacks sind vorhanden
+- In-Trade-Update-Pfade tragen die fehlenden Felder weiter
+- Experience-Linking / Episode-History führt diese Felder weiter
 
-- Typen von Situationen
-- wiederkehrende Struktur-Zustands-Muster
-- deren Tragfähigkeit für das System
+Bereits sauber geführt insbesondere:
 
----
-
-# --------------------------------------------------
-# 3.5 Outcome als Zustandswirkung
-# --------------------------------------------------
-
-Outcome soll fachlich nicht nur als Geldzahl wirken,
-sondern als Veränderung im Innenraum.
-
-Beispiel:
-
-- Gewinn -> Entlastung / Stabilisierung / evtl. Euphorie
-- Verlust -> Belastung / Rückzug / Recovery-Bedarf
-
-Wichtig:
-
-- positive Wirkung darf nicht blind verstärken
-- Euphorie ist nicht automatisch Stabilität
-- Verlust ist nicht nur schlecht, sondern regulatorisches Feedback
-
----
-
-# --------------------------------------------------
-# 4. Was davon technisch bereits vorbereitet ist
-# --------------------------------------------------
-
-Für diese Vertiefung gibt es bereits reale technische Anknüpfungspunkte im Code:
-
-- `context_clusters`
-- `signature_memory`
-- `mcm_experience_space`
-- `similarity_axes`
-- `drift`
-- `reinforcement`
-- `attenuation`
-- `review_score`
-- `structural_bearing_quality`
-- `observation_quality`
-- `decision_path_quality`
-- `state_before / state_after / state_delta`
-- Felt-/Episode-Profile
-- Proof-/Attempt-Feedback-Metriken
-
-### Einordnung
-
-Das bedeutet:
-
-- die Richtung ist technisch vorbereitet
-- die Experience-Vertiefung ist anschlussfähig
-- aber die volle fachliche Interpretation als Tragfähigkeits- und Energie-System ist noch nicht komplett ausformuliert bzw. verhärtet
-
----
-
-# --------------------------------------------------
-# 5. Was noch nicht fertig ist
-# --------------------------------------------------
-
-# --------------------------------------------------
-# 5.1 KPI / Auswertung
-# --------------------------------------------------
-
-Der KPI-Bereich ist aktuell in einer Übergangsform.
-
-Noch aktiv vorhanden sind klassische Kennzahlen wie:
-
-- `pnl_netto`
-- `pnl_tp`
-- `pnl_sl`
-- `equity_peak`
-- `max_drawdown_abs`
-- `max_drawdown_pct`
-- `winrate`
-- `profit_factor`
-- `expectancy`
-
-Gleichzeitig existieren aber bereits neuere Nachweisgrößen wie:
-
-- `attempt_density`
-- `context_quality`
-- `overtrade_pressure`
-- `pressure_to_capacity`
 - `regulatory_load`
 - `action_capacity`
-- `recovery_need`
 - `survival_pressure`
 - `pressure_release`
 - `load_bearing_capacity`
@@ -427,133 +321,195 @@ Gleichzeitig existieren aber bereits neuere Nachweisgrößen wie:
 - `capacity_reserve`
 - `recovery_balance`
 
-Damit ist der Nachweisbereich nicht mehr rein alt,
-aber noch nicht vollständig auf Tragfähigkeitsmetriken umgestellt.
+Folge:
+
+- die alte statistische Abflachung dieser Diagnosegrößen ist im aktuellen Code nicht mehr der Hauptfehler
 
 ---
 
 # --------------------------------------------------
-# 5.2 GUI / Visualisierung
+# 4. Reale offene Punkte im aktuellen Stand
 # --------------------------------------------------
 
-Die GUI ist bereits weiter als ein reines Equity-/PnL-Fenster.
+# --------------------------------------------------
+# 4.1 Live-Handoff zwischen Pending, Fill und Position ist noch nicht vollständig geschlossen
+# --------------------------------------------------
 
-Bereits angebunden sind:
+Real offen:
 
-- Visual-Snapshot
-- Inner-Snapshot
-- Memory-State
-- Stats
-- Equity-Historie
+- `_handle_pending_entry()` schreibt im Live-Pfad `pending_update`, kehrt danach aber direkt zurück
+- der Bot-seitige `filled`-Übergang mit `stats.on_attempt(status="filled")`, Episode-Event und `self.position`-Aufbau existiert aktuell nur im Nicht-Live-/Backtest-Pfad
+- der Exchange-Sync erkennt offene Positionen failsafe-seitig, aber dieser Zustand wird noch nicht als vollständiger Bot-/Episode-/Stats-Handoff geführt
 
-Offen ist trotzdem noch:
+Folge:
 
-- die alte KPI-Zentrierung weiter zurückzubauen
-- Außenwelt / Innenwelt / Entwicklung noch klarer zu trennen
-- Experience- und Tragfähigkeitsverläufe stärker in den Mittelpunkt zu stellen
-
-Die GUI ist damit bereits im Umbau,
-aber noch nicht vollständig in der Zielarchitektur angekommen.
+- Backtest- und Live-Nachweisraum sind im Übergang `pending -> filled -> position` noch nicht gleichwertig
+- ein Teil des realen Live-Handlungsverlaufs bleibt im Bot-internen Nachweisraum strukturell unvollständig
 
 ---
 
 # --------------------------------------------------
-# 5.3 Experience-Vertiefung
+# 4.2 Innenkontextcluster fehlen noch als eigener Persistenztyp
 # --------------------------------------------------
 
-Die fachliche Vertiefung ist ausgearbeitet,
-aber noch nicht vollständig als klare technische Logik durchgezogen.
+Der Innenraum wird bereits real über
+`felt_state`, `thought_state`, `meta_regulation_state`, `expectation_state`, `state_before`, `state_after`, `state_delta` und `mcm_experience_space` getragen.
 
-Noch offen ist insbesondere:
+Offen ist weiterhin:
 
-- Tragfähigkeit als explizite Bewertungsgröße
-- Lernen als Umgangsfähigkeit
-- Reibung / Energie als Experience-Kosten
-- Cluster-Bewertung über Tragfähigkeit statt Ergebnis
-- stärkere Entkopplung von Profitlogik
+- die persistente Clusterform ist aktuell nur `context_clusters`
+- ein eigener Speicher-Typ für wiederkehrende innere Spannungs-, Drift- und Regulationsmuster fehlt
+
+Ziel:
+
+- `context_clusters` als äußerer / gesamt-situativer Signaturraum klar halten
+- getrennte `inner_context_clusters` für wiederkehrende innere Zustandsmuster einführen
 
 ---
 
 # --------------------------------------------------
-# 5.4 Runtime / Architekturtrennung
+# 4.3 MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher sind noch nicht ausgebaut
 # --------------------------------------------------
 
-Weiter zu schärfen ist:
+Offen:
 
-- Ebene 1 = reine Wahrnehmung
-- Ebene 2 = reiner Innenprozess
-- Ebene 3 = reine Entwicklung / Experience
+- das MCM-Feld erkennt bereits laufende Feldcluster, reduziert diese aktuell aber zu stark auf kompakte Feldwerte und verdichtete Memory-Formen
+- die Gesamtorganisation des Agentenfeldes ist noch nicht als eigene Feldwahrnehmung formalisiert
+- Feldtopologie, Clusterbeziehungen, Driftverlauf, Fragmentierung, Verschmelzung und Rückführungsbewegung werden noch nicht als eigener Innenkontext sauber mitgeführt
+- ein eigener persistenter Speicher für wiederkehrende Feldformen, Driftmuster und Regulationsverläufe fehlt aktuell
+- die Visualisierung bildet das MCM-Feld bislang noch nicht als räumlich-dynamischen Innenraum ab
+
+Ziel:
+
+- Feldcluster nicht nur erkennen, sondern in ihrer Größe, Dichte, Stabilität, Verschiebung und Beziehung zueinander lesbar machen
+- die Gesamtform des MCM-Feldes als Feldtopologie beschreiben
+- Feldverlauf über Zeit mitführen
+- einen verdichteten Innenfeldspeicher für wiederkehrende Clusterkonfigurationen, Feldformen, Driftmuster und Rückführungsbewegungen aufbauen
+
+---
+
+# --------------------------------------------------
+# 4.4 Runtime / Bot-State sind noch nicht weit genug getrennt
+# --------------------------------------------------
+
+Offen:
+
+- `Bot` bündelt weiter Außenwahrnehmung, Runtime, Handlungsbahn, Experience, Persistenz und Snapshot-Orchestrierung
+- die Zieltrennung Ebene 1 / Ebene 2 / Ebene 3 ist damit noch nicht strukturell verhärtet
 
 Ziel:
 
 - weniger Vermischung von Runtime und Bot-State
-- klarere strukturelle Trennung der Ebenen
+- klarere Trennung von Wahrnehmung / Innenprozess / Entwicklung
 
 ---
 
 # --------------------------------------------------
-# 5.5 Tests
+# 4.5 Persistenz ist entschärft, aber noch nicht ausreichend entkoppelt
 # --------------------------------------------------
 
-Dedizierte Tests fehlen weiterhin insbesondere für:
+Offen:
 
-- `bot_gate_funktions.py`
-- `mcm_core_engine.py`
+- Persistenz ist bereits über Dirty-Flag und Cooldown teilweise entschärft
+- Save-/Flush-Pfade liegen aber weiter nah am Kernlauf
+
+Folge:
+
+- Bot-Kern bleibt unnötig eng mit Save-/Flush-Logik gekoppelt
 
 ---
 
 # --------------------------------------------------
-# 6. Nächste Schritte
+# 5. Fachlich vorbereitet, aber noch nicht vollständig ausgebaut
 # --------------------------------------------------
 
 # --------------------------------------------------
-# 6.1 Hauptblock
+# 5.1 Tragfähigkeit ist stärker verankert, aber noch nicht Endzustand
 # --------------------------------------------------
 
-Nächster sinnvoller Hauptblock ist:
+Experience bewertet bereits stärker:
 
-- Experience fachlich von Ergebnisbewertung auf Tragfähigkeitsbewertung schärfen
-- Zustandswirkung von Outcome sauberer formulieren
-- Cluster stärker als Erfahrungsräume nutzen
-- Lernen explizit als Umgangsfähigkeit modellieren
+- Tragfähigkeit
+- Regulationskosten
+- Entlastung
+- Handlungsspielraum
+
+Noch nicht vollständig ausgebaut ist:
+
+- die weitere Entkopplung von Ergebnislogik und Experience-Logik
+- die noch konsequentere Ausrichtung auf Zustandswirkung statt Geldwirkung
 
 ---
 
 # --------------------------------------------------
-# 6.2 Danach
+# 5.2 Lernen als Umgangsfähigkeit ist begonnen, aber noch nicht konsequent genug
 # --------------------------------------------------
 
-Danach sinnvoll:
+Das System lernt bereits erkennbar stärker:
 
-- Runtime / Architektur weiter trennen
-- KPI-Bereich weiter umbauen
-- GUI weiter auf Außenwelt / Innenwelt / Entwicklung ausrichten
-- dedizierte Tests ergänzen
+- womit es umgehen kann
+- in welchen Situationen es handlungsfähig bleibt
+- wie Tragfähigkeit und Belastung zusammenhängen
+
+Noch offen ist:
+
+- Lernen als Umgangsfähigkeit technisch konsequenter durchzuziehen
+- Cluster-Bewertung noch stärker auf Tragfähigkeit statt Ergebnis auszurichten
 
 ---
 
 # --------------------------------------------------
-# 7. Fazit
+# 5.3 Outcome ist reduziert, aber noch nicht weit genug aus Experience gelöst
 # --------------------------------------------------
 
-Der reale Stand des Projekts ist:
+Noch offen:
 
-- Kernmechanik steht
-- Wahrnehmung steht
-- Runtime steht
-- Handlungsbahn steht
-- Experience steht
-- Persistenz steht
-- Snapshot-/GUI-Basis steht
+- `_experience_reward_delta()` verzweigt weiterhin direkt über `tp_hit`, `sl_hit`, `cancel`, `timeout` und ähnliche Outcome-Wege
+- Outcome-Gewicht ist damit reduziert, aber noch nicht weit genug zurückgebaut
+- Outcome muss noch klarer als Zustandswirkung statt Geldwirkung ausgebildet werden
 
-Der nächste Hauptschritt ist nicht mehr Basis-Fixerei,
+---
+
+# --------------------------------------------------
+# 6. Nächste sinnvolle Schritte
+# --------------------------------------------------
+
+Die sinnvollste Reihenfolge ab jetzt ist:
+
+1. Live-Handoff `pending -> filled -> position` im Bot-/Episode-/Stats-Raum schließen
+2. `inner_context_clusters` als eigenen Persistenztyp einführen
+3. MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
+4. Runtime / Bot-State weiter trennen
+5. Experience weiter von Outcome-Logik lösen
+
+---
+
+# --------------------------------------------------
+# 7. Kurzfazit
+# --------------------------------------------------
+
+Der Bot steht nicht mehr am Anfang.
+
+Die Basismechanik,
+die äußere Wahrnehmung,
+die innere Runtime,
+die Entscheidungstendenz,
+die technische Handlungsbahn,
+die Experience-Ebene
+und die Persistenz sind real vorhanden.
+
+Die früheren Kernkorrekturen
+`state_delta`,
+`Statistik-Semantik`,
+`structure_bands`
+und `attempt_feedback / proof-Felder`
+sind im aktuellen Code bereits umgesetzt.
+
+Offen sind jetzt nicht mehr die alten Basisfehler,
 sondern:
 
-- Architektur-Endausbau
-- Experience-/Tragfähigkeits-Vertiefung
-- spätere KPI-/GUI-Neuausrichtung
-"""
-
-path = Path("/mnt/data/aktueller_stand_korrigiert.md")
-path.write_text(content, encoding="utf-8")
-print(f"Wrote {path}")
+- der noch unvollständige Live-Nachweisraum
+- der Ausbau innerer Speicherformen
+- die Feldtopologie des MCM-Raums
+- die weitere Trennung von Runtime und Bot-State
+- die weitere Ablösung von Outcome-Logik in Experience
