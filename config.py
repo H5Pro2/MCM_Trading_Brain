@@ -14,7 +14,7 @@ class Config:
     # ==================================================
     # DATENQUELLE
     # ==================================================
-    BACKTEST_FILEPATH = "data/1-2_2026_5m_SOLUSDT.csv" 
+    BACKTEST_FILEPATH = "data/1_month.csv" 
     # workspace | 1-12_2023_5m_SOLUSDT | 1-12_2024_5m_SOLUSDT | 1-12_2025_5m_SOLUSDT | 1-2_2026_5m_SOLUSDT 
     
     CSV_OHLCV_PATH = "data/workspace.csv"   # Live Mode OHLCV Daten Börse
@@ -29,7 +29,7 @@ class Config:
     ORDER_SIZE = 0.5
     WORLD_TIME_LOOP_SECONDS = 1.0 # Live-Loop-Wartezeit für den äußeren Welt-/Chart-Loop.
     # WORLD_TIME_LOOP_SECONDS sollte fachlich  eher Polling-Intervall heißen, nicht Weltzeit. !!!!!
-    WORLD_REPLAY_LOOP_SECONDS = 0.01 # Replay-Verzögerung im Backtest/CSV-Feed.
+    WORLD_REPLAY_LOOP_SECONDS = 0.1 # Replay-Verzögerung im Backtest/CSV-Feed.
     # ==================================================
     # WORKSPACE
     # ==================================================

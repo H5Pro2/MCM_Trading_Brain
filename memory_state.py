@@ -257,6 +257,55 @@ def normalize_context_clusters(context_clusters) -> dict:
 
     return normalized
 # --------------------------------------------------
+def normalize_inner_context_clusters(inner_context_clusters) -> dict:
+
+    normalized = {}
+
+    if not isinstance(inner_context_clusters, dict):
+        return normalized
+
+    for cluster_id, item in inner_context_clusters.items():
+        if cluster_id is None or not isinstance(item, dict):
+            continue
+
+        cluster_key = str(cluster_id).strip()
+        if not cluster_key:
+            continue
+
+        normalized[cluster_key] = {
+            "cluster_id": _to_str(item.get("cluster_id"), cluster_key),
+            "center_vector": _to_float_list(item.get("center_vector", [])),
+            "variance": max(0.0, _to_float(item.get("variance", 0.0), 0.0)),
+            "radius": max(0.0, _to_float(item.get("radius", 0.0), 0.0)),
+            "seen": max(0, _to_int(item.get("seen", 0), 0)),
+            "tp": max(0, _to_int(item.get("tp", 0), 0)),
+            "sl": max(0, _to_int(item.get("sl", 0), 0)),
+            "cancel": max(0, _to_int(item.get("cancel", 0), 0)),
+            "timeout": max(0, _to_int(item.get("timeout", 0), 0)),
+            "score": max(-12.0, min(12.0, _to_float(item.get("score", 0.0), 0.0))),
+            "trust": max(0.0, min(1.0, _to_float(item.get("trust", 0.0), 0.0))),
+            "age": max(0, _to_int(item.get("age", 0), 0)),
+            "signature_keys": _to_str_list(item.get("signature_keys", []))[-24:],
+            "last_signature_key": _to_str(item.get("last_signature_key"), None),
+            "last_outcome": _to_str(item.get("last_outcome"), None),
+            "last_distance": max(0.0, _to_float(item.get("last_distance", 0.0), 0.0)),
+            "field_density": max(0.0, min(1.0, _to_float(item.get("field_density", 0.0), 0.0))),
+            "field_stability": max(0.0, min(1.0, _to_float(item.get("field_stability", 0.0), 0.0))),
+            "field_cluster_count": max(0, _to_int(item.get("field_cluster_count", 0), 0)),
+            "field_cluster_mass_mean": max(0.0, min(1.0, _to_float(item.get("field_cluster_mass_mean", 0.0), 0.0))),
+            "field_cluster_mass_max": max(0.0, min(1.0, _to_float(item.get("field_cluster_mass_max", 0.0), 0.0))),
+            "field_cluster_center_spread": max(0.0, _to_float(item.get("field_cluster_center_spread", 0.0), 0.0)),
+            "field_cluster_separation": max(0.0, _to_float(item.get("field_cluster_separation", 0.0), 0.0)),
+            "field_cluster_center_drift": max(0.0, _to_float(item.get("field_cluster_center_drift", 0.0), 0.0)),
+            "field_cluster_count_drift": max(0.0, _to_float(item.get("field_cluster_count_drift", 0.0), 0.0)),
+            "field_velocity_trend": _to_float(item.get("field_velocity_trend", 0.0), 0.0),
+            "field_reorganization_direction": _to_str(item.get("field_reorganization_direction"), "stable"),
+            "field_mean_velocity": max(0.0, _to_float(item.get("field_mean_velocity", 0.0), 0.0)),
+            "field_regulation_pressure": max(0.0, _to_float(item.get("field_regulation_pressure", 0.0), 0.0)),
+        }
+
+    return normalized
+# --------------------------------------------------
 # NORMALIZE MCM MEMORY
 # --------------------------------------------------
 def normalize_mcm_memory(memory_items) -> list[dict]:
@@ -296,6 +345,10 @@ def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
             "last_signature_context": None,
             "last_context_cluster_id": None,
             "last_context_cluster_key": None,
+            "inner_context_clusters": {},
+            "inner_context_cluster_seq": 0,
+            "last_inner_context_cluster_id": None,
+            "last_inner_context_cluster_key": None,
             "mcm_runtime_snapshot": {},
             "mcm_runtime_decision_state": {},
             "mcm_runtime_brain_snapshot": {},
@@ -325,6 +378,10 @@ def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
         "last_signature_context": normalize_json_state(getattr(bot, "last_signature_context", None)),
         "last_context_cluster_id": _to_str(getattr(bot, "last_context_cluster_id", None), None),
         "last_context_cluster_key": _to_str(getattr(bot, "last_context_cluster_key", None), None),
+        "inner_context_clusters": normalize_inner_context_clusters(getattr(bot, "inner_context_clusters", {})),
+        "inner_context_cluster_seq": max(0, _to_int(getattr(bot, "inner_context_cluster_seq", 0), 0)),
+        "last_inner_context_cluster_id": _to_str(getattr(bot, "last_inner_context_cluster_id", None), None),
+        "last_inner_context_cluster_key": _to_str(getattr(bot, "last_inner_context_cluster_key", None), None),
         "focus_point": _to_float(getattr(bot, "focus_point", 0.0), 0.0),
         "focus_confidence": _to_float(getattr(bot, "focus_confidence", 0.0), 0.0),
         "target_lock": _to_float(getattr(bot, "target_lock", 0.0), 0.0),
@@ -390,12 +447,16 @@ def apply_memory_state(bot, state: dict | None) -> dict:
     bot.signature_memory = normalize_signature_memory(payload.get("signature_memory", {}))
     bot.context_clusters = normalize_context_clusters(payload.get("context_clusters", {}))
     bot.context_cluster_seq = max(0, _to_int(payload.get("context_cluster_seq", 0), 0))
+    bot.inner_context_clusters = normalize_inner_context_clusters(payload.get("inner_context_clusters", {}))
+    bot.inner_context_cluster_seq = max(0, _to_int(payload.get("inner_context_cluster_seq", 0), 0))
 
     bot.last_signature_key = _to_str(payload.get("last_signature_key"), None)
     bot.last_signature_outcome = _to_str(payload.get("last_signature_outcome"), None)
     bot.last_signature_context = normalize_json_state(payload.get("last_signature_context"))
     bot.last_context_cluster_id = _to_str(payload.get("last_context_cluster_id"), None)
     bot.last_context_cluster_key = _to_str(payload.get("last_context_cluster_key"), None)
+    bot.last_inner_context_cluster_id = _to_str(payload.get("last_inner_context_cluster_id"), None)
+    bot.last_inner_context_cluster_key = _to_str(payload.get("last_inner_context_cluster_key"), None)
     bot.focus_point = _to_float(payload.get("focus_point", 0.0), 0.0)
     bot.focus_confidence = _to_float(payload.get("focus_confidence", 0.0), 0.0)
     bot.target_lock = _to_float(payload.get("target_lock", 0.0), 0.0)
@@ -464,6 +525,10 @@ def read_memory_state(path: str | None = None) -> dict:
         "last_signature_context": None,
         "last_context_cluster_id": None,
         "last_context_cluster_key": None,
+        "inner_context_clusters": {},
+        "inner_context_cluster_seq": 0,
+        "last_inner_context_cluster_id": None,
+        "last_inner_context_cluster_key": None,
         "focus_point": 0.0,
         "focus_confidence": 0.0,
         "target_lock": 0.0,
@@ -529,6 +594,10 @@ def read_memory_state(path: str | None = None) -> dict:
         "last_signature_context": normalize_json_state((raw or {}).get("last_signature_context")),
         "last_context_cluster_id": _to_str((raw or {}).get("last_context_cluster_id"), None),
         "last_context_cluster_key": _to_str((raw or {}).get("last_context_cluster_key"), None),
+        "inner_context_clusters": normalize_inner_context_clusters((raw or {}).get("inner_context_clusters", {})),
+        "inner_context_cluster_seq": max(0, _to_int((raw or {}).get("inner_context_cluster_seq", 0), 0)),
+        "last_inner_context_cluster_id": _to_str((raw or {}).get("last_inner_context_cluster_id"), None),
+        "last_inner_context_cluster_key": _to_str((raw or {}).get("last_inner_context_cluster_key"), None),
         "focus_point": _to_float((raw or {}).get("focus_point", 0.0), 0.0),
         "focus_confidence": _to_float((raw or {}).get("focus_confidence", 0.0), 0.0),
         "target_lock": _to_float((raw or {}).get("target_lock", 0.0), 0.0),

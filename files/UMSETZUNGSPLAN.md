@@ -474,10 +474,13 @@ Die technische Handlung bleibt damit nachgeordnet.
 
 Ebene 3 ist die **Entwicklungsebene**.
 
-Hier wird aus Episoden, Reviews, Outcome-Strukturen und Kontexten gelernt.
+Hier wird aus Episoden, Reviews, Zustandswirkungen und Kontexten gelernt.
+
+Outcomes bleiben in dieser Ebene erhalten,
+aber nur als **Ereigniskontext** und nicht als eigentliches Bewertungszentrum.
 
 Diese Ebene soll nicht nur Treffer speichern,
-sondern den **ganzen Entscheidungsverlauf** bewerten.
+sondern den **ganzen Entscheidungsverlauf** und seine Wirkung auf den Innenraum bewerten.
 
 ---
 
@@ -587,6 +590,51 @@ Geringe regulatorische Last bedeutet eher:
 
 Das Ziel ist daher nicht minimale Aktivität,
 sondern möglichst geringe regulatorische Last bei tragfähiger Aktivität.
+
+---
+
+## Experience bewertet primär Zustandswirkung
+
+Die Entwicklungsebene soll langfristig **nicht primär nach TP / SL / Cancel / Timeout**
+bewerten, sondern nach der **Wirkung des Verlaufs auf den Innenraum**.
+
+Das bedeutet:
+
+- formale Outcomes bleiben erhalten
+- sie liefern aber nur Ereigniskontext
+- die eigentliche Bewertung entsteht aus Zustandsveränderung, Tragfähigkeit und Regulationswirkung
+
+Primär relevant sind damit insbesondere:
+
+- `state_before`
+- `state_after`
+- `state_delta`
+- `regulatory_load`
+- `action_capacity`
+- `recovery_need`
+- `survival_pressure`
+- `pressure_release`
+- `load_bearing_capacity`
+- `state_stability`
+- `capacity_reserve`
+- `recovery_balance`
+
+Die Kernfrage lautet daher nicht zuerst:
+
+- war das ein TP?
+- war das ein SL?
+- wurde der Trade gecancelt?
+
+Sondern:
+
+- hat der Verlauf den Innenraum entlastet oder belastet?
+- wurde die Lage tragfähiger oder fragiler?
+- ist Handlungsfähigkeit gewachsen oder gesunken?
+- war Nicht-Handlung regulatorisch sinnvoller als Aktion?
+
+Erst wenn diese Zustandswirkung das Primat der Bewertung bildet,
+wird lokale Rückführung auf `inner_context_clusters`,
+Feldmuster und neuronale Teilträger fachlich wirklich stimmig.
 
 ---
 
@@ -805,6 +853,15 @@ Beispiele für Clustercharakter:
 Outcome soll nicht primär als Geldzahl verarbeitet werden,
 sondern als Zustandsveränderung des Systems.
 
+Outcome bleibt dabei **sekundärer Ereigniskontext**,
+nicht primärer Belohnungs- oder Bestrafungsträger.
+
+Das bedeutet:
+
+- `tp_hit`, `sl_hit`, `cancel`, `timeout` und ähnliche Pfade bleiben sichtbar
+- sie dürfen aber die Experience-Bewertung nicht mehr grob binär dominieren
+- dieselbe Outcome-Klasse kann je nach Zustandswirkung unterschiedlich bewertet werden
+
 ---
 
 ## Typische Wirkungen
@@ -820,6 +877,25 @@ SL (Verlust) kann bedeuten:
 - Belastung
 - Erhöhung von `recovery_need`
 - Reduktion von `action_capacity`
+
+Cancel / Timeout / Nicht-Handlung können bedeuten:
+
+- regulatorisch sinnvolle Unterbrechung
+- Schutz vor weiterer Überlast
+- Reorientierung
+- noch unreife Handlung
+- in bestimmten Lagen sogar bessere Tragfähigkeit als formale Aktion
+
+Deshalb darf nicht automatisch gelten:
+
+- TP = gut
+- SL = schlecht
+- Cancel = negativ
+
+Sondern:
+
+- die Bewertung folgt der Zustandswirkung,
+  nicht dem bloßen Ergebnisetikett
 
 ---
 
@@ -955,6 +1031,11 @@ sondern nur als Input konsumieren.
 
 Ebene 3 darf nicht zur technischen Sofortlogik degenerieren,
 sondern muss Entwicklungsebene bleiben.
+
+Ebene 3 darf außerdem keine grobe Outcome-Binärlogik
+direkt als Lernsignal zurück in den Innenraum spielen.
+Rückführung muss aus verdichteter Zustandswirkung entstehen,
+nicht aus bloßen Ergebnisetiketten.
 
 ---
 

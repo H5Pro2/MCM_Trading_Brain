@@ -127,6 +127,11 @@ class Bot:
         self.last_context_cluster_id = None
         self.last_context_cluster_key = None
 
+        self.inner_context_clusters = {}
+        self.inner_context_cluster_seq = 0
+        self.last_inner_context_cluster_id = None
+        self.last_inner_context_cluster_key = None
+
         self.inhibition_level = 0.0
         self.habituation_level = 0.0
         self.competition_bias = 0.0
@@ -164,6 +169,40 @@ class Bot:
     # ==================================================
     # RUNTIME THREAD / IDLE
     # ==================================================
+    def _build_runtime_execution_payload(self, action_context, candle_state=None):
+
+        payload_state = self._build_runtime_action_payload_state(
+            action_context,
+            candle_state=candle_state,
+            allow_empty=True,
+        )
+
+        return {
+            "window": list(payload_state.get("window", []) or []),
+            "last": dict(payload_state.get("last", {}) or {}),
+            "live_mode": bool(payload_state.get("live_mode", False)),
+            "external_order_active": bool(payload_state.get("external_order_active", False)),
+            "candle_state": dict(payload_state.get("candle_state", {}) or {}),
+        }
+    # --------------------------------------------------
+    def _resolve_runtime_action_window_state(self, action_context):
+
+        context = dict(action_context or {})
+        window = [dict(item or {}) for item in list(context.get("window", []) or []) if isinstance(item, dict)]
+
+        if not window:
+            return None
+
+        timestamp = context.get("timestamp", window[-1].get("timestamp"))
+        last = dict(context.get("last", window[-1]) or window[-1])
+
+        return {
+            "context": dict(context or {}),
+            "window": list(window or []),
+            "timestamp": timestamp,
+            "last": dict(last or {}),
+        }
+    # --------------------------------------------------
     def _start_runtime_thread(self):
 
         if self._runtime_thread is not None and self._runtime_thread.is_alive():
@@ -333,12 +372,7 @@ class Bot:
             try:
                 packet = self._market_packet_queue.get(timeout=idle_sleep)
             except queue.Empty:
-                if self._runtime_seeded:
-                    self._step_runtime_idle(
-                        cycles=self._runtime_idle_cycles(),
-                    )
-                self._flush_visualization_snapshots()
-                self._flush_memory_state_if_due()
+                self._run_runtime_idle_followup()
                 continue
 
             try:
@@ -348,13 +382,10 @@ class Bot:
     # --------------------------------------------------
     def _run_runtime_execution_paths(self, prepared_context, candle_state):
 
-        if self._run_position_execution_path(prepared_context):
+        if self._run_existing_trade_execution_paths(prepared_context):
             return True
 
-        if self._run_pending_execution_path(prepared_context):
-            return True
-
-        if self._run_decision_execution_path(prepared_context, candle_state):
+        if self._run_entry_execution_path(prepared_context, candle_state):
             return True
 
         return True        
@@ -458,20 +489,23 @@ class Bot:
             bot=self,
             cycles=max(1, int(idle_cycles or 1)),
         )
-    # ==================================================
-    # WINDOW EINGANG / FEED
-    # ==================================================   
-    def publish_market_window(self, window):
-
-        packet = self._build_market_perception_packet(window)
-        if packet is None:
-            return None
-
-        return self._publish_market_packet(packet)
     # --------------------------------------------------
-    def _process_market_packet_and_followup(self, packet):
+    def _flush_runtime_followup(self):
 
-        result = self._process_market_packet(packet)
+        self._flush_visualization_snapshots()
+        self._flush_memory_state_if_due()
+        return True
+    # --------------------------------------------------
+    def _run_runtime_idle_followup(self):
+
+        if self._runtime_seeded:
+            self._step_runtime_idle(
+                cycles=self._runtime_idle_cycles(),
+            )
+
+        return self._flush_runtime_followup()
+    # --------------------------------------------------
+    def _run_runtime_market_followup(self):
 
         market_cycles = self._runtime_market_followup_cycles()
         if self._runtime_seeded and market_cycles > 0:
@@ -479,22 +513,66 @@ class Bot:
                 cycles=market_cycles,
             )
 
-        self._flush_visualization_snapshots()
-        self._flush_memory_state_if_due()
-        return result
+        return self._flush_runtime_followup()
+    # -------------------------------------------------- 
+    def _build_runtime_action_context_flags(self):
+
+        live_mode = str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE"
+        external_order_active = False
+
+        if live_mode and self.position is None and is_order_active():
+            external_order_active = True
+            if DEBUG:
+                dbr_debug("RUNTIME: ORDER_ACTIVE_WATCH", "live_backtest_debug.csv")
+
+        return {
+            "live_mode": bool(live_mode),
+            "external_order_active": bool(external_order_active),
+            "outer_market_state": dict(getattr(self, "outer_market_state", {}) or {}),
+        }
     # --------------------------------------------------
-    def _process_market_window_and_followup(self, window):
+    def _resolve_runtime_action_context_state(self, action_context):
+
+        resolved_state = self._resolve_runtime_action_window_state(
+            action_context,
+        )
+        if resolved_state is None:
+            return None
+
+        context = dict(resolved_state.get("context", {}) or {})
+        return {
+            "context": dict(context or {}),
+            "window": list(resolved_state.get("window", []) or []),
+            "last": dict(resolved_state.get("last", {}) or {}),
+            "timestamp": resolved_state.get("timestamp", None),
+            "live_mode": bool(context.get("live_mode", False)),
+            "external_order_active": bool(context.get("external_order_active", False)),
+            "outer_market_state": dict(context.get("outer_market_state", {}) or {}),
+        }   
+    # ==================================================
+    # WINDOW EINGANG / FEED
+    # ==================================================  
+    def _build_market_packet_from_window(self, window):
 
         packet = self._build_market_perception_packet(window)
         if packet is None:
             return None
 
-        return self._process_market_packet_and_followup(packet)
-    # --------------------------------------------------   
-    def _run_rows_buffer_loop(self, window_size: int = 2, delay_seconds: float = 0.0):
+        return dict(packet or {}) 
+    # --------------------------------------------------    
+    def _consume_feed_windows(self, windows):
+
+        processed = 0
+
+        for window in windows:
+            self._process_market_window_and_followup(window)
+            processed += 1
+
+        return processed
+    # --------------------------------------------------
+    def _iter_row_windows(self, window_size: int = 2, delay_seconds: float = 0.0):
 
         buffer = []
-        self.processed = 0
 
         for row in self.feed.rows(delay_seconds=delay_seconds):
             buffer.append(row)
@@ -505,22 +583,49 @@ class Bot:
             if len(buffer) > window_size:
                 buffer.pop(0)
 
-            self._process_market_window_and_followup(buffer)
+            yield list(buffer)
+    # --------------------------------------------------
+    def _process_market_packet_and_followup(self, packet):
 
-        return True
+        result = self._process_market_packet(packet)
+        self._run_runtime_market_followup()
+        return result
+    # --------------------------------------------------  
+    def publish_market_window(self, window):
+
+        packet = self._build_market_packet_from_window(window)
+        if packet is None:
+            return None
+
+        return self._publish_market_packet(packet)
+    # --------------------------------------------------
+    def _process_market_window_and_followup(self, window):
+
+        packet = self._build_market_packet_from_window(window)
+        if packet is None:
+            return None
+
+        return self._process_market_packet_and_followup(packet)
+    # --------------------------------------------------   
+    def _run_rows_buffer_loop(self, window_size: int = 2, delay_seconds: float = 0.0):
+
+        self.processed = 0
+
+        return self._consume_feed_windows(
+            self._iter_row_windows(
+                window_size=window_size,
+                delay_seconds=delay_seconds,
+            )
+        )
     # --------------------------------------------------
     def _run_window_feed_loop(self, size: int, delay_seconds: float = 0.0):
 
         if not hasattr(self, "processed"):
             self.processed = 0
 
-        processed = 0
-
-        for window in self.feed.window(size, delay_seconds=delay_seconds):
-            self._process_market_window_and_followup(window)
-            processed += 1
-
-        return processed
+        return self._consume_feed_windows(
+            self.feed.window(size, delay_seconds=delay_seconds)
+        )
     # --------------------------------------------------
     def run_rows(self, window_size: int = 2, delay_seconds: float = 0.0):
 
@@ -535,6 +640,23 @@ class Bot:
             size=size,
             delay_seconds=delay_seconds,
         )
+    # --------------------------------------------------     
+    def _run_existing_trade_execution_paths(self, prepared_context):
+
+        if self._run_position_execution_path(prepared_context):
+            return True
+
+        if self._run_pending_execution_path(prepared_context):
+            return True
+
+        return False  
+    # --------------------------------------------------       
+    def _run_entry_execution_path(self, prepared_context, candle_state):
+
+        return self._run_decision_execution_path(
+            prepared_context,
+            candle_state,
+        )    
     # ==================================================
     # MARKET WINDOW NORMALISIERUNG / AUSSENWAHRNEHMUNG
     # ==================================================
@@ -916,6 +1038,35 @@ class Bot:
     # ==================================================
     # ACTION CONTEXT / RUNTIME HANDLUNGSVORBEREITUNG
     # ==================================================
+    def _build_runtime_action_payload_state(self, action_context, candle_state=None, allow_empty: bool = False):
+
+        resolved_context = self._resolve_runtime_action_context_state(
+            action_context,
+        )
+        if resolved_context is None:
+            if not bool(allow_empty):
+                return None
+
+            return {
+                "window": [],
+                "last": {},
+                "timestamp": None,
+                "live_mode": False,
+                "external_order_active": False,
+                "outer_market_state": {},
+                "candle_state": dict(candle_state or {}),
+            }
+
+        return {
+            "window": list(resolved_context.get("window", []) or []),
+            "last": dict(resolved_context.get("last", {}) or {}),
+            "timestamp": resolved_context.get("timestamp", None),
+            "live_mode": bool(resolved_context.get("live_mode", False)),
+            "external_order_active": bool(resolved_context.get("external_order_active", False)),
+            "outer_market_state": dict(resolved_context.get("outer_market_state", {}) or {}),
+            "candle_state": dict(candle_state or {}),
+        }   
+    # --------------------------------------------------  
     def _build_runtime_action_context(self, window):
 
         if not window:
@@ -925,54 +1076,47 @@ class Bot:
         if not local_window:
             return None
 
-        live_mode = str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE"
-        external_order_active = False
-
-        if live_mode and self.position is None and is_order_active():
-            external_order_active = True
-            if DEBUG:
-                dbr_debug("RUNTIME: ORDER_ACTIVE_WATCH", "live_backtest_debug.csv")
-
         last = local_window[-1]
         timestamp = last.get("timestamp")
+        context_flags = self._build_runtime_action_context_flags()
 
         return {
             "window": local_window,
             "last": last,
             "timestamp": timestamp,
-            "live_mode": bool(live_mode),
-            "external_order_active": bool(external_order_active),
-            "outer_market_state": dict(getattr(self, "outer_market_state", {}) or {}),
+            "live_mode": bool(context_flags.get("live_mode", False)),
+            "external_order_active": bool(context_flags.get("external_order_active", False)),
+            "outer_market_state": dict(context_flags.get("outer_market_state", {}) or {}),
         }
     # --------------------------------------------------
     def _normalize_runtime_action_context(self, action_context):
 
-        context = dict(action_context or {})
-        window = [dict(item or {}) for item in list(context.get("window", []) or []) if isinstance(item, dict)]
-
-        if not window:
+        payload_state = self._build_runtime_action_payload_state(
+            action_context,
+            allow_empty=False,
+        )
+        if payload_state is None:
             return None
 
-        timestamp = context.get("timestamp", window[-1].get("timestamp"))
-
         return {
-            "window": window,
-            "last": dict(context.get("last", window[-1]) or window[-1]),
-            "timestamp": timestamp,
-            "live_mode": bool(context.get("live_mode", False)),
-            "external_order_active": bool(context.get("external_order_active", False)),
-            "outer_market_state": dict(context.get("outer_market_state", {}) or {}),
+            "window": list(payload_state.get("window", []) or []),
+            "last": dict(payload_state.get("last", {}) or {}),
+            "timestamp": payload_state.get("timestamp", None),
+            "live_mode": bool(payload_state.get("live_mode", False)),
+            "external_order_active": bool(payload_state.get("external_order_active", False)),
+            "outer_market_state": dict(payload_state.get("outer_market_state", {}) or {}),
         }    
     # --------------------------------------------------
     def _apply_runtime_action_state(self, action_context):
 
-        context = dict(action_context or {})
-        window = [dict(item or {}) for item in list(context.get("window", []) or []) if isinstance(item, dict)]
-
-        if not window:
+        resolved_state = self._resolve_runtime_action_window_state(
+            action_context,
+        )
+        if resolved_state is None:
             return None
 
-        timestamp = context.get("timestamp", window[-1].get("timestamp"))
+        context = dict(resolved_state.get("context", {}) or {})
+        timestamp = resolved_state.get("timestamp", None)
 
         if self.position and self.position.get("entry_ts") is None:
             self.position["entry_ts"] = timestamp
@@ -1009,35 +1153,103 @@ class Bot:
     # --------------------------------------------------
     def _run_position_execution_path(self, action_context):
 
-        context = dict(action_context or {})
+        payload = self._build_runtime_execution_payload(
+            action_context,
+        )
         return self._handle_active_position(
-            context.get("window", []),
-            context.get("last", {}),
-            bool(context.get("live_mode", False)),
+            payload.get("window", []),
+            payload.get("last", {}),
+            bool(payload.get("live_mode", False)),
         )
     # --------------------------------------------------
     def _run_pending_execution_path(self, action_context):
 
-        context = dict(action_context or {})
+        payload = self._build_runtime_execution_payload(
+            action_context,
+        )
         return self._handle_pending_entry(
-            context.get("window", []),
-            context.get("last", {}),
-            bool(context.get("live_mode", False)),
+            payload.get("window", []),
+            payload.get("last", {}),
+            bool(payload.get("live_mode", False)),
         )
     # --------------------------------------------------
     def _run_decision_execution_path(self, action_context, candle_state):
 
-        context = dict(action_context or {})
+        payload = self._build_runtime_execution_payload(
+            action_context,
+            candle_state=candle_state,
+        )
         return self._handle_entry_attempt(
-            context.get("window", []),
-            dict(candle_state or {}),
-            context.get("last", {}),
-            bool(context.get("live_mode", False)),
-            bool(context.get("external_order_active", False)),
+            payload.get("window", []),
+            dict(payload.get("candle_state", {}) or {}),
+            payload.get("last", {}),
+            bool(payload.get("live_mode", False)),
+            bool(payload.get("external_order_active", False)),
         )
     # ==================================================
     # ENTSCHEIDUNGSBAHN / HANDLUNGSBAHN
     # ==================================================
+    def _finalize_pending_fill_handoff(self, side, entry_price, tp_price, sl_price, entry_ts, order_id, position_meta, reason: str):
+
+        fill_state_before = self._build_regulation_state_snapshot()
+        fill_risk = abs(float(entry_price) - float(sl_price))
+
+        position_context = dict(position_meta or {})
+        position_context["felt_bearing_score"] = float(position_context.get("felt_bearing_score", 0.0) or 0.0)
+        position_context["felt_profile_label"] = str(position_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear")
+        position_context["bearing_context"] = dict(position_context.get("bearing_context", {}) or {})
+
+        self.execution_state = {
+            **dict(self.execution_state or {}),
+            "execution_phase": "position_active",
+            "execution_ready": True,
+            "execution_blocked": False,
+        }
+
+        self.position = {
+            "side": str(side),
+            "entry": float(entry_price),
+            "tp": float(tp_price),
+            "sl": float(sl_price),
+            "mfe": 0.0,
+            "mae": 0.0,
+            "risk": float(fill_risk),
+            "order_id": order_id,
+            "entry_ts": entry_ts,
+            "entry_index": self.processed,
+            "last_checked_ts": entry_ts,
+            "meta": dict(position_context or {}),
+        }
+
+        fill_state_after = self._build_regulation_state_snapshot()
+        fill_state_delta = self._build_regulation_state_delta(
+            fill_state_before,
+            fill_state_after,
+        )
+
+        self.pending_entry = None
+        self.stats.on_attempt(
+            status="filled",
+            context=position_context,
+        )
+        mark_runtime_episode_event(
+            self,
+            "filled",
+            {
+                "position": dict(self.position or {}),
+                "reason": str(reason or "pending_fill_handoff"),
+                "bearing_context": dict((position_context.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(position_context.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(position_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+                "state_before": dict(fill_state_before or {}),
+                "state_after": dict(fill_state_after or {}),
+                "state_delta": dict(fill_state_delta or {}),
+            },
+        )
+        self._mark_memory_state_dirty()
+        self._commit_regulation_state_snapshot(fill_state_after)
+        return True
+    # --------------------------------------------------   
     def _handle_decision_tendency(self, entry_result: dict):
 
         result = dict(entry_result or {})
@@ -1088,7 +1300,90 @@ class Bot:
         )
         self._commit_regulation_state_snapshot(state_after)
         return True               
-    # --------------------------------------------------    
+    # --------------------------------------------------   
+    def _finalize_active_position_cancel(self, resolved_position, exit_context, order_id, cancel_cause):
+
+        cancel_state_before = self._build_regulation_state_snapshot()
+        apply_outcome_stimulus(self, "cancel", self.position)
+        cancel_state_after = self._build_regulation_state_snapshot()
+        cancel_state_delta = self._build_regulation_state_delta(
+            cancel_state_before,
+            cancel_state_after,
+        )
+        self.stats.on_attempt(
+            status="cancelled",
+            context=exit_context,
+        )
+        mark_runtime_episode_event(
+            self,
+            "cancelled",
+            {
+                "position": dict(resolved_position or {}),
+                "reason": str(cancel_cause or "exchange_cancel"),
+                "bearing_context": dict((exit_context.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(exit_context.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(exit_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+                "state_before": dict(cancel_state_before or {}),
+                "state_after": dict(cancel_state_after or {}),
+                "state_delta": dict(cancel_state_delta or {}),
+            },
+        )
+        self.stats.on_cancel(
+            order_id=order_id,
+            cause=str(cancel_cause or "exchange_cancel"),
+            exploration_trade=False,
+            outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
+            context=exit_context,
+        )
+        self._mark_memory_state_dirty()
+        self._commit_regulation_state_snapshot(cancel_state_after)
+        self.position = None
+        return True    
+    # --------------------------------------------------   
+    def _finalize_active_position_resolution(self, resolved_position, exit_context, reason, live_mode: bool):
+
+        state_before = self._build_regulation_state_snapshot()
+        apply_outcome_stimulus(self, reason, self.position)
+        state_after = self._build_regulation_state_snapshot()
+        state_delta = self._build_regulation_state_delta(
+            state_before,
+            state_after,
+        )
+        self._mark_memory_state_dirty()
+
+        if str(reason).lower() == "sl_hit":
+            self.mcm_pause_left = int(getattr(Config, "MCM_SL_PAUSE_STEPS", 3) or 3)
+
+        self.stats.on_exit(
+            entry=self.position.get("entry"),
+            tp=self.position.get("tp"),
+            sl=self.position.get("sl"),
+            reason=reason,
+            side=self.position.get("side"),
+            amount=Config.ORDER_SIZE if live_mode else 1.0,
+            exploration_trade=False,
+            outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
+            context=exit_context,
+        )
+        mark_runtime_episode_event(
+            self,
+            "resolved",
+            {
+                "position": dict(resolved_position or {}),
+                "reason": str(reason or "-"),
+                "bearing_context": dict((exit_context.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(exit_context.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(exit_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+                "state_before": dict(state_before or {}),
+                "state_after": dict(state_after or {}),
+                "state_delta": dict(state_delta or {}),
+            },
+        )
+
+        self._commit_regulation_state_snapshot(state_after)
+        self.position = None
+        return True    
+    # --------------------------------------------------   
     def _handle_active_position(self, window, last, live_mode: bool):
 
         if self.position is None:
@@ -1218,89 +1513,24 @@ class Bot:
             return True
 
         resolved_position = dict(self.position or {})
-        state_before = self._build_regulation_state_snapshot()
 
         if live_mode and Config.AKTIV_ORDER:
             oid = self.position.get("order_id")
             cancel_cause = consume_cancelled_cause(oid)
             if oid is not None and cancel_cause is not None:
-                cancel_state_before = self._build_regulation_state_snapshot()
-                apply_outcome_stimulus(self, "cancel", self.position)
-                cancel_state_after = self._build_regulation_state_snapshot()
-                cancel_state_delta = self._build_regulation_state_delta(
-                    cancel_state_before,
-                    cancel_state_after,
-                )
-                self.stats.on_attempt(
-                    status="cancelled",
-                    context=exit_context,
-                )
-                mark_runtime_episode_event(
-                    self,
-                    "cancelled",
-                    {
-                        "position": dict(resolved_position or {}),
-                        "reason": str(cancel_cause or "exchange_cancel"),
-                        "bearing_context": dict((exit_context.get("bearing_context", {}) or {})),
-                        "felt_bearing_score": float(exit_context.get("felt_bearing_score", 0.0) or 0.0),
-                        "felt_profile_label": str(exit_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                        "state_before": dict(cancel_state_before or {}),
-                        "state_after": dict(cancel_state_after or {}),
-                        "state_delta": dict(cancel_state_delta or {}),
-                    },
-                )
-                self.stats.on_cancel(
+                return self._finalize_active_position_cancel(
+                    resolved_position=dict(resolved_position or {}),
+                    exit_context=dict(exit_context or {}),
                     order_id=oid,
-                    cause=str(cancel_cause or "exchange_cancel"),
-                    exploration_trade=False,
-                    outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
-                    context=exit_context,
+                    cancel_cause=cancel_cause,
                 )
-                self._mark_memory_state_dirty()
-                self._commit_regulation_state_snapshot(cancel_state_after)
-                self.position = None
-                return True
 
-        apply_outcome_stimulus(self, reason, self.position)
-        state_after = self._build_regulation_state_snapshot()
-        state_delta = self._build_regulation_state_delta(
-            state_before,
-            state_after,
-        )
-        self._mark_memory_state_dirty()
-
-        if str(reason).lower() == "sl_hit":
-            self.mcm_pause_left = int(getattr(Config, "MCM_SL_PAUSE_STEPS", 3) or 3)
-
-        self.stats.on_exit(
-            entry=self.position.get("entry"),
-            tp=self.position.get("tp"),
-            sl=self.position.get("sl"),
+        return self._finalize_active_position_resolution(
+            resolved_position=dict(resolved_position or {}),
+            exit_context=dict(exit_context or {}),
             reason=reason,
-            side=self.position.get("side"),
-            amount=Config.ORDER_SIZE if live_mode else 1.0,
-            exploration_trade=False,
-            outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
-            context=exit_context,
+            live_mode=bool(live_mode),
         )
-        mark_runtime_episode_event(
-            self,
-            "resolved",
-            {
-                "position": dict(resolved_position or {}),
-                "reason": str(reason or "-"),
-                "bearing_context": dict((exit_context.get("bearing_context", {}) or {})),
-                "felt_bearing_score": float(exit_context.get("felt_bearing_score", 0.0) or 0.0),
-                "felt_profile_label": str(exit_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                "state_before": dict(state_before or {}),
-                "state_after": dict(state_after or {}),
-                "state_delta": dict(state_delta or {}),
-            },
-        )
-
-        self._commit_regulation_state_snapshot(state_after)
-        self.position = None
-        return True
     # --------------------------------------------------
     def _handle_pending_entry(self, window, last, live_mode: bool):
 
@@ -1460,8 +1690,6 @@ class Bot:
                 live_source = str(live_snapshot.get("source", "") or "").strip().lower()
 
             if live_source == "position_context":
-                fill_state_before = self._build_regulation_state_snapshot()
-
                 live_entry_price = float(live_snapshot.get("entry", entry_price) or entry_price)
                 live_tp_price = float(live_snapshot.get("tp", tp_price) or tp_price)
                 live_sl_price = float(live_snapshot.get("sl", sl_price) or sl_price)
@@ -1470,56 +1698,16 @@ class Bot:
                 if live_entry_ts is None:
                     live_entry_ts = last.get("timestamp")
 
-                live_risk = abs(live_entry_price - live_sl_price)
-
-                position_meta = dict(pending_meta or {})
-                position_meta["felt_bearing_score"] = float(position_meta.get("felt_bearing_score", 0.0) or 0.0)
-                position_meta["felt_profile_label"] = str(position_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear")
-                position_meta["bearing_context"] = dict(position_meta.get("bearing_context", {}) or {})
-
-                self.position = {
-                    "side": str(live_snapshot.get("side", side) or side),
-                    "entry": float(live_entry_price),
-                    "tp": float(live_tp_price),
-                    "sl": float(live_sl_price),
-                    "mfe": 0.0,
-                    "mae": 0.0,
-                    "risk": float(live_risk),
-                    "order_id": self.pending_entry.get("order_id"),
-                    "entry_ts": live_entry_ts,
-                    "entry_index": self.processed,
-                    "last_checked_ts": live_entry_ts,
-                    "meta": position_meta,
-                }
-
-                fill_state_after = self._build_regulation_state_snapshot()
-                fill_state_delta = self._build_regulation_state_delta(
-                    fill_state_before,
-                    fill_state_after,
+                return self._finalize_pending_fill_handoff(
+                    side=str(live_snapshot.get("side", side) or side),
+                    entry_price=float(live_entry_price),
+                    tp_price=float(live_tp_price),
+                    sl_price=float(live_sl_price),
+                    entry_ts=live_entry_ts,
+                    order_id=self.pending_entry.get("order_id"),
+                    position_meta=dict(pending_meta or {}),
+                    reason="live_fill_handoff",
                 )
-
-                self.pending_entry = None
-                self.stats.on_attempt(
-                    status="filled",
-                    context=position_meta,
-                )
-                mark_runtime_episode_event(
-                    self,
-                    "filled",
-                    {
-                        "position": dict(self.position or {}),
-                        "reason": "live_fill_handoff",
-                        "bearing_context": dict((position_meta.get("bearing_context", {}) or {})),
-                        "felt_bearing_score": float(position_meta.get("felt_bearing_score", 0.0) or 0.0),
-                        "felt_profile_label": str(position_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                        "state_before": dict(fill_state_before or {}),
-                        "state_after": dict(fill_state_after or {}),
-                        "state_delta": dict(fill_state_delta or {}),
-                    },
-                )
-                self._mark_memory_state_dirty()
-                self._commit_regulation_state_snapshot(fill_state_after)
-                return True
 
             if (self.processed - created) > max_wait:
                 timeout_snapshot = dict(self.pending_entry or {})
@@ -1575,58 +1763,16 @@ class Bot:
             fill_price = float(min(max(entry_price, low), high))
 
         if side in ("LONG", "SHORT") and (entry_touched or validity_touched):
-
-            risk = abs(fill_price - sl_price)
-            fill_state_before = self._build_regulation_state_snapshot()
-
-            position_meta = dict(pending_meta or {})
-            position_meta["felt_bearing_score"] = float(position_meta.get("felt_bearing_score", 0.0) or 0.0)
-            position_meta["felt_profile_label"] = str(position_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear")
-            position_meta["bearing_context"] = dict(position_meta.get("bearing_context", {}) or {})
-
-            self.position = {
-                "side": side,
-                "entry": float(fill_price),
-                "tp": tp_price,
-                "sl": sl_price,
-                "mfe": 0.0,
-                "mae": 0.0,
-                "risk": float(risk),
-                "order_id": None,
-                "entry_ts": last.get("timestamp"),
-                "entry_index": self.processed,
-                "last_checked_ts": last.get("timestamp"),
-                "meta": position_meta,
-            }
-
-            fill_state_after = self._build_regulation_state_snapshot()
-            fill_state_delta = self._build_regulation_state_delta(
-                fill_state_before,
-                fill_state_after,
+            return self._finalize_pending_fill_handoff(
+                side=str(side),
+                entry_price=float(fill_price),
+                tp_price=float(tp_price),
+                sl_price=float(sl_price),
+                entry_ts=last.get("timestamp"),
+                order_id=None,
+                position_meta=dict(pending_meta or {}),
+                reason="backtest_fill",
             )
-
-            self.pending_entry = None
-            self.stats.on_attempt(
-                status="filled",
-                context=position_meta,
-            )
-            mark_runtime_episode_event(
-                self,
-                "filled",
-                {
-                    "position": dict(self.position or {}),
-                    "reason": "backtest_fill",
-                    "bearing_context": dict((position_meta.get("bearing_context", {}) or {})),
-                    "felt_bearing_score": float(position_meta.get("felt_bearing_score", 0.0) or 0.0),
-                    "felt_profile_label": str(position_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                    "state_before": dict(fill_state_before or {}),
-                    "state_after": dict(fill_state_after or {}),
-                    "state_delta": dict(fill_state_delta or {}),
-                },
-            )
-            self._mark_memory_state_dirty()
-            self._commit_regulation_state_snapshot(fill_state_after)
-            return True
 
         if (self.processed - created) > max_wait:
 
@@ -1671,6 +1817,88 @@ class Bot:
 
         return True
     # --------------------------------------------------
+    def _finalize_entry_attempt_abandoned(self, entry_result: dict, reason: str, state_before, state_after, state_delta):
+
+        abandoned_context = self._build_entry_attempt_context(
+            entry_result,
+            state_before=state_before,
+            state_after=state_after,
+            state_delta=state_delta,
+        )
+        self.stats.on_attempt(
+            status="skipped",
+            context=abandoned_context,
+        )
+        mark_runtime_episode_event(
+            self,
+            "abandoned",
+            {
+                "trade_plan": dict((abandoned_context.get("trade_plan", {}) or {})),
+                "reason": str(reason or "entry_abandoned"),
+                "bearing_context": dict((abandoned_context.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(abandoned_context.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(abandoned_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+                "state_before": dict((abandoned_context.get("state_before", {}) or {})),
+                "state_after": dict((abandoned_context.get("state_after", {}) or {})),
+                "state_delta": dict((abandoned_context.get("state_delta", {}) or {})),
+            },
+        )
+        self._commit_regulation_state_snapshot(state_after)
+        return True    
+    # --------------------------------------------------
+    def _finalize_entry_attempt_submission(self, entry_result: dict, side, entry_price, tp_price, sl_price, risk, order_id, state_before, state_after, state_delta):
+
+        attempt_meta = self._build_entry_attempt_context(
+            entry_result,
+            state_before=state_before,
+            state_after=state_after,
+            state_delta=state_delta,
+        )
+
+        self.execution_state = {
+            **dict(self.execution_state or {}),
+            "execution_phase": "pending_submitted",
+            "execution_ready": True,
+            "execution_blocked": False,
+        }
+
+        self.pending_entry = {
+            "side": side,
+            "entry": entry_price,
+            "tp": tp_price,
+            "sl": sl_price,
+            "risk": float(risk),
+            "order_id": order_id,
+            "created_index": self.processed,
+            "max_wait_bars": int(getattr(Config, "PENDING_ENTRY_MAX_WAIT_BARS", 20) or 20),
+            "meta": {
+                **dict(attempt_meta or {}),
+                "felt_bearing_score": float(entry_result.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(entry_result.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+                "episode_felt_summary": dict(entry_result.get("episode_felt_summary", {}) or {}),
+                "bearing_context": dict((attempt_meta.get("bearing_context", {}) or {})),
+            },
+        }
+        self.stats.on_attempt(
+            status="submitted",
+            context=dict(self.pending_entry.get("meta", {}) or {}),
+        )
+        mark_runtime_episode_event(
+            self,
+            "submitted",
+            {
+                "trade_plan": dict((attempt_meta.get("trade_plan", {}) or {})),
+                "reason": str(side or "-").lower(),
+                "bearing_context": dict((attempt_meta.get("bearing_context", {}) or {})),
+                "felt_bearing_score": float(attempt_meta.get("felt_bearing_score", 0.0) or 0.0),
+                "felt_profile_label": str(attempt_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+            },
+        )
+
+        self._mark_memory_state_dirty()
+        self._commit_regulation_state_snapshot(state_after)
+        return True    
+    # --------------------------------------------------
     def _handle_entry_attempt(self, window, candle_state, last, live_mode: bool, external_order_active: bool):
 
         if self.position is not None or self.pending_entry is not None:
@@ -1678,36 +1906,17 @@ class Bot:
 
         if external_order_active:
             skip_state_before, skip_state_after, skip_state_delta = self._capture_regulation_transition()
-
-            skip_context = self._build_entry_attempt_context(
+            return self._finalize_entry_attempt_abandoned(
                 {
                     "decision_tendency": "hold",
                     "proposed_decision": "WAIT",
                     "rejection_reason": "external_order_active",
                 },
+                reason="external_order_active",
                 state_before=skip_state_before,
                 state_after=skip_state_after,
                 state_delta=skip_state_delta,
             )
-            self.stats.on_attempt(
-                status="skipped",
-                context=skip_context,
-            )
-            mark_runtime_episode_event(
-                self,
-                "abandoned",
-                {
-                    "reason": "external_order_active",
-                    "bearing_context": dict((skip_context.get("bearing_context", {}) or {})),
-                    "felt_bearing_score": float(skip_context.get("felt_bearing_score", 0.0) or 0.0),
-                    "felt_profile_label": str(skip_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                    "state_before": dict((skip_context.get("state_before", {}) or {})),
-                    "state_after": dict((skip_context.get("state_after", {}) or {})),
-                    "state_delta": dict((skip_context.get("state_delta", {}) or {})),
-                },
-            )
-            self._commit_regulation_state_snapshot(skip_state_after)
-            return True
 
         if int(getattr(self, "mcm_pause_left", 0) or 0) > 0:
             self.mcm_pause_left -= 1
@@ -1720,36 +1929,17 @@ class Bot:
 
         if entry_result is None:
             skip_state_before, skip_state_after, skip_state_delta = self._capture_regulation_transition()
-
-            skip_context = self._build_entry_attempt_context(
+            return self._finalize_entry_attempt_abandoned(
                 {
                     "decision_tendency": "hold",
                     "proposed_decision": "WAIT",
                     "rejection_reason": "entry_result_missing",
                 },
+                reason="entry_result_missing",
                 state_before=skip_state_before,
                 state_after=skip_state_after,
                 state_delta=skip_state_delta,
             )
-            self.stats.on_attempt(
-                status="skipped",
-                context=skip_context,
-            )
-            mark_runtime_episode_event(
-                self,
-                "abandoned",
-                {
-                    "reason": "entry_result_missing",
-                    "bearing_context": dict((skip_context.get("bearing_context", {}) or {})),
-                    "felt_bearing_score": float(skip_context.get("felt_bearing_score", 0.0) or 0.0),
-                    "felt_profile_label": str(skip_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                    "state_before": dict((skip_context.get("state_before", {}) or {})),
-                    "state_after": dict((skip_context.get("state_after", {}) or {})),
-                    "state_delta": dict((skip_context.get("state_delta", {}) or {})),
-                },
-            )
-            self._commit_regulation_state_snapshot(skip_state_after)
-            return True
 
         self.action_intent_state = dict(entry_result.get("action_intent_state", {}) or {})
         self.execution_state = dict(entry_result.get("execution_state", {}) or {})
@@ -1824,69 +2014,29 @@ class Bot:
 
         if side not in ("LONG", "SHORT"):
             invalid_state_before, invalid_state_after, invalid_state_delta = self._capture_regulation_transition()
-
-            invalid_context = self._build_entry_attempt_context(
+            return self._finalize_entry_attempt_abandoned(
                 {
                     **dict(entry_result or {}),
                     "rejection_reason": "invalid_trade_direction",
                 },
+                reason="invalid_trade_direction",
                 state_before=invalid_state_before,
                 state_after=invalid_state_after,
                 state_delta=invalid_state_delta,
             )
-            self.stats.on_attempt(
-                status="skipped",
-                context=invalid_context,
-            )
-            mark_runtime_episode_event(
-                self,
-                "abandoned",
-                {
-                    "trade_plan": dict((invalid_context.get("trade_plan", {}) or {})),
-                    "reason": "invalid_trade_direction",
-                    "bearing_context": dict((invalid_context.get("bearing_context", {}) or {})),
-                    "felt_bearing_score": float(invalid_context.get("felt_bearing_score", 0.0) or 0.0),
-                    "felt_profile_label": str(invalid_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                    "state_before": dict((invalid_context.get("state_before", {}) or {})),
-                    "state_after": dict((invalid_context.get("state_after", {}) or {})),
-                    "state_delta": dict((invalid_context.get("state_delta", {}) or {})),
-                },
-            )
-            self._commit_regulation_state_snapshot(invalid_state_after)
-            return True
 
         if entry_price <= 0.0 or tp_price <= 0.0 or sl_price <= 0.0 or risk <= 0.0:
             invalid_state_before, invalid_state_after, invalid_state_delta = self._capture_regulation_transition()
-
-            invalid_context = self._build_entry_attempt_context(
+            return self._finalize_entry_attempt_abandoned(
                 {
                     **dict(entry_result or {}),
                     "rejection_reason": "invalid_trade_geometry",
                 },
+                reason="invalid_trade_geometry",
                 state_before=invalid_state_before,
                 state_after=invalid_state_after,
                 state_delta=invalid_state_delta,
             )
-            self.stats.on_attempt(
-                status="skipped",
-                context=invalid_context,
-            )
-            mark_runtime_episode_event(
-                self,
-                "abandoned",
-                {
-                    "trade_plan": dict((invalid_context.get("trade_plan", {}) or {})),
-                    "reason": "invalid_trade_geometry",
-                    "bearing_context": dict((invalid_context.get("bearing_context", {}) or {})),
-                    "felt_bearing_score": float(invalid_context.get("felt_bearing_score", 0.0) or 0.0),
-                    "felt_profile_label": str(invalid_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                    "state_before": dict((invalid_context.get("state_before", {}) or {})),
-                    "state_after": dict((invalid_context.get("state_after", {}) or {})),
-                    "state_delta": dict((invalid_context.get("state_delta", {}) or {})),
-                },
-            )
-            self._commit_regulation_state_snapshot(invalid_state_after)
-            return True
 
         order_side = "sell" if side == "SHORT" else "buy"
 
@@ -1922,89 +2072,30 @@ class Bot:
 
             if order_id is None:
                 failed_state_before, failed_state_after, failed_state_delta = self._capture_regulation_transition()
-
-                failed_context = self._build_entry_attempt_context(
+                return self._finalize_entry_attempt_abandoned(
                     {
                         **dict(entry_result or {}),
                         "rejection_reason": "order_submit_failed",
                     },
+                    reason="order_submit_failed",
                     state_before=failed_state_before,
                     state_after=failed_state_after,
                     state_delta=failed_state_delta,
                 )
-                self.stats.on_attempt(
-                    status="skipped",
-                    context=failed_context,
-                )
-                mark_runtime_episode_event(
-                    self,
-                    "abandoned",
-                    {
-                        "trade_plan": dict((failed_context.get("trade_plan", {}) or {})),
-                        "reason": "order_submit_failed",
-                        "bearing_context": dict((failed_context.get("bearing_context", {}) or {})),
-                        "felt_bearing_score": float(failed_context.get("felt_bearing_score", 0.0) or 0.0),
-                        "felt_profile_label": str(failed_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                        "state_before": dict((failed_context.get("state_before", {}) or {})),
-                        "state_after": dict((failed_context.get("state_after", {}) or {})),
-                        "state_delta": dict((failed_context.get("state_delta", {}) or {})),
-                    },
-                )
-                self._commit_regulation_state_snapshot(failed_state_after)
-                return True
 
         submitted_state_before, submitted_state_after, submitted_state_delta = self._capture_regulation_transition()
-
-        attempt_meta = self._build_entry_attempt_context(
-            entry_result,
+        return self._finalize_entry_attempt_submission(
+            entry_result=dict(entry_result or {}),
+            side=side,
+            entry_price=entry_price,
+            tp_price=tp_price,
+            sl_price=sl_price,
+            risk=float(risk),
+            order_id=order_id,
             state_before=submitted_state_before,
             state_after=submitted_state_after,
             state_delta=submitted_state_delta,
         )
-
-        self.execution_state = {
-            **dict(self.execution_state or {}),
-            "execution_phase": "pending_submitted",
-            "execution_ready": True,
-            "execution_blocked": False,
-        }
-
-        self.pending_entry = {
-            "side": side,
-            "entry": entry_price,
-            "tp": tp_price,
-            "sl": sl_price,
-            "risk": float(risk),
-            "order_id": order_id,
-            "created_index": self.processed,
-            "max_wait_bars": int(getattr(Config, "PENDING_ENTRY_MAX_WAIT_BARS", 20) or 20),
-            "meta": {
-                **dict(attempt_meta or {}),
-                "felt_bearing_score": float(entry_result.get("felt_bearing_score", 0.0) or 0.0),
-                "felt_profile_label": str(entry_result.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-                "episode_felt_summary": dict(entry_result.get("episode_felt_summary", {}) or {}),
-                "bearing_context": dict((attempt_meta.get("bearing_context", {}) or {})),
-            },
-        }
-        self.stats.on_attempt(
-            status="submitted",
-            context=dict(self.pending_entry.get("meta", {}) or {}),
-        )
-        mark_runtime_episode_event(
-            self,
-            "submitted",
-            {
-                "trade_plan": dict((attempt_meta.get("trade_plan", {}) or {})),
-                "reason": str(side or "-").lower(),
-                "bearing_context": dict((attempt_meta.get("bearing_context", {}) or {})),
-                "felt_bearing_score": float(attempt_meta.get("felt_bearing_score", 0.0) or 0.0),
-                "felt_profile_label": str(attempt_meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
-            },
-        )
-
-        self._mark_memory_state_dirty()
-        self._commit_regulation_state_snapshot(submitted_state_after)
-        return True
     # --------------------------------------------------    
     def _build_entry_attempt_context(self, entry_result: dict, state_before: dict | None = None, state_after: dict | None = None, state_delta: dict | None = None) -> dict:
 

@@ -176,25 +176,47 @@ Ziel:
 ---
 
 # --------------------------------------------------
-# 4.3 Innenkontextcluster formal trennen
+# 4.3 Innenkontextcluster als Innenfeldspeicher vertiefen
 # --------------------------------------------------
 
 Offen:
 
 - der Innenraum wird bereits real über `felt_state`, `thought_state`, `meta_regulation_state`, `expectation_state`, `state_before`, `state_after`, `state_delta` und `mcm_experience_space` getragen
-- die persistente Clusterform ist aktuell aber weiterhin nur `context_clusters`
-- ein eigener Speicher-Typ für wiederkehrende innere Spannungs-, Drift- und Regulationsmuster fehlt aktuell
+- `inner_context_clusters` sind im aktuellen Code bereits formal vorhanden, werden aktualisiert und persistiert
+- noch nicht erreicht ist der Endausbau zu einem tieferen Innenmuster- und Innenfeldspeicher für wiederkehrende innere Spannungs-, Drift-, Regulations- und Reorganisationsmuster
 
 Ziel:
 
 - `context_clusters` als äußerer / gesamt-situativer Signaturraum klar halten
-- getrennte `inner_context_clusters` für wiederkehrende innere Zustandsmuster einführen
-- dadurch Vermeidungs-, Entlastungs- und Reorganisationslernen auch auf Innenmuster sauber abbilden
+- `inner_context_clusters` fachlich davon getrennt als Innenmuster- / Innenfeldspeicher vertiefen
+- Vermeidungs-, Entlastungs-, Reorganisations- und Wiedererkennungslernen sauber auf Innenmuster abbilden
 
 ---
 
 # --------------------------------------------------
-# 4.4 MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
+# 4.4 Experience-Bewertungslogik auf Zustandswirkung umstellen
+# --------------------------------------------------
+
+Offen:
+
+- `_experience_reward_delta()` verzweigt weiterhin direkt über `tp_hit`, `sl_hit`, `cancel`, `timeout` und ähnliche Outcome-Wege
+- Outcome-Gewicht ist damit reduziert, aber noch nicht weit genug zurückgebaut
+- Experience bewertet bereits Teile von `state_delta`, aber das formale Ergebnis dominiert fachlich noch zu stark
+- lokale Rückführung auf `inner_context_clusters`, Feldmuster und neuronale Teilträger wäre so noch zu stark von Ergebnisetiketten geprägt
+- Nicht-Handlung, Cancel oder Timeout können regulatorisch sinnvoll sein, werden aber noch nicht konsequent primär als Zustandswirkung behandelt
+
+Ziel:
+
+- Experience bewertet primär `state_before`, `state_after`, `state_delta` und Tragfähigkeitswirkung
+- `tp_hit`, `sl_hit`, `cancel`, `timeout` bleiben nur Ereigniskontext
+- positive und negative Rückführung entsteht aus Belastung, Entlastung, Stabilisierung, Fragilisierung und Handlungsfähigkeit
+- lokale Rückführung auf Innenmuster, `inner_context_clusters` und neuronale Teilträger erfolgt erst auf dieser Grundlage
+- Lernen wird dadurch sauberer als Umgangsfähigkeit statt Ergebnisreflex modelliert
+
+---
+
+# --------------------------------------------------
+# 4.5 MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
 # --------------------------------------------------
 
 Offen:
@@ -220,7 +242,7 @@ Ziel:
 # --------------------------------------------------
 
 # --------------------------------------------------
-# 5.1 Experience / Review vertiefen
+# 5.1 Review / Cluster-Bewertung weiter vertiefen
 # --------------------------------------------------
 
 Teilweise bereits umgesetzt:
@@ -232,12 +254,11 @@ Teilweise bereits umgesetzt:
 
 Noch offen:
 
-- `_experience_reward_delta()` verzweigt weiterhin direkt über `tp_hit`, `sl_hit`, `cancel`, `timeout` und ähnliche Outcome-Wege
-- Outcome-Gewicht ist damit reduziert, aber noch nicht weit genug zurückgebaut
-- Profitlogik und Ergebnislogik weiter von Experience entkoppeln
-- Cluster-Bewertung stärker auf Tragfähigkeit statt Ergebnis ausrichten
+- Review und Cluster-Bewertung stärker auf Tragfähigkeit statt Ergebnis ausrichten
+- innere Musterbewertung deutlicher von Geld- und Trade-Etiketten lösen
 - Outcome noch klarer als Zustandswirkung statt Geldwirkung ausformen
 - Lernen als Umgangsfähigkeit technisch noch konsequenter durchziehen
+- nach der Grundumstellung der Experience-Bewertung die Folgeauswertung in Reviews, Link-Buckets und Cluster-Scoring nachziehen
 
 ---
 
@@ -333,14 +354,15 @@ Nicht mehr als offene Fix-Punkte führen:
 
 - Persistenz weiter entkoppeln
 - Runtime / Bot-State weiter trennen
-- `inner_context_clusters` formal einführen
+- Experience-Bewertungslogik primär auf Zustandswirkung umstellen
+- `inner_context_clusters` als Innenmuster- / Innenfeldspeicher ausbauen
 - MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
 
 # --------------------------------------------------
 # PRIO 3
 # --------------------------------------------------
 
-- Experience / Review weiter von Outcome-Logik entkoppeln
+- Review / Cluster-Bewertung nach der Zustandswirkungs-Umstellung nachziehen
 - KPI / Auswertung umbauen
 - GUI / Visualisierung weiter umbauen
 - dedizierte Tests ergänzen
@@ -357,4 +379,5 @@ Offen sind jetzt:
 
 - ein Restpunkt im Live-/Nachweisraum
 - danach der Architektur-Endausbau
-- danach der fachliche Ausbau von Experience, KPI und Visualisierung
+- darin ausdrücklich die Umstellung der Experience-Bewertung auf Zustandswirkung
+- danach der fachliche Ausbau von Review, KPI und Visualisierung

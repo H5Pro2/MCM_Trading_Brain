@@ -34,7 +34,8 @@ Die Kernbasis steht bereits im Code:
 - Visual- und Inner-Snapshots für die GUI sind vorhanden
 
 Die Hauptarbeit liegt damit nicht mehr in der Einführung der Grundmechanik,
-sondern im Architektur-Endausbau und in der Experience-Vertiefung.
+sondern im Architektur-Endausbau, in der Experience-Vertiefung
+und in der weiteren Ausrichtung auf zustandswirkungsbasierte Experience-Bewertung.
 
 ---
 
@@ -174,6 +175,7 @@ Vorhanden sind:
 - Review-Logik
 - Signature-Memory
 - Context-Cluster
+- formale `inner_context_clusters`-Anbindung
 - persistenter Memory-State
 - In-Trade-Update-Auswertung
 - Experience-Linking
@@ -200,6 +202,14 @@ Episode / Experience führen bereits:
 
 Damit ist die Kopplung von Handlung / Nicht-Handlung und Zustandsveränderung bereits real umgesetzt.
 
+### Innenkontextcluster sind formal begonnen
+
+`inner_context_clusters` sind im aktuellen Code nicht mehr nur Zielidee,
+sondern bereits in `Bot`, Experience-Aktualisierung und Memory-State verankert.
+
+Noch nicht erreicht ist aber der Endausbau
+zu einem tieferen Innenmuster- und Innenfeldspeicher.
+
 ---
 
 # --------------------------------------------------
@@ -210,6 +220,7 @@ Persistenz ist vorhanden für:
 
 - `signature_memory`
 - `context_clusters`
+- `inner_context_clusters`
 - `mcm_runtime_snapshot`
 - `mcm_runtime_decision_state`
 - `mcm_runtime_brain_snapshot`
@@ -349,26 +360,56 @@ Folge:
 ---
 
 # --------------------------------------------------
-# 4.2 Innenkontextcluster fehlen noch als eigener Persistenztyp
+# 4.2 Innenkontextcluster sind formal begonnen, aber noch nicht tief genug ausgebaut
 # --------------------------------------------------
 
-Der Innenraum wird bereits real über
-`felt_state`, `thought_state`, `meta_regulation_state`, `expectation_state`, `state_before`, `state_after`, `state_delta` und `mcm_experience_space` getragen.
+Real offen:
 
-Offen ist weiterhin:
+- `inner_context_clusters` sind bereits real in `Bot`, Experience-Aktualisierung und Persistenz verankert
+- sie sind aber noch nicht als tiefer Innenmuster-, Innenfeld- und Reorganisationsspeicher ausgebaut
+- die Trennung von `context_clusters` und `inner_context_clusters` ist fachlich begonnen, aber noch nicht vollständig durchgezogen
+- wiederkehrende innere Spannungs-, Drift- und Regulationsmuster sind damit noch nicht als eigenständiger Erfahrungsraum ausgereift
 
-- die persistente Clusterform ist aktuell nur `context_clusters`
-- ein eigener Speicher-Typ für wiederkehrende innere Spannungs-, Drift- und Regulationsmuster fehlt
+Folge:
+
+- der Innenraum ist schon stärker als eigener Erfahrungsraum angelegt
+- aber noch nicht in der Tiefe stabilisiert, die für echte Zustandsidentität und Innenmusterlernen nötig ist
 
 Ziel:
 
 - `context_clusters` als äußerer / gesamt-situativer Signaturraum klar halten
-- getrennte `inner_context_clusters` für wiederkehrende innere Zustandsmuster einführen
+- `inner_context_clusters` als wiederkehrenden Innenmusterraum weiter ausbauen
+- Vermeidungs-, Entlastungs-, Reorganisations- und Tragfähigkeitslernen sauber auf Innenmuster legen
 
 ---
 
 # --------------------------------------------------
-# 4.3 MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher sind noch nicht ausgebaut
+# 4.3 Experience-Bewertungslogik ist noch nicht weit genug auf Zustandswirkung umgestellt
+# --------------------------------------------------
+
+Real offen:
+
+- `_experience_reward_delta()` verzweigt weiterhin direkt über `tp_hit`, `sl_hit`, `cancel`, `timeout` und ähnliche Outcome-Wege
+- Experience verarbeitet zwar bereits Zustandsfelder wie Tragfähigkeit, Regulationskosten, Entlastung und Handlungsspielraum, aber das formale Ergebnis dominiert fachlich noch zu stark
+- Outcome ist damit reduziert, aber noch nicht weit genug aus Experience gelöst
+- lokale Rückführung auf `inner_context_clusters`, Feldmuster und neuronale Teilträger wäre auf dieser Grundlage noch zu stark von Ergebnisetiketten geprägt
+
+Folge:
+
+- Experience ist fachlich schon deutlich besser als früher
+- aber noch nicht konsequent genug auf Zustandswirkung, Tragfähigkeit und Umgangsfähigkeit ausgerichtet
+
+Ziel:
+
+- Experience bewertet primär `state_before`, `state_after`, `state_delta` und Tragfähigkeitswirkung
+- `tp_hit`, `sl_hit`, `cancel`, `timeout` bleiben nur Ereigniskontext
+- Lernen entsteht stärker aus Belastung, Entlastung, Stabilisierung, Fragilisierung und Handlungsfähigkeit
+- lokale Rückführung wird erst auf dieser Grundlage fachlich sinnvoll
+
+---
+
+# --------------------------------------------------
+# 4.4 MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher sind noch nicht ausgebaut
 # --------------------------------------------------
 
 Offen:
@@ -389,7 +430,7 @@ Ziel:
 ---
 
 # --------------------------------------------------
-# 4.4 Runtime / Bot-State sind noch nicht weit genug getrennt
+# 4.5 Runtime / Bot-State sind noch nicht weit genug getrennt
 # --------------------------------------------------
 
 Offen:
@@ -405,7 +446,7 @@ Ziel:
 ---
 
 # --------------------------------------------------
-# 4.5 Persistenz ist entschärft, aber noch nicht ausreichend entkoppelt
+# 4.6 Persistenz ist entschärft, aber noch nicht ausreichend entkoppelt
 # --------------------------------------------------
 
 Offen:
@@ -438,6 +479,7 @@ Noch nicht vollständig ausgebaut ist:
 
 - die weitere Entkopplung von Ergebnislogik und Experience-Logik
 - die noch konsequentere Ausrichtung auf Zustandswirkung statt Geldwirkung
+- die formale Umstellung der Experience-Bewertungslogik von Outcome-Verzweigungen auf Zustandswirkung
 
 ---
 
@@ -459,16 +501,24 @@ Noch offen ist:
 ---
 
 # --------------------------------------------------
-# 5.3 Outcome ist reduziert, aber noch nicht weit genug aus Experience gelöst
+# 5.3 Lokale Rückführung ist vorbereitet, aber fachlich noch nicht reif genug
 # --------------------------------------------------
 
-Noch offen:
+Vorbereitet ist bereits:
 
-- `_experience_reward_delta()` verzweigt weiterhin direkt über `tp_hit`, `sl_hit`, `cancel`, `timeout` und ähnliche Outcome-Wege
-- Outcome-Gewicht ist damit reduziert, aber noch nicht weit genug zurückgebaut
-- Outcome muss noch klarer als Zustandswirkung statt Geldwirkung ausgebildet werden
+- Experience-Linking
+- `inner_context_clusters`
+- Similarity-/Drift-/Reinforcement-Mechanik
+- Zustandsachsen für Tragfähigkeit, Belastung, Entlastung und Handlungsfähigkeit
+
+Noch offen ist:
+
+- lokale Erfahrungsrückwirkung erst nach sauberer Umstellung auf Zustandswirkung zu vertiefen
+- lokale Hemmung, Gewöhnung und Rückführungsneigung nicht zu früh an Outcome-Etiketten zu koppeln
+- neuronale Teilträger und Feldmuster erst dann tiefer zu modulieren, wenn Experience fachlich sauber genug entkoppelt ist
 
 ---
+
 
 # --------------------------------------------------
 # 6. Nächste sinnvolle Schritte
@@ -477,12 +527,14 @@ Noch offen:
 Die sinnvollste Reihenfolge ab jetzt ist:
 
 1. Live-Handoff `pending -> filled -> position` im Bot-/Episode-/Stats-Raum schließen
-2. `inner_context_clusters` als eigenen Persistenztyp einführen
-3. MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
-4. Runtime / Bot-State weiter trennen
-5. Experience weiter von Outcome-Logik lösen
+2. Persistenz weiter entkoppeln und Runtime / Bot-State weiter trennen
+3. `inner_context_clusters` als Innenmusterraum weiter ausbauen
+4. Experience-Bewertungslogik primär auf Zustandswirkung umstellen
+5. MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher weiter ausbauen
+6. erst danach lokale Erfahrungsrückwirkung tiefer an Innenmuster und neuronale Teilträger legen
 
 ---
+
 
 # --------------------------------------------------
 # 7. Kurzfazit
@@ -505,11 +557,16 @@ Die früheren Kernkorrekturen
 und `attempt_feedback / proof-Felder`
 sind im aktuellen Code bereits umgesetzt.
 
+`inner_context_clusters` sind im aktuellen Stand
+bereits formal im System verankert,
+aber noch nicht als tiefer Innenmuster- und Innenfeldspeicher ausgebaut.
+
 Offen sind jetzt nicht mehr die alten Basisfehler,
 sondern:
 
 - der noch unvollständige Live-Nachweisraum
-- der Ausbau innerer Speicherformen
-- die Feldtopologie des MCM-Raums
-- die weitere Trennung von Runtime und Bot-State
-- die weitere Ablösung von Outcome-Logik in Experience
+- die weitere Entkopplung von Persistenz sowie Runtime / Bot-State
+- der weitere Ausbau von `inner_context_clusters` als Innenmusterraum
+- die Umstellung von Experience auf primäre Zustandswirkungsbewertung
+- der Ausbau von Feldtopologie, Feldverlauf und Innenfeldspeicher
+- danach die tiefere lokale Erfahrungsrückwirkung auf Innenmuster und neuronale Teilträger

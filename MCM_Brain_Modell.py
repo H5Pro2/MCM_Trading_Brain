@@ -560,6 +560,229 @@ def _build_experience_similarity_axes(summary):
     }
 
 # --------------------------------------------------
+def _update_inner_context_cluster_memory(bot, summary):
+
+    if bot is None:
+        return None
+
+    summary_item = dict(summary or {})
+    inner_context_clusters = dict(getattr(bot, "inner_context_clusters", {}) or {})
+    inner_field_state = dict(getattr(bot, "inner_field_perception_state", {}) or {})
+    signature_key = str(summary_item.get("signature_key", "") or "").strip()
+    outcome_reason = str(summary_item.get("outcome_reason", "-") or "-").strip().lower()
+    outcome_delta = float(_experience_reward_delta(summary_item) or 0.0)
+
+    field_density = float(getattr(bot, "field_density", 0.0) or 0.0)
+    field_stability = float(getattr(bot, "field_stability", 0.0) or 0.0)
+    field_cluster_count = int(inner_field_state.get("field_cluster_count", 0) or 0)
+    field_cluster_mass_mean = float(inner_field_state.get("field_cluster_mass_mean", 0.0) or 0.0)
+    field_cluster_mass_max = float(inner_field_state.get("field_cluster_mass_max", 0.0) or 0.0)
+    field_cluster_center_spread = float(inner_field_state.get("field_cluster_center_spread", 0.0) or 0.0)
+    field_cluster_separation = float(inner_field_state.get("field_cluster_separation", 0.0) or 0.0)
+    field_cluster_center_drift = float(inner_field_state.get("field_cluster_center_drift", 0.0) or 0.0)
+    field_cluster_count_drift = float(inner_field_state.get("field_cluster_count_drift", 0.0) or 0.0)
+    field_velocity_trend = float(inner_field_state.get("field_velocity_trend", 0.0) or 0.0)
+    field_reorganization_direction = str(inner_field_state.get("field_reorganization_direction", "stable") or "stable")
+    field_mean_velocity = float(inner_field_state.get("field_mean_velocity", 0.0) or 0.0)
+    field_regulation_pressure = float(inner_field_state.get("field_regulation_pressure", 0.0) or 0.0)
+
+    current_vector = [
+        float(summary_item.get("in_trade_avg_regulatory_load", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_action_capacity", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_survival_pressure", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_pressure_release", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_state_stability", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_capacity_reserve", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_recovery_balance", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_regulated_courage", 0.0) or 0.0),
+        float(summary_item.get("in_trade_avg_courage_gap", 0.0) or 0.0),
+        float(summary_item.get("felt_bearing_score", 0.0) or 0.0),
+        float(summary_item.get("focus_confidence", 0.0) or 0.0),
+        float(summary_item.get("competition_bias", 0.0) or 0.0),
+        float(field_density),
+        float(field_stability),
+        float(field_cluster_count),
+        float(field_cluster_mass_mean),
+        float(field_cluster_mass_max),
+        float(field_cluster_center_spread),
+        float(field_cluster_separation),
+        float(field_mean_velocity),
+        float(field_regulation_pressure),
+    ]
+
+    current_array = np.asarray(current_vector, dtype=float)
+
+    nearest_cluster_id = None
+    nearest_cluster = None
+    nearest_distance = None
+
+    for cluster_id, item in inner_context_clusters.items():
+        if not isinstance(item, dict):
+            continue
+
+        candidate_vector = list(item.get("center_vector", []) or [])
+        if len(candidate_vector) != len(current_vector):
+            continue
+
+        candidate_array = np.asarray(candidate_vector, dtype=float)
+        distance = float(np.mean(np.abs(current_array - candidate_array)))
+
+        if nearest_distance is None or distance < nearest_distance:
+            nearest_distance = distance
+            nearest_cluster_id = str(cluster_id)
+            nearest_cluster = dict(item or {})
+
+    match_threshold = float(getattr(Config, "MCM_INNER_CONTEXT_MATCH_THRESHOLD", 0.18) or 0.18)
+
+    if nearest_cluster is None or nearest_distance is None or nearest_distance > match_threshold:
+        bot.inner_context_cluster_seq = max(0, int(getattr(bot, "inner_context_cluster_seq", 0) or 0)) + 1
+        nearest_cluster_id = f"inner_ctx_{int(bot.inner_context_cluster_seq)}"
+        nearest_distance = 0.0
+        nearest_cluster = {
+            "cluster_id": str(nearest_cluster_id),
+            "center_vector": [float(round(value, 4)) for value in current_array.tolist()],
+            "variance": 0.0,
+            "radius": 0.0,
+            "seen": 0,
+            "tp": 0,
+            "sl": 0,
+            "cancel": 0,
+            "timeout": 0,
+            "score": 0.0,
+            "trust": 0.12,
+            "age": 0,
+            "signature_keys": [],
+            "last_signature_key": None,
+            "last_outcome": None,
+            "last_distance": 0.0,
+            "field_density": float(field_density),
+            "field_stability": float(field_stability),
+            "field_cluster_count": int(field_cluster_count),
+            "field_cluster_mass_mean": float(field_cluster_mass_mean),
+            "field_cluster_mass_max": float(field_cluster_mass_max),
+            "field_cluster_center_spread": float(field_cluster_center_spread),
+            "field_cluster_separation": float(field_cluster_separation),
+            "field_cluster_center_drift": float(field_cluster_center_drift),
+            "field_cluster_count_drift": float(field_cluster_count_drift),
+            "field_velocity_trend": float(field_velocity_trend),
+            "field_reorganization_direction": str(field_reorganization_direction),
+            "field_mean_velocity": float(field_mean_velocity),
+            "field_regulation_pressure": float(field_regulation_pressure),
+        }
+    else:
+        seen = max(0, int(nearest_cluster.get("seen", 0) or 0))
+        prior_vector = list(nearest_cluster.get("center_vector", []) or [])
+        prior_array = np.asarray(prior_vector, dtype=float)
+
+        alpha = max(0.10, min(0.28, 1.0 / max(1.0, float(seen + 1))))
+        merged_center = (prior_array * (1.0 - alpha)) + (current_array * alpha)
+
+        updated_distance = float(np.mean(np.abs(current_array - prior_array)))
+
+        nearest_cluster["center_vector"] = [float(round(value, 4)) for value in merged_center.tolist()]
+        nearest_cluster["variance"] = float(
+            (float(nearest_cluster.get("variance", 0.0) or 0.0) * 0.78)
+            + ((updated_distance ** 2) * 0.22)
+        )
+        nearest_cluster["radius"] = float(
+            max(
+                float(nearest_cluster.get("radius", 0.0) or 0.0) * 0.88,
+                updated_distance,
+            )
+        )
+        nearest_distance = float(updated_distance)
+
+    nearest_cluster["seen"] = int(nearest_cluster.get("seen", 0) or 0) + 1
+    nearest_cluster["score"] = float(
+        max(
+            -12.0,
+            min(
+                12.0,
+                (float(nearest_cluster.get("score", 0.0) or 0.0) * 0.82) + outcome_delta,
+            ),
+        )
+    )
+
+    trust_base = float(nearest_cluster.get("trust", 0.0) or 0.0)
+    trust_shift = 0.06 if outcome_delta >= 0.0 else -0.04
+    nearest_cluster["trust"] = float(
+        min(
+            1.0,
+            max(
+                0.0,
+                (trust_base * 0.86) + 0.10 + trust_shift,
+            ),
+        )
+    )
+    nearest_cluster["age"] = 0
+    nearest_cluster["last_signature_key"] = str(signature_key or nearest_cluster.get("last_signature_key") or "") or None
+    nearest_cluster["last_outcome"] = str(outcome_reason or nearest_cluster.get("last_outcome") or "-") or None
+    nearest_cluster["last_distance"] = float(nearest_distance)
+    nearest_cluster["field_density"] = float(field_density)
+    nearest_cluster["field_stability"] = float(field_stability)
+    nearest_cluster["field_cluster_count"] = int(field_cluster_count)
+    nearest_cluster["field_cluster_mass_mean"] = float(field_cluster_mass_mean)
+    nearest_cluster["field_cluster_mass_max"] = float(field_cluster_mass_max)
+    nearest_cluster["field_cluster_center_spread"] = float(field_cluster_center_spread)
+    nearest_cluster["field_cluster_separation"] = float(field_cluster_separation)
+    nearest_cluster["field_cluster_center_drift"] = float(field_cluster_center_drift)
+    nearest_cluster["field_cluster_count_drift"] = float(field_cluster_count_drift)
+    nearest_cluster["field_velocity_trend"] = float(field_velocity_trend)
+    nearest_cluster["field_reorganization_direction"] = str(field_reorganization_direction)
+    nearest_cluster["field_mean_velocity"] = float(field_mean_velocity)
+    nearest_cluster["field_regulation_pressure"] = float(field_regulation_pressure)
+
+    signature_keys = list(nearest_cluster.get("signature_keys", []) or [])
+    if signature_key and signature_key not in signature_keys:
+        signature_keys.append(str(signature_key))
+    nearest_cluster["signature_keys"] = signature_keys[-24:]
+
+    if outcome_reason == "tp_hit":
+        nearest_cluster["tp"] = int(nearest_cluster.get("tp", 0) or 0) + 1
+    elif outcome_reason == "sl_hit":
+        nearest_cluster["sl"] = int(nearest_cluster.get("sl", 0) or 0) + 1
+    elif "timeout" in outcome_reason:
+        nearest_cluster["timeout"] = int(nearest_cluster.get("timeout", 0) or 0) + 1
+    elif "cancel" in outcome_reason:
+        nearest_cluster["cancel"] = int(nearest_cluster.get("cancel", 0) or 0) + 1
+
+    inner_context_clusters[str(nearest_cluster_id)] = dict(nearest_cluster)
+    bot.inner_context_clusters = dict(inner_context_clusters)
+    bot.last_inner_context_cluster_id = str(nearest_cluster_id)
+    bot.last_inner_context_cluster_key = str(signature_key or nearest_cluster_id)
+
+    return {
+        "cluster_id": str(nearest_cluster_id),
+        "distance": float(nearest_distance),
+        "seen": int(nearest_cluster.get("seen", 0) or 0),
+        "score": float(nearest_cluster.get("score", 0.0) or 0.0),
+        "trust": float(nearest_cluster.get("trust", 0.0) or 0.0),
+        "variance": float(nearest_cluster.get("variance", 0.0) or 0.0),
+        "radius": float(nearest_cluster.get("radius", 0.0) or 0.0),
+        "tp": int(nearest_cluster.get("tp", 0) or 0),
+        "sl": int(nearest_cluster.get("sl", 0) or 0),
+        "cancel": int(nearest_cluster.get("cancel", 0) or 0),
+        "timeout": int(nearest_cluster.get("timeout", 0) or 0),
+        "field_density": float(nearest_cluster.get("field_density", 0.0) or 0.0),
+        "field_stability": float(nearest_cluster.get("field_stability", 0.0) or 0.0),
+        "field_cluster_count": int(nearest_cluster.get("field_cluster_count", 0) or 0),
+        "field_cluster_mass_mean": float(nearest_cluster.get("field_cluster_mass_mean", 0.0) or 0.0),
+        "field_cluster_mass_max": float(nearest_cluster.get("field_cluster_mass_max", 0.0) or 0.0),
+        "field_cluster_center_spread": float(nearest_cluster.get("field_cluster_center_spread", 0.0) or 0.0),
+        "field_cluster_separation": float(nearest_cluster.get("field_cluster_separation", 0.0) or 0.0),
+        "field_cluster_center_drift": float(nearest_cluster.get("field_cluster_center_drift", 0.0) or 0.0),
+        "field_cluster_count_drift": float(nearest_cluster.get("field_cluster_count_drift", 0.0) or 0.0),
+        "field_velocity_trend": float(nearest_cluster.get("field_velocity_trend", 0.0) or 0.0),
+        "field_reorganization_direction": str(nearest_cluster.get("field_reorganization_direction", "stable") or "stable"),
+        "field_mean_velocity": float(nearest_cluster.get("field_mean_velocity", 0.0) or 0.0),
+        "field_regulation_pressure": float(nearest_cluster.get("field_regulation_pressure", 0.0) or 0.0),
+        "last_outcome": nearest_cluster.get("last_outcome"),
+    }
+
+# --------------------------------------------------
 def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event_name=None):
 
     if bot is None:
@@ -572,6 +795,58 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         decision_tendency=decision_tendency,
         event_name=event_name,
     )
+
+    inner_context_result = _update_inner_context_cluster_memory(
+        bot,
+        summary,
+    )
+
+    if isinstance(inner_context_result, dict):
+        summary["inner_context_cluster_id"] = str(inner_context_result.get("cluster_id", "-") or "-")
+        summary["inner_context_cluster_distance"] = float(inner_context_result.get("distance", 0.0) or 0.0)
+        summary["inner_context_cluster_score"] = float(inner_context_result.get("score", 0.0) or 0.0)
+        summary["inner_context_cluster_trust"] = float(inner_context_result.get("trust", 0.0) or 0.0)
+        summary["inner_context_cluster_mass_mean"] = float(inner_context_result.get("field_cluster_mass_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_mass_max"] = float(inner_context_result.get("field_cluster_mass_max", 0.0) or 0.0)
+        summary["inner_context_cluster_center_spread"] = float(inner_context_result.get("field_cluster_center_spread", 0.0) or 0.0)
+        summary["inner_context_cluster_separation"] = float(inner_context_result.get("field_cluster_separation", 0.0) or 0.0)
+        summary["inner_context_cluster_center_drift"] = float(inner_context_result.get("field_cluster_center_drift", 0.0) or 0.0)
+        summary["inner_context_cluster_count_drift"] = float(inner_context_result.get("field_cluster_count_drift", 0.0) or 0.0)
+        summary["inner_context_cluster_velocity_trend"] = float(inner_context_result.get("field_velocity_trend", 0.0) or 0.0)
+        summary["inner_context_cluster_reorganization_direction"] = str(inner_context_result.get("field_reorganization_direction", "stable") or "stable")
+        summary["inner_context_cluster_mean_velocity"] = float(inner_context_result.get("field_mean_velocity", 0.0) or 0.0)
+        summary["inner_context_cluster_regulation_pressure"] = float(inner_context_result.get("field_regulation_pressure", 0.0) or 0.0)
+
+        experience_space["last_inner_context_cluster_id"] = str(inner_context_result.get("cluster_id", "-") or "-")
+        experience_space["last_inner_context_cluster_key"] = str(getattr(bot, "last_inner_context_cluster_key", None) or "")
+        experience_space["last_inner_context_cluster_distance"] = float(inner_context_result.get("distance", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_score"] = float(inner_context_result.get("score", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_trust"] = float(inner_context_result.get("trust", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_mass_mean"] = float(inner_context_result.get("field_cluster_mass_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_mass_max"] = float(inner_context_result.get("field_cluster_mass_max", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_center_spread"] = float(inner_context_result.get("field_cluster_center_spread", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_separation"] = float(inner_context_result.get("field_cluster_separation", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_center_drift"] = float(inner_context_result.get("field_cluster_center_drift", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_count_drift"] = float(inner_context_result.get("field_cluster_count_drift", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_velocity_trend"] = float(inner_context_result.get("field_velocity_trend", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_reorganization_direction"] = str(inner_context_result.get("field_reorganization_direction", "stable") or "stable")
+        experience_space["last_inner_context_cluster_mean_velocity"] = float(inner_context_result.get("field_mean_velocity", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_regulation_pressure"] = float(inner_context_result.get("field_regulation_pressure", 0.0) or 0.0)
+    else:
+        summary["inner_context_cluster_id"] = str(getattr(bot, "last_inner_context_cluster_id", None) or "-")
+        summary["inner_context_cluster_distance"] = 0.0
+        summary["inner_context_cluster_score"] = 0.0
+        summary["inner_context_cluster_trust"] = 0.0
+        summary["inner_context_cluster_mass_mean"] = 0.0
+        summary["inner_context_cluster_mass_max"] = 0.0
+        summary["inner_context_cluster_center_spread"] = 0.0
+        summary["inner_context_cluster_separation"] = 0.0
+        summary["inner_context_cluster_center_drift"] = 0.0
+        summary["inner_context_cluster_count_drift"] = 0.0
+        summary["inner_context_cluster_velocity_trend"] = 0.0
+        summary["inner_context_cluster_reorganization_direction"] = "stable"
+        summary["inner_context_cluster_mean_velocity"] = 0.0
+        summary["inner_context_cluster_regulation_pressure"] = 0.0
 
     experience_space["market_ticks"] = int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0)
     experience_space["runtime_tick_seq"] = int(((getattr(bot, "mcm_runtime_snapshot", {}) or {}).get("runtime_tick_seq", 0)) or 0)
@@ -615,6 +890,15 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
     experience_space = _append_experience_episode(experience_space, summary)
     experience_space = _update_experience_link_bucket(experience_space, "signature_links", summary.get("signature_key"), summary)
     experience_space = _update_experience_link_bucket(experience_space, "context_links", summary.get("context_cluster_id"), summary)
+
+    if str(summary.get("inner_context_cluster_id", "-") or "-") != "-":
+        experience_space = _update_experience_link_bucket(
+            experience_space,
+            "inner_context_links",
+            summary.get("inner_context_cluster_id"),
+            summary,
+        )
+
     experience_space = _update_experience_link_bucket(
         experience_space,
         "decision_links",
@@ -717,6 +1001,19 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
         "in_trade_avg_courage_gap": float(summary_item.get("in_trade_avg_courage_gap", 0.0) or 0.0),
         "in_trade_last_pre_action_phase": str(summary_item.get("in_trade_last_pre_action_phase", "-") or "-"),
         "in_trade_last_dominant_tension_cause": str(summary_item.get("in_trade_last_dominant_tension_cause", "-") or "-"),
+        "field_density": float(summary_item.get("field_density", 0.0) or 0.0),
+        "field_stability": float(summary_item.get("field_stability", 0.0) or 0.0),
+        "field_cluster_count": int(summary_item.get("field_cluster_count", 0) or 0),
+        "inner_context_cluster_mass_mean": float(summary_item.get("inner_context_cluster_mass_mean", 0.0) or 0.0),
+        "inner_context_cluster_mass_max": float(summary_item.get("inner_context_cluster_mass_max", 0.0) or 0.0),
+        "inner_context_cluster_center_spread": float(summary_item.get("inner_context_cluster_center_spread", 0.0) or 0.0),
+        "inner_context_cluster_separation": float(summary_item.get("inner_context_cluster_separation", 0.0) or 0.0),
+        "inner_context_cluster_center_drift": float(summary_item.get("inner_context_cluster_center_drift", 0.0) or 0.0),
+        "inner_context_cluster_count_drift": float(summary_item.get("inner_context_cluster_count_drift", 0.0) or 0.0),
+        "inner_context_cluster_velocity_trend": float(summary_item.get("inner_context_cluster_velocity_trend", 0.0) or 0.0),
+        "inner_context_cluster_reorganization_direction": str(summary_item.get("inner_context_cluster_reorganization_direction", "stable") or "stable"),
+        "inner_context_cluster_mean_velocity": float(summary_item.get("inner_context_cluster_mean_velocity", 0.0) or 0.0),
+        "inner_context_cluster_regulation_pressure": float(summary_item.get("inner_context_cluster_regulation_pressure", 0.0) or 0.0),
         "episode_felt_summary": dict(summary_item.get("episode_felt_summary", {}) or {}),
         "felt_label": str(summary_item.get("felt_label", "mixed") or "mixed"),
         "axis_shift": float(axis_shift),
@@ -756,6 +1053,19 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     item["avg_recovery_balance"] = float((float(item.get("avg_recovery_balance", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_recovery_balance", 0.0) or 0.0) * 0.32))
     item["avg_regulated_courage"] = float((float(item.get("avg_regulated_courage", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_regulated_courage", 0.0) or 0.0) * 0.32))
     item["avg_courage_gap"] = float((float(item.get("avg_courage_gap", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_courage_gap", 0.0) or 0.0) * 0.32))
+    item["avg_field_density"] = float((float(item.get("avg_field_density", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_density", 0.0) or 0.0) * 0.32))
+    item["avg_field_stability"] = float((float(item.get("avg_field_stability", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_stability", 0.0) or 0.0) * 0.32))
+    item["avg_field_cluster_count"] = float((float(item.get("avg_field_cluster_count", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_cluster_count", 0.0) or 0.0) * 0.32))
+    item["avg_field_cluster_mass_mean"] = float((float(item.get("avg_field_cluster_mass_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_mass_mean", 0.0) or 0.0) * 0.32))
+    item["avg_field_cluster_mass_max"] = float((float(item.get("avg_field_cluster_mass_max", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_mass_max", 0.0) or 0.0) * 0.32))
+    item["avg_field_cluster_center_spread"] = float((float(item.get("avg_field_cluster_center_spread", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_center_spread", 0.0) or 0.0) * 0.32))
+    item["avg_field_cluster_separation"] = float((float(item.get("avg_field_cluster_separation", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_separation", 0.0) or 0.0) * 0.32))
+    item["avg_field_cluster_center_drift"] = float((float(item.get("avg_field_cluster_center_drift", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_center_drift", 0.0) or 0.0) * 0.32))
+    item["avg_field_cluster_count_drift"] = float((float(item.get("avg_field_cluster_count_drift", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_count_drift", 0.0) or 0.0) * 0.32))
+    item["avg_field_velocity_trend"] = float((float(item.get("avg_field_velocity_trend", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_velocity_trend", 0.0) or 0.0) * 0.32))
+    item["last_field_reorganization_direction"] = str(summary_item.get("inner_context_cluster_reorganization_direction", item.get("last_field_reorganization_direction", "stable")) or "stable")
+    item["avg_field_mean_velocity"] = float((float(item.get("avg_field_mean_velocity", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_mean_velocity", 0.0) or 0.0) * 0.32))
+    item["avg_field_regulation_pressure"] = float((float(item.get("avg_field_regulation_pressure", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_regulation_pressure", 0.0) or 0.0) * 0.32))
     item["bearing_effect"] = float((float(item.get("bearing_effect", 0.0) or 0.0) * 0.70) + (float(_experience_bearing_delta(summary_item) or 0.0) * 0.30))
     item["relief_score"] = float((float(item.get("relief_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("in_trade_avg_action_capacity", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_pressure_release", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_capacity_reserve", 0.0) or 0.0)) * 0.30))
     item["strain_score"] = float((float(item.get("strain_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("in_trade_avg_regulatory_load", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_survival_pressure", 0.0) or 0.0) + max(0.0, -float(summary_item.get("in_trade_avg_recovery_balance", 0.0) or 0.0))) * 0.30))
@@ -818,6 +1128,20 @@ def _append_experience_episode(space, summary):
         "proposed_decision": str((summary or {}).get("proposed_decision", "WAIT") or "WAIT"),
         "signature_key": str((summary or {}).get("signature_key", "-") or "-"),
         "context_cluster_id": str((summary or {}).get("context_cluster_id", "-") or "-"),
+        "inner_context_cluster_id": str((summary or {}).get("inner_context_cluster_id", "-") or "-"),
+        "inner_context_cluster_distance": float((summary or {}).get("inner_context_cluster_distance", 0.0) or 0.0),
+        "inner_context_cluster_score": float((summary or {}).get("inner_context_cluster_score", 0.0) or 0.0),
+        "inner_context_cluster_trust": float((summary or {}).get("inner_context_cluster_trust", 0.0) or 0.0),
+        "inner_context_cluster_mass_mean": float((summary or {}).get("inner_context_cluster_mass_mean", 0.0) or 0.0),
+        "inner_context_cluster_mass_max": float((summary or {}).get("inner_context_cluster_mass_max", 0.0) or 0.0),
+        "inner_context_cluster_center_spread": float((summary or {}).get("inner_context_cluster_center_spread", 0.0) or 0.0),
+        "inner_context_cluster_separation": float((summary or {}).get("inner_context_cluster_separation", 0.0) or 0.0),
+        "inner_context_cluster_center_drift": float((summary or {}).get("inner_context_cluster_center_drift", 0.0) or 0.0),
+        "inner_context_cluster_count_drift": float((summary or {}).get("inner_context_cluster_count_drift", 0.0) or 0.0),
+        "inner_context_cluster_velocity_trend": float((summary or {}).get("inner_context_cluster_velocity_trend", 0.0) or 0.0),
+        "inner_context_cluster_reorganization_direction": str((summary or {}).get("inner_context_cluster_reorganization_direction", "stable") or "stable"),
+        "inner_context_cluster_mean_velocity": float((summary or {}).get("inner_context_cluster_mean_velocity", 0.0) or 0.0),
+        "inner_context_cluster_regulation_pressure": float((summary or {}).get("inner_context_cluster_regulation_pressure", 0.0) or 0.0),
         "outcome_reason": str((summary or {}).get("outcome_reason", "-") or "-"),
         "non_action_type": (summary or {}).get("non_action_type", None),
         "review_label": str((summary or {}).get("review_label", "-") or "-"),
@@ -1484,6 +1808,7 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
     fused = dict(fused_state or {})
     experience_space = dict(getattr(bot, "mcm_experience_space", {}) or {})
     context_links = dict(experience_space.get("context_links", {}) or {})
+    inner_context_links = dict(experience_space.get("inner_context_links", {}) or {})
 
     context_cluster_id = str(
         fused.get(
@@ -1492,12 +1817,37 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
         ) or "-"
     ).strip()
 
-    context_item = dict(context_links.get(context_cluster_id, {}) or {})
+    inner_context_cluster_id = str(
+        fused.get(
+            "inner_context_cluster_id",
+            getattr(bot, "last_inner_context_cluster_id", "-"),
+        ) or "-"
+    ).strip()
 
-    felt_bearing_score = float(context_item.get("felt_bearing_score", 0.0) or 0.0)
-    felt_profile_label = str(context_item.get("felt_profile_label", "mixed_unclear") or "mixed_unclear").strip().lower()
-    felt_profile = dict(context_item.get("felt_profile", {}) or {})
-    felt_distribution = dict(context_item.get("felt_distribution", {}) or {})
+    context_item = dict(context_links.get(context_cluster_id, {}) or {})
+    inner_context_item = dict(inner_context_links.get(inner_context_cluster_id, {}) or {})
+
+    context_felt_bearing_score = float(context_item.get("felt_bearing_score", 0.0) or 0.0)
+    context_felt_profile_label = str(context_item.get("felt_profile_label", "mixed_unclear") or "mixed_unclear").strip().lower()
+
+    inner_felt_bearing_score = float(inner_context_item.get("felt_bearing_score", 0.0) or 0.0)
+    inner_felt_profile_label = str(inner_context_item.get("felt_profile_label", "mixed_unclear") or "mixed_unclear").strip().lower()
+
+    selected_item = dict(context_item or {})
+    felt_bearing_score = float(context_felt_bearing_score)
+    felt_profile_label = str(context_felt_profile_label or "mixed_unclear")
+
+    if inner_context_item:
+        selected_item = dict(inner_context_item or {})
+        felt_bearing_score = float((context_felt_bearing_score * 0.42) + (inner_felt_bearing_score * 0.58))
+
+        if inner_felt_profile_label not in ("", "mixed_unclear", "-"):
+            felt_profile_label = str(inner_felt_profile_label)
+        else:
+            felt_profile_label = str(context_felt_profile_label or "mixed_unclear")
+
+    felt_profile = dict(selected_item.get("felt_profile", {}) or {})
+    felt_distribution = dict(selected_item.get("felt_distribution", {}) or {})
     felt_averages = dict(felt_profile.get("averages", {}) or {})
     felt_variance = dict(felt_profile.get("variance", {}) or {})
     felt_stability = dict(felt_profile.get("stability", {}) or {})
@@ -1508,6 +1858,50 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
     felt_valence_variance = float(felt_variance.get("felt_valence_variance", 0.0) or 0.0)
     felt_bearing_variance = float(felt_variance.get("felt_bearing_variance", 0.0) or 0.0)
     felt_conflict_ratio = float(felt_stability.get("felt_conflict_ratio", 0.0) or 0.0)
+
+    topology_density = float(selected_item.get("avg_field_density", selected_item.get("field_density", 0.0)) or 0.0)
+    topology_stability = float(selected_item.get("avg_field_stability", selected_item.get("field_stability", 0.0)) or 0.0)
+    topology_cluster_count = float(selected_item.get("avg_field_cluster_count", selected_item.get("field_cluster_count", 0.0)) or 0.0)
+    topology_mass_mean = float(selected_item.get("avg_field_cluster_mass_mean", selected_item.get("field_cluster_mass_mean", 0.0)) or 0.0)
+    topology_mass_max = float(selected_item.get("avg_field_cluster_mass_max", selected_item.get("field_cluster_mass_max", 0.0)) or 0.0)
+    topology_center_spread = float(selected_item.get("avg_field_cluster_center_spread", selected_item.get("field_cluster_center_spread", 0.0)) or 0.0)
+    topology_separation = float(selected_item.get("avg_field_cluster_separation", selected_item.get("field_cluster_separation", 0.0)) or 0.0)
+    topology_center_drift = float(selected_item.get("avg_field_cluster_center_drift", selected_item.get("field_cluster_center_drift", 0.0)) or 0.0)
+    topology_count_drift = float(selected_item.get("avg_field_cluster_count_drift", selected_item.get("field_cluster_count_drift", 0.0)) or 0.0)
+    topology_velocity_trend = float(selected_item.get("avg_field_velocity_trend", selected_item.get("field_velocity_trend", 0.0)) or 0.0)
+    topology_reorganization_direction = str(selected_item.get("last_field_reorganization_direction", selected_item.get("field_reorganization_direction", "stable")) or "stable")
+    topology_velocity = float(selected_item.get("avg_field_mean_velocity", selected_item.get("field_mean_velocity", 0.0)) or 0.0)
+    topology_pressure = float(selected_item.get("avg_field_regulation_pressure", selected_item.get("field_regulation_pressure", 0.0)) or 0.0)
+
+    topology_support = max(
+        0.0,
+        min(
+            1.0,
+            (topology_density * 0.18)
+            + (topology_stability * 0.34)
+            + (topology_mass_mean * 0.22)
+            + (topology_mass_max * 0.26)
+            - (min(1.0, topology_center_spread) * 0.18)
+            - (min(1.0, topology_separation) * 0.16)
+            - (min(1.0, topology_velocity) * 0.10),
+        ),
+    )
+
+    topology_fragmentation = max(
+        0.0,
+        min(
+            1.0,
+            (min(1.0, topology_center_spread) * 0.28)
+            + (min(1.0, topology_separation) * 0.22)
+            + ((1.0 - topology_stability) * 0.22)
+            + (min(1.0, topology_cluster_count / 6.0) * 0.14)
+            + (min(1.0, topology_pressure) * 0.14)
+            + (min(1.0, topology_velocity) * 0.18)
+            + (min(1.0, topology_center_drift) * 0.12)
+            + (min(1.0, topology_count_drift) * 0.10)
+            + (min(1.0, max(0.0, topology_velocity_trend)) * 0.08),
+        ),
+    )
 
     decision_bias = 0.0
     conviction_boost = 0.0
@@ -1553,6 +1947,33 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
     else:
         caution_penalty += (felt_conflict_ratio * 0.06)
         volatility_penalty += (felt_bearing_variance * 0.06)
+
+    decision_bias += float(topology_support * 0.04)
+    conviction_boost += float(topology_support * 0.05)
+    caution_penalty += float(topology_fragmentation * 0.05)
+    volatility_penalty += float(topology_fragmentation * 0.04)
+    risk_shift -= float(topology_support * 0.02)
+    risk_shift -= float(topology_fragmentation * 0.03)
+    rr_shift += float(topology_support * 0.02)
+    width_shift -= float(topology_support * 0.02)
+    width_shift += float(topology_fragmentation * 0.03)
+
+    if topology_reorganization_direction in ("reorganizing", "dissolving"):
+        caution_penalty += 0.04
+        volatility_penalty += 0.03
+        risk_shift -= 0.03
+        width_shift += 0.03
+    elif topology_reorganization_direction == "forming":
+        caution_penalty += 0.02
+        volatility_penalty += 0.01
+    elif topology_reorganization_direction == "accelerating":
+        caution_penalty += 0.03
+        volatility_penalty += 0.03
+        width_shift += 0.02
+    elif topology_reorganization_direction == "settling":
+        decision_bias += 0.02
+        conviction_boost += 0.02
+        width_shift -= 0.01
 
     return {
         "felt_bearing_score": float(felt_bearing_score),
@@ -2033,7 +2454,115 @@ def build_outcome_stimulus(outcome_reason, position=None):
         "memory_boost": float(max(0.0, min(8.0, memory_boost))),
         "outcome_label": outcome_label,
     }
+# --------------------------------------------------
+def _snapshot_float_vector(values, digits=4):
 
+    vector = []
+
+    for value in list(np.asarray(values, dtype=float).tolist() if values is not None else []):
+        try:
+            vector.append(float(round(float(value), digits)))
+        except Exception:
+            vector.append(0.0)
+
+    return vector
+
+# --------------------------------------------------
+def _snapshot_agent_field_points(field, limit=48):
+
+    points = []
+
+    if field is None:
+        return points
+
+    energy = np.asarray(getattr(field, "energy", []), dtype=float)
+    velocity = np.asarray(getattr(field, "velocity", []), dtype=float)
+
+    if len(energy) == 0:
+        return points
+
+    sample_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_AGENT_LIMIT", limit) or limit))
+
+    if len(energy) <= sample_limit:
+        indices = list(range(len(energy)))
+    else:
+        indices = []
+        for value in np.linspace(0, len(energy) - 1, num=sample_limit):
+            index = int(round(float(value)))
+            if index not in indices:
+                indices.append(index)
+
+    for index in indices:
+        velocity_item = velocity[index] if len(velocity) > index else np.zeros(energy.shape[1], dtype=float)
+        points.append({
+            "agent_index": int(index),
+            "position": _snapshot_float_vector(energy[index]),
+            "velocity": _snapshot_float_vector(velocity_item),
+        })
+
+    return points
+
+# --------------------------------------------------
+def _snapshot_cluster_centers(clusters):
+
+    payload = []
+    center_vectors = []
+
+    for cluster_index, item in enumerate(list(clusters or [])):
+        cluster_array = np.asarray(item, dtype=float)
+
+        if len(cluster_array) == 0:
+            continue
+
+        center = np.mean(cluster_array, axis=0)
+        distances = [
+            float(np.linalg.norm(np.asarray(point, dtype=float) - np.asarray(center, dtype=float)))
+            for point in cluster_array
+        ]
+        mean_radius = float(np.mean(distances)) if distances else 0.0
+        max_radius = float(max(distances)) if distances else 0.0
+
+        center_vectors.append(np.asarray(center, dtype=float))
+        payload.append({
+            "cluster_index": int(cluster_index),
+            "size": int(len(cluster_array)),
+            "center": _snapshot_float_vector(center),
+            "mean_radius": float(round(mean_radius, 4)),
+            "max_radius": float(round(max_radius, 4)),
+        })
+
+    return payload, center_vectors
+
+# --------------------------------------------------
+def _snapshot_cluster_links(center_vectors, limit=12):
+
+    links = []
+    if len(list(center_vectors or [])) < 2:
+        return links
+
+    candidates = []
+
+    for i in range(len(center_vectors)):
+        for j in range(i + 1, len(center_vectors)):
+            distance = float(
+                np.linalg.norm(
+                    np.asarray(center_vectors[i], dtype=float)
+                    - np.asarray(center_vectors[j], dtype=float)
+                )
+            )
+            candidates.append((distance, i, j))
+
+    candidates.sort(key=lambda item: float(item[0]))
+    link_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_CLUSTER_LINK_LIMIT", limit) or limit))
+
+    for distance, source_index, target_index in candidates[:link_limit]:
+        links.append({
+            "source_index": int(source_index),
+            "target_index": int(target_index),
+            "distance": float(round(distance, 4)),
+        })
+
+    return links
 # --------------------------------------------------
 # MCM STEP
 # --------------------------------------------------
@@ -2089,7 +2618,11 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     field.step(total_energy_impulse * 0.55)
     field.energy = np.clip(field.energy, -2.2, 2.2)
 
-    clusters = cluster.detect(field.energy, force=is_outcome_mode)
+    clusters = cluster.detect(
+        field.energy,
+        force=is_outcome_mode,
+        mean_velocity=float(np.mean(np.linalg.norm(field.velocity, axis=1))),
+    )
 
     memory_store_clusters = []
     for item in clusters:
@@ -2125,6 +2658,79 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     mean_risk = float(np.mean(field.energy[:, 2]))
     mean_velocity = float(np.mean(np.linalg.norm(field.velocity, axis=1)))
 
+    clusters = cluster.detect(
+        field.energy,
+        force=is_outcome_mode,
+        mean_velocity=mean_velocity,
+    )
+
+    cluster_sizes = [int(len(cluster)) for cluster in list(clusters or []) if len(cluster) > 0]
+    cluster_center_payload, cluster_center_vectors = _snapshot_cluster_centers(clusters)
+    cluster_centers = [np.asarray(item, dtype=float) for item in list(cluster_center_vectors or [])]
+    cluster_links = _snapshot_cluster_links(cluster_center_vectors)
+    field_center = np.mean(field.energy, axis=0) if len(field.energy) > 0 else np.zeros(field.D, dtype=float)
+    field_energy = np.asarray(getattr(field, "energy", []), dtype=float)
+
+    cluster_mass_mean = 0.0
+    cluster_mass_max = 0.0
+    cluster_center_spread = 0.0
+    cluster_separation = 0.0
+
+    if cluster_sizes:
+        cluster_mass_mean = float(np.mean(cluster_sizes) / max(1, int(field.N or 1)))
+        cluster_mass_max = float(max(cluster_sizes) / max(1, int(field.N or 1)))
+
+    if cluster_centers:
+        cluster_center_spread = float(
+            np.mean(
+                [
+                    np.linalg.norm(
+                        np.asarray(center, dtype=float) - np.asarray(field_center, dtype=float)
+                    )
+                    for center in cluster_centers
+                ]
+            )
+        )
+
+    if len(cluster_centers) > 1:
+        separation_values = []
+
+        for i in range(len(cluster_centers)):
+            for j in range(i + 1, len(cluster_centers)):
+                separation_values.append(
+                    float(
+                        np.linalg.norm(
+                            np.asarray(cluster_centers[i], dtype=float)
+                            - np.asarray(cluster_centers[j], dtype=float)
+                        )
+                    )
+                )
+
+        if separation_values:
+            cluster_separation = float(np.mean(separation_values))
+
+    field_bounds = {
+        "energy": {
+            "min": float(round(float(np.min(field_energy[:, 0])) if len(field_energy) > 0 else 0.0, 4)),
+            "max": float(round(float(np.max(field_energy[:, 0])) if len(field_energy) > 0 else 0.0, 4)),
+        },
+        "motivation": {
+            "min": float(round(float(np.min(field_energy[:, 1])) if len(field_energy) > 1 else 0.0, 4)),
+            "max": float(round(float(np.max(field_energy[:, 1])) if len(field_energy) > 1 else 0.0, 4)),
+        },
+        "risk": {
+            "min": float(round(float(np.min(field_energy[:, 2])) if len(field_energy) > 2 else 0.0, 4)),
+            "max": float(round(float(np.max(field_energy[:, 2])) if len(field_energy) > 2 else 0.0, 4)),
+        },
+    }
+    field_agent_points = _snapshot_agent_field_points(field)
+
+    cluster_topology = dict(getattr(cluster, "last_topology", {}) or {})
+    cluster_center_drift = float(cluster_topology.get("cluster_center_drift", 0.0) or 0.0)
+    cluster_count_drift = float(cluster_topology.get("cluster_count_drift", 0.0) or 0.0)
+    field_velocity_trend = float(cluster_topology.get("field_velocity_trend", 0.0) or 0.0)
+    reorganization_direction = str(cluster_topology.get("reorganization_direction", "stable") or "stable")
+
     snapshot = {
         "mode": mode_value,
         "outcome_label": outcome_label,
@@ -2137,7 +2743,21 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "mean_risk": float(mean_risk),
         "mean_velocity": float(mean_velocity),
         "cluster_count": int(len(clusters)),
+        "cluster_mass_mean": float(cluster_mass_mean),
+        "cluster_mass_max": float(cluster_mass_max),
+        "cluster_center_spread": float(cluster_center_spread),
+        "cluster_separation": float(cluster_separation),
+        "cluster_center_drift": float(cluster_center_drift),
+        "cluster_count_drift": float(cluster_count_drift),
+        "field_velocity_trend": float(field_velocity_trend),
+        "reorganization_direction": str(reorganization_direction),
         "regulation_pressure": float(abs(mean_energy) * 0.85 + abs(mean_risk) * 0.95 + mean_velocity * 0.35),
+        "field_center_vector": _snapshot_float_vector(field_center),
+        "field_agent_points": list(field_agent_points or []),
+        "field_cluster_centers": list(cluster_center_payload or []),
+        "field_cluster_links": list(cluster_links or []),
+        "field_projection_axes": ["energy", "motivation", "risk"],
+        "field_projection_bounds": dict(field_bounds or {}),
     }
 
     _mcm_state_debug(
@@ -2348,7 +2968,21 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "field_mean_risk": float(snap.get("mean_risk", 0.0) or 0.0),
         "field_mean_velocity": float(snap.get("mean_velocity", 0.0) or 0.0),
         "field_cluster_count": int(snap.get("cluster_count", 0) or 0),
+        "field_cluster_mass_mean": float(snap.get("cluster_mass_mean", 0.0) or 0.0),
+        "field_cluster_mass_max": float(snap.get("cluster_mass_max", 0.0) or 0.0),
+        "field_cluster_center_spread": float(snap.get("cluster_center_spread", 0.0) or 0.0),
+        "field_cluster_separation": float(snap.get("cluster_separation", 0.0) or 0.0),
+        "field_cluster_center_drift": float(snap.get("cluster_center_drift", 0.0) or 0.0),
+        "field_cluster_count_drift": float(snap.get("cluster_count_drift", 0.0) or 0.0),
+        "field_velocity_trend": float(snap.get("field_velocity_trend", 0.0) or 0.0),
+        "field_reorganization_direction": str(snap.get("reorganization_direction", "stable") or "stable"),
         "field_regulation_pressure": float(snap.get("regulation_pressure", 0.0) or 0.0),
+        "field_center_vector": list(snap.get("field_center_vector", []) or []),
+        "field_agent_points": [dict(item or {}) for item in list(snap.get("field_agent_points", []) or []) if isinstance(item, dict)],
+        "field_cluster_centers": [dict(item or {}) for item in list(snap.get("field_cluster_centers", []) or []) if isinstance(item, dict)],
+        "field_cluster_links": [dict(item or {}) for item in list(snap.get("field_cluster_links", []) or []) if isinstance(item, dict)],
+        "field_projection_axes": list(snap.get("field_projection_axes", []) or []),
+        "field_projection_bounds": dict(snap.get("field_projection_bounds", {}) or {}),
         "self_state": str(snap.get("self_state", "stable") or "stable"),
         "attractor": str(snap.get("attractor", "neutral") or "neutral"),
         "prior_experience_regulation": float(prior_regulation),
