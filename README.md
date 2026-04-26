@@ -276,7 +276,11 @@ Outcome-Wege wie `tp_hit`, `sl_hit`, `cancel` oder `timeout` sind im aktuellen C
 Das ist ein **offener Ausbaupunkt**, kein bereits abgeschlossener Endzustand.
 
 ---
+## MCM Neuron ansicht und Aufbau
 
+![alt text](files/MCM_Neuron.png)
+
+---
 ## Innenfeld, Musterbildung und neuronale Richtung
 
 Die Zielarchitektur versteht das MCM-Feld nicht nur als Container,
