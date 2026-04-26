@@ -276,7 +276,7 @@ Outcome-Wege wie `tp_hit`, `sl_hit`, `cancel` oder `timeout` sind im aktuellen C
 Das ist ein **offener Ausbaupunkt**, kein bereits abgeschlossener Endzustand.
 
 ---
-## MCM Neuron ansicht und Aufbau
+## MCM-Neuron Ansicht und Aufbau
 
 ![alt text](files/MCM_Neuron.png)
 
