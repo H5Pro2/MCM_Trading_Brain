@@ -29,6 +29,7 @@ class MCMBrainRuntime:
         self.last_impulse = {}
         self.pending_impulse = None
         self.brain_snapshot = {}
+        self.active_context_trace = {}
         self._market_tick_pending = False
     # ----------------------
     def restore_from_bot(self):
@@ -44,6 +45,13 @@ class MCMBrainRuntime:
         self.runtime_tick_seq = int(runtime_snapshot.get("runtime_tick_seq", 0) or 0)
         self.last_result = dict(runtime_decision_state.get("entry_result", {}) or {})
         self.brain_snapshot = dict(runtime_brain_snapshot or {})
+        self.active_context_trace = _normalize_active_context_trace(
+            runtime_snapshot.get(
+                "active_context_trace",
+                runtime_brain_snapshot.get("active_context_trace", {}),
+            )
+        )
+        setattr(self.bot, "active_context_trace", dict(self.active_context_trace or {}))
         self.pending_impulse = None
         self._market_tick_pending = False
 
@@ -145,6 +153,12 @@ class MCMBrainRuntime:
         if not window:
             return None
 
+        self.active_context_trace = _decay_active_context_trace(
+            self.active_context_trace,
+            market_tick_advanced=self._market_tick_pending,
+        )
+        setattr(self.bot, "active_context_trace", dict(self.active_context_trace or {}))
+
         runtime_result, decision_tendency, timestamp = _compute_runtime_result(
             window,
             candle_state,
@@ -199,7 +213,181 @@ class MCMBrainRuntime:
             "brain_snapshot": dict(self.brain_snapshot or {}),
             "last_result": dict(self.last_result or {}),
         }
-    
+
+# --------------------------------------------------
+def _resolve_active_context_replay_impulse(trace):
+
+    item = _normalize_active_context_trace(trace)
+    if not item:
+        return 0.0
+
+    activation = float(item.get("activation", 0.0) or 0.0)
+    support_pressure = (
+        float(item.get("support", 0.0) or 0.0)
+        + float(item.get("bearing", 0.0) or 0.0)
+        + float(item.get("reinforcement", 0.0) or 0.0)
+    )
+    regulation_pressure = (
+        float(item.get("conflict", 0.0) or 0.0)
+        + float(item.get("fragility", 0.0) or 0.0)
+        + float(item.get("attenuation", 0.0) or 0.0)
+    )
+    context_balance = max(-1.0, min(1.0, (support_pressure - regulation_pressure) / 3.0))
+    replay_weight = max(0.0, min(0.18, float(getattr(Config, "MCM_ACTIVE_CONTEXT_REPLAY_WEIGHT", 0.06) or 0.06)))
+
+    return float(max(-0.12, min(0.12, activation * context_balance * replay_weight)))
+
+# --------------------------------------------------
+def _normalize_active_context_trace(trace):
+
+    item = dict(trace or {})
+    cluster_id = str(item.get("cluster_id", item.get("inner_context_cluster_id", "-")) or "-").strip()
+
+    if not cluster_id or cluster_id == "-":
+        return {}
+
+    try:
+        activation = float(item.get("activation", 0.0) or 0.0)
+    except Exception:
+        activation = 0.0
+
+    activation = max(0.0, min(1.0, activation))
+    if activation <= 0.001:
+        return {}
+
+    return {
+        "cluster_id": str(cluster_id),
+        "activation": float(activation),
+        "support": max(0.0, min(1.0, float(item.get("support", 0.0) or 0.0))),
+        "conflict": max(0.0, min(1.0, float(item.get("conflict", 0.0) or 0.0))),
+        "fragility": max(0.0, min(1.0, float(item.get("fragility", 0.0) or 0.0))),
+        "bearing": max(0.0, min(1.0, float(item.get("bearing", 0.0) or 0.0))),
+        "action_support": max(0.0, min(1.0, float(item.get("action_support", 0.0) or 0.0))),
+        "observe_pressure": max(0.0, min(1.0, float(item.get("observe_pressure", 0.0) or 0.0))),
+        "replan_pressure": max(0.0, min(1.0, float(item.get("replan_pressure", 0.0) or 0.0))),
+        "reinforcement": max(0.0, min(1.0, float(item.get("reinforcement", 0.0) or 0.0))),
+        "attenuation": max(0.0, min(1.0, float(item.get("attenuation", 0.0) or 0.0))),
+        "last_seen_tick": int(float(item.get("last_seen_tick", 0) or 0)),
+    }
+
+# --------------------------------------------------
+def _decay_active_context_trace(trace, market_tick_advanced=True):
+
+    item = _normalize_active_context_trace(trace)
+    if not item:
+        return {}
+
+    if market_tick_advanced:
+        decay = float(getattr(Config, "MCM_ACTIVE_CONTEXT_TRACE_DECAY", 0.92) or 0.92)
+    else:
+        decay = float(getattr(Config, "MCM_ACTIVE_CONTEXT_TRACE_IDLE_DECAY", 0.975) or 0.975)
+
+    item["activation"] = max(0.0, min(1.0, float(item.get("activation", 0.0) or 0.0) * max(0.0, min(1.0, decay))))
+
+    if item["activation"] <= 0.01:
+        return {}
+
+    return dict(item)
+
+# --------------------------------------------------
+def _build_active_context_trace_from_inner_cluster(bot=None):
+
+    if bot is None:
+        return {}
+
+    cluster_id = str(getattr(bot, "last_inner_context_cluster_id", "-") or "-").strip()
+    if not cluster_id or cluster_id == "-":
+        return {}
+
+    inner_context_clusters = dict(getattr(bot, "inner_context_clusters", {}) or {})
+    experience_space = dict(getattr(bot, "mcm_experience_space", {}) or {})
+    inner_context_links = dict(experience_space.get("inner_context_links", {}) or {})
+
+    source = dict(inner_context_clusters.get(cluster_id, {}) or inner_context_links.get(cluster_id, {}) or {})
+    if not source:
+        return {}
+
+    support = max(0.0, min(1.0, float(source.get("pattern_support_score", source.get("inner_pattern_support", 0.0)) or 0.0)))
+    conflict = max(0.0, min(1.0, float(source.get("pattern_conflict_score", source.get("inner_pattern_conflict", 0.0)) or 0.0)))
+    fragility = max(0.0, min(1.0, float(source.get("pattern_fragility_score", source.get("inner_pattern_fragility", 0.0)) or 0.0)))
+    bearing = max(0.0, min(1.0, float(source.get("pattern_bearing_score", source.get("inner_pattern_bearing", 0.0)) or 0.0)))
+    reinforcement = max(0.0, min(1.0, float(source.get("pattern_reinforcement", source.get("reinforcement", 0.0)) or 0.0)))
+    attenuation = max(0.0, min(1.0, float(source.get("pattern_attenuation", source.get("attenuation", 0.0)) or 0.0)))
+    trust = max(0.0, min(1.0, float(source.get("trust", 0.0) or 0.0)))
+
+    activation = max(
+        0.0,
+        min(
+            1.0,
+            0.08
+            + (trust * 0.30)
+            + (support * 0.18)
+            + (bearing * 0.18)
+            + (reinforcement * 0.18)
+            - (conflict * 0.10)
+            - (attenuation * 0.08),
+        ),
+    )
+
+    action_support = max(0.0, min(1.0, (support * 0.28) + (bearing * 0.34) + (reinforcement * 0.24) - (conflict * 0.14)))
+    observe_pressure = max(0.0, min(1.0, (conflict * 0.30) + (fragility * 0.34) + (attenuation * 0.24) - (reinforcement * 0.08)))
+    replan_pressure = max(0.0, min(1.0, (conflict * 0.34) + (attenuation * 0.28) + (fragility * 0.18) - (support * 0.10)))
+
+    return {
+        "cluster_id": str(cluster_id),
+        "activation": float(activation),
+        "support": float(support),
+        "conflict": float(conflict),
+        "fragility": float(fragility),
+        "bearing": float(bearing),
+        "action_support": float(action_support),
+        "observe_pressure": float(observe_pressure),
+        "replan_pressure": float(replan_pressure),
+        "reinforcement": float(reinforcement),
+        "attenuation": float(attenuation),
+        "last_seen_tick": int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0),
+    }
+
+# --------------------------------------------------
+def _refresh_active_context_trace(trace, bot=None, runtime_result=None, market_tick_advanced=True):
+
+    current = _decay_active_context_trace(
+        trace,
+        market_tick_advanced=market_tick_advanced,
+    )
+    candidate = _build_active_context_trace_from_inner_cluster(bot=bot)
+
+    if not candidate:
+        return dict(current or {})
+
+    if not current:
+        return _normalize_active_context_trace(candidate)
+
+    if str(current.get("cluster_id", "-") or "-") != str(candidate.get("cluster_id", "-") or "-"):
+        if float(candidate.get("activation", 0.0) or 0.0) >= float(current.get("activation", 0.0) or 0.0) * 0.78:
+            return _normalize_active_context_trace(candidate)
+        return dict(current)
+
+    alpha = max(0.08, min(0.34, float(candidate.get("activation", 0.0) or 0.0)))
+    merged = dict(current)
+    merged["activation"] = max(float(current.get("activation", 0.0) or 0.0), float(candidate.get("activation", 0.0) or 0.0))
+
+    for key in (
+        "support",
+        "conflict",
+        "fragility",
+        "bearing",
+        "action_support",
+        "observe_pressure",
+        "replan_pressure",
+        "reinforcement",
+        "attenuation",
+    ):
+        merged[key] = float((float(current.get(key, 0.0) or 0.0) * (1.0 - alpha)) + (float(candidate.get(key, 0.0) or 0.0) * alpha))
+
+    merged["last_seen_tick"] = int(candidate.get("last_seen_tick", current.get("last_seen_tick", 0)) or 0)
+    return _normalize_active_context_trace(merged)    
+
 # --------------------------------------------------
 def step_mcm_runtime_idle(bot=None, cycles=1):
 
@@ -410,98 +598,81 @@ def _experience_reward_delta(summary):
     felt_burden = float(item.get("felt_burden", 0.0) or 0.0)
     experience_friction_cost = float(item.get("experience_friction_cost", 0.0) or 0.0)
     experience_energy_cost = float(item.get("experience_energy_cost", 0.0) or 0.0)
+    field_areal_stability_mean = float(item.get("field_areal_stability_mean", 0.0) or 0.0)
+    field_areal_pressure_mean = float(item.get("field_areal_pressure_mean", 0.0) or 0.0)
+    field_areal_dominance = float(item.get("field_areal_dominance", 0.0) or 0.0)
+    field_areal_fragmentation = float(item.get("field_areal_fragmentation", 0.0) or 0.0)
+    field_areal_coherence_mean = float(item.get("field_areal_coherence_mean", 0.0) or 0.0)
+    field_areal_conflict_mean = float(item.get("field_areal_conflict_mean", 0.0) or 0.0)
+    processing_areal_tension = float(item.get("processing_areal_tension", 0.0) or 0.0)
+    processing_areal_support = float(item.get("processing_areal_support", 0.0) or 0.0)
+    thought_areal_pressure = float(item.get("thought_areal_pressure", 0.0) or 0.0)
+    thought_areal_support = float(item.get("thought_areal_support", 0.0) or 0.0)
+    episode_felt_summary = dict(item.get("episode_felt_summary", {}) or {})
+    felt_areal_support = float(episode_felt_summary.get("areal_support", 0.0) or 0.0)
+    felt_areal_conflict = float(episode_felt_summary.get("areal_conflict_pressure", 0.0) or 0.0)
     bearing_delta = float(_experience_bearing_delta(item) or 0.0)
 
-    base_delta = float(
-        (bearing_delta * 0.34)
-        + (structural_bearing_quality * 0.16)
-        + (relief_quality * 0.12)
-        + (carrying_room * 0.10)
-        + (felt_bearing * 0.10)
+    state_support = float(
+        (bearing_delta * 0.24)
+        + (structural_bearing_quality * 0.12)
+        + (relief_quality * 0.10)
+        + (carrying_room * 0.08)
+        + (felt_bearing * 0.08)
         + (felt_regulation_quality * 0.08)
-        + (review_score * 0.05)
-        - (bearing_regulation_cost * 0.12)
-        - (experience_friction_cost * 0.10)
-        - (experience_energy_cost * 0.07)
-        - (felt_recovery_cost * 0.08)
-        - (felt_burden * 0.08)
+        + (review_score * 0.04)
+        + (field_areal_stability_mean * 0.08)
+        + (field_areal_coherence_mean * 0.06)
+        + (field_areal_dominance * 0.04)
+        + (felt_areal_support * 0.08)
+        + (processing_areal_support * 0.06)
+        + (thought_areal_support * 0.04)
     )
 
-    if outcome_reason == "tp_hit":
-        return float(
-            max(
-                -0.28,
-                min(
-                    0.28,
-                    base_delta
-                    + (plan_quality * 0.04)
-                    + (execution_quality * 0.04)
-                    + (max(0.0, carrying_room - bearing_regulation_cost) * 0.06),
-                ),
-            )
-        )
+    state_strain = float(
+        (bearing_regulation_cost * 0.10)
+        + (experience_friction_cost * 0.10)
+        + (experience_energy_cost * 0.08)
+        + (felt_recovery_cost * 0.08)
+        + (felt_burden * 0.08)
+        + (field_areal_pressure_mean * 0.06)
+        + (field_areal_fragmentation * 0.06)
+        + (field_areal_conflict_mean * 0.08)
+        + (felt_areal_conflict * 0.08)
+        + (processing_areal_tension * 0.06)
+        + (thought_areal_pressure * 0.04)
+    )
 
-    if outcome_reason == "sl_hit":
-        return float(
-            max(
-                -0.28,
-                min(
-                    0.28,
-                    base_delta
-                    - 0.03
-                    - ((1.0 - risk_fit_quality) * 0.05)
-                    - (bearing_regulation_cost * 0.04),
-                ),
-            )
-        )
-
-    if outcome_reason in ("cancel", "timeout", "reward_too_small", "rr_too_low", "sl_distance_too_high"):
-        return float(
-            max(
-                -0.28,
-                min(
-                    0.28,
-                    base_delta
-                    - 0.01
-                    + (correction_timing_quality * 0.06)
-                    + (observation_quality * 0.04),
-                ),
-            )
-        )
+    base_delta = float((state_support * 0.64) - (state_strain * 0.58))
+    event_context_delta = 0.0
 
     if event_name in ("observed_only", "withheld", "replanned", "abandoned"):
-        non_action_delta = float(
-            base_delta
-            + (observation_quality * 0.08)
-            + (correction_timing_quality * 0.06)
-            + (structural_bearing_quality * 0.04)
-        )
-
+        event_context_delta += (observation_quality * 0.05) + (correction_timing_quality * 0.04)
         if decision_tendency in ("observe", "replan", "hold"):
-            non_action_delta += 0.02
+            event_context_delta += 0.02
 
-        return float(max(-0.28, min(0.28, non_action_delta)))
+    elif event_name == "submitted":
+        event_context_delta += 0.01 + (plan_quality * 0.02)
 
-    if event_name == "submitted":
-        return float(max(-0.28, min(0.28, 0.01 + (base_delta * 0.32))))
+    elif event_name == "filled":
+        event_context_delta += 0.01 + (execution_quality * 0.02)
 
-    if event_name == "filled":
-        return float(max(-0.28, min(0.28, 0.02 + (base_delta * 0.40))))
+    elif event_name in ("pending_update", "position_update", "in_trade_update", "monitor_update"):
+        event_context_delta += (execution_quality * 0.02) + (risk_fit_quality * 0.02)
 
-    if event_name in ("pending_update", "position_update", "in_trade_update", "monitor_update"):
-        return float(
-            max(
-                -0.28,
-                min(
-                    0.28,
-                    (base_delta * 0.52)
-                    + (execution_quality * 0.03)
-                    + (risk_fit_quality * 0.03),
-                ),
-            )
-        )
+    if outcome_reason == "tp_hit":
+        event_context_delta += 0.02 + (plan_quality * 0.02) + (execution_quality * 0.02)
+        event_context_delta += max(0.0, carrying_room - bearing_regulation_cost) * 0.03
 
-    return float(max(-0.28, min(0.28, base_delta * 0.42)))
+    elif outcome_reason == "sl_hit":
+        event_context_delta -= 0.02 + ((1.0 - risk_fit_quality) * 0.03)
+        event_context_delta -= bearing_regulation_cost * 0.02
+
+    elif outcome_reason in ("cancel", "timeout", "reward_too_small", "rr_too_low", "sl_distance_too_high"):
+        event_context_delta += (correction_timing_quality * 0.04) + (observation_quality * 0.03)
+        event_context_delta -= 0.01
+
+    return float(max(-0.28, min(0.28, (base_delta * 0.78) + event_context_delta)))
 
 # --------------------------------------------------
 def _build_experience_similarity_axes(summary):
@@ -531,9 +702,25 @@ def _build_experience_similarity_axes(summary):
     capacity_delta = float(field_delta.get("action_capacity", 0.0) or 0.0)
     recovery_delta = float(field_delta.get("recovery_need", 0.0) or 0.0)
     survival_delta = float(field_delta.get("survival_pressure", 0.0) or 0.0)
+    areal_pressure_delta = float(field_delta.get("field_areal_pressure_mean", 0.0) or 0.0)
+    areal_stability_delta = float(field_delta.get("field_areal_stability_mean", 0.0) or 0.0)
+    areal_drift_delta = float(field_delta.get("field_areal_drift", 0.0) or 0.0)
+    areal_dominance_delta = float(field_delta.get("field_areal_dominance", 0.0) or 0.0)
+    areal_fragmentation_delta = float(field_delta.get("field_areal_fragmentation", 0.0) or 0.0)
+    areal_conflict_delta = float(field_delta.get("field_areal_conflict_mean", 0.0) or 0.0)
     release_delta = float(experience_delta.get("pressure_release", 0.0) or 0.0)
     bearing_delta = float(experience_delta.get("load_bearing_capacity", 0.0) or 0.0)
     bearing_effect = float(_experience_bearing_delta(item) or 0.0)
+
+    field_areal_fragmentation = float(item.get("field_areal_fragmentation", 0.0) or 0.0)
+    field_areal_conflict_mean = float(item.get("field_areal_conflict_mean", 0.0) or 0.0)
+    field_areal_dominance = float(item.get("field_areal_dominance", 0.0) or 0.0)
+    field_areal_stability_mean = float(item.get("field_areal_stability_mean", 0.0) or 0.0)
+    field_areal_coherence_mean = float(item.get("field_areal_coherence_mean", 0.0) or 0.0)
+    processing_areal_tension = float(item.get("processing_areal_tension", 0.0) or 0.0)
+    processing_areal_support = float(item.get("processing_areal_support", 0.0) or 0.0)
+    thought_areal_pressure = float(item.get("thought_areal_pressure", 0.0) or 0.0)
+    thought_areal_support = float(item.get("thought_areal_support", 0.0) or 0.0)
 
     return {
         "direction_axis": float(direction_value),
@@ -549,6 +736,21 @@ def _build_experience_similarity_axes(summary):
         "strain_axis": float(pressure_delta + recovery_delta + survival_delta),
         "relief_axis": float(release_delta + bearing_delta),
         "capacity_balance_axis": float(capacity_delta - pressure_delta),
+        "areal_pressure_axis": float(
+            field_areal_conflict_mean
+            + field_areal_fragmentation
+            + processing_areal_tension
+            + thought_areal_pressure
+        ),
+        "areal_support_axis": float(
+            field_areal_stability_mean
+            + field_areal_coherence_mean
+            + field_areal_dominance
+            + processing_areal_support
+            + thought_areal_support
+        ),
+        "thought_conflict_axis": float(item.get("thought_decision_conflict", 0.0) or 0.0),
+        "thought_maturity_axis": float(item.get("thought_state_maturity", 0.0) or 0.0),
         "delta_energy_axis": float(tension_delta.get("energy", 0.0) or 0.0),
         "delta_stability_axis": float(tension_delta.get("stability", 0.0) or 0.0),
         "delta_pressure_axis": float(pressure_delta),
@@ -557,6 +759,260 @@ def _build_experience_similarity_axes(summary):
         "delta_survival_axis": float(survival_delta),
         "delta_release_axis": float(release_delta),
         "delta_bearing_axis": float(bearing_delta),
+        "delta_areal_pressure_axis": float(areal_pressure_delta),
+        "delta_areal_stability_axis": float(areal_stability_delta),
+        "delta_areal_drift_axis": float(areal_drift_delta),
+        "delta_areal_dominance_axis": float(areal_dominance_delta),
+        "delta_areal_fragmentation_axis": float(areal_fragmentation_delta),
+        "delta_areal_conflict_axis": float(areal_conflict_delta),
+    }
+
+# --------------------------------------------------
+def _derive_inner_pattern_label(inner_field_state, summary_item):
+
+    field_state = dict(inner_field_state or {})
+    summary = dict(summary_item or {})
+
+    regulation_pressure = float(field_state.get("field_regulation_pressure", 0.0) or 0.0)
+    field_stability = float(field_state.get("field_stability", 0.0) or 0.0)
+    field_cluster_count = int(field_state.get("field_cluster_count", 0) or 0)
+    reorganization_direction = str(field_state.get("field_reorganization_direction", "stable") or "stable").strip().lower()
+    neuron_activation_mean = float(field_state.get("field_neuron_activation_mean", 0.0) or 0.0)
+    neuron_stability_mean = float(field_state.get("field_neuron_stability_mean", 0.0) or 0.0)
+    neuron_coupling_norm_mean = float(field_state.get("field_neuron_coupling_norm_mean", 0.0) or 0.0)
+    neuron_external_impulse_norm_mean = float(field_state.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0)
+    areal_count = int(field_state.get("field_areal_count", 0) or 0)
+    areal_stability_mean = float(field_state.get("field_areal_stability_mean", 0.0) or 0.0)
+    areal_pressure_mean = float(field_state.get("field_areal_pressure_mean", 0.0) or 0.0)
+    areal_dominance = float(field_state.get("field_areal_dominance", 0.0) or 0.0)
+    areal_fragmentation = float(field_state.get("field_areal_fragmentation", 0.0) or 0.0)
+    areal_coherence_mean = float(field_state.get("field_areal_coherence_mean", 0.0) or 0.0)
+    areal_conflict_mean = float(field_state.get("field_areal_conflict_mean", 0.0) or 0.0)
+    competition_bias = abs(float(summary.get("competition_bias", 0.0) or 0.0))
+    felt_label = str(summary.get("felt_label", summary.get("felt_profile_label", "mixed")) or "mixed").strip().lower()
+    felt_bearing_score = float(summary.get("felt_bearing_score", 0.0) or 0.0)
+    thought_state_maturity = float(summary.get("thought_state_maturity", 0.0) or 0.0)
+    thought_decision_readiness = float(summary.get("thought_decision_readiness", 0.0) or 0.0)
+    thought_areal_pressure = float(summary.get("thought_areal_pressure", 0.0) or 0.0)
+    thought_areal_support = float(summary.get("thought_areal_support", 0.0) or 0.0)
+    processing_areal_tension = float(summary.get("processing_areal_tension", 0.0) or 0.0)
+    processing_areal_support = float(summary.get("processing_areal_support", 0.0) or 0.0)
+
+    areal_support = max(
+        0.0,
+        min(
+            1.0,
+            (areal_stability_mean * 0.24)
+            + (areal_coherence_mean * 0.22)
+            + (areal_dominance * 0.10)
+            + (processing_areal_support * 0.16)
+            + (thought_areal_support * 0.14)
+            + (felt_bearing_score * 0.14),
+        ),
+    )
+    areal_conflict = max(
+        0.0,
+        min(
+            1.0,
+            (areal_pressure_mean * 0.18)
+            + (areal_conflict_mean * 0.24)
+            + (areal_fragmentation * 0.20)
+            + (processing_areal_tension * 0.14)
+            + (thought_areal_pressure * 0.14)
+            + (competition_bias * 0.10),
+        ),
+    )
+
+    if regulation_pressure >= 0.72 or areal_pressure_mean >= 0.68 or areal_conflict >= 0.66:
+        pressure_band = "critical_load"
+    elif regulation_pressure >= 0.46 or areal_pressure_mean >= 0.42 or areal_conflict >= 0.42:
+        pressure_band = "elevated_load"
+    else:
+        pressure_band = "regulated_load"
+
+    if areal_fragmentation >= 0.72 or areal_count >= 4 or field_cluster_count >= 4:
+        organization_band = "fragmented_field"
+    elif areal_conflict >= 0.54:
+        organization_band = "conflicted_areal"
+    elif areal_support >= 0.58 and areal_dominance >= 0.34:
+        organization_band = "supported_areal"
+    elif areal_dominance >= 0.46 and areal_count <= 2:
+        organization_band = "dominant_areal"
+    elif field_cluster_count >= 2 or areal_count >= 2:
+        organization_band = "multi_cluster"
+    else:
+        organization_band = "coherent_field"
+
+    if areal_conflict_mean >= 0.24 or competition_bias >= 0.34 or neuron_coupling_norm_mean >= 0.30:
+        neuron_band = "contested_neurons"
+    elif neuron_stability_mean >= 0.64 and field_stability >= 0.58 and areal_support >= 0.46:
+        neuron_band = "settled_neurons"
+    elif neuron_activation_mean >= 0.66 or neuron_external_impulse_norm_mean >= 0.34:
+        neuron_band = "activated_neurons"
+    else:
+        neuron_band = "adaptive_neurons"
+
+    if felt_label in ("fragmented_conflict", "burdened") or areal_conflict >= 0.58:
+        bearing_band = "fragile_bearing"
+    elif thought_state_maturity >= 0.52 and thought_decision_readiness >= 0.48 and areal_support >= 0.52:
+        bearing_band = "mature_bearing"
+    elif areal_support >= 0.44 and areal_conflict <= 0.38:
+        bearing_band = "recovering_bearing"
+    else:
+        bearing_band = "unclear_bearing"
+
+    return f"{pressure_band}::{organization_band}::{neuron_band}::{bearing_band}::{reorganization_direction}"
+
+# --------------------------------------------------
+def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None):
+
+    field_state = dict(inner_field_state or {})
+    summary = dict(summary_item or {})
+
+    field_density = float(getattr(bot, "field_density", 0.0) or 0.0) if bot is not None else 0.0
+    field_stability = float(getattr(bot, "field_stability", 0.0) or 0.0) if bot is not None else 0.0
+    areal_stability_mean = float(field_state.get("field_areal_stability_mean", 0.0) or 0.0)
+    areal_pressure_mean = float(field_state.get("field_areal_pressure_mean", 0.0) or 0.0)
+    areal_dominance = float(field_state.get("field_areal_dominance", 0.0) or 0.0)
+    areal_fragmentation = float(field_state.get("field_areal_fragmentation", 0.0) or 0.0)
+    areal_coherence_mean = float(field_state.get("field_areal_coherence_mean", 0.0) or 0.0)
+    areal_conflict_mean = float(field_state.get("field_areal_conflict_mean", 0.0) or 0.0)
+    processing_areal_tension = float(summary.get("processing_areal_tension", 0.0) or 0.0)
+    processing_areal_support = float(summary.get("processing_areal_support", 0.0) or 0.0)
+    thought_areal_pressure = float(summary.get("thought_areal_pressure", 0.0) or 0.0)
+    thought_areal_support = float(summary.get("thought_areal_support", 0.0) or 0.0)
+    felt_bearing_score = float(summary.get("felt_bearing_score", 0.0) or 0.0)
+    felt_recovery_cost = float(summary.get("felt_recovery_cost", 0.0) or 0.0)
+
+    inner_pattern_support = max(
+        0.0,
+        min(
+            1.0,
+            (field_stability * 0.12)
+            + (areal_stability_mean * 0.18)
+            + (areal_coherence_mean * 0.16)
+            + (areal_dominance * 0.08)
+            + (processing_areal_support * 0.16)
+            + (thought_areal_support * 0.14)
+            + (felt_bearing_score * 0.16),
+        ),
+    )
+    inner_pattern_conflict = max(
+        0.0,
+        min(
+            1.0,
+            (areal_pressure_mean * 0.16)
+            + (areal_fragmentation * 0.18)
+            + (areal_conflict_mean * 0.22)
+            + (processing_areal_tension * 0.16)
+            + (thought_areal_pressure * 0.16)
+            + (felt_recovery_cost * 0.12),
+        ),
+    )
+    inner_pattern_fragility = max(0.0, min(1.0, inner_pattern_conflict - (inner_pattern_support * 0.42)))
+    inner_pattern_bearing = max(0.0, min(1.0, inner_pattern_support - (inner_pattern_conflict * 0.46)))
+    inner_pattern_state = "bearing"
+    if inner_pattern_conflict >= 0.58 and inner_pattern_support < 0.46:
+        inner_pattern_state = "conflicted"
+    elif inner_pattern_fragility >= 0.44:
+        inner_pattern_state = "fragile"
+    elif inner_pattern_support >= 0.54 and inner_pattern_conflict <= 0.36:
+        inner_pattern_state = "supported"
+
+    state_payload = {
+        "field_density": float(field_density),
+        "field_stability": float(field_stability),
+        "field_cluster_count": int(field_state.get("field_cluster_count", 0) or 0),
+        "field_cluster_mass_mean": float(field_state.get("field_cluster_mass_mean", 0.0) or 0.0),
+        "field_cluster_mass_max": float(field_state.get("field_cluster_mass_max", 0.0) or 0.0),
+        "field_cluster_center_spread": float(field_state.get("field_cluster_center_spread", 0.0) or 0.0),
+        "field_cluster_separation": float(field_state.get("field_cluster_separation", 0.0) or 0.0),
+        "field_cluster_center_drift": float(field_state.get("field_cluster_center_drift", 0.0) or 0.0),
+        "field_cluster_count_drift": float(field_state.get("field_cluster_count_drift", 0.0) or 0.0),
+        "field_velocity_trend": float(field_state.get("field_velocity_trend", 0.0) or 0.0),
+        "field_reorganization_direction": str(field_state.get("field_reorganization_direction", "stable") or "stable"),
+        "field_mean_velocity": float(field_state.get("field_mean_velocity", 0.0) or 0.0),
+        "field_regulation_pressure": float(field_state.get("field_regulation_pressure", 0.0) or 0.0),
+        "field_neuron_count": int(field_state.get("field_neuron_count", 0) or 0),
+        "field_neuron_activation_mean": float(field_state.get("field_neuron_activation_mean", 0.0) or 0.0),
+        "field_neuron_activation_max": float(field_state.get("field_neuron_activation_max", 0.0) or 0.0),
+        "field_neuron_stability_mean": float(field_state.get("field_neuron_stability_mean", 0.0) or 0.0),
+        "field_neuron_regulation_pressure_mean": float(field_state.get("field_neuron_regulation_pressure_mean", 0.0) or 0.0),
+        "field_neuron_memory_norm_mean": float(field_state.get("field_neuron_memory_norm_mean", 0.0) or 0.0),
+        "field_neuron_coupling_norm_mean": float(field_state.get("field_neuron_coupling_norm_mean", 0.0) or 0.0),
+        "field_neuron_regulation_force_norm_mean": float(field_state.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
+        "field_neuron_external_impulse_norm_mean": float(field_state.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        "field_areal_count": int(field_state.get("field_areal_count", 0) or 0),
+        "field_areal_activation_mean": float(field_state.get("field_areal_activation_mean", 0.0) or 0.0),
+        "field_areal_stability_mean": float(field_state.get("field_areal_stability_mean", 0.0) or 0.0),
+        "field_areal_pressure_mean": float(field_state.get("field_areal_pressure_mean", 0.0) or 0.0),
+        "field_areal_drift": float(field_state.get("field_areal_drift", 0.0) or 0.0),
+        "field_areal_dominance": float(field_state.get("field_areal_dominance", 0.0) or 0.0),
+        "field_areal_fragmentation": float(field_state.get("field_areal_fragmentation", 0.0) or 0.0),
+        "field_areal_coherence_mean": float(field_state.get("field_areal_coherence_mean", 0.0) or 0.0),
+        "field_areal_conflict_mean": float(field_state.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "inner_pattern_support": float(inner_pattern_support),
+        "inner_pattern_conflict": float(inner_pattern_conflict),
+        "inner_pattern_fragility": float(inner_pattern_fragility),
+        "inner_pattern_bearing": float(inner_pattern_bearing),
+        "inner_pattern_state": str(inner_pattern_state),
+        "inner_pattern_label": _derive_inner_pattern_label(field_state, summary),
+        "inner_self_state": str(field_state.get("self_state", summary.get("self_state", "stable")) or "stable"),
+        "inner_attractor": str(field_state.get("attractor", summary.get("attractor", "neutral")) or "neutral"),
+    }
+
+    current_vector = [
+        float(summary.get("in_trade_avg_regulatory_load", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_action_capacity", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_recovery_need", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_survival_pressure", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_pressure_release", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_state_stability", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_capacity_reserve", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_recovery_balance", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_regulated_courage", 0.0) or 0.0),
+        float(summary.get("in_trade_avg_courage_gap", 0.0) or 0.0),
+        float(summary.get("felt_bearing_score", 0.0) or 0.0),
+        float(summary.get("focus_confidence", 0.0) or 0.0),
+        float(summary.get("competition_bias", 0.0) or 0.0),
+        float(state_payload.get("field_density", 0.0) or 0.0),
+        float(state_payload.get("field_stability", 0.0) or 0.0),
+        float(state_payload.get("field_cluster_count", 0.0) or 0.0),
+        float(state_payload.get("field_cluster_mass_mean", 0.0) or 0.0),
+        float(state_payload.get("field_cluster_mass_max", 0.0) or 0.0),
+        float(state_payload.get("field_cluster_center_spread", 0.0) or 0.0),
+        float(state_payload.get("field_cluster_separation", 0.0) or 0.0),
+        float(state_payload.get("field_mean_velocity", 0.0) or 0.0),
+        float(state_payload.get("field_regulation_pressure", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_count", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_activation_mean", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_activation_max", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_stability_mean", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_regulation_pressure_mean", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_memory_norm_mean", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_coupling_norm_mean", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        float(state_payload.get("field_areal_count", 0.0) or 0.0),
+        float(state_payload.get("field_areal_activation_mean", 0.0) or 0.0),
+        float(state_payload.get("field_areal_stability_mean", 0.0) or 0.0),
+        float(state_payload.get("field_areal_pressure_mean", 0.0) or 0.0),
+        float(state_payload.get("field_areal_drift", 0.0) or 0.0),
+        float(state_payload.get("field_areal_dominance", 0.0) or 0.0),
+        float(state_payload.get("field_areal_fragmentation", 0.0) or 0.0),
+        float(state_payload.get("field_areal_coherence_mean", 0.0) or 0.0),
+        float(state_payload.get("field_areal_conflict_mean", 0.0) or 0.0),
+        float(state_payload.get("inner_pattern_support", 0.0) or 0.0),
+        float(state_payload.get("inner_pattern_conflict", 0.0) or 0.0),
+        float(state_payload.get("inner_pattern_fragility", 0.0) or 0.0),
+        float(state_payload.get("inner_pattern_bearing", 0.0) or 0.0),
+    ]
+
+    return {
+        "state_payload": dict(state_payload or {}),
+        "current_vector": list(current_vector or []),
     }
 
 # --------------------------------------------------
@@ -572,48 +1028,21 @@ def _update_inner_context_cluster_memory(bot, summary):
     outcome_reason = str(summary_item.get("outcome_reason", "-") or "-").strip().lower()
     outcome_delta = float(_experience_reward_delta(summary_item) or 0.0)
 
-    field_density = float(getattr(bot, "field_density", 0.0) or 0.0)
-    field_stability = float(getattr(bot, "field_stability", 0.0) or 0.0)
-    field_cluster_count = int(inner_field_state.get("field_cluster_count", 0) or 0)
-    field_cluster_mass_mean = float(inner_field_state.get("field_cluster_mass_mean", 0.0) or 0.0)
-    field_cluster_mass_max = float(inner_field_state.get("field_cluster_mass_max", 0.0) or 0.0)
-    field_cluster_center_spread = float(inner_field_state.get("field_cluster_center_spread", 0.0) or 0.0)
-    field_cluster_separation = float(inner_field_state.get("field_cluster_separation", 0.0) or 0.0)
-    field_cluster_center_drift = float(inner_field_state.get("field_cluster_center_drift", 0.0) or 0.0)
-    field_cluster_count_drift = float(inner_field_state.get("field_cluster_count_drift", 0.0) or 0.0)
-    field_velocity_trend = float(inner_field_state.get("field_velocity_trend", 0.0) or 0.0)
-    field_reorganization_direction = str(inner_field_state.get("field_reorganization_direction", "stable") or "stable")
-    field_mean_velocity = float(inner_field_state.get("field_mean_velocity", 0.0) or 0.0)
-    field_regulation_pressure = float(inner_field_state.get("field_regulation_pressure", 0.0) or 0.0)
-
-    current_vector = [
-        float(summary_item.get("in_trade_avg_regulatory_load", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_action_capacity", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_survival_pressure", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_pressure_release", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_state_stability", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_capacity_reserve", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_recovery_balance", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_regulated_courage", 0.0) or 0.0),
-        float(summary_item.get("in_trade_avg_courage_gap", 0.0) or 0.0),
-        float(summary_item.get("felt_bearing_score", 0.0) or 0.0),
-        float(summary_item.get("focus_confidence", 0.0) or 0.0),
-        float(summary_item.get("competition_bias", 0.0) or 0.0),
-        float(field_density),
-        float(field_stability),
-        float(field_cluster_count),
-        float(field_cluster_mass_mean),
-        float(field_cluster_mass_max),
-        float(field_cluster_center_spread),
-        float(field_cluster_separation),
-        float(field_mean_velocity),
-        float(field_regulation_pressure),
-    ]
-
+    cluster_state = _build_inner_context_cluster_state(
+        inner_field_state,
+        summary_item,
+        bot=bot,
+    )
+    state_payload = dict(cluster_state.get("state_payload", {}) or {})
+    current_vector = list(cluster_state.get("current_vector", []) or [])
     current_array = np.asarray(current_vector, dtype=float)
+    inner_pattern_support = float(state_payload.get("inner_pattern_support", 0.0) or 0.0)
+    inner_pattern_conflict = float(state_payload.get("inner_pattern_conflict", 0.0) or 0.0)
+    inner_pattern_fragility = float(state_payload.get("inner_pattern_fragility", 0.0) or 0.0)
+    inner_pattern_bearing = float(state_payload.get("inner_pattern_bearing", 0.0) or 0.0)
+    inner_pattern_state = str(state_payload.get("inner_pattern_state", "bearing") or "bearing")
+    pattern_reinforcement = max(0.0, min(1.0, inner_pattern_support + max(0.0, outcome_delta) - (inner_pattern_conflict * 0.52)))
+    pattern_attenuation = max(0.0, min(1.0, inner_pattern_conflict + max(0.0, -outcome_delta) - (inner_pattern_support * 0.42)))
 
     nearest_cluster_id = None
     nearest_cluster = None
@@ -658,19 +1087,13 @@ def _update_inner_context_cluster_memory(bot, summary):
             "last_signature_key": None,
             "last_outcome": None,
             "last_distance": 0.0,
-            "field_density": float(field_density),
-            "field_stability": float(field_stability),
-            "field_cluster_count": int(field_cluster_count),
-            "field_cluster_mass_mean": float(field_cluster_mass_mean),
-            "field_cluster_mass_max": float(field_cluster_mass_max),
-            "field_cluster_center_spread": float(field_cluster_center_spread),
-            "field_cluster_separation": float(field_cluster_separation),
-            "field_cluster_center_drift": float(field_cluster_center_drift),
-            "field_cluster_count_drift": float(field_cluster_count_drift),
-            "field_velocity_trend": float(field_velocity_trend),
-            "field_reorganization_direction": str(field_reorganization_direction),
-            "field_mean_velocity": float(field_mean_velocity),
-            "field_regulation_pressure": float(field_regulation_pressure),
+            "pattern_support_score": float(inner_pattern_support),
+            "pattern_conflict_score": float(inner_pattern_conflict),
+            "pattern_fragility_score": float(inner_pattern_fragility),
+            "pattern_bearing_score": float(inner_pattern_bearing),
+            "pattern_reinforcement": 0.0,
+            "pattern_attenuation": 0.0,
+            **dict(state_payload or {}),
         }
     else:
         seen = max(0, int(nearest_cluster.get("seen", 0) or 0))
@@ -706,14 +1129,45 @@ def _update_inner_context_cluster_memory(bot, summary):
         )
     )
 
+    nearest_cluster["pattern_support_score"] = float(
+        (float(nearest_cluster.get("pattern_support_score", 0.0) or 0.0) * 0.74)
+        + (inner_pattern_support * 0.26)
+    )
+    nearest_cluster["pattern_conflict_score"] = float(
+        (float(nearest_cluster.get("pattern_conflict_score", 0.0) or 0.0) * 0.74)
+        + (inner_pattern_conflict * 0.26)
+    )
+    nearest_cluster["pattern_fragility_score"] = float(
+        (float(nearest_cluster.get("pattern_fragility_score", 0.0) or 0.0) * 0.74)
+        + (inner_pattern_fragility * 0.26)
+    )
+    nearest_cluster["pattern_bearing_score"] = float(
+        (float(nearest_cluster.get("pattern_bearing_score", 0.0) or 0.0) * 0.74)
+        + (inner_pattern_bearing * 0.26)
+    )
+    nearest_cluster["pattern_reinforcement"] = float(
+        (float(nearest_cluster.get("pattern_reinforcement", 0.0) or 0.0) * 0.78)
+        + (pattern_reinforcement * 0.22)
+    )
+    nearest_cluster["pattern_attenuation"] = float(
+        (float(nearest_cluster.get("pattern_attenuation", 0.0) or 0.0) * 0.78)
+        + (pattern_attenuation * 0.22)
+    )
+
     trust_base = float(nearest_cluster.get("trust", 0.0) or 0.0)
-    trust_shift = 0.06 if outcome_delta >= 0.0 else -0.04
+    trust_shift = (
+        (0.04 if outcome_delta >= 0.0 else -0.03)
+        + (inner_pattern_support * 0.05)
+        + (inner_pattern_bearing * 0.04)
+        - (inner_pattern_conflict * 0.06)
+        - (inner_pattern_fragility * 0.04)
+    )
     nearest_cluster["trust"] = float(
         min(
             1.0,
             max(
                 0.0,
-                (trust_base * 0.86) + 0.10 + trust_shift,
+                (trust_base * 0.84) + 0.08 + trust_shift,
             ),
         )
     )
@@ -721,19 +1175,9 @@ def _update_inner_context_cluster_memory(bot, summary):
     nearest_cluster["last_signature_key"] = str(signature_key or nearest_cluster.get("last_signature_key") or "") or None
     nearest_cluster["last_outcome"] = str(outcome_reason or nearest_cluster.get("last_outcome") or "-") or None
     nearest_cluster["last_distance"] = float(nearest_distance)
-    nearest_cluster["field_density"] = float(field_density)
-    nearest_cluster["field_stability"] = float(field_stability)
-    nearest_cluster["field_cluster_count"] = int(field_cluster_count)
-    nearest_cluster["field_cluster_mass_mean"] = float(field_cluster_mass_mean)
-    nearest_cluster["field_cluster_mass_max"] = float(field_cluster_mass_max)
-    nearest_cluster["field_cluster_center_spread"] = float(field_cluster_center_spread)
-    nearest_cluster["field_cluster_separation"] = float(field_cluster_separation)
-    nearest_cluster["field_cluster_center_drift"] = float(field_cluster_center_drift)
-    nearest_cluster["field_cluster_count_drift"] = float(field_cluster_count_drift)
-    nearest_cluster["field_velocity_trend"] = float(field_velocity_trend)
-    nearest_cluster["field_reorganization_direction"] = str(field_reorganization_direction)
-    nearest_cluster["field_mean_velocity"] = float(field_mean_velocity)
-    nearest_cluster["field_regulation_pressure"] = float(field_regulation_pressure)
+
+    for key, value in dict(state_payload or {}).items():
+        nearest_cluster[str(key)] = value
 
     signature_keys = list(nearest_cluster.get("signature_keys", []) or [])
     if signature_key and signature_key not in signature_keys:
@@ -779,6 +1223,38 @@ def _update_inner_context_cluster_memory(bot, summary):
         "field_reorganization_direction": str(nearest_cluster.get("field_reorganization_direction", "stable") or "stable"),
         "field_mean_velocity": float(nearest_cluster.get("field_mean_velocity", 0.0) or 0.0),
         "field_regulation_pressure": float(nearest_cluster.get("field_regulation_pressure", 0.0) or 0.0),
+        "field_neuron_count": int(nearest_cluster.get("field_neuron_count", 0) or 0),
+        "field_neuron_activation_mean": float(nearest_cluster.get("field_neuron_activation_mean", 0.0) or 0.0),
+        "field_neuron_activation_max": float(nearest_cluster.get("field_neuron_activation_max", 0.0) or 0.0),
+        "field_neuron_stability_mean": float(nearest_cluster.get("field_neuron_stability_mean", 0.0) or 0.0),
+        "field_neuron_regulation_pressure_mean": float(nearest_cluster.get("field_neuron_regulation_pressure_mean", 0.0) or 0.0),
+        "field_neuron_memory_norm_mean": float(nearest_cluster.get("field_neuron_memory_norm_mean", 0.0) or 0.0),
+        "field_neuron_coupling_norm_mean": float(nearest_cluster.get("field_neuron_coupling_norm_mean", 0.0) or 0.0),
+        "field_neuron_regulation_force_norm_mean": float(nearest_cluster.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
+        "field_neuron_external_impulse_norm_mean": float(nearest_cluster.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        "field_areal_count": int(nearest_cluster.get("field_areal_count", 0) or 0),
+        "field_areal_activation_mean": float(nearest_cluster.get("field_areal_activation_mean", 0.0) or 0.0),
+        "field_areal_stability_mean": float(nearest_cluster.get("field_areal_stability_mean", 0.0) or 0.0),
+        "field_areal_pressure_mean": float(nearest_cluster.get("field_areal_pressure_mean", 0.0) or 0.0),
+        "field_areal_drift": float(nearest_cluster.get("field_areal_drift", 0.0) or 0.0),
+        "field_areal_dominance": float(nearest_cluster.get("field_areal_dominance", 0.0) or 0.0),
+        "field_areal_fragmentation": float(nearest_cluster.get("field_areal_fragmentation", 0.0) or 0.0),
+        "field_areal_coherence_mean": float(nearest_cluster.get("field_areal_coherence_mean", 0.0) or 0.0),
+        "field_areal_conflict_mean": float(nearest_cluster.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "inner_pattern_support": float(nearest_cluster.get("inner_pattern_support", 0.0) or 0.0),
+        "inner_pattern_conflict": float(nearest_cluster.get("inner_pattern_conflict", 0.0) or 0.0),
+        "inner_pattern_fragility": float(nearest_cluster.get("inner_pattern_fragility", 0.0) or 0.0),
+        "inner_pattern_bearing": float(nearest_cluster.get("inner_pattern_bearing", 0.0) or 0.0),
+        "inner_pattern_state": str(nearest_cluster.get("inner_pattern_state", "bearing") or "bearing"),
+        "pattern_support_score": float(nearest_cluster.get("pattern_support_score", 0.0) or 0.0),
+        "pattern_conflict_score": float(nearest_cluster.get("pattern_conflict_score", 0.0) or 0.0),
+        "pattern_fragility_score": float(nearest_cluster.get("pattern_fragility_score", 0.0) or 0.0),
+        "pattern_bearing_score": float(nearest_cluster.get("pattern_bearing_score", 0.0) or 0.0),
+        "pattern_reinforcement": float(nearest_cluster.get("pattern_reinforcement", 0.0) or 0.0),
+        "pattern_attenuation": float(nearest_cluster.get("pattern_attenuation", 0.0) or 0.0),
+        "inner_pattern_label": str(nearest_cluster.get("inner_pattern_label", "") or ""),
+        "inner_self_state": str(nearest_cluster.get("inner_self_state", "stable") or "stable"),
+        "inner_attractor": str(nearest_cluster.get("inner_attractor", "neutral") or "neutral"),
         "last_outcome": nearest_cluster.get("last_outcome"),
     }
 
@@ -816,6 +1292,38 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         summary["inner_context_cluster_reorganization_direction"] = str(inner_context_result.get("field_reorganization_direction", "stable") or "stable")
         summary["inner_context_cluster_mean_velocity"] = float(inner_context_result.get("field_mean_velocity", 0.0) or 0.0)
         summary["inner_context_cluster_regulation_pressure"] = float(inner_context_result.get("field_regulation_pressure", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_count"] = int(inner_context_result.get("field_neuron_count", 0) or 0)
+        summary["inner_context_cluster_neuron_activation_mean"] = float(inner_context_result.get("field_neuron_activation_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_activation_max"] = float(inner_context_result.get("field_neuron_activation_max", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_stability_mean"] = float(inner_context_result.get("field_neuron_stability_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_regulation_pressure_mean"] = float(inner_context_result.get("field_neuron_regulation_pressure_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_memory_norm_mean"] = float(inner_context_result.get("field_neuron_memory_norm_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_coupling_norm_mean"] = float(inner_context_result.get("field_neuron_coupling_norm_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_regulation_force_norm_mean"] = float(inner_context_result.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_external_impulse_norm_mean"] = float(inner_context_result.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_count"] = int(inner_context_result.get("field_areal_count", 0) or 0)
+        summary["inner_context_cluster_areal_activation_mean"] = float(inner_context_result.get("field_areal_activation_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_stability_mean"] = float(inner_context_result.get("field_areal_stability_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_pressure_mean"] = float(inner_context_result.get("field_areal_pressure_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_drift"] = float(inner_context_result.get("field_areal_drift", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_dominance"] = float(inner_context_result.get("field_areal_dominance", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_fragmentation"] = float(inner_context_result.get("field_areal_fragmentation", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_coherence_mean"] = float(inner_context_result.get("field_areal_coherence_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_conflict_mean"] = float(inner_context_result.get("field_areal_conflict_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_label"] = str(inner_context_result.get("inner_pattern_label", "") or "")
+        summary["inner_context_cluster_pattern_support"] = float(inner_context_result.get("inner_pattern_support", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_conflict"] = float(inner_context_result.get("inner_pattern_conflict", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_fragility"] = float(inner_context_result.get("inner_pattern_fragility", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_bearing"] = float(inner_context_result.get("inner_pattern_bearing", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_state"] = str(inner_context_result.get("inner_pattern_state", "bearing") or "bearing")
+        summary["inner_context_cluster_pattern_support_score"] = float(inner_context_result.get("pattern_support_score", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_conflict_score"] = float(inner_context_result.get("pattern_conflict_score", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_fragility_score"] = float(inner_context_result.get("pattern_fragility_score", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_bearing_score"] = float(inner_context_result.get("pattern_bearing_score", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_reinforcement"] = float(inner_context_result.get("pattern_reinforcement", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_attenuation"] = float(inner_context_result.get("pattern_attenuation", 0.0) or 0.0)
+        summary["inner_context_cluster_self_state"] = str(inner_context_result.get("inner_self_state", "stable") or "stable")
+        summary["inner_context_cluster_attractor"] = str(inner_context_result.get("inner_attractor", "neutral") or "neutral")
 
         experience_space["last_inner_context_cluster_id"] = str(inner_context_result.get("cluster_id", "-") or "-")
         experience_space["last_inner_context_cluster_key"] = str(getattr(bot, "last_inner_context_cluster_key", None) or "")
@@ -832,6 +1340,38 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         experience_space["last_inner_context_cluster_reorganization_direction"] = str(inner_context_result.get("field_reorganization_direction", "stable") or "stable")
         experience_space["last_inner_context_cluster_mean_velocity"] = float(inner_context_result.get("field_mean_velocity", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_regulation_pressure"] = float(inner_context_result.get("field_regulation_pressure", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_count"] = int(inner_context_result.get("field_neuron_count", 0) or 0)
+        experience_space["last_inner_context_cluster_neuron_activation_mean"] = float(inner_context_result.get("field_neuron_activation_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_activation_max"] = float(inner_context_result.get("field_neuron_activation_max", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_stability_mean"] = float(inner_context_result.get("field_neuron_stability_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_regulation_pressure_mean"] = float(inner_context_result.get("field_neuron_regulation_pressure_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_memory_norm_mean"] = float(inner_context_result.get("field_neuron_memory_norm_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_coupling_norm_mean"] = float(inner_context_result.get("field_neuron_coupling_norm_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_regulation_force_norm_mean"] = float(inner_context_result.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_external_impulse_norm_mean"] = float(inner_context_result.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_count"] = int(inner_context_result.get("field_areal_count", 0) or 0)
+        experience_space["last_inner_context_cluster_areal_activation_mean"] = float(inner_context_result.get("field_areal_activation_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_stability_mean"] = float(inner_context_result.get("field_areal_stability_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_pressure_mean"] = float(inner_context_result.get("field_areal_pressure_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_drift"] = float(inner_context_result.get("field_areal_drift", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_dominance"] = float(inner_context_result.get("field_areal_dominance", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_fragmentation"] = float(inner_context_result.get("field_areal_fragmentation", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_coherence_mean"] = float(inner_context_result.get("field_areal_coherence_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_conflict_mean"] = float(inner_context_result.get("field_areal_conflict_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_label"] = str(inner_context_result.get("inner_pattern_label", "") or "")
+        experience_space["last_inner_context_cluster_pattern_support"] = float(inner_context_result.get("inner_pattern_support", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_conflict"] = float(inner_context_result.get("inner_pattern_conflict", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_fragility"] = float(inner_context_result.get("inner_pattern_fragility", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_bearing"] = float(inner_context_result.get("inner_pattern_bearing", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_state"] = str(inner_context_result.get("inner_pattern_state", "bearing") or "bearing")
+        experience_space["last_inner_context_cluster_pattern_support_score"] = float(inner_context_result.get("pattern_support_score", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_conflict_score"] = float(inner_context_result.get("pattern_conflict_score", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_fragility_score"] = float(inner_context_result.get("pattern_fragility_score", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_bearing_score"] = float(inner_context_result.get("pattern_bearing_score", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_reinforcement"] = float(inner_context_result.get("pattern_reinforcement", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_attenuation"] = float(inner_context_result.get("pattern_attenuation", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_self_state"] = str(inner_context_result.get("inner_self_state", "stable") or "stable")
+        experience_space["last_inner_context_cluster_attractor"] = str(inner_context_result.get("inner_attractor", "neutral") or "neutral")
     else:
         summary["inner_context_cluster_id"] = str(getattr(bot, "last_inner_context_cluster_id", None) or "-")
         summary["inner_context_cluster_distance"] = 0.0
@@ -847,6 +1387,27 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         summary["inner_context_cluster_reorganization_direction"] = "stable"
         summary["inner_context_cluster_mean_velocity"] = 0.0
         summary["inner_context_cluster_regulation_pressure"] = 0.0
+        summary["inner_context_cluster_neuron_count"] = 0
+        summary["inner_context_cluster_neuron_activation_mean"] = 0.0
+        summary["inner_context_cluster_neuron_activation_max"] = 0.0
+        summary["inner_context_cluster_neuron_stability_mean"] = 0.0
+        summary["inner_context_cluster_neuron_regulation_pressure_mean"] = 0.0
+        summary["inner_context_cluster_neuron_memory_norm_mean"] = 0.0
+        summary["inner_context_cluster_neuron_coupling_norm_mean"] = 0.0
+        summary["inner_context_cluster_neuron_regulation_force_norm_mean"] = 0.0
+        summary["inner_context_cluster_neuron_external_impulse_norm_mean"] = 0.0
+        summary["inner_context_cluster_areal_count"] = 0
+        summary["inner_context_cluster_areal_activation_mean"] = 0.0
+        summary["inner_context_cluster_areal_stability_mean"] = 0.0
+        summary["inner_context_cluster_areal_pressure_mean"] = 0.0
+        summary["inner_context_cluster_areal_drift"] = 0.0
+        summary["inner_context_cluster_areal_dominance"] = 0.0
+        summary["inner_context_cluster_areal_fragmentation"] = 0.0
+        summary["inner_context_cluster_areal_coherence_mean"] = 0.0
+        summary["inner_context_cluster_areal_conflict_mean"] = 0.0
+        summary["inner_context_cluster_pattern_label"] = ""
+        summary["inner_context_cluster_self_state"] = "stable"
+        summary["inner_context_cluster_attractor"] = "neutral"
 
     experience_space["market_ticks"] = int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0)
     experience_space["runtime_tick_seq"] = int(((getattr(bot, "mcm_runtime_snapshot", {}) or {}).get("runtime_tick_seq", 0)) or 0)
@@ -1004,6 +1565,19 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
         "field_density": float(summary_item.get("field_density", 0.0) or 0.0),
         "field_stability": float(summary_item.get("field_stability", 0.0) or 0.0),
         "field_cluster_count": int(summary_item.get("field_cluster_count", 0) or 0),
+        "field_areal_count": int(summary_item.get("field_areal_count", 0) or 0),
+        "field_areal_activation_mean": float(summary_item.get("field_areal_activation_mean", 0.0) or 0.0),
+        "field_areal_stability_mean": float(summary_item.get("field_areal_stability_mean", 0.0) or 0.0),
+        "field_areal_pressure_mean": float(summary_item.get("field_areal_pressure_mean", 0.0) or 0.0),
+        "field_areal_drift": float(summary_item.get("field_areal_drift", 0.0) or 0.0),
+        "field_areal_dominance": float(summary_item.get("field_areal_dominance", 0.0) or 0.0),
+        "field_areal_fragmentation": float(summary_item.get("field_areal_fragmentation", 0.0) or 0.0),
+        "field_areal_coherence_mean": float(summary_item.get("field_areal_coherence_mean", 0.0) or 0.0),
+        "field_areal_conflict_mean": float(summary_item.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "processing_areal_tension": float(summary_item.get("processing_areal_tension", 0.0) or 0.0),
+        "processing_areal_support": float(summary_item.get("processing_areal_support", 0.0) or 0.0),
+        "thought_areal_pressure": float(summary_item.get("thought_areal_pressure", 0.0) or 0.0),
+        "thought_areal_support": float(summary_item.get("thought_areal_support", 0.0) or 0.0),
         "inner_context_cluster_mass_mean": float(summary_item.get("inner_context_cluster_mass_mean", 0.0) or 0.0),
         "inner_context_cluster_mass_max": float(summary_item.get("inner_context_cluster_mass_max", 0.0) or 0.0),
         "inner_context_cluster_center_spread": float(summary_item.get("inner_context_cluster_center_spread", 0.0) or 0.0),
@@ -1066,9 +1640,24 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     item["last_field_reorganization_direction"] = str(summary_item.get("inner_context_cluster_reorganization_direction", item.get("last_field_reorganization_direction", "stable")) or "stable")
     item["avg_field_mean_velocity"] = float((float(item.get("avg_field_mean_velocity", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_mean_velocity", 0.0) or 0.0) * 0.32))
     item["avg_field_regulation_pressure"] = float((float(item.get("avg_field_regulation_pressure", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_regulation_pressure", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_count"] = float((float(item.get("avg_field_areal_count", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_count", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_activation_mean"] = float((float(item.get("avg_field_areal_activation_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_activation_mean", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_stability_mean"] = float((float(item.get("avg_field_areal_stability_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_stability_mean", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_pressure_mean"] = float((float(item.get("avg_field_areal_pressure_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_pressure_mean", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_drift"] = float((float(item.get("avg_field_areal_drift", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_drift", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_dominance"] = float((float(item.get("avg_field_areal_dominance", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_dominance", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_fragmentation"] = float((float(item.get("avg_field_areal_fragmentation", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_fragmentation", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_coherence_mean"] = float((float(item.get("avg_field_areal_coherence_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_coherence_mean", 0.0) or 0.0) * 0.32))
+    item["avg_field_areal_conflict_mean"] = float((float(item.get("avg_field_areal_conflict_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_conflict_mean", 0.0) or 0.0) * 0.32))
+    item["avg_processing_areal_tension"] = float((float(item.get("avg_processing_areal_tension", 0.0) or 0.0) * 0.68) + (float(summary_item.get("processing_areal_tension", 0.0) or 0.0) * 0.32))
+    item["avg_processing_areal_support"] = float((float(item.get("avg_processing_areal_support", 0.0) or 0.0) * 0.68) + (float(summary_item.get("processing_areal_support", 0.0) or 0.0) * 0.32))
+    item["avg_thought_areal_pressure"] = float((float(item.get("avg_thought_areal_pressure", 0.0) or 0.0) * 0.68) + (float(summary_item.get("thought_areal_pressure", 0.0) or 0.0) * 0.32))
+    item["avg_thought_areal_support"] = float((float(item.get("avg_thought_areal_support", 0.0) or 0.0) * 0.68) + (float(summary_item.get("thought_areal_support", 0.0) or 0.0) * 0.32))
     item["bearing_effect"] = float((float(item.get("bearing_effect", 0.0) or 0.0) * 0.70) + (float(_experience_bearing_delta(summary_item) or 0.0) * 0.30))
     item["relief_score"] = float((float(item.get("relief_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("in_trade_avg_action_capacity", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_pressure_release", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_capacity_reserve", 0.0) or 0.0)) * 0.30))
     item["strain_score"] = float((float(item.get("strain_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("in_trade_avg_regulatory_load", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0) + float(summary_item.get("in_trade_avg_survival_pressure", 0.0) or 0.0) + max(0.0, -float(summary_item.get("in_trade_avg_recovery_balance", 0.0) or 0.0))) * 0.30))
+    item["areal_support_score"] = float((float(item.get("areal_support_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("field_areal_stability_mean", 0.0) or 0.0) + float(summary_item.get("field_areal_coherence_mean", 0.0) or 0.0) + float(summary_item.get("field_areal_dominance", 0.0) or 0.0) + float(summary_item.get("processing_areal_support", 0.0) or 0.0) + float(summary_item.get("thought_areal_support", 0.0) or 0.0)) * 0.24))
+    item["areal_conflict_score"] = float((float(item.get("areal_conflict_score", 0.0) or 0.0) * 0.70) + (max(0.0, float(summary_item.get("field_areal_conflict_mean", 0.0) or 0.0) + float(summary_item.get("field_areal_fragmentation", 0.0) or 0.0) + float(summary_item.get("processing_areal_tension", 0.0) or 0.0) + float(summary_item.get("thought_areal_pressure", 0.0) or 0.0)) * 0.24))
     item["similarity_axes"] = dict(similarity_axes)
     item["axis_shift"] = float((float(item.get("axis_shift", 0.0) or 0.0) * 0.68) + (axis_shift * 0.32))
     item["drift"] = float(drift_value)
@@ -1193,6 +1782,8 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
     inner_field = dict(episode_internal.get("inner_field_perception_state", {}) or {})
     focus = dict(episode_internal.get("focus", {}) or {})
     felt_state = dict(episode_internal.get("felt_state", getattr(bot, "felt_state", {}) if bot is not None else {}) or {})
+    processing_state = dict(episode_internal.get("processing_state", getattr(bot, "processing_state", {}) if bot is not None else {}) or {})
+    thought_state = dict(episode_internal.get("thought_state", getattr(bot, "thought_state", {}) if bot is not None else {}) or {})
     state_signature = dict(episode.get("state_signature", {}) or {})
     last_payload = dict(episode_internal.get("last_payload", episode.get("last_payload", {})) or {})
     state_before = dict(last_payload.get("state_before", {}) or {})
@@ -1243,6 +1834,29 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
         "carrying_room": float(review_notes.get("carrying_room", 0.0) or 0.0),
         "action_inhibition": float(review_notes.get("action_inhibition", 0.0) or 0.0),
         "action_clearance": float(review_notes.get("action_clearance", 0.0) or 0.0),
+        "field_areal_count": int(inner_field.get("field_areal_count", 0) or 0),
+        "field_areal_activation_mean": float(inner_field.get("field_areal_activation_mean", 0.0) or 0.0),
+        "field_areal_stability_mean": float(inner_field.get("field_areal_stability_mean", 0.0) or 0.0),
+        "field_areal_pressure_mean": float(inner_field.get("field_areal_pressure_mean", 0.0) or 0.0),
+        "field_areal_drift": float(inner_field.get("field_areal_drift", 0.0) or 0.0),
+        "field_areal_dominance": float(inner_field.get("field_areal_dominance", 0.0) or 0.0),
+        "field_areal_fragmentation": float(inner_field.get("field_areal_fragmentation", 0.0) or 0.0),
+        "field_areal_coherence_mean": float(inner_field.get("field_areal_coherence_mean", 0.0) or 0.0),
+        "field_areal_conflict_mean": float(inner_field.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "processing_areal_tension": float(processing_state.get("processing_areal_tension", 0.0) or 0.0),
+        "processing_areal_support": float(processing_state.get("processing_areal_support", 0.0) or 0.0),
+        "thought_decision_conflict": float(thought_state.get("decision_conflict", 0.0) or 0.0),
+        "thought_state_maturity": float(thought_state.get("state_maturity", 0.0) or 0.0),
+        "thought_rumination_depth": float(thought_state.get("rumination_depth", 0.0) or 0.0),
+        "thought_inner_time_scale": float(thought_state.get("inner_time_scale", 0.0) or 0.0),
+        "thought_decision_readiness": float(thought_state.get("decision_readiness", 0.0) or 0.0),
+        "thought_alignment": float(thought_state.get("thought_alignment", 0.0) or 0.0),
+        "thought_decision_pressure": float(thought_state.get("decision_pressure", 0.0) or 0.0),
+        "thought_inertia": float(thought_state.get("thought_inertia", 0.0) or 0.0),
+        "thought_settlement": float(thought_state.get("thought_settlement", 0.0) or 0.0),
+        "thought_drift": float(thought_state.get("thought_drift", 0.0) or 0.0),
+        "thought_areal_pressure": float(thought_state.get("thought_areal_pressure", 0.0) or 0.0),
+        "thought_areal_support": float(thought_state.get("thought_areal_support", 0.0) or 0.0),
         "in_trade_update_count": int(in_trade_summary.get("in_trade_update_count", 0) or 0),
         "in_trade_max_mfe": float(in_trade_summary.get("in_trade_max_mfe", 0.0) or 0.0),
         "in_trade_max_mae": float(in_trade_summary.get("in_trade_max_mae", 0.0) or 0.0),
@@ -1261,6 +1875,15 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
         "in_trade_avg_recovery_balance": float(in_trade_summary.get("in_trade_avg_recovery_balance", 0.0) or 0.0),
         "in_trade_avg_regulated_courage": float(in_trade_summary.get("in_trade_avg_regulated_courage", 0.0) or 0.0),
         "in_trade_avg_courage_gap": float(in_trade_summary.get("in_trade_avg_courage_gap", 0.0) or 0.0),
+        "in_trade_avg_field_areal_count": float(in_trade_summary.get("in_trade_avg_field_areal_count", 0.0) or 0.0),
+        "in_trade_avg_field_areal_activation_mean": float(in_trade_summary.get("in_trade_avg_field_areal_activation_mean", 0.0) or 0.0),
+        "in_trade_avg_field_areal_stability_mean": float(in_trade_summary.get("in_trade_avg_field_areal_stability_mean", 0.0) or 0.0),
+        "in_trade_avg_field_areal_pressure_mean": float(in_trade_summary.get("in_trade_avg_field_areal_pressure_mean", 0.0) or 0.0),
+        "in_trade_avg_field_areal_drift": float(in_trade_summary.get("in_trade_avg_field_areal_drift", 0.0) or 0.0),
+        "in_trade_avg_field_areal_dominance": float(in_trade_summary.get("in_trade_avg_field_areal_dominance", 0.0) or 0.0),
+        "in_trade_avg_field_areal_fragmentation": float(in_trade_summary.get("in_trade_avg_field_areal_fragmentation", 0.0) or 0.0),
+        "in_trade_avg_field_areal_coherence_mean": float(in_trade_summary.get("in_trade_avg_field_areal_coherence_mean", 0.0) or 0.0),
+        "in_trade_avg_field_areal_conflict_mean": float(in_trade_summary.get("in_trade_avg_field_areal_conflict_mean", 0.0) or 0.0),
         "in_trade_last_pre_action_phase": str(in_trade_summary.get("in_trade_last_pre_action_phase", "-") or "-"),
         "in_trade_last_dominant_tension_cause": str(in_trade_summary.get("in_trade_last_dominant_tension_cause", "-") or "-"),
         "felt_state": dict(felt_state or {}),
@@ -1295,17 +1918,38 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
     destabilization_cost = float(max(0.0, -float(tension_delta.get("stability", 0.0) or 0.0)))
     energy_disturbance = float(min(1.0, abs(float(tension_delta.get("energy", 0.0) or 0.0))))
     delta_pressure_cost = float(min(1.0, max(0.0, float(field_delta.get("regulatory_load", 0.0) or 0.0))))
+    areal_pressure_cost = float(min(1.0, max(0.0, float(summary.get("in_trade_avg_field_areal_pressure_mean", summary.get("field_areal_pressure_mean", 0.0)) or 0.0))))
+    areal_fragmentation_cost = float(min(1.0, max(0.0, float(summary.get("in_trade_avg_field_areal_fragmentation", summary.get("field_areal_fragmentation", 0.0)) or 0.0))))
+    delta_areal_pressure_cost = float(min(1.0, max(0.0, float(field_delta.get("field_areal_pressure_mean", 0.0) or 0.0))))
+    delta_areal_fragmentation_cost = float(min(1.0, max(0.0, float(field_delta.get("field_areal_fragmentation", 0.0) or 0.0))))
+    delta_areal_conflict_cost = float(min(1.0, max(0.0, float(field_delta.get("field_areal_conflict_mean", 0.0) or 0.0))))
+    areal_support_room = float(
+        max(
+            0.0,
+            min(
+                1.0,
+                (float(summary.get("field_areal_stability_mean", 0.0) or 0.0) * 0.28)
+                + (float(summary.get("field_areal_coherence_mean", 0.0) or 0.0) * 0.24)
+                + (float(summary.get("field_areal_dominance", 0.0) or 0.0) * 0.14)
+                + (float(summary.get("processing_areal_support", 0.0) or 0.0) * 0.18)
+                + (float(summary.get("thought_areal_support", 0.0) or 0.0) * 0.16)
+            ),
+        )
+    )
 
     summary["experience_friction_cost"] = float(
         max(
             0.0,
             min(
                 1.0,
-                (float(summary.get("bearing_regulation_cost", 0.0) or 0.0) * 0.34)
-                + (float(summary.get("felt_recovery_cost", 0.0) or 0.0) * 0.24)
-                + (float(summary.get("felt_burden", 0.0) or 0.0) * 0.22)
-                + (pressure_cost * 0.10)
-                + (delta_pressure_cost * 0.10),
+                (pressure_cost * 0.26)
+                + (destabilization_cost * 0.18)
+                + (delta_pressure_cost * 0.08)
+                + (areal_pressure_cost * 0.10)
+                + (areal_fragmentation_cost * 0.08)
+                + (delta_areal_pressure_cost * 0.04)
+                + (delta_areal_fragmentation_cost * 0.02)
+                + (delta_areal_conflict_cost * 0.02),
             ),
         )
     )
@@ -1315,8 +1959,10 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
             0.0,
             min(
                 1.0,
-                (energy_disturbance * 0.52)
-                + (min(1.0, destabilization_cost) * 0.48),
+                (energy_disturbance * 0.46)
+                + (min(1.0, destabilization_cost) * 0.38)
+                + (delta_areal_conflict_cost * 0.10)
+                + (delta_areal_fragmentation_cost * 0.06),
             ),
         )
     )
@@ -1326,9 +1972,11 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
             0.0,
             min(
                 1.0,
-                (float(summary.get("carrying_room", 0.0) or 0.0) * 0.52)
-                + (float(summary.get("felt_bearing", 0.0) or 0.0) * 0.28)
-                + (float(summary.get("relief_quality", 0.0) or 0.0) * 0.20),
+                (float(summary.get("carrying_room", 0.0) or 0.0) * 0.34)
+                + (float(summary.get("felt_bearing", 0.0) or 0.0) * 0.22)
+                + (float(summary.get("relief_quality", 0.0) or 0.0) * 0.14)
+                + (areal_support_room * 0.18)
+                + (float(summary.get("thought_areal_support", 0.0) or 0.0) * 0.12),
             ),
         )
     )
@@ -1455,22 +2103,55 @@ def mark_runtime_episode_event(bot, event_name, payload=None):
     return dict(episode)
 
 # --------------------------------------------------
-def _derive_felt_label(valence, bearing, overactivation, burden, regulation_quality, conflict, recovery_cost):
+def _derive_felt_label(
+    valence,
+    bearing,
+    overactivation,
+    burden,
+    regulation_quality,
+    conflict,
+    recovery_cost,
+    areal_support=0.0,
+    areal_conflict_pressure=0.0,
+    field_areal_fragmentation=0.0,
+    processing_areal_tension=0.0,
+    thought_areal_pressure=0.0,
+):
 
-    if overactivation >= 0.72 and valence >= 0.18:
+    if overactivation >= 0.72 and valence >= 0.18 and areal_conflict_pressure < 0.42:
         return "euphoric"
+
+    if (
+        areal_conflict_pressure >= 0.58
+        or field_areal_fragmentation >= 0.54
+        or processing_areal_tension >= 0.54
+        or thought_areal_pressure >= 0.54
+    ):
+        return "fragmented_conflict"
 
     if burden >= 0.68 or recovery_cost >= 0.72:
         return "burdened"
 
-    if bearing >= 0.58 and regulation_quality >= 0.56 and conflict <= 0.34:
+    if (
+        bearing >= 0.58
+        and regulation_quality >= 0.56
+        and conflict <= 0.34
+        and areal_support >= 0.52
+        and areal_conflict_pressure <= 0.34
+    ):
         return "stable_bearing"
+
+    if bearing >= 0.48 and areal_support >= 0.46 and recovery_cost <= 0.46 and conflict <= 0.42:
+        return "recovering"
 
     if conflict >= 0.56:
         return "conflicted"
 
-    if abs(valence) <= 0.12 and abs(bearing) <= 0.12:
+    if abs(valence) <= 0.12 and abs(bearing) <= 0.12 and areal_support <= 0.18 and areal_conflict_pressure <= 0.18:
         return "neutral"
+
+    if field_areal_fragmentation >= 0.38 or areal_conflict_pressure >= 0.40:
+        return "volatile_bearing"
 
     if valence < 0.0:
         return "strained"
@@ -1504,15 +2185,38 @@ def _build_episode_felt_summary(summary):
     survival_delta = float(field_delta.get("survival_pressure", 0.0) or 0.0)
     release_delta = float(experience_delta.get("pressure_release", 0.0) or 0.0)
     bearing_delta = float(experience_delta.get("load_bearing_capacity", 0.0) or 0.0)
+    field_areal_pressure_mean = float(item.get("field_areal_pressure_mean", 0.0) or 0.0)
+    field_areal_stability_mean = float(item.get("field_areal_stability_mean", 0.0) or 0.0)
+    field_areal_dominance = float(item.get("field_areal_dominance", 0.0) or 0.0)
+    field_areal_fragmentation = float(item.get("field_areal_fragmentation", 0.0) or 0.0)
+    field_areal_coherence_mean = float(item.get("field_areal_coherence_mean", 0.0) or 0.0)
+    field_areal_conflict_mean = float(item.get("field_areal_conflict_mean", 0.0) or 0.0)
+    processing_areal_tension = float(item.get("processing_areal_tension", 0.0) or 0.0)
+    processing_areal_support = float(item.get("processing_areal_support", 0.0) or 0.0)
+    thought_areal_pressure = float(item.get("thought_areal_pressure", 0.0) or 0.0)
+    thought_areal_support = float(item.get("thought_areal_support", 0.0) or 0.0)
+    areal_support = float(felt_state.get("areal_support", 0.0) or 0.0)
+    areal_conflict_pressure = float(felt_state.get("areal_conflict_pressure", 0.0) or 0.0)
+    delta_areal_pressure = float(field_delta.get("field_areal_pressure_mean", 0.0) or 0.0)
+    delta_areal_fragmentation = float(field_delta.get("field_areal_fragmentation", 0.0) or 0.0)
+    delta_areal_conflict = float(field_delta.get("field_areal_conflict_mean", 0.0) or 0.0)
 
     raw_valence = (
-        (felt_quality * 0.24)
-        + (review_score * 0.18)
-        + (thought_quality * 0.10)
-        + (release_delta * 0.22)
-        - (pressure_delta * 0.22)
-        - (survival_delta * 0.18)
-        - (recovery_delta * 0.14)
+        (felt_quality * 0.20)
+        + (review_score * 0.14)
+        + (thought_quality * 0.08)
+        + (release_delta * 0.18)
+        + (areal_support * 0.10)
+        + (field_areal_stability_mean * 0.08)
+        + (field_areal_coherence_mean * 0.06)
+        + (processing_areal_support * 0.06)
+        + (thought_areal_support * 0.06)
+        - (pressure_delta * 0.18)
+        - (survival_delta * 0.14)
+        - (recovery_delta * 0.10)
+        - (areal_conflict_pressure * 0.14)
+        - (field_areal_pressure_mean * 0.08)
+        - (field_areal_fragmentation * 0.06)
     )
 
     valence = float(max(-1.0, min(1.0, raw_valence)))
@@ -1520,13 +2224,21 @@ def _build_episode_felt_summary(summary):
         0.0,
         min(
             1.0,
-            (structural_bearing_quality * 0.28)
-            + (decision_path_quality * 0.14)
-            + (capacity_delta * 0.22)
-            + (bearing_delta * 0.24)
-            + (confidence * 0.12)
-            - (pressure_delta * 0.18)
-            - (recovery_delta * 0.10),
+            (structural_bearing_quality * 0.18)
+            + (decision_path_quality * 0.10)
+            + (capacity_delta * 0.16)
+            + (bearing_delta * 0.18)
+            + (confidence * 0.08)
+            + (areal_support * 0.14)
+            + (field_areal_stability_mean * 0.10)
+            + (field_areal_coherence_mean * 0.08)
+            + (field_areal_dominance * 0.06)
+            + (processing_areal_support * 0.08)
+            + (thought_areal_support * 0.08)
+            - (pressure_delta * 0.12)
+            - (recovery_delta * 0.08)
+            - (field_areal_fragmentation * 0.08)
+            - (field_areal_conflict_mean * 0.10),
         ),
     ))
     overactivation = float(max(
@@ -1534,64 +2246,91 @@ def _build_episode_felt_summary(summary):
         min(
             1.0,
             competition_bias
-            + max(0.0, pressure_delta * 0.34)
-            + max(0.0, survival_delta * 0.26)
-            - (release_delta * 0.16),
+            + max(0.0, pressure_delta * 0.26)
+            + max(0.0, survival_delta * 0.18)
+            + (areal_conflict_pressure * 0.18)
+            + (field_areal_pressure_mean * 0.14)
+            + (processing_areal_tension * 0.12)
+            - (release_delta * 0.12)
+            - (processing_areal_support * 0.10),
         ),
     ))
     burden = float(max(
         0.0,
         min(
             1.0,
-            (pressure_delta * 0.34)
-            + (recovery_delta * 0.28)
-            + (survival_delta * 0.24)
-            - (capacity_delta * 0.16)
-            - (release_delta * 0.12),
+            (pressure_delta * 0.24)
+            + (recovery_delta * 0.20)
+            + (survival_delta * 0.18)
+            + (areal_conflict_pressure * 0.16)
+            + (field_areal_fragmentation * 0.12)
+            + (field_areal_conflict_mean * 0.12)
+            - (capacity_delta * 0.12)
+            - (release_delta * 0.10)
+            - (areal_support * 0.10),
         ),
     ))
     regulation_quality = float(max(
         0.0,
         min(
             1.0,
-            (review_score * 0.18)
-            + (observation_quality * 0.14)
-            + (correction_quality * 0.18)
-            + (uncertainty_quality * 0.16)
-            + (release_delta * 0.16)
-            + (bearing_delta * 0.10)
-            - (competition_bias * 0.14),
+            (review_score * 0.14)
+            + (observation_quality * 0.10)
+            + (correction_quality * 0.14)
+            + (uncertainty_quality * 0.12)
+            + (release_delta * 0.12)
+            + (bearing_delta * 0.08)
+            + (areal_support * 0.12)
+            + (processing_areal_support * 0.10)
+            + (thought_areal_support * 0.08)
+            - (competition_bias * 0.10)
+            - (areal_conflict_pressure * 0.12)
+            - (processing_areal_tension * 0.08)
+            - (thought_areal_pressure * 0.08),
         ),
     ))
     stability = float(max(
         0.0,
         min(
             1.0,
-            (bearing * 0.34)
-            + (regulation_quality * 0.24)
-            + (confidence * 0.18)
-            - (overactivation * 0.20)
-            - (burden * 0.18),
+            (bearing * 0.26)
+            + (regulation_quality * 0.18)
+            + (confidence * 0.12)
+            + (areal_support * 0.16)
+            + (processing_areal_support * 0.10)
+            + (thought_areal_support * 0.08)
+            - (overactivation * 0.14)
+            - (burden * 0.12)
+            - (areal_conflict_pressure * 0.10),
         ),
     ))
     conflict = float(max(
         0.0,
         min(
             1.0,
-            (abs(valence) * 0.12)
-            + (competition_bias * 0.34)
-            + max(0.0, pressure_delta - capacity_delta) * 0.28
-            + max(0.0, 0.5 - regulation_quality) * 0.18,
+            (abs(valence) * 0.08)
+            + (competition_bias * 0.20)
+            + max(0.0, pressure_delta - capacity_delta) * 0.16
+            + max(0.0, 0.5 - regulation_quality) * 0.12
+            + (field_areal_conflict_mean * 0.16)
+            + (field_areal_fragmentation * 0.12)
+            + (areal_conflict_pressure * 0.12)
+            + (thought_areal_pressure * 0.08),
         ),
     ))
     recovery_cost = float(max(
         0.0,
         min(
             1.0,
-            (recovery_delta * 0.44)
-            + (burden * 0.28)
-            + (conflict * 0.18)
-            - (release_delta * 0.18),
+            (recovery_delta * 0.34)
+            + (burden * 0.20)
+            + (conflict * 0.14)
+            + (areal_conflict_pressure * 0.12)
+            + (max(0.0, delta_areal_fragmentation) * 0.08)
+            + (max(0.0, delta_areal_conflict) * 0.08)
+            + (max(0.0, delta_areal_pressure) * 0.08)
+            - (release_delta * 0.14)
+            - (areal_support * 0.10),
         ),
     ))
 
@@ -1603,6 +2342,11 @@ def _build_episode_felt_summary(summary):
         regulation_quality,
         conflict,
         recovery_cost,
+        areal_support=areal_support,
+        areal_conflict_pressure=areal_conflict_pressure,
+        field_areal_fragmentation=field_areal_fragmentation,
+        processing_areal_tension=processing_areal_tension,
+        thought_areal_pressure=thought_areal_pressure,
     )
 
     return {
@@ -1615,6 +2359,14 @@ def _build_episode_felt_summary(summary):
         "confidence": float(confidence),
         "conflict": float(conflict),
         "recovery_cost": float(recovery_cost),
+        "areal_support": float(areal_support),
+        "areal_conflict_pressure": float(areal_conflict_pressure),
+        "field_areal_fragmentation": float(field_areal_fragmentation),
+        "field_areal_conflict_mean": float(field_areal_conflict_mean),
+        "processing_areal_tension": float(processing_areal_tension),
+        "processing_areal_support": float(processing_areal_support),
+        "thought_areal_pressure": float(thought_areal_pressure),
+        "thought_areal_support": float(thought_areal_support),
         "felt_label": str(felt_label),
     }
 
@@ -1631,25 +2383,34 @@ def _build_affective_structure_profile(episodes):
                 "neutral_ratio": 0.0,
                 "euphoric_ratio": 0.0,
                 "burden_ratio": 0.0,
+                "areal_fragmented_ratio": 0.0,
+                "areal_supported_ratio": 0.0,
             },
             "averages": {
                 "felt_valence_avg": 0.0,
                 "felt_bearing_avg": 0.0,
                 "felt_regulation_quality_avg": 0.0,
                 "felt_recovery_cost_avg": 0.0,
+                "felt_areal_support_avg": 0.0,
+                "felt_areal_conflict_avg": 0.0,
             },
             "variance": {
                 "felt_valence_variance": 0.0,
                 "felt_bearing_variance": 0.0,
+                "felt_areal_support_variance": 0.0,
+                "felt_areal_conflict_variance": 0.0,
             },
             "stability": {
                 "felt_stability": 0.0,
                 "felt_coherence_avg": 0.0,
                 "felt_conflict_ratio": 0.0,
+                "felt_areal_support_avg": 0.0,
+                "felt_areal_conflict_avg": 0.0,
             },
             "dynamic": {
                 "felt_drift_avg": 0.0,
                 "felt_trend": "flat",
+                "felt_areal_drift_avg": 0.0,
             },
             "felt_bearing_score": 0.0,
             "felt_profile_label": "mixed_unclear",
@@ -1670,6 +2431,14 @@ def _build_affective_structure_profile(episodes):
             "confidence": float(felt.get("confidence", 0.0) or 0.0),
             "conflict": float(felt.get("conflict", 0.0) or 0.0),
             "recovery_cost": float(felt.get("recovery_cost", 0.0) or 0.0),
+            "areal_support": float(felt.get("areal_support", 0.0) or 0.0),
+            "areal_conflict_pressure": float(felt.get("areal_conflict_pressure", 0.0) or 0.0),
+            "field_areal_fragmentation": float(felt.get("field_areal_fragmentation", 0.0) or 0.0),
+            "field_areal_conflict_mean": float(felt.get("field_areal_conflict_mean", 0.0) or 0.0),
+            "processing_areal_tension": float(felt.get("processing_areal_tension", 0.0) or 0.0),
+            "processing_areal_support": float(felt.get("processing_areal_support", 0.0) or 0.0),
+            "thought_areal_pressure": float(felt.get("thought_areal_pressure", 0.0) or 0.0),
+            "thought_areal_support": float(felt.get("thought_areal_support", 0.0) or 0.0),
             "label": str(felt.get("felt_label", "mixed") or "mixed"),
             "axis_shift": float(item.get("axis_shift", 0.0) or 0.0),
             "drift": float(item.get("drift", 0.0) or 0.0),
@@ -1682,7 +2451,16 @@ def _build_affective_structure_profile(episodes):
     recovery_values = [float(item["recovery_cost"]) for item in felt_items]
     stability_values = [float(item["stability"]) for item in felt_items]
     conflict_values = [float(item["conflict"]) for item in felt_items]
-    drift_values = [float(item["drift"]) + float(item["axis_shift"]) for item in felt_items]
+    areal_support_values = [float(item["areal_support"]) for item in felt_items]
+    areal_conflict_values = [float(item["areal_conflict_pressure"]) for item in felt_items]
+    fragmentation_values = [float(item["field_areal_fragmentation"]) for item in felt_items]
+    areal_dynamic_values = [
+        float(item["drift"])
+        + float(item["axis_shift"])
+        + (float(item["processing_areal_tension"]) * 0.35)
+        + (float(item["thought_areal_pressure"]) * 0.25)
+        for item in felt_items
+    ]
 
     valence_avg = float(sum(valences) / total)
     bearing_avg = float(sum(bearings) / total)
@@ -1690,10 +2468,14 @@ def _build_affective_structure_profile(episodes):
     recovery_avg = float(sum(recovery_values) / total)
     stability_avg = float(sum(stability_values) / total)
     conflict_avg = float(sum(conflict_values) / total)
-    drift_avg = float(sum(drift_values) / total)
+    areal_support_avg = float(sum(areal_support_values) / total)
+    areal_conflict_avg = float(sum(areal_conflict_values) / total)
+    drift_avg = float(sum(areal_dynamic_values) / total)
 
     valence_variance = float(sum((value - valence_avg) ** 2 for value in valences) / total)
     bearing_variance = float(sum((value - bearing_avg) ** 2 for value in bearings) / total)
+    areal_support_variance = float(sum((value - areal_support_avg) ** 2 for value in areal_support_values) / total)
+    areal_conflict_variance = float(sum((value - areal_conflict_avg) ** 2 for value in areal_conflict_values) / total)
 
     positive_ratio = float(sum(1.0 for value in valences if value > 0.12) / total)
     negative_ratio = float(sum(1.0 for value in valences if value < -0.12) / total)
@@ -1701,12 +2483,14 @@ def _build_affective_structure_profile(episodes):
     euphoric_ratio = float(sum(1.0 for item in felt_items if item["label"] == "euphoric") / total)
     burden_ratio = float(sum(1.0 for item in felt_items if item["label"] == "burdened") / total)
     conflict_ratio = float(sum(1.0 for value in conflict_values if value >= 0.55) / total)
+    areal_fragmented_ratio = float(sum(1.0 for value in fragmentation_values if value >= 0.48) / total)
+    areal_supported_ratio = float(sum(1.0 for value in areal_support_values if value >= 0.58) / total)
 
-    coherence_avg = float(max(0.0, min(1.0, 1.0 - ((valence_variance * 0.75) + (bearing_variance * 0.90) + (conflict_ratio * 0.55)))))
-    felt_stability = float(max(0.0, min(1.0, (stability_avg * 0.44) + (coherence_avg * 0.34) + (bearing_avg * 0.22) - (drift_avg * 0.08))))
+    coherence_avg = float(max(0.0, min(1.0, 1.0 - ((valence_variance * 0.58) + (bearing_variance * 0.66) + (areal_support_variance * 0.46) + (areal_conflict_variance * 0.52) + (conflict_ratio * 0.40)))))
+    felt_stability = float(max(0.0, min(1.0, (stability_avg * 0.28) + (coherence_avg * 0.22) + (bearing_avg * 0.16) + (areal_support_avg * 0.18) - (areal_conflict_avg * 0.12) - (drift_avg * 0.06))))
 
     if len(valences) >= 2:
-        trend_value = float(valences[-1] - valences[0])
+        trend_value = float((valences[-1] + areal_support_values[-1] - areal_conflict_values[-1]) - (valences[0] + areal_support_values[0] - areal_conflict_values[0]))
     else:
         trend_value = 0.0
 
@@ -1721,26 +2505,31 @@ def _build_affective_structure_profile(episodes):
         0.0,
         min(
             1.0,
-            (bearing_avg * 0.34)
-            + (regulation_avg * 0.22)
-            + (felt_stability * 0.22)
-            + (coherence_avg * 0.12)
-            + (max(0.0, valence_avg) * 0.10)
-            - (recovery_avg * 0.18)
-            - (burden_ratio * 0.16)
-            - (euphoric_ratio * 0.10),
+            (bearing_avg * 0.24)
+            + (regulation_avg * 0.16)
+            + (felt_stability * 0.16)
+            + (coherence_avg * 0.10)
+            + (max(0.0, valence_avg) * 0.08)
+            + (areal_support_avg * 0.18)
+            - (recovery_avg * 0.14)
+            - (burden_ratio * 0.10)
+            - (euphoric_ratio * 0.06)
+            - (areal_conflict_avg * 0.12)
+            - (areal_fragmented_ratio * 0.08),
         ),
     ))
 
-    if felt_bearing_score >= 0.66 and felt_stability >= 0.58 and euphoric_ratio <= 0.22:
+    if felt_bearing_score >= 0.66 and felt_stability >= 0.58 and areal_supported_ratio >= 0.42 and areal_fragmented_ratio <= 0.24:
         felt_profile_label = "stable_bearing"
+    elif areal_fragmented_ratio >= 0.42 or areal_conflict_avg >= 0.58:
+        felt_profile_label = "fragmented_conflict"
     elif euphoric_ratio >= 0.34 and bearing_avg < 0.62:
         felt_profile_label = "euphoric_risk"
     elif burden_ratio >= 0.38 or recovery_avg >= 0.62:
         felt_profile_label = "burdened"
-    elif felt_trend == "up" and recovery_avg <= 0.48 and burden_ratio <= 0.28:
+    elif felt_trend == "up" and recovery_avg <= 0.48 and burden_ratio <= 0.28 and areal_conflict_avg <= 0.42:
         felt_profile_label = "recovering"
-    elif valence_variance >= 0.10 or bearing_variance >= 0.08:
+    elif valence_variance >= 0.10 or bearing_variance >= 0.08 or areal_support_variance >= 0.10:
         felt_profile_label = "volatile_bearing"
     else:
         felt_profile_label = "mixed_unclear"
@@ -1754,6 +2543,9 @@ def _build_affective_structure_profile(episodes):
             "regulation_quality": float(item.get("regulation_quality", 0.0) or 0.0),
             "burden": float(item.get("burden", 0.0) or 0.0),
             "overactivation": float(item.get("overactivation", 0.0) or 0.0),
+            "areal_support": float(item.get("areal_support", 0.0) or 0.0),
+            "areal_conflict_pressure": float(item.get("areal_conflict_pressure", 0.0) or 0.0),
+            "field_areal_fragmentation": float(item.get("field_areal_fragmentation", 0.0) or 0.0),
             "label": str(item.get("label", "mixed") or "mixed"),
         })
 
@@ -1764,25 +2556,34 @@ def _build_affective_structure_profile(episodes):
             "neutral_ratio": float(neutral_ratio),
             "euphoric_ratio": float(euphoric_ratio),
             "burden_ratio": float(burden_ratio),
+            "areal_fragmented_ratio": float(areal_fragmented_ratio),
+            "areal_supported_ratio": float(areal_supported_ratio),
         },
         "averages": {
             "felt_valence_avg": float(valence_avg),
             "felt_bearing_avg": float(bearing_avg),
             "felt_regulation_quality_avg": float(regulation_avg),
             "felt_recovery_cost_avg": float(recovery_avg),
+            "felt_areal_support_avg": float(areal_support_avg),
+            "felt_areal_conflict_avg": float(areal_conflict_avg),
         },
         "variance": {
             "felt_valence_variance": float(valence_variance),
             "felt_bearing_variance": float(bearing_variance),
+            "felt_areal_support_variance": float(areal_support_variance),
+            "felt_areal_conflict_variance": float(areal_conflict_variance),
         },
         "stability": {
             "felt_stability": float(felt_stability),
             "felt_coherence_avg": float(coherence_avg),
             "felt_conflict_ratio": float(conflict_ratio),
+            "felt_areal_support_avg": float(areal_support_avg),
+            "felt_areal_conflict_avg": float(areal_conflict_avg),
         },
         "dynamic": {
             "felt_drift_avg": float(drift_avg),
             "felt_trend": str(felt_trend),
+            "felt_areal_drift_avg": float(sum(areal_dynamic_values) / total),
         },
         "felt_bearing_score": float(felt_bearing_score),
         "felt_profile_label": str(felt_profile_label),
@@ -1796,6 +2597,20 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
         return {
             "felt_bearing_score": 0.0,
             "felt_profile_label": "mixed_unclear",
+            "inner_pattern_support": 0.0,
+            "inner_pattern_conflict": 0.0,
+            "inner_pattern_fragility": 0.0,
+            "inner_pattern_bearing": 0.0,
+            "inner_pattern_state": "bearing",
+            "pattern_support_score": 0.0,
+            "pattern_conflict_score": 0.0,
+            "pattern_fragility_score": 0.0,
+            "pattern_bearing_score": 0.0,
+            "pattern_reinforcement": 0.0,
+            "pattern_attenuation": 0.0,
+            "pattern_action_support": 0.0,
+            "pattern_observe_pressure": 0.0,
+            "pattern_replan_pressure": 0.0,
             "decision_bias": 0.0,
             "conviction_boost": 0.0,
             "caution_penalty": 0.0,
@@ -1839,7 +2654,7 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
 
     if inner_context_item:
         selected_item = dict(inner_context_item or {})
-        felt_bearing_score = float((context_felt_bearing_score * 0.42) + (inner_felt_bearing_score * 0.58))
+        felt_bearing_score = float((context_felt_bearing_score * 0.38) + (inner_felt_bearing_score * 0.62))
 
         if inner_felt_profile_label not in ("", "mixed_unclear", "-"):
             felt_profile_label = str(inner_felt_profile_label)
@@ -1851,13 +2666,21 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
     felt_averages = dict(felt_profile.get("averages", {}) or {})
     felt_variance = dict(felt_profile.get("variance", {}) or {})
     felt_stability = dict(felt_profile.get("stability", {}) or {})
+    felt_dynamic = dict(felt_profile.get("dynamic", {}) or {})
 
     euphoric_ratio = float(felt_distribution.get("euphoric_ratio", 0.0) or 0.0)
     burden_ratio = float(felt_distribution.get("burden_ratio", 0.0) or 0.0)
+    areal_fragmented_ratio = float(felt_distribution.get("areal_fragmented_ratio", 0.0) or 0.0)
+    areal_supported_ratio = float(felt_distribution.get("areal_supported_ratio", 0.0) or 0.0)
     felt_recovery_cost_avg = float(felt_averages.get("felt_recovery_cost_avg", 0.0) or 0.0)
+    felt_areal_support_avg = float(felt_averages.get("felt_areal_support_avg", 0.0) or 0.0)
+    felt_areal_conflict_avg = float(felt_averages.get("felt_areal_conflict_avg", 0.0) or 0.0)
     felt_valence_variance = float(felt_variance.get("felt_valence_variance", 0.0) or 0.0)
     felt_bearing_variance = float(felt_variance.get("felt_bearing_variance", 0.0) or 0.0)
+    felt_areal_support_variance = float(felt_variance.get("felt_areal_support_variance", 0.0) or 0.0)
+    felt_areal_conflict_variance = float(felt_variance.get("felt_areal_conflict_variance", 0.0) or 0.0)
     felt_conflict_ratio = float(felt_stability.get("felt_conflict_ratio", 0.0) or 0.0)
+    felt_areal_drift_avg = float(felt_dynamic.get("felt_areal_drift_avg", 0.0) or 0.0)
 
     topology_density = float(selected_item.get("avg_field_density", selected_item.get("field_density", 0.0)) or 0.0)
     topology_stability = float(selected_item.get("avg_field_stability", selected_item.get("field_stability", 0.0)) or 0.0)
@@ -1872,18 +2695,51 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
     topology_reorganization_direction = str(selected_item.get("last_field_reorganization_direction", selected_item.get("field_reorganization_direction", "stable")) or "stable")
     topology_velocity = float(selected_item.get("avg_field_mean_velocity", selected_item.get("field_mean_velocity", 0.0)) or 0.0)
     topology_pressure = float(selected_item.get("avg_field_regulation_pressure", selected_item.get("field_regulation_pressure", 0.0)) or 0.0)
+    areal_stability = float(selected_item.get("avg_field_areal_stability_mean", selected_item.get("field_areal_stability_mean", 0.0)) or 0.0)
+    areal_pressure = float(selected_item.get("avg_field_areal_pressure_mean", selected_item.get("field_areal_pressure_mean", 0.0)) or 0.0)
+    areal_dominance = float(selected_item.get("avg_field_areal_dominance", selected_item.get("field_areal_dominance", 0.0)) or 0.0)
+    areal_fragmentation = float(selected_item.get("avg_field_areal_fragmentation", selected_item.get("field_areal_fragmentation", 0.0)) or 0.0)
+    areal_coherence = float(selected_item.get("avg_field_areal_coherence_mean", selected_item.get("field_areal_coherence_mean", 0.0)) or 0.0)
+    areal_conflict = float(selected_item.get("avg_field_areal_conflict_mean", selected_item.get("field_areal_conflict_mean", 0.0)) or 0.0)
+    processing_areal_tension = float(selected_item.get("avg_processing_areal_tension", selected_item.get("processing_areal_tension", 0.0)) or 0.0)
+    processing_areal_support = float(selected_item.get("avg_processing_areal_support", selected_item.get("processing_areal_support", 0.0)) or 0.0)
+    thought_areal_pressure = float(selected_item.get("avg_thought_areal_pressure", selected_item.get("thought_areal_pressure", 0.0)) or 0.0)
+    thought_areal_support = float(selected_item.get("avg_thought_areal_support", selected_item.get("thought_areal_support", 0.0)) or 0.0)
+    inner_pattern_support = float(selected_item.get("inner_pattern_support", 0.0) or 0.0)
+    inner_pattern_conflict = float(selected_item.get("inner_pattern_conflict", 0.0) or 0.0)
+    inner_pattern_fragility = float(selected_item.get("inner_pattern_fragility", 0.0) or 0.0)
+    inner_pattern_bearing = float(selected_item.get("inner_pattern_bearing", 0.0) or 0.0)
+    inner_pattern_state = str(selected_item.get("inner_pattern_state", "bearing") or "bearing").strip().lower()
+    pattern_support_score = float(selected_item.get("pattern_support_score", inner_pattern_support) or 0.0)
+    pattern_conflict_score = float(selected_item.get("pattern_conflict_score", inner_pattern_conflict) or 0.0)
+    pattern_fragility_score = float(selected_item.get("pattern_fragility_score", inner_pattern_fragility) or 0.0)
+    pattern_bearing_score = float(selected_item.get("pattern_bearing_score", inner_pattern_bearing) or 0.0)
+    pattern_reinforcement = float(selected_item.get("pattern_reinforcement", 0.0) or 0.0)
+    pattern_attenuation = float(selected_item.get("pattern_attenuation", 0.0) or 0.0)
+    active_context_trace = _normalize_active_context_trace(getattr(bot, "active_context_trace", {}) or {})
+    active_context_strength = float(active_context_trace.get("activation", 0.0) or 0.0)
+
+    if active_context_strength > 0.0:
+        trace_blend = max(0.0, min(0.38, active_context_strength * 0.38))
+        inner_pattern_support = float((inner_pattern_support * (1.0 - trace_blend)) + (float(active_context_trace.get("support", 0.0) or 0.0) * trace_blend))
+        inner_pattern_conflict = float((inner_pattern_conflict * (1.0 - trace_blend)) + (float(active_context_trace.get("conflict", 0.0) or 0.0) * trace_blend))
+        inner_pattern_fragility = float((inner_pattern_fragility * (1.0 - trace_blend)) + (float(active_context_trace.get("fragility", 0.0) or 0.0) * trace_blend))
+        inner_pattern_bearing = float((inner_pattern_bearing * (1.0 - trace_blend)) + (float(active_context_trace.get("bearing", 0.0) or 0.0) * trace_blend))
+        pattern_reinforcement = float((pattern_reinforcement * (1.0 - trace_blend)) + (float(active_context_trace.get("reinforcement", 0.0) or 0.0) * trace_blend))
+        pattern_attenuation = float((pattern_attenuation * (1.0 - trace_blend)) + (float(active_context_trace.get("attenuation", 0.0) or 0.0) * trace_blend))
+
 
     topology_support = max(
         0.0,
         min(
             1.0,
-            (topology_density * 0.18)
-            + (topology_stability * 0.34)
-            + (topology_mass_mean * 0.22)
-            + (topology_mass_max * 0.26)
-            - (min(1.0, topology_center_spread) * 0.18)
-            - (min(1.0, topology_separation) * 0.16)
-            - (min(1.0, topology_velocity) * 0.10),
+            (topology_density * 0.14)
+            + (topology_stability * 0.24)
+            + (topology_mass_mean * 0.16)
+            + (topology_mass_max * 0.18)
+            - (min(1.0, topology_center_spread) * 0.12)
+            - (min(1.0, topology_separation) * 0.10)
+            - (min(1.0, topology_velocity) * 0.08),
         ),
     )
 
@@ -1891,15 +2747,87 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
         0.0,
         min(
             1.0,
-            (min(1.0, topology_center_spread) * 0.28)
-            + (min(1.0, topology_separation) * 0.22)
-            + ((1.0 - topology_stability) * 0.22)
-            + (min(1.0, topology_cluster_count / 6.0) * 0.14)
-            + (min(1.0, topology_pressure) * 0.14)
-            + (min(1.0, topology_velocity) * 0.18)
-            + (min(1.0, topology_center_drift) * 0.12)
-            + (min(1.0, topology_count_drift) * 0.10)
-            + (min(1.0, max(0.0, topology_velocity_trend)) * 0.08),
+            (min(1.0, topology_center_spread) * 0.20)
+            + (min(1.0, topology_separation) * 0.16)
+            + ((1.0 - topology_stability) * 0.16)
+            + (min(1.0, topology_cluster_count / 6.0) * 0.10)
+            + (min(1.0, topology_pressure) * 0.10)
+            + (min(1.0, topology_velocity) * 0.12)
+            + (min(1.0, topology_center_drift) * 0.08)
+            + (min(1.0, topology_count_drift) * 0.06)
+            + (min(1.0, max(0.0, topology_velocity_trend)) * 0.06),
+        ),
+    )
+
+    areal_support_mod = max(
+        0.0,
+        min(
+            1.0,
+            (felt_areal_support_avg * 0.18)
+            + (areal_supported_ratio * 0.12)
+            + (areal_stability * 0.12)
+            + (areal_coherence * 0.10)
+            + (areal_dominance * 0.06)
+            + (processing_areal_support * 0.10)
+            + (thought_areal_support * 0.10)
+            + (inner_pattern_support * 0.10)
+            + (pattern_support_score * 0.10)
+            + (pattern_bearing_score * 0.08)
+            + (pattern_reinforcement * 0.04),
+        ),
+    )
+
+    areal_conflict_mod = max(
+        0.0,
+        min(
+            1.0,
+            (felt_areal_conflict_avg * 0.14)
+            + (areal_fragmented_ratio * 0.12)
+            + (areal_fragmentation * 0.12)
+            + (areal_conflict * 0.12)
+            + (areal_pressure * 0.08)
+            + (processing_areal_tension * 0.10)
+            + (thought_areal_pressure * 0.08)
+            + (felt_areal_conflict_variance * 0.04)
+            + (inner_pattern_conflict * 0.10)
+            + (pattern_conflict_score * 0.10)
+            + (pattern_fragility_score * 0.06)
+            + (pattern_attenuation * 0.04),
+        ),
+    )
+
+    pattern_action_support = max(
+        0.0,
+        min(
+            1.0,
+            (areal_support_mod * 0.34)
+            + (inner_pattern_bearing * 0.22)
+            + (pattern_bearing_score * 0.18)
+            + (pattern_reinforcement * 0.14)
+            - (areal_conflict_mod * 0.16)
+            - (pattern_attenuation * 0.10),
+        ),
+    )
+    pattern_observe_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (areal_conflict_mod * 0.30)
+            + (inner_pattern_fragility * 0.20)
+            + (pattern_fragility_score * 0.16)
+            + (pattern_attenuation * 0.14)
+            - (pattern_reinforcement * 0.08),
+        ),
+    )
+    pattern_replan_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (inner_pattern_conflict * 0.24)
+            + (pattern_conflict_score * 0.22)
+            + (pattern_attenuation * 0.18)
+            + (areal_conflict_mod * 0.18)
+            - (areal_support_mod * 0.10),
         ),
     )
 
@@ -1912,63 +2840,80 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
     width_shift = 0.0
 
     if felt_profile_label == "stable_bearing":
-        decision_bias += 0.08 + (felt_bearing_score * 0.06)
-        conviction_boost += 0.08 + (felt_bearing_score * 0.08)
-        risk_shift -= 0.06
-        rr_shift += 0.06
-        width_shift -= 0.06
+        decision_bias += 0.06 + (felt_bearing_score * 0.04) + (areal_support_mod * 0.04)
+        conviction_boost += 0.06 + (felt_bearing_score * 0.06) + (areal_support_mod * 0.06)
+        risk_shift -= 0.04
+        rr_shift += 0.05
+        width_shift -= 0.05
 
     elif felt_profile_label == "recovering":
-        decision_bias += 0.03 + (felt_bearing_score * 0.04)
-        conviction_boost += 0.04
+        decision_bias += 0.03 + (felt_bearing_score * 0.03) + (areal_support_mod * 0.02)
+        conviction_boost += 0.03 + (areal_support_mod * 0.04)
         risk_shift -= 0.02
-        rr_shift += 0.03
+        rr_shift += 0.02
         width_shift -= 0.02
 
     elif felt_profile_label == "volatile_bearing":
-        caution_penalty += 0.05 + (felt_bearing_variance * 0.20)
-        volatility_penalty += 0.04 + (felt_valence_variance * 0.18)
+        caution_penalty += 0.04 + (felt_bearing_variance * 0.12) + (felt_areal_support_variance * 0.10)
+        volatility_penalty += 0.04 + (felt_valence_variance * 0.12) + (felt_areal_drift_avg * 0.08)
         risk_shift -= 0.04
-        width_shift += 0.06
+        width_shift += 0.05
 
-    elif felt_profile_label == "euphoric_risk":
-        caution_penalty += 0.08 + (euphoric_ratio * 0.16)
-        volatility_penalty += 0.04 + (euphoric_ratio * 0.10)
+    elif felt_profile_label == "fragmented_conflict":
+        caution_penalty += 0.08 + (areal_conflict_mod * 0.14)
+        volatility_penalty += 0.06 + (areal_fragmented_ratio * 0.12) + (felt_areal_drift_avg * 0.08)
         risk_shift -= 0.08
-        rr_shift += 0.02
-        width_shift += 0.04
-
-    elif felt_profile_label == "burdened":
-        caution_penalty += 0.10 + (burden_ratio * 0.16)
-        volatility_penalty += 0.06 + (felt_recovery_cost_avg * 0.12)
-        risk_shift -= 0.10
+        rr_shift -= 0.02
         width_shift += 0.08
 
-    else:
-        caution_penalty += (felt_conflict_ratio * 0.06)
-        volatility_penalty += (felt_bearing_variance * 0.06)
+    elif felt_profile_label == "euphoric_risk":
+        caution_penalty += 0.06 + (euphoric_ratio * 0.12)
+        volatility_penalty += 0.04 + (euphoric_ratio * 0.08)
+        risk_shift -= 0.06
+        rr_shift += 0.02
+        width_shift += 0.03
 
-    decision_bias += float(topology_support * 0.04)
-    conviction_boost += float(topology_support * 0.05)
-    caution_penalty += float(topology_fragmentation * 0.05)
-    volatility_penalty += float(topology_fragmentation * 0.04)
+    elif felt_profile_label == "burdened":
+        caution_penalty += 0.08 + (burden_ratio * 0.12) + (areal_conflict_mod * 0.08)
+        volatility_penalty += 0.05 + (felt_recovery_cost_avg * 0.10)
+        risk_shift -= 0.08
+        width_shift += 0.06
+
+    else:
+        caution_penalty += (felt_conflict_ratio * 0.04) + (areal_conflict_mod * 0.04)
+        volatility_penalty += (felt_bearing_variance * 0.04) + (felt_areal_conflict_variance * 0.04)
+
+    decision_bias += float(topology_support * 0.03)
+    decision_bias += float(areal_support_mod * 0.04)
+    conviction_boost += float(topology_support * 0.03)
+    conviction_boost += float(areal_support_mod * 0.05)
+    caution_penalty += float(topology_fragmentation * 0.03)
+    caution_penalty += float(areal_conflict_mod * 0.05)
+    volatility_penalty += float(topology_fragmentation * 0.03)
+    volatility_penalty += float(areal_conflict_mod * 0.04)
     risk_shift -= float(topology_support * 0.02)
-    risk_shift -= float(topology_fragmentation * 0.03)
+    risk_shift -= float(areal_support_mod * 0.03)
+    risk_shift -= float(topology_fragmentation * 0.02)
+    risk_shift -= float(areal_conflict_mod * 0.03)
     rr_shift += float(topology_support * 0.02)
+    rr_shift += float(areal_support_mod * 0.03)
+    rr_shift -= float(areal_conflict_mod * 0.02)
     width_shift -= float(topology_support * 0.02)
-    width_shift += float(topology_fragmentation * 0.03)
+    width_shift -= float(areal_support_mod * 0.02)
+    width_shift += float(topology_fragmentation * 0.02)
+    width_shift += float(areal_conflict_mod * 0.03)
 
     if topology_reorganization_direction in ("reorganizing", "dissolving"):
-        caution_penalty += 0.04
+        caution_penalty += 0.03
         volatility_penalty += 0.03
         risk_shift -= 0.03
         width_shift += 0.03
     elif topology_reorganization_direction == "forming":
-        caution_penalty += 0.02
+        caution_penalty += 0.01
         volatility_penalty += 0.01
     elif topology_reorganization_direction == "accelerating":
-        caution_penalty += 0.03
-        volatility_penalty += 0.03
+        caution_penalty += 0.02
+        volatility_penalty += 0.02
         width_shift += 0.02
     elif topology_reorganization_direction == "settling":
         decision_bias += 0.02
@@ -1978,6 +2923,20 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
     return {
         "felt_bearing_score": float(felt_bearing_score),
         "felt_profile_label": str(felt_profile_label),
+        "inner_pattern_support": float(inner_pattern_support),
+        "inner_pattern_conflict": float(inner_pattern_conflict),
+        "inner_pattern_fragility": float(inner_pattern_fragility),
+        "inner_pattern_bearing": float(inner_pattern_bearing),
+        "inner_pattern_state": str(inner_pattern_state or "bearing"),
+        "pattern_support_score": float(pattern_support_score),
+        "pattern_conflict_score": float(pattern_conflict_score),
+        "pattern_fragility_score": float(pattern_fragility_score),
+        "pattern_bearing_score": float(pattern_bearing_score),
+        "pattern_reinforcement": float(pattern_reinforcement),
+        "pattern_attenuation": float(pattern_attenuation),
+        "pattern_action_support": float(pattern_action_support),
+        "pattern_observe_pressure": float(pattern_observe_pressure),
+        "pattern_replan_pressure": float(pattern_replan_pressure),
         "decision_bias": float(decision_bias),
         "conviction_boost": float(conviction_boost),
         "caution_penalty": float(caution_penalty),
@@ -2004,6 +2963,14 @@ def build_runtime_pipeline_snapshot(bot=None):
             "review_carry_capacity": 0.0,
             "review_caution_load": 0.0,
             "review_tendency_hint": "hold",
+            "inner_pattern_support": 0.0,
+            "inner_pattern_conflict": 0.0,
+            "inner_pattern_fragility": 0.0,
+            "inner_pattern_bearing": 0.0,
+            "inner_pattern_state": "bearing",
+            "pattern_action_support": 0.0,
+            "pattern_observe_pressure": 0.0,
+            "pattern_replan_pressure": 0.0,
             "expectation_state": {},
             "action_intent_state": {},
             "execution_state": {},
@@ -2041,6 +3008,14 @@ def build_runtime_pipeline_snapshot(bot=None):
         "review_carry_capacity": float(meta_regulation_state.get("review_carry_capacity", review_feedback_state.get("carry_capacity", 0.0)) or 0.0),
         "review_caution_load": float(meta_regulation_state.get("review_caution_load", review_feedback_state.get("caution_load", 0.0)) or 0.0),
         "review_tendency_hint": str(meta_regulation_state.get("review_tendency_hint", review_feedback_state.get("tendency_hint", "hold")) or "hold"),
+        "inner_pattern_support": float(meta_regulation_state.get("inner_pattern_support", review_feedback_state.get("inner_pattern_support", 0.0)) or 0.0),
+        "inner_pattern_conflict": float(meta_regulation_state.get("inner_pattern_conflict", review_feedback_state.get("inner_pattern_conflict", 0.0)) or 0.0),
+        "inner_pattern_fragility": float(meta_regulation_state.get("inner_pattern_fragility", review_feedback_state.get("inner_pattern_fragility", 0.0)) or 0.0),
+        "inner_pattern_bearing": float(meta_regulation_state.get("inner_pattern_bearing", review_feedback_state.get("inner_pattern_bearing", 0.0)) or 0.0),
+        "inner_pattern_state": str(meta_regulation_state.get("inner_pattern_state", review_feedback_state.get("inner_pattern_state", "bearing")) or "bearing"),
+        "pattern_action_support": float(meta_regulation_state.get("pattern_action_support", review_feedback_state.get("pattern_action_support", 0.0)) or 0.0),
+        "pattern_observe_pressure": float(meta_regulation_state.get("pattern_observe_pressure", review_feedback_state.get("pattern_observe_pressure", 0.0)) or 0.0),
+        "pattern_replan_pressure": float(meta_regulation_state.get("pattern_replan_pressure", review_feedback_state.get("pattern_replan_pressure", 0.0)) or 0.0),
         "expectation_state": dict(getattr(bot, "expectation_state", {}) or {}),
         "action_intent_state": dict(getattr(bot, "action_intent_state", {}) or {}),
         "execution_state": dict(getattr(bot, "execution_state", {}) or {}),
@@ -2307,6 +3282,8 @@ def build_mcm_stimulus(candle_state, tension_state, pause_mode=False, bot=None):
         bot=bot,
     )
     filtered = apply_focus_filter(candle_state, tension_state, vision, focus, pause_mode=pause_mode)
+    active_context_trace = _normalize_active_context_trace(getattr(bot, "active_context_trace", {}) or {})
+    active_context_replay_impulse = _resolve_active_context_replay_impulse(active_context_trace)
 
     return {
         "mode": "market",
@@ -2318,6 +3295,8 @@ def build_mcm_stimulus(candle_state, tension_state, pause_mode=False, bot=None):
         "motivation_impulse": float(filtered.get("motivation_impulse", 0.0) or 0.0),
         "risk_impulse": float(filtered.get("risk_impulse", 0.0) or 0.0),
         "opportunity_bias": float(filtered.get("opportunity_bias", 0.0) or 0.0),
+        "active_context_trace": dict(active_context_trace or {}),
+        "active_context_replay_impulse": float(active_context_replay_impulse),
     }
 
 def build_neural_modulation(bot, stimulus):
@@ -2481,6 +3460,42 @@ def _snapshot_agent_field_points(field, limit=48):
     if len(energy) == 0:
         return points
 
+    neuron_map = {}
+    areal_membership = {}
+    areal_label_map = {}
+
+    try:
+        field_snapshot = dict(field.read_snapshot() or {}) if hasattr(field, "read_snapshot") else {}
+    except Exception:
+        field_snapshot = {}
+
+    for neuron_item in list(field_snapshot.get("neurons", []) or []):
+        if not isinstance(neuron_item, dict):
+            continue
+
+        try:
+            neuron_index = int(neuron_item.get("agent_index", len(neuron_map)))
+        except Exception:
+            neuron_index = len(neuron_map)
+
+        neuron_map[int(neuron_index)] = dict(neuron_item or {})
+
+    for areal_item in list(field_snapshot.get("areal_states", []) or []):
+        if not isinstance(areal_item, dict):
+            continue
+
+        areal_id = str(areal_item.get("areal_id", "") or "")
+        state_label = str(areal_item.get("state_label", "adaptive_areal") or "adaptive_areal")
+
+        for member_index in list(areal_item.get("member_indices", []) or []):
+            try:
+                resolved_index = int(member_index)
+            except Exception:
+                continue
+
+            areal_membership[int(resolved_index)] = str(areal_id)
+            areal_label_map[int(resolved_index)] = str(state_label)
+
     sample_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_AGENT_LIMIT", limit) or limit))
 
     if len(energy) <= sample_limit:
@@ -2494,13 +3509,211 @@ def _snapshot_agent_field_points(field, limit=48):
 
     for index in indices:
         velocity_item = velocity[index] if len(velocity) > index else np.zeros(energy.shape[1], dtype=float)
+        neuron_item = dict(neuron_map.get(int(index), {}) or {})
+        memory_trace = np.asarray(neuron_item.get("memory_trace", []), dtype=float)
+        coupling_force = np.asarray(neuron_item.get("coupling_force", []), dtype=float)
+        regulation_force = np.asarray(neuron_item.get("regulation_force", []), dtype=float)
+        external_impulse = np.asarray(neuron_item.get("external_impulse", []), dtype=float)
+
         points.append({
             "agent_index": int(index),
             "position": _snapshot_float_vector(energy[index]),
             "velocity": _snapshot_float_vector(velocity_item),
+            "activation": float(neuron_item.get("activation", 0.0) or 0.0),
+            "stability": float(neuron_item.get("stability", 0.0) or 0.0),
+            "regulation_pressure": float(neuron_item.get("regulation_pressure", 0.0) or 0.0),
+            "memory_norm": float(np.linalg.norm(memory_trace)) if memory_trace.size > 0 else 0.0,
+            "coupling_norm": float(np.linalg.norm(coupling_force)) if coupling_force.size > 0 else 0.0,
+            "regulation_force_norm": float(np.linalg.norm(regulation_force)) if regulation_force.size > 0 else 0.0,
+            "external_impulse_norm": float(np.linalg.norm(external_impulse)) if external_impulse.size > 0 else 0.0,
+            "areal_id": str(areal_membership.get(int(index), "") or ""),
+            "areal_state_label": str(areal_label_map.get(int(index), "") or ""),
         })
 
     return points
+
+#  --------------------------------------------------
+def _snapshot_neuron_population(field, limit=24):
+
+    summary = {
+        "neuron_count": 0,
+        "neuron_activation_mean": 0.0,
+        "neuron_activation_max": 0.0,
+        "neuron_stability_mean": 0.0,
+        "neuron_regulation_pressure_mean": 0.0,
+        "neuron_memory_norm_mean": 0.0,
+        "neuron_coupling_norm_mean": 0.0,
+        "neuron_regulation_force_norm_mean": 0.0,
+        "neuron_external_impulse_norm_mean": 0.0,
+    }
+    population = []
+
+    if field is None or not hasattr(field, "read_snapshot"):
+        return summary, population
+
+    try:
+        field_snapshot = dict(field.read_snapshot() or {})
+    except Exception:
+        return summary, population
+
+    neurons = [dict(item or {}) for item in list(field_snapshot.get("neurons", []) or []) if isinstance(item, dict)]
+    if not neurons:
+        return summary, population
+
+    activation_values = []
+    stability_values = []
+    regulation_pressure_values = []
+    memory_norm_values = []
+    coupling_norm_values = []
+    regulation_force_norm_values = []
+    external_impulse_norm_values = []
+
+    for neuron_index, neuron_item in enumerate(list(neurons or [])):
+        memory_trace = np.asarray(neuron_item.get("memory_trace", []), dtype=float)
+        coupling_force = np.asarray(neuron_item.get("coupling_force", []), dtype=float)
+        regulation_force = np.asarray(neuron_item.get("regulation_force", []), dtype=float)
+        external_impulse = np.asarray(neuron_item.get("external_impulse", []), dtype=float)
+
+        activation_values.append(float(neuron_item.get("activation", 0.0) or 0.0))
+        stability_values.append(float(neuron_item.get("stability", 0.0) or 0.0))
+        regulation_pressure_values.append(float(neuron_item.get("regulation_pressure", 0.0) or 0.0))
+        memory_norm_values.append(float(np.linalg.norm(memory_trace)) if memory_trace.size > 0 else 0.0)
+        coupling_norm_values.append(float(np.linalg.norm(coupling_force)) if coupling_force.size > 0 else 0.0)
+        regulation_force_norm_values.append(float(np.linalg.norm(regulation_force)) if regulation_force.size > 0 else 0.0)
+        external_impulse_norm_values.append(float(np.linalg.norm(external_impulse)) if external_impulse.size > 0 else 0.0)
+
+    summary = {
+        "neuron_count": int(len(neurons)),
+        "neuron_activation_mean": float(np.mean(activation_values)) if activation_values else 0.0,
+        "neuron_activation_max": float(np.max(activation_values)) if activation_values else 0.0,
+        "neuron_stability_mean": float(np.mean(stability_values)) if stability_values else 0.0,
+        "neuron_regulation_pressure_mean": float(np.mean(regulation_pressure_values)) if regulation_pressure_values else 0.0,
+        "neuron_memory_norm_mean": float(np.mean(memory_norm_values)) if memory_norm_values else 0.0,
+        "neuron_coupling_norm_mean": float(np.mean(coupling_norm_values)) if coupling_norm_values else 0.0,
+        "neuron_regulation_force_norm_mean": float(np.mean(regulation_force_norm_values)) if regulation_force_norm_values else 0.0,
+        "neuron_external_impulse_norm_mean": float(np.mean(external_impulse_norm_values)) if external_impulse_norm_values else 0.0,
+    }
+
+    sample_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_NEURON_LIMIT", limit) or limit))
+
+    if len(neurons) <= sample_limit:
+        indices = list(range(len(neurons)))
+    else:
+        indices = []
+        for value in np.linspace(0, len(neurons) - 1, num=sample_limit):
+            index = int(round(float(value)))
+            if index not in indices:
+                indices.append(index)
+
+    for index in indices:
+        neuron_item = dict(neurons[index] or {})
+        memory_trace = np.asarray(neuron_item.get("memory_trace", []), dtype=float)
+        coupling_force = np.asarray(neuron_item.get("coupling_force", []), dtype=float)
+        regulation_force = np.asarray(neuron_item.get("regulation_force", []), dtype=float)
+        external_impulse = np.asarray(neuron_item.get("external_impulse", []), dtype=float)
+
+        population.append({
+            "agent_index": int(neuron_item.get("agent_index", index) or index),
+            "activation": float(neuron_item.get("activation", 0.0) or 0.0),
+            "stability": float(neuron_item.get("stability", 0.0) or 0.0),
+            "regulation_pressure": float(neuron_item.get("regulation_pressure", 0.0) or 0.0),
+            "memory_norm": float(np.linalg.norm(memory_trace)) if memory_trace.size > 0 else 0.0,
+            "coupling_norm": float(np.linalg.norm(coupling_force)) if coupling_force.size > 0 else 0.0,
+            "regulation_force_norm": float(np.linalg.norm(regulation_force)) if regulation_force.size > 0 else 0.0,
+            "external_impulse_norm": float(np.linalg.norm(external_impulse)) if external_impulse.size > 0 else 0.0,
+            "state": _snapshot_float_vector(neuron_item.get("state", [])),
+            "velocity": _snapshot_float_vector(neuron_item.get("velocity", [])),
+        })
+
+    return summary, population
+
+# --------------------------------------------------
+def _snapshot_areal_population(field, limit=16):
+
+    summary = {
+        "areal_count": 0,
+        "areal_activation_mean": 0.0,
+        "areal_stability_mean": 0.0,
+        "areal_pressure_mean": 0.0,
+        "areal_drift": 0.0,
+        "areal_dominance": 0.0,
+        "areal_fragmentation": 0.0,
+        "areal_coherence_mean": 0.0,
+        "areal_conflict_mean": 0.0,
+    }
+    areal_states = []
+    areal_links = []
+
+    if field is None or not hasattr(field, "read_snapshot"):
+        return summary, areal_states, areal_links
+
+    try:
+        field_snapshot = dict(field.read_snapshot() or {})
+    except Exception:
+        return summary, areal_states, areal_links
+
+    areal_state = dict(field_snapshot.get("areal_state", {}) or {})
+    raw_areal_states = [dict(item or {}) for item in list(field_snapshot.get("areal_states", []) or []) if isinstance(item, dict)]
+    raw_areal_links = [dict(item or {}) for item in list(field_snapshot.get("areal_links", []) or []) if isinstance(item, dict)]
+
+    summary = {
+        "areal_count": int(areal_state.get("areal_count", 0) or 0),
+        "areal_activation_mean": float(areal_state.get("areal_activation_mean", 0.0) or 0.0),
+        "areal_stability_mean": float(areal_state.get("areal_stability_mean", 0.0) or 0.0),
+        "areal_pressure_mean": float(areal_state.get("areal_pressure_mean", 0.0) or 0.0),
+        "areal_drift": float(areal_state.get("areal_drift", 0.0) or 0.0),
+        "areal_dominance": float(areal_state.get("areal_dominance", 0.0) or 0.0),
+        "areal_fragmentation": float(areal_state.get("areal_fragmentation", 0.0) or 0.0),
+        "areal_coherence_mean": float(areal_state.get("areal_coherence_mean", 0.0) or 0.0),
+        "areal_conflict_mean": float(areal_state.get("areal_conflict_mean", 0.0) or 0.0),
+    }
+
+    sample_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_AREAL_LIMIT", limit) or limit))
+
+    if len(raw_areal_states) <= sample_limit:
+        indices = list(range(len(raw_areal_states)))
+    else:
+        indices = []
+        for value in np.linspace(0, len(raw_areal_states) - 1, num=sample_limit):
+            index = int(round(float(value)))
+            if index not in indices:
+                indices.append(index)
+
+    for index in indices:
+        areal_item = dict(raw_areal_states[index] or {})
+        areal_states.append({
+            "areal_id": str(areal_item.get("areal_id", f"areal_{index}") or f"areal_{index}"),
+            "member_indices": [int(item) for item in list(areal_item.get("member_indices", []) or [])],
+            "center": _snapshot_float_vector(areal_item.get("center", [])),
+            "mean_velocity_vector": _snapshot_float_vector(areal_item.get("mean_velocity_vector", [])),
+            "bounds_min": _snapshot_float_vector(areal_item.get("bounds_min", [])),
+            "bounds_max": _snapshot_float_vector(areal_item.get("bounds_max", [])),
+            "mass": int(areal_item.get("mass", 0) or 0),
+            "density": float(areal_item.get("density", 0.0) or 0.0),
+            "activation_mean": float(areal_item.get("activation_mean", 0.0) or 0.0),
+            "stability_mean": float(areal_item.get("stability_mean", 0.0) or 0.0),
+            "pressure_mean": float(areal_item.get("pressure_mean", 0.0) or 0.0),
+            "memory_norm_mean": float(areal_item.get("memory_norm_mean", 0.0) or 0.0),
+            "coupling_norm_mean": float(areal_item.get("coupling_norm_mean", 0.0) or 0.0),
+            "regulation_force_norm_mean": float(areal_item.get("regulation_force_norm_mean", 0.0) or 0.0),
+            "external_impulse_norm_mean": float(areal_item.get("external_impulse_norm_mean", 0.0) or 0.0),
+            "velocity_mean": float(areal_item.get("velocity_mean", 0.0) or 0.0),
+            "coherence": float(areal_item.get("coherence", 0.0) or 0.0),
+            "conflict": float(areal_item.get("conflict", 0.0) or 0.0),
+            "state_label": str(areal_item.get("state_label", "adaptive_areal") or "adaptive_areal"),
+        })
+
+    areal_links = [
+        {
+            "source_areal_id": str(item.get("source_areal_id", "") or ""),
+            "target_areal_id": str(item.get("target_areal_id", "") or ""),
+            "distance": float(item.get("distance", 0.0) or 0.0),
+            "relation_label": str(item.get("relation_label", "bridged") or "bridged"),
+        }
+        for item in list(raw_areal_links or [])
+    ]
+
+    return summary, areal_states, areal_links
 
 # --------------------------------------------------
 def _snapshot_cluster_centers(clusters):
@@ -2578,10 +3791,18 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     replay_scale = float(getattr(Config, "MCM_REPLAY_SCALE", 0.05) or 0.05)
     internal_cycles = int(getattr(Config, "MCM_INTERNAL_CYCLES", 3) or 3)
 
-    replay_impulse = float(memory.replay_impulse(replay_scale=replay_scale) or 0.0)
+    memory_replay_impulse = float(memory.replay_impulse(replay_scale=replay_scale) or 0.0)
 
     mode_value = str(mode or stimulus.get("mode", "market") or "market").strip().lower()
     is_outcome_mode = bool(mode_value == "outcome")
+    active_context_trace = _normalize_active_context_trace(stimulus.get("active_context_trace", {}) or {})
+    active_context_replay_impulse = float(
+        stimulus.get(
+            "active_context_replay_impulse",
+            _resolve_active_context_replay_impulse(active_context_trace),
+        ) or 0.0
+    )
+    replay_impulse = float(max(-0.35, min(0.35, memory_replay_impulse + active_context_replay_impulse)))
 
     raw_impulse = float(stimulus.get("impulse", 0.0) or 0.0)
     motivation_impulse = float(stimulus.get("motivation_impulse", 0.0) or 0.0)
@@ -2724,6 +3945,8 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         },
     }
     field_agent_points = _snapshot_agent_field_points(field)
+    neuron_population_summary, neuron_population = _snapshot_neuron_population(field)
+    areal_population_summary, areal_population, areal_links = _snapshot_areal_population(field)
 
     cluster_topology = dict(getattr(cluster, "last_topology", {}) or {})
     cluster_center_drift = float(cluster_topology.get("cluster_center_drift", 0.0) or 0.0)
@@ -2735,6 +3958,9 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "mode": mode_value,
         "outcome_label": outcome_label,
         "replay_impulse": float(replay_impulse),
+        "memory_replay_impulse": float(memory_replay_impulse),
+        "active_context_replay_impulse": float(active_context_replay_impulse),
+        "active_context_trace": dict(active_context_trace or {}),
         "self_state": str(self_state),
         "attractor": str(selected_attractor),
         "strongest_memory": strongest_memory,
@@ -2758,6 +3984,27 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "field_cluster_links": list(cluster_links or []),
         "field_projection_axes": ["energy", "motivation", "risk"],
         "field_projection_bounds": dict(field_bounds or {}),
+        "field_neuron_count": int(neuron_population_summary.get("neuron_count", 0) or 0),
+        "field_neuron_activation_mean": float(neuron_population_summary.get("neuron_activation_mean", 0.0) or 0.0),
+        "field_neuron_activation_max": float(neuron_population_summary.get("neuron_activation_max", 0.0) or 0.0),
+        "field_neuron_stability_mean": float(neuron_population_summary.get("neuron_stability_mean", 0.0) or 0.0),
+        "field_neuron_regulation_pressure_mean": float(neuron_population_summary.get("neuron_regulation_pressure_mean", 0.0) or 0.0),
+        "field_neuron_memory_norm_mean": float(neuron_population_summary.get("neuron_memory_norm_mean", 0.0) or 0.0),
+        "field_neuron_coupling_norm_mean": float(neuron_population_summary.get("neuron_coupling_norm_mean", 0.0) or 0.0),
+        "field_neuron_regulation_force_norm_mean": float(neuron_population_summary.get("neuron_regulation_force_norm_mean", 0.0) or 0.0),
+        "field_neuron_external_impulse_norm_mean": float(neuron_population_summary.get("neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        "field_neuron_population": list(neuron_population or []),
+        "field_areal_count": int(areal_population_summary.get("areal_count", 0) or 0),
+        "field_areal_activation_mean": float(areal_population_summary.get("areal_activation_mean", 0.0) or 0.0),
+        "field_areal_stability_mean": float(areal_population_summary.get("areal_stability_mean", 0.0) or 0.0),
+        "field_areal_pressure_mean": float(areal_population_summary.get("areal_pressure_mean", 0.0) or 0.0),
+        "field_areal_drift": float(areal_population_summary.get("areal_drift", 0.0) or 0.0),
+        "field_areal_dominance": float(areal_population_summary.get("areal_dominance", 0.0) or 0.0),
+        "field_areal_fragmentation": float(areal_population_summary.get("areal_fragmentation", 0.0) or 0.0),
+        "field_areal_coherence_mean": float(areal_population_summary.get("areal_coherence_mean", 0.0) or 0.0),
+        "field_areal_conflict_mean": float(areal_population_summary.get("areal_conflict_mean", 0.0) or 0.0),
+        "field_areal_states": list(areal_population or []),
+        "field_areal_links": list(areal_links or []),
     }
 
     _mcm_state_debug(
@@ -2983,6 +4230,27 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "field_cluster_links": [dict(item or {}) for item in list(snap.get("field_cluster_links", []) or []) if isinstance(item, dict)],
         "field_projection_axes": list(snap.get("field_projection_axes", []) or []),
         "field_projection_bounds": dict(snap.get("field_projection_bounds", {}) or {}),
+        "field_neuron_count": int(snap.get("field_neuron_count", 0) or 0),
+        "field_neuron_activation_mean": float(snap.get("field_neuron_activation_mean", 0.0) or 0.0),
+        "field_neuron_activation_max": float(snap.get("field_neuron_activation_max", 0.0) or 0.0),
+        "field_neuron_stability_mean": float(snap.get("field_neuron_stability_mean", 0.0) or 0.0),
+        "field_neuron_regulation_pressure_mean": float(snap.get("field_neuron_regulation_pressure_mean", 0.0) or 0.0),
+        "field_neuron_memory_norm_mean": float(snap.get("field_neuron_memory_norm_mean", 0.0) or 0.0),
+        "field_neuron_coupling_norm_mean": float(snap.get("field_neuron_coupling_norm_mean", 0.0) or 0.0),
+        "field_neuron_regulation_force_norm_mean": float(snap.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
+        "field_neuron_external_impulse_norm_mean": float(snap.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        "field_neuron_population": [dict(item or {}) for item in list(snap.get("field_neuron_population", []) or []) if isinstance(item, dict)],
+        "field_areal_count": int(snap.get("field_areal_count", 0) or 0),
+        "field_areal_activation_mean": float(snap.get("field_areal_activation_mean", 0.0) or 0.0),
+        "field_areal_stability_mean": float(snap.get("field_areal_stability_mean", 0.0) or 0.0),
+        "field_areal_pressure_mean": float(snap.get("field_areal_pressure_mean", 0.0) or 0.0),
+        "field_areal_drift": float(snap.get("field_areal_drift", 0.0) or 0.0),
+        "field_areal_dominance": float(snap.get("field_areal_dominance", 0.0) or 0.0),
+        "field_areal_fragmentation": float(snap.get("field_areal_fragmentation", 0.0) or 0.0),
+        "field_areal_coherence_mean": float(snap.get("field_areal_coherence_mean", 0.0) or 0.0),
+        "field_areal_conflict_mean": float(snap.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "field_areal_states": [dict(item or {}) for item in list(snap.get("field_areal_states", []) or []) if isinstance(item, dict)],
+        "field_areal_links": [dict(item or {}) for item in list(snap.get("field_areal_links", []) or []) if isinstance(item, dict)],
         "self_state": str(snap.get("self_state", "stable") or "stable"),
         "attractor": str(snap.get("attractor", "neutral") or "neutral"),
         "prior_experience_regulation": float(prior_regulation),
@@ -3003,23 +4271,61 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
     zone_proximity = float(perception.get("zone_proximity", 0.0) or 0.0)
     field_risk = abs(float(inner.get("field_mean_risk", 0.0) or 0.0))
     field_pressure = float(inner.get("field_regulation_pressure", 0.0) or 0.0)
+    field_areal_count = int(inner.get("field_areal_count", 0) or 0)
+    field_areal_stability_mean = float(inner.get("field_areal_stability_mean", 0.0) or 0.0)
+    field_areal_pressure_mean = float(inner.get("field_areal_pressure_mean", 0.0) or 0.0)
+    field_areal_drift = float(inner.get("field_areal_drift", 0.0) or 0.0)
+    field_areal_dominance = float(inner.get("field_areal_dominance", 0.0) or 0.0)
+    field_areal_fragmentation = float(inner.get("field_areal_fragmentation", 0.0) or 0.0)
+    field_areal_coherence_mean = float(inner.get("field_areal_coherence_mean", 0.0) or 0.0)
+    field_areal_conflict_mean = float(inner.get("field_areal_conflict_mean", 0.0) or 0.0)
     uncertainty = float(perception.get("uncertainty_score", 0.0) or 0.0)
     novelty = float(perception.get("novelty_score", 0.0) or 0.0)
     structure_quality = float(perception.get("structure_quality", 0.0) or 0.0)
     structure_stability = float(perception.get("structure_stability", 0.0) or 0.0)
 
     visual_alignment = max(0.0, min(1.0, 1.0 - abs(spatial_bias - directional_bias)))
+    areal_presence = max(0.0, min(1.0, float(field_areal_count) / 4.0))
+
+    processing_areal_tension = max(
+        0.0,
+        min(
+            1.0,
+            (field_areal_pressure_mean * 0.26)
+            + (field_areal_conflict_mean * 0.24)
+            + (field_areal_fragmentation * 0.22)
+            + (min(1.0, field_areal_drift) * 0.12)
+            + (areal_presence * 0.08)
+            - (field_areal_coherence_mean * 0.10)
+            - (field_areal_stability_mean * 0.08),
+        ),
+    )
+
+    processing_areal_support = max(
+        0.0,
+        min(
+            1.0,
+            (field_areal_stability_mean * 0.28)
+            + (field_areal_coherence_mean * 0.24)
+            + (field_areal_dominance * 0.12)
+            + (max(0.0, 1.0 - field_areal_fragmentation) * 0.16)
+            + (max(0.0, 1.0 - min(1.0, field_areal_drift)) * 0.10)
+            + (max(0.0, 1.0 - field_areal_conflict_mean) * 0.10),
+        ),
+    )
 
     processing_tension = max(
         0.0,
         min(
             1.0,
-            (breakout_tension * 0.34)
-            + (visual_contrast * 0.18)
-            + (uncertainty * 0.16)
-            + (field_pressure * 0.14)
-            + (max(0.0, abs(spatial_bias) - market_balance) * 0.10)
-            - (visual_coherence * 0.10),
+            (breakout_tension * 0.30)
+            + (visual_contrast * 0.16)
+            + (uncertainty * 0.14)
+            + (field_pressure * 0.12)
+            + (processing_areal_tension * 0.14)
+            + (max(0.0, abs(spatial_bias) - market_balance) * 0.08)
+            - (visual_coherence * 0.08)
+            - (processing_areal_support * 0.06),
         ),
     )
 
@@ -3027,16 +4333,18 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
         0.0,
         min(
             1.0,
-            (uncertainty * 0.26)
-            + (novelty * 0.14)
-            + (field_pressure * 0.16)
-            + (field_risk * 0.10)
-            + (visual_contrast * 0.08)
-            + (breakout_tension * 0.14)
-            + (max(0.0, 1.0 - visual_alignment) * 0.08)
+            (uncertainty * 0.22)
+            + (novelty * 0.12)
+            + (field_pressure * 0.14)
+            + (field_risk * 0.08)
+            + (visual_contrast * 0.06)
+            + (breakout_tension * 0.12)
+            + (processing_areal_tension * 0.16)
+            + (max(0.0, 1.0 - visual_alignment) * 0.06)
             - (structure_stability * 0.04)
-            - (market_balance * 0.08)
-            - (visual_coherence * 0.10),
+            - (market_balance * 0.06)
+            - (visual_coherence * 0.08)
+            - (processing_areal_support * 0.08),
         ),
     )
 
@@ -3044,12 +4352,14 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
         0.0,
         min(
             1.0,
-            (visual_alignment * 0.34)
-            + (market_balance * 0.22)
-            + (visual_coherence * 0.18)
-            + (signal_relevance * 0.10)
+            (visual_alignment * 0.28)
+            + (market_balance * 0.18)
+            + (visual_coherence * 0.14)
+            + (signal_relevance * 0.08)
             + (zone_proximity * 0.06)
-            + (structure_quality * 0.10),
+            + (structure_quality * 0.08)
+            + (processing_areal_support * 0.14)
+            - (processing_areal_tension * 0.10),
         ),
     )
 
@@ -3057,15 +4367,17 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
         0.0,
         min(
             1.0,
-            (signal_relevance * 0.22)
-            + (max(0.0, 1.0 - uncertainty) * 0.18)
-            + (max(0.0, 1.0 - min(1.0, field_risk)) * 0.12)
+            (signal_relevance * 0.18)
+            + (max(0.0, 1.0 - uncertainty) * 0.14)
+            + (max(0.0, 1.0 - min(1.0, field_risk)) * 0.10)
             + (structure_quality * 0.08)
             + (structure_stability * 0.08)
-            + (market_balance * 0.16)
-            + (visual_coherence * 0.12)
-            + (processing_alignment * 0.12)
-            - (processing_tension * 0.12),
+            + (market_balance * 0.12)
+            + (visual_coherence * 0.10)
+            + (processing_alignment * 0.10)
+            + (processing_areal_support * 0.16)
+            - (processing_tension * 0.10)
+            - (processing_areal_tension * 0.10),
         ),
     )
 
@@ -3073,9 +4385,10 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
         0.0,
         min(
             1.0,
-            (processing_stability * 0.52)
-            + (max(0.0, 1.0 - processing_load) * 0.28)
-            + (processing_alignment * 0.20),
+            (processing_stability * 0.44)
+            + (max(0.0, 1.0 - processing_load) * 0.24)
+            + (processing_alignment * 0.16)
+            + (processing_areal_support * 0.16),
         ),
     )
 
@@ -3085,6 +4398,16 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
         "processing_readiness": float(processing_readiness),
         "processing_alignment": float(processing_alignment),
         "processing_tension": float(processing_tension),
+        "processing_areal_tension": float(processing_areal_tension),
+        "processing_areal_support": float(processing_areal_support),
+        "field_areal_count": int(field_areal_count),
+        "field_areal_stability_mean": float(field_areal_stability_mean),
+        "field_areal_pressure_mean": float(field_areal_pressure_mean),
+        "field_areal_drift": float(field_areal_drift),
+        "field_areal_dominance": float(field_areal_dominance),
+        "field_areal_fragmentation": float(field_areal_fragmentation),
+        "field_areal_coherence_mean": float(field_areal_coherence_mean),
+        "field_areal_conflict_mean": float(field_areal_conflict_mean),
     }
 
 def build_outcome_decomposition(bot, outcome_reason, position=None, experience_state=None):
@@ -5096,6 +6419,7 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
     filtered_vision = dict((stimulus or {}).get("filtered_vision", {}) or {})
     perception = dict(perception_state or {})
     processing = dict(processing_state or {})
+    snap = dict(snapshot or {})
     competition_abs = abs(float(getattr(bot, "competition_bias", 0.0) or 0.0)) if bot is not None else 0.0
     habituation_level = float(getattr(bot, "habituation_level", 0.0) or 0.0) if bot is not None else 0.0
 
@@ -5113,6 +6437,16 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
     processing_stability = float(processing.get("processing_stability", 0.0) or 0.0)
     processing_alignment = float(processing.get("processing_alignment", 0.0) or 0.0)
     processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
+    processing_areal_tension = float(processing.get("processing_areal_tension", 0.0) or 0.0)
+    processing_areal_support = float(processing.get("processing_areal_support", 0.0) or 0.0)
+    field_areal_count = int(snap.get("field_areal_count", processing.get("field_areal_count", 0)) or 0)
+    field_areal_stability_mean = float(snap.get("field_areal_stability_mean", processing.get("field_areal_stability_mean", 0.0)) or 0.0)
+    field_areal_pressure_mean = float(snap.get("field_areal_pressure_mean", processing.get("field_areal_pressure_mean", 0.0)) or 0.0)
+    field_areal_drift = float(snap.get("field_areal_drift", processing.get("field_areal_drift", 0.0)) or 0.0)
+    field_areal_dominance = float(snap.get("field_areal_dominance", processing.get("field_areal_dominance", 0.0)) or 0.0)
+    field_areal_fragmentation = float(snap.get("field_areal_fragmentation", processing.get("field_areal_fragmentation", 0.0)) or 0.0)
+    field_areal_coherence_mean = float(snap.get("field_areal_coherence_mean", processing.get("field_areal_coherence_mean", 0.0)) or 0.0)
+    field_areal_conflict_mean = float(snap.get("field_areal_conflict_mean", processing.get("field_areal_conflict_mean", 0.0)) or 0.0)
 
     entry_expectation = float((expectation_state or {}).get("entry_expectation", 0.0) or 0.0)
     target_expectation = float((expectation_state or {}).get("target_expectation", 0.0) or 0.0)
@@ -5124,18 +6458,47 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
     protective_width_regulation = float((expectation_state or {}).get("protective_width_regulation", 0.0) or 0.0)
     protective_courage = float((expectation_state or {}).get("protective_courage", 0.0) or 0.0)
 
+    areal_presence = max(0.0, min(1.0, float(field_areal_count) / 4.0))
+    areal_support = max(
+        0.0,
+        min(
+            1.0,
+            (field_areal_stability_mean * 0.28)
+            + (field_areal_coherence_mean * 0.24)
+            + (field_areal_dominance * 0.12)
+            + (processing_areal_support * 0.18)
+            + (max(0.0, 1.0 - field_areal_fragmentation) * 0.10)
+            + (max(0.0, 1.0 - field_areal_conflict_mean) * 0.08),
+        ),
+    )
+
+    areal_conflict_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (field_areal_conflict_mean * 0.32)
+            + (field_areal_fragmentation * 0.22)
+            + (field_areal_pressure_mean * 0.18)
+            + (processing_areal_tension * 0.14)
+            + (min(1.0, field_areal_drift) * 0.08)
+            + (areal_presence * 0.06),
+        ),
+    )
+
     felt_risk = max(
         0.0,
         min(
             1.0,
-            (float(filtered_vision.get("threat_map", 0.0) or 0.0) * 0.24)
-            + (uncertainty_score * 0.18)
+            (float(filtered_vision.get("threat_map", 0.0) or 0.0) * 0.22)
+            + (uncertainty_score * 0.16)
             + (float(perception.get("noise_damp", 0.0) or 0.0) * 0.10)
-            + (breakout_tension * 0.18)
+            + (breakout_tension * 0.16)
             + (max(0.0, 1.0 - market_balance) * 0.10)
-            + (max(0.0, 1.0 - visual_coherence) * 0.08)
-            + (processing_tension * 0.08)
-            - (stress_relief_potential * 0.10),
+            + (max(0.0, 1.0 - visual_coherence) * 0.06)
+            + (processing_tension * 0.06)
+            + (areal_conflict_pressure * 0.12)
+            - (stress_relief_potential * 0.08)
+            - (areal_support * 0.10),
         ),
     )
 
@@ -5143,14 +6506,16 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (float(filtered_vision.get("target_map", 0.0) or 0.0) * 0.24)
-            + (signal_quality * 0.18)
+            (float(filtered_vision.get("target_map", 0.0) or 0.0) * 0.22)
+            + (signal_quality * 0.16)
             + (float(perception.get("target_lock", 0.0) or 0.0) * 0.10)
             + (structure_quality * 0.08)
-            + (market_balance * 0.14)
-            + (visual_coherence * 0.12)
-            + (processing_alignment * 0.14)
-            - (processing_tension * 0.06),
+            + (market_balance * 0.12)
+            + (visual_coherence * 0.10)
+            + (processing_alignment * 0.12)
+            + (areal_support * 0.14)
+            - (processing_tension * 0.04)
+            - (areal_conflict_pressure * 0.08),
         ),
     )
 
@@ -5158,11 +6523,12 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (abs(felt_opportunity - felt_risk) * 0.16)
-            + (min(felt_opportunity, felt_risk) * 0.56)
+            (abs(felt_opportunity - felt_risk) * 0.14)
+            + (min(felt_opportunity, felt_risk) * 0.46)
             + (competition_abs * 0.08)
             + (abs(spatial_bias - directional_bias) * 0.08)
-            + (max(0.0, processing_tension - processing_alignment) * 0.12),
+            + (max(0.0, processing_tension - processing_alignment) * 0.10)
+            + (areal_conflict_pressure * 0.14),
         ),
     )
 
@@ -5170,15 +6536,17 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (approach_pressure * 0.30)
-            + (entry_expectation * 0.12)
+            (approach_pressure * 0.26)
+            + (entry_expectation * 0.10)
             + (felt_opportunity * 0.08)
             + (felt_risk * 0.08)
-            + (breakout_tension * 0.16)
-            + (processing_load * 0.12)
-            + (processing_tension * 0.10)
-            - (stress_relief_potential * 0.08)
-            - (market_balance * 0.06),
+            + (breakout_tension * 0.14)
+            + (processing_load * 0.10)
+            + (processing_tension * 0.08)
+            + (areal_conflict_pressure * 0.12)
+            - (stress_relief_potential * 0.06)
+            - (market_balance * 0.04)
+            - (areal_support * 0.06),
         ),
     )
 
@@ -5187,15 +6555,17 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         min(
             1.0,
             1.0
-            - (uncertainty_score * 0.22)
-            - (felt_conflict * 0.18)
-            - (pressure_release * 0.08)
-            - (felt_pressure * 0.10)
-            + (experience_regulation * 0.12)
+            - (uncertainty_score * 0.18)
+            - (felt_conflict * 0.16)
+            - (pressure_release * 0.06)
+            - (felt_pressure * 0.08)
+            - (areal_conflict_pressure * 0.10)
+            + (experience_regulation * 0.10)
             + (context_confidence * 0.08)
-            + (market_balance * 0.12)
-            + (visual_coherence * 0.12)
-            + (processing_stability * 0.14),
+            + (market_balance * 0.10)
+            + (visual_coherence * 0.10)
+            + (processing_stability * 0.12)
+            + (areal_support * 0.14),
         ),
     )
 
@@ -5203,12 +6573,14 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (processing_alignment * 0.38)
-            + (market_balance * 0.18)
-            + (visual_coherence * 0.16)
+            (processing_alignment * 0.30)
+            + (market_balance * 0.14)
+            + (visual_coherence * 0.14)
             + (context_confidence * 0.10)
             + (structure_quality * 0.08)
-            + (max(0.0, 1.0 - felt_conflict) * 0.10),
+            + (max(0.0, 1.0 - felt_conflict) * 0.08)
+            + (areal_support * 0.16)
+            - (areal_conflict_pressure * 0.10),
         ),
     )
 
@@ -5216,11 +6588,11 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (breakout_tension * 0.28)
-            + (max(0.0, 1.0 - market_balance) * 0.18)
-            + (max(0.0, 1.0 - visual_coherence) * 0.14)
+            (breakout_tension * 0.26)
+            + (max(0.0, 1.0 - market_balance) * 0.16)
+            + (max(0.0, 1.0 - visual_coherence) * 0.12)
             + (uncertainty_score * 0.10)
-            + (processing_tension * 0.12)
+            + (processing_tension * 0.10)
             + (float(filtered_vision.get("threat_map", 0.0) or 0.0) * 0.12)
             + (max(0.0, 1.0 - context_confidence) * 0.06),
         ),
@@ -5230,12 +6602,13 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (felt_conflict * 0.42)
-            + (competition_abs * 0.14)
+            (felt_conflict * 0.38)
+            + (competition_abs * 0.12)
             + (abs(spatial_bias - directional_bias) * 0.10)
-            + (max(0.0, processing_tension - processing_alignment) * 0.16)
-            + (max(0.0, 1.0 - felt_alignment) * 0.10)
-            + (max(0.0, 1.0 - processing_stability) * 0.08),
+            + (max(0.0, processing_tension - processing_alignment) * 0.14)
+            + (max(0.0, 1.0 - felt_alignment) * 0.08)
+            + (max(0.0, 1.0 - processing_stability) * 0.06)
+            + (areal_conflict_pressure * 0.12),
         ),
     )
 
@@ -5257,12 +6630,13 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (approach_pressure * 0.42)
-            + (entry_expectation * 0.20)
-            + (target_expectation * 0.14)
+            (approach_pressure * 0.40)
+            + (entry_expectation * 0.18)
+            + (target_expectation * 0.12)
             + (felt_pressure * 0.10)
             + (max(0.0, 1.0 - protective_width_regulation) * 0.06)
-            + (max(0.0, 1.0 - load_bearing_capacity) * 0.08),
+            + (max(0.0, 1.0 - load_bearing_capacity) * 0.08)
+            + (areal_conflict_pressure * 0.06),
         ),
     )
 
@@ -5270,12 +6644,13 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (uncertainty_score * 0.38)
-            + (processing_load * 0.16)
+            (uncertainty_score * 0.34)
+            + (processing_load * 0.14)
             + (processing_tension * 0.10)
             + (max(0.0, 1.0 - context_confidence) * 0.10)
-            + (max(0.0, 1.0 - signal_quality) * 0.10)
-            + (max(0.0, 1.0 - visual_coherence) * 0.10),
+            + (max(0.0, 1.0 - signal_quality) * 0.08)
+            + (max(0.0, 1.0 - visual_coherence) * 0.08)
+            + (processing_areal_tension * 0.08),
         ),
     )
 
@@ -5283,12 +6658,13 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (pressure_release * 0.30)
-            + (max(0.0, 1.0 - experience_regulation) * 0.22)
-            + (max(0.0, 1.0 - reflection_maturity) * 0.18)
+            (pressure_release * 0.28)
+            + (max(0.0, 1.0 - experience_regulation) * 0.20)
+            + (max(0.0, 1.0 - reflection_maturity) * 0.16)
             + (max(0.0, 1.0 - load_bearing_capacity) * 0.12)
             + (felt_risk * 0.08)
-            + (max(0.0, 1.0 - protective_courage) * 0.10),
+            + (max(0.0, 1.0 - protective_courage) * 0.10)
+            + (max(0.0, 1.0 - areal_support) * 0.06),
         ),
     )
 
@@ -5299,6 +6675,7 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         "expectation_pressure": float(expectation_pressure),
         "uncertainty_pressure": float(uncertainty_pressure),
         "aftereffect_pressure": float(aftereffect_pressure),
+        "areal_conflict_pressure": float(areal_conflict_pressure),
     }
     dominant_tension_cause = max(tension_cause_map, key=tension_cause_map.get)
     dominant_tension_value = float(tension_cause_map.get(dominant_tension_cause, 0.0) or 0.0)
@@ -5307,14 +6684,15 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         0.0,
         min(
             1.0,
-            (external_pressure * 0.22)
-            + (uncertainty_pressure * 0.22)
-            + (aftereffect_pressure * 0.16)
-            + (felt_pressure * 0.10)
+            (external_pressure * 0.18)
+            + (uncertainty_pressure * 0.18)
+            + (aftereffect_pressure * 0.14)
+            + (felt_pressure * 0.08)
             + (processing_load * 0.08)
-            + (max(0.0, 1.0 - felt_stability) * 0.10)
-            + (max(0.0, 1.0 - context_confidence) * 0.06)
-            + (max(0.0, 1.0 - signal_quality) * 0.06),
+            + (areal_conflict_pressure * 0.18)
+            + (max(0.0, 1.0 - felt_stability) * 0.08)
+            + (max(0.0, 1.0 - context_confidence) * 0.04)
+            + (max(0.0, 1.0 - signal_quality) * 0.04),
         ),
     )
 
@@ -5323,6 +6701,8 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         market_feel_state = "threatened"
     elif felt_opportunity > felt_risk and felt_opportunity >= 0.56:
         market_feel_state = "drawn"
+    elif areal_conflict_pressure >= 0.58:
+        market_feel_state = "fragmented"
     elif felt_conflict >= 0.50:
         market_feel_state = "conflicted"
     elif felt_pressure >= 0.58 and breakout_tension >= 0.54:
@@ -5353,6 +6733,16 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         "load_bearing_capacity": float(load_bearing_capacity),
         "protective_width_regulation": float(protective_width_regulation),
         "protective_courage": float(protective_courage),
+        "field_areal_count": int(field_areal_count),
+        "field_areal_stability_mean": float(field_areal_stability_mean),
+        "field_areal_pressure_mean": float(field_areal_pressure_mean),
+        "field_areal_drift": float(field_areal_drift),
+        "field_areal_dominance": float(field_areal_dominance),
+        "field_areal_fragmentation": float(field_areal_fragmentation),
+        "field_areal_coherence_mean": float(field_areal_coherence_mean),
+        "field_areal_conflict_mean": float(field_areal_conflict_mean),
+        "areal_support": float(areal_support),
+        "areal_conflict_pressure": float(areal_conflict_pressure),
         "external_pressure": float(external_pressure),
         "inner_conflict_pressure": float(inner_conflict_pressure),
         "repetition_pressure": float(repetition_pressure),
@@ -5381,6 +6771,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     processing_load = float(processing.get("processing_load", 0.0) or 0.0)
     processing_alignment = float(processing.get("processing_alignment", 0.0) or 0.0)
     processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
+    processing_areal_tension = float(processing.get("processing_areal_tension", 0.0) or 0.0)
+    processing_areal_support = float(processing.get("processing_areal_support", 0.0) or 0.0)
     felt_conflict = float(felt.get("felt_conflict", 0.0) or 0.0)
     felt_pressure = float(felt.get("felt_pressure", 0.0) or 0.0)
     felt_alignment = float(felt.get("felt_alignment", 0.0) or 0.0)
@@ -5393,6 +6785,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     expectation_pressure = float(felt.get("expectation_pressure", 0.0) or 0.0)
     uncertainty_pressure = float(felt.get("uncertainty_pressure", 0.0) or 0.0)
     aftereffect_pressure = float(felt.get("aftereffect_pressure", 0.0) or 0.0)
+    areal_support = float(felt.get("areal_support", 0.0) or 0.0)
+    areal_conflict_pressure = float(felt.get("areal_conflict_pressure", 0.0) or 0.0)
     dominant_tension_cause = str(felt.get("dominant_tension_cause", "-") or "-")
     dominant_tension_value = float(felt.get("dominant_tension_value", 0.0) or 0.0)
     pre_action_observation_need = float(felt.get("pre_action_observation_need", 0.0) or 0.0)
@@ -5422,13 +6816,14 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         0.0,
         min(
             1.0,
-            (protective_courage * 0.34)
-            + (load_bearing_capacity * 0.22)
+            (protective_courage * 0.30)
+            + (load_bearing_capacity * 0.20)
             + (state_maturity * 0.12)
-            + (decision_readiness * 0.12)
+            + (decision_readiness * 0.10)
             + (felt_alignment * 0.08)
             + (experience_regulation * 0.08)
-            + (max(0.0, 1.0 - uncertainty_score) * 0.04),
+            + (areal_support * 0.08)
+            + (processing_areal_support * 0.04),
         ),
     )
 
@@ -5444,14 +6839,16 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         0.0,
         min(
             1.0,
-            (felt_pressure * 0.18)
-            + (decision_conflict * 0.14)
-            + (processing_tension * 0.12)
-            + (uncertainty_pressure * 0.12)
-            + (aftereffect_pressure * 0.10)
-            + (courage_gap * 0.20)
-            + (max(0.0, 1.0 - protective_width_regulation) * 0.08)
-            + (max(0.0, 1.0 - load_bearing_capacity) * 0.06),
+            (felt_pressure * 0.16)
+            + (decision_conflict * 0.12)
+            + (processing_tension * 0.10)
+            + (uncertainty_pressure * 0.10)
+            + (aftereffect_pressure * 0.08)
+            + (areal_conflict_pressure * 0.12)
+            + (processing_areal_tension * 0.06)
+            + (courage_gap * 0.18)
+            + (max(0.0, 1.0 - protective_width_regulation) * 0.06)
+            + (max(0.0, 1.0 - load_bearing_capacity) * 0.04),
         ),
     )
 
@@ -5459,12 +6856,13 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         0.0,
         min(
             1.0,
-            (regulated_courage * 0.34)
-            + (decision_readiness * 0.18)
-            + (state_maturity * 0.16)
-            + (signal_quality * 0.12)
+            (regulated_courage * 0.30)
+            + (decision_readiness * 0.16)
+            + (state_maturity * 0.14)
+            + (signal_quality * 0.10)
             + (processing_alignment * 0.10)
-            + (max(0.0, 1.0 - action_inhibition) * 0.10),
+            + (areal_support * 0.10)
+            + (processing_areal_support * 0.10),
         ),
     )
 
@@ -5487,7 +6885,7 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         allow_observe = True
         rejection_reason = "observe_state"
         pre_action_phase = "observe"
-    elif dominant_tension_cause in ("external_pressure", "uncertainty_pressure", "aftereffect_pressure") and dominant_tension_value >= 0.56 and decision_strength < 1.14:
+    elif dominant_tension_cause in ("external_pressure", "uncertainty_pressure", "aftereffect_pressure", "areal_conflict_pressure") and dominant_tension_value >= 0.56 and decision_strength < 1.14:
         allow_observe = True
         rejection_reason = f"{dominant_tension_cause}_observe"
         pre_action_phase = "observe"
@@ -5506,6 +6904,10 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     elif processing_load >= 0.66 and breakout_tension >= 0.56 and processing_alignment < 0.54 and decision_strength < 1.14:
         allow_observe = True
         rejection_reason = "visual_overload_observe"
+        pre_action_phase = "observe"
+    elif processing_areal_tension >= 0.58 and processing_areal_support < 0.46 and decision_strength < 1.14:
+        allow_observe = True
+        rejection_reason = "areal_overload_observe"
         pre_action_phase = "observe"
     elif expectation_pressure >= 0.58 and courage_gap >= 0.12 and decision_strength < 1.16:
         allow_ruminate = True
@@ -5535,6 +6937,10 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         allow_ruminate = True
         rejection_reason = f"{dominant_tension_cause}_replan"
         pre_action_phase = "replan"
+    elif areal_conflict_pressure >= 0.60 and areal_support < 0.42 and decision_strength < 1.16:
+        allow_ruminate = True
+        rejection_reason = "areal_conflict_replan"
+        pre_action_phase = "replan"
     elif decision_conflict >= conflict_threshold or rumination_depth >= rumination_threshold or felt_conflict >= 0.58:
         allow_ruminate = True
         rejection_reason = "ruminate_state"
@@ -5546,6 +6952,10 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     elif processing_load >= 0.78 and processing_tension >= 0.62 and decision_strength < 1.18:
         allow_block = True
         rejection_reason = "processing_block"
+        pre_action_phase = "hold"
+    elif processing_areal_tension >= 0.72 and areal_support < 0.34 and decision_strength < 1.18:
+        allow_block = True
+        rejection_reason = "areal_processing_block"
         pre_action_phase = "hold"
     elif felt_pressure > 0.94 and state_maturity < 0.50 and decision_strength < 1.18:
         allow_block = True
@@ -5581,6 +6991,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "processing_load": float(processing_load),
         "processing_alignment": float(processing_alignment),
         "processing_tension": float(processing_tension),
+        "processing_areal_tension": float(processing_areal_tension),
+        "processing_areal_support": float(processing_areal_support),
         "market_balance": float(market_balance),
         "breakout_tension": float(breakout_tension),
         "visual_coherence": float(visual_coherence),
@@ -5590,6 +7002,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "expectation_pressure": float(expectation_pressure),
         "uncertainty_pressure": float(uncertainty_pressure),
         "aftereffect_pressure": float(aftereffect_pressure),
+        "areal_support": float(areal_support),
+        "areal_conflict_pressure": float(areal_conflict_pressure),
         "dominant_tension_cause": str(dominant_tension_cause),
         "dominant_tension_value": float(dominant_tension_value),
         "observation_need": float(pre_action_observation_need),
@@ -5612,6 +7026,7 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
     perception = dict(perception_state or {})
     felt = dict(felt_state or {})
     processing = dict(processing_state or {})
+    snap = dict(snapshot or {})
 
     long_score = float(fused_state.get("long_score", 0.0) or 0.0)
     short_score = float(fused_state.get("short_score", 0.0) or 0.0)
@@ -5625,7 +7040,42 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
     processing_readiness = float(processing.get("processing_readiness", 0.0) or 0.0)
     processing_alignment = float(processing.get("processing_alignment", 0.0) or 0.0)
     processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
+    processing_areal_tension = float(processing.get("processing_areal_tension", 0.0) or 0.0)
+    processing_areal_support = float(processing.get("processing_areal_support", 0.0) or 0.0)
+    areal_support = float(felt.get("areal_support", 0.0) or 0.0)
+    areal_conflict_pressure = float(felt.get("areal_conflict_pressure", 0.0) or 0.0)
+    field_areal_count = int(snap.get("field_areal_count", processing.get("field_areal_count", 0)) or 0)
+    field_areal_dominance = float(snap.get("field_areal_dominance", processing.get("field_areal_dominance", 0.0)) or 0.0)
+    field_areal_fragmentation = float(snap.get("field_areal_fragmentation", processing.get("field_areal_fragmentation", 0.0)) or 0.0)
+    field_areal_conflict_mean = float(snap.get("field_areal_conflict_mean", processing.get("field_areal_conflict_mean", 0.0)) or 0.0)
+    field_areal_stability_mean = float(snap.get("field_areal_stability_mean", processing.get("field_areal_stability_mean", 0.0)) or 0.0)
+    field_areal_coherence_mean = float(snap.get("field_areal_coherence_mean", processing.get("field_areal_coherence_mean", 0.0)) or 0.0)
     uncertainty_score = float(perception.get("uncertainty_score", 0.0) or 0.0)
+
+    thought_areal_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (areal_conflict_pressure * 0.34)
+            + (processing_areal_tension * 0.24)
+            + (field_areal_conflict_mean * 0.18)
+            + (field_areal_fragmentation * 0.14)
+            + (min(1.0, float(field_areal_count) / 4.0) * 0.10),
+        ),
+    )
+
+    thought_areal_support = max(
+        0.0,
+        min(
+            1.0,
+            (areal_support * 0.34)
+            + (processing_areal_support * 0.24)
+            + (field_areal_stability_mean * 0.18)
+            + (field_areal_coherence_mean * 0.14)
+            + (field_areal_dominance * 0.10)
+            - (field_areal_fragmentation * 0.12),
+        ),
+    )
 
     decision_conflict = max(
         0.0,
@@ -5633,9 +7083,11 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             1.0,
             1.0
             - min(1.0, abs(long_score - short_score) / 1.2)
-            + (float(felt.get("felt_conflict", 0.0) or 0.0) * 0.18)
-            + (processing_tension * 0.12)
-            + (max(0.0, 1.0 - processing_alignment) * 0.10),
+            + (float(felt.get("felt_conflict", 0.0) or 0.0) * 0.16)
+            + (processing_tension * 0.10)
+            + (max(0.0, 1.0 - processing_alignment) * 0.08)
+            + (thought_areal_pressure * 0.12)
+            - (thought_areal_support * 0.08),
         ),
     )
 
@@ -5643,17 +7095,19 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         0.0,
         min(
             1.0,
-            (float(felt.get("reflection_maturity", 0.0) or 0.0) * 0.22)
-            + (float(felt.get("experience_regulation", 0.0) or 0.0) * 0.16)
-            + (float(felt.get("felt_stability", 0.0) or 0.0) * 0.12)
+            (float(felt.get("reflection_maturity", 0.0) or 0.0) * 0.18)
+            + (float(felt.get("experience_regulation", 0.0) or 0.0) * 0.14)
+            + (float(felt.get("felt_stability", 0.0) or 0.0) * 0.10)
             + (float(perception.get("signal_quality", 0.0) or 0.0) * 0.10)
-            + (max(0.0, 1.0 - uncertainty_score) * 0.10)
-            + (processing_stability * 0.12)
+            + (max(0.0, 1.0 - uncertainty_score) * 0.08)
+            + (processing_stability * 0.10)
             + (processing_alignment * 0.08)
-            + (felt_alignment * 0.10)
-            + (market_balance * 0.08)
-            + (visual_coherence * 0.08)
-            - (decision_conflict * 0.16),
+            + (felt_alignment * 0.08)
+            + (market_balance * 0.06)
+            + (visual_coherence * 0.06)
+            + (thought_areal_support * 0.16)
+            - (decision_conflict * 0.14)
+            - (thought_areal_pressure * 0.10),
         ),
     )
 
@@ -5661,13 +7115,15 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         0.0,
         min(
             1.0,
-            (decision_conflict * 0.34)
-            + (float(perception.get("observe_priority", 0.0) or 0.0) * 0.18)
+            (decision_conflict * 0.28)
+            + (float(perception.get("observe_priority", 0.0) or 0.0) * 0.16)
             + (float(felt.get("felt_pressure", 0.0) or 0.0) * 0.10)
-            + (processing_load * 0.14)
-            + (processing_tension * 0.10)
-            + (breakout_tension * 0.08)
-            + (0.12 if bool(fused_state.get("observation_mode", False)) else 0.0),
+            + (processing_load * 0.12)
+            + (processing_tension * 0.08)
+            + (breakout_tension * 0.06)
+            + (thought_areal_pressure * 0.14)
+            - (thought_areal_support * 0.08)
+            + (0.10 if bool(fused_state.get("observation_mode", False)) else 0.0),
         ),
     )
 
@@ -5675,14 +7131,16 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         0.0,
         min(
             1.0,
-            (state_maturity * 0.26)
-            + (float(felt.get("load_bearing_capacity", 0.0) or 0.0) * 0.12)
-            + (max(0.0, 1.0 - float(perception.get("novelty_score", 0.0) or 0.0)) * 0.10)
-            + (processing_alignment * 0.16)
-            + (processing_stability * 0.14)
-            + (visual_coherence * 0.10)
-            + (market_balance * 0.08)
+            (state_maturity * 0.22)
+            + (float(felt.get("load_bearing_capacity", 0.0) or 0.0) * 0.10)
+            + (max(0.0, 1.0 - float(perception.get("novelty_score", 0.0) or 0.0)) * 0.08)
+            + (processing_alignment * 0.14)
+            + (processing_stability * 0.12)
+            + (visual_coherence * 0.08)
+            + (market_balance * 0.06)
+            + (thought_areal_support * 0.12)
             - (processing_tension * 0.08)
+            - (thought_areal_pressure * 0.08)
             + max(0.0, 1.0 - (abs(float((tension_state or {}).get("coherence", 0.0) or 0.0)) * 0.18)),
         ),
     )
@@ -5691,12 +7149,14 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         0.0,
         min(
             1.0,
-            (float(felt.get("felt_pressure", 0.0) or 0.0) * 0.30)
-            + (breakout_tension * 0.18)
-            + (processing_tension * 0.16)
+            (float(felt.get("felt_pressure", 0.0) or 0.0) * 0.24)
+            + (breakout_tension * 0.16)
+            + (processing_tension * 0.14)
             + (max(0.0, abs(long_score - short_score)) * 0.08)
+            + (thought_areal_pressure * 0.16)
             - (market_balance * 0.08)
-            - (visual_coherence * 0.08),
+            - (visual_coherence * 0.06)
+            - (thought_areal_support * 0.08),
         ),
     )
 
@@ -5704,14 +7164,16 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         0.0,
         min(
             1.0,
-            (state_maturity * 0.28)
-            + (max(0.0, 1.0 - decision_conflict) * 0.16)
+            (state_maturity * 0.24)
+            + (max(0.0, 1.0 - decision_conflict) * 0.14)
             + (float(perception.get("signal_quality", 0.0) or 0.0) * 0.10)
             + (float(felt.get("felt_stability", 0.0) or 0.0) * 0.08)
-            + (processing_readiness * 0.24)
+            + (processing_readiness * 0.20)
             + (felt_alignment * 0.08)
-            - (rumination_depth * 0.10)
-            - (decision_pressure * 0.08),
+            + (thought_areal_support * 0.14)
+            - (rumination_depth * 0.08)
+            - (decision_pressure * 0.06)
+            - (thought_areal_pressure * 0.10),
         ),
     )
 
@@ -5719,11 +7181,13 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         0.0,
         min(
             1.0,
-            (processing_alignment * 0.36)
-            + (felt_alignment * 0.24)
-            + (market_balance * 0.14)
-            + (visual_coherence * 0.12)
-            + (max(0.0, 1.0 - decision_conflict) * 0.14),
+            (processing_alignment * 0.28)
+            + (felt_alignment * 0.20)
+            + (market_balance * 0.12)
+            + (visual_coherence * 0.10)
+            + (max(0.0, 1.0 - decision_conflict) * 0.12)
+            + (thought_areal_support * 0.18)
+            - (thought_areal_pressure * 0.10),
         ),
     )
 
@@ -5739,6 +7203,12 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         "decision_readiness": float(decision_readiness),
         "thought_alignment": float(thought_alignment),
         "decision_pressure": float(decision_pressure),
+        "thought_areal_pressure": float(thought_areal_pressure),
+        "thought_areal_support": float(thought_areal_support),
+        "field_areal_count": int(field_areal_count),
+        "field_areal_dominance": float(field_areal_dominance),
+        "field_areal_fragmentation": float(field_areal_fragmentation),
+        "field_areal_conflict_mean": float(field_areal_conflict_mean),
         "uncertainty": float(uncertainty_score),
         "conflict": float(decision_conflict),
         "maturity": float(state_maturity),
@@ -6055,12 +7525,41 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         bot=bot,
         runtime_result={
             "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
+            "inner_context_cluster_id": str(getattr(bot, "last_inner_context_cluster_id", "-") or "-"),
         },
     )
+    pattern_action_support = float(review_feedback_state.get("pattern_action_support", 0.0) or 0.0)
+    pattern_observe_pressure = float(review_feedback_state.get("pattern_observe_pressure", 0.0) or 0.0)
+    pattern_replan_pressure = float(review_feedback_state.get("pattern_replan_pressure", 0.0) or 0.0)
+
+    if bool(meta_regulation_state.get("allow_plan", False)):
+        if pattern_replan_pressure >= 0.58 and pattern_action_support < 0.48:
+            meta_regulation_state["allow_plan"] = False
+            meta_regulation_state["allow_ruminate"] = True
+            meta_regulation_state["allow_observe"] = False
+            meta_regulation_state["allow_block"] = False
+            meta_regulation_state["pre_action_phase"] = "replan"
+            meta_regulation_state["rejection_reason"] = "inner_pattern_replan"
+        elif pattern_observe_pressure >= 0.54 and pattern_action_support < 0.44:
+            meta_regulation_state["allow_plan"] = False
+            meta_regulation_state["allow_ruminate"] = False
+            meta_regulation_state["allow_observe"] = True
+            meta_regulation_state["allow_block"] = False
+            meta_regulation_state["pre_action_phase"] = "observe"
+            meta_regulation_state["rejection_reason"] = "inner_pattern_observe"
+
     meta_regulation_state["review_feedback_state"] = dict(review_feedback_state or {})
     meta_regulation_state["review_carry_capacity"] = float(review_feedback_state.get("carry_capacity", 0.0) or 0.0)
     meta_regulation_state["review_caution_load"] = float(review_feedback_state.get("caution_load", 0.0) or 0.0)
     meta_regulation_state["review_tendency_hint"] = str(review_feedback_state.get("tendency_hint", "hold") or "hold")
+    meta_regulation_state["inner_pattern_support"] = float(review_feedback_state.get("inner_pattern_support", 0.0) or 0.0)
+    meta_regulation_state["inner_pattern_conflict"] = float(review_feedback_state.get("inner_pattern_conflict", 0.0) or 0.0)
+    meta_regulation_state["inner_pattern_fragility"] = float(review_feedback_state.get("inner_pattern_fragility", 0.0) or 0.0)
+    meta_regulation_state["inner_pattern_bearing"] = float(review_feedback_state.get("inner_pattern_bearing", 0.0) or 0.0)
+    meta_regulation_state["inner_pattern_state"] = str(review_feedback_state.get("inner_pattern_state", "bearing") or "bearing")
+    meta_regulation_state["pattern_action_support"] = float(pattern_action_support)
+    meta_regulation_state["pattern_observe_pressure"] = float(pattern_observe_pressure)
+    meta_regulation_state["pattern_replan_pressure"] = float(pattern_replan_pressure)
 
     bot.visual_market_state = dict(visual_market_state)
     bot.temporal_perception_state = dict(temporal_perception_state)
@@ -6340,6 +7839,8 @@ def build_runtime_decision_tendency(window, candle_state, bot=None):
 def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timestamp, runtime_tick_seq=0):
 
     result = dict(runtime_result or {})
+    meta_regulation_state = dict(result.get("meta_regulation_state", {}) or {})
+    review_feedback_state = dict(meta_regulation_state.get("review_feedback_state", result.get("review_feedback_state", {}) or {}) or {})
 
     return {
         "timestamp": timestamp,
@@ -6382,6 +7883,14 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
             "action_capacity": float(result.get("action_capacity", 0.0) or 0.0),
             "recovery_need": float(result.get("recovery_need", 0.0) or 0.0),
             "survival_pressure": float(result.get("survival_pressure", 0.0) or 0.0),
+            "inner_pattern_support": float(meta_regulation_state.get("inner_pattern_support", review_feedback_state.get("inner_pattern_support", 0.0)) or 0.0),
+            "inner_pattern_conflict": float(meta_regulation_state.get("inner_pattern_conflict", review_feedback_state.get("inner_pattern_conflict", 0.0)) or 0.0),
+            "inner_pattern_fragility": float(meta_regulation_state.get("inner_pattern_fragility", review_feedback_state.get("inner_pattern_fragility", 0.0)) or 0.0),
+            "inner_pattern_bearing": float(meta_regulation_state.get("inner_pattern_bearing", review_feedback_state.get("inner_pattern_bearing", 0.0)) or 0.0),
+            "inner_pattern_state": str(meta_regulation_state.get("inner_pattern_state", review_feedback_state.get("inner_pattern_state", "bearing")) or "bearing"),
+            "pattern_action_support": float(meta_regulation_state.get("pattern_action_support", review_feedback_state.get("pattern_action_support", 0.0)) or 0.0),
+            "pattern_observe_pressure": float(meta_regulation_state.get("pattern_observe_pressure", review_feedback_state.get("pattern_observe_pressure", 0.0)) or 0.0),
+            "pattern_replan_pressure": float(meta_regulation_state.get("pattern_replan_pressure", review_feedback_state.get("pattern_replan_pressure", 0.0)) or 0.0),
         },
     }
 
@@ -6398,6 +7907,14 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
             "structural_bearing_quality": 0.0,
             "felt_bearing_score": 0.0,
             "felt_profile_label": "mixed_unclear",
+            "inner_pattern_support": 0.0,
+            "inner_pattern_conflict": 0.0,
+            "inner_pattern_fragility": 0.0,
+            "inner_pattern_bearing": 0.0,
+            "inner_pattern_state": "bearing",
+            "pattern_action_support": 0.0,
+            "pattern_observe_pressure": 0.0,
+            "pattern_replan_pressure": 0.0,
             "reinforcement": 0.0,
             "attenuation": 0.0,
             "bearing_effect": 0.0,
@@ -6414,12 +7931,18 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
     review_notes = dict((getattr(bot, "mcm_decision_episode_internal", {}) or {}).get("review_notes", {}) or {})
     experience_space = dict(getattr(bot, "mcm_experience_space", {}) or {})
     context_links = dict(experience_space.get("context_links", {}) or {})
+    inner_context_links = dict(experience_space.get("inner_context_links", {}) or {})
 
     context_cluster_id = str(result.get("context_cluster_id", getattr(bot, "last_context_cluster_id", "-")) or "-").strip()
+    inner_context_cluster_id = str(result.get("inner_context_cluster_id", getattr(bot, "last_inner_context_cluster_id", "-")) or "-").strip()
     context_item = dict(context_links.get(context_cluster_id, {}) or {})
+    inner_context_item = dict(inner_context_links.get(inner_context_cluster_id, {}) or {})
     affective = _resolve_affective_context_modulation(
         bot=bot,
-        fused_state={"context_cluster_id": context_cluster_id},
+        fused_state={
+            "context_cluster_id": context_cluster_id,
+            "inner_context_cluster_id": inner_context_cluster_id,
+        },
     )
 
     review_label = str(review_notes.get("review_label", "mixed") or "mixed").strip().lower()
@@ -6432,9 +7955,22 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
     action_clearance = float(review_notes.get("action_clearance", 0.0) or 0.0)
     felt_bearing_score = float(affective.get("felt_bearing_score", 0.0) or 0.0)
     felt_profile_label = str(affective.get("felt_profile_label", "mixed_unclear") or "mixed_unclear").strip().lower()
+    inner_pattern_support = float(affective.get("inner_pattern_support", 0.0) or 0.0)
+    inner_pattern_conflict = float(affective.get("inner_pattern_conflict", 0.0) or 0.0)
+    inner_pattern_fragility = float(affective.get("inner_pattern_fragility", 0.0) or 0.0)
+    inner_pattern_bearing = float(affective.get("inner_pattern_bearing", 0.0) or 0.0)
+    inner_pattern_state = str(affective.get("inner_pattern_state", "bearing") or "bearing").strip().lower()
+    pattern_action_support = float(affective.get("pattern_action_support", 0.0) or 0.0)
+    pattern_observe_pressure = float(affective.get("pattern_observe_pressure", 0.0) or 0.0)
+    pattern_replan_pressure = float(affective.get("pattern_replan_pressure", 0.0) or 0.0)
     reinforcement = float(context_item.get("reinforcement", 0.0) or 0.0)
     attenuation = float(context_item.get("attenuation", 0.0) or 0.0)
     bearing_effect = float(context_item.get("bearing_effect", 0.0) or 0.0)
+
+    if inner_context_item:
+        reinforcement = float((reinforcement * 0.56) + (float(inner_context_item.get("pattern_reinforcement", 0.0) or 0.0) * 0.44))
+        attenuation = float((attenuation * 0.56) + (float(inner_context_item.get("pattern_attenuation", 0.0) or 0.0) * 0.44))
+        bearing_effect = float((bearing_effect * 0.58) + ((inner_pattern_bearing - inner_pattern_conflict) * 0.42))
 
     carry_capacity = max(
         0.0,
@@ -6461,13 +7997,15 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
         ),
     )
 
-    act_push = max(0.0, min(1.0, carry_capacity - (caution_load * 0.72)))
+    act_push = max(0.0, min(1.0, carry_capacity - (caution_load * 0.68) + (pattern_action_support * 0.18)))
     observe_pull = max(
         0.0,
         min(
             1.0,
-            (observation_quality * 0.42)
-            + (uncertainty_recognition_quality * 0.24)
+            (observation_quality * 0.34)
+            + (uncertainty_recognition_quality * 0.20)
+            + (pattern_observe_pressure * 0.22)
+            + (inner_pattern_fragility * 0.08)
             + (0.10 if review_label == "observe_was_correct" else 0.0),
         ),
     )
@@ -6475,8 +8013,10 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
         0.0,
         min(
             1.0,
-            (correction_timing_quality * 0.46)
-            + (uncertainty_recognition_quality * 0.14)
+            (correction_timing_quality * 0.36)
+            + (uncertainty_recognition_quality * 0.12)
+            + (pattern_replan_pressure * 0.26)
+            + (inner_pattern_conflict * 0.10)
             + (0.12 if review_label == "correction_was_correct" else 0.0),
         ),
     )
@@ -6484,8 +8024,10 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
         0.0,
         min(
             1.0,
-            (caution_load * 0.54)
-            + (max(0.0, 1.0 - act_push) * 0.16),
+            (caution_load * 0.46)
+            + (pattern_observe_pressure * 0.10)
+            + (pattern_replan_pressure * 0.08)
+            + (max(0.0, 1.0 - act_push) * 0.14),
         ),
     )
 
@@ -6507,6 +8049,14 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
         "structural_bearing_quality": float(structural_bearing_quality),
         "felt_bearing_score": float(felt_bearing_score),
         "felt_profile_label": str(felt_profile_label),
+        "inner_pattern_support": float(inner_pattern_support),
+        "inner_pattern_conflict": float(inner_pattern_conflict),
+        "inner_pattern_fragility": float(inner_pattern_fragility),
+        "inner_pattern_bearing": float(inner_pattern_bearing),
+        "inner_pattern_state": str(inner_pattern_state or "bearing"),
+        "pattern_action_support": float(pattern_action_support),
+        "pattern_observe_pressure": float(pattern_observe_pressure),
+        "pattern_replan_pressure": float(pattern_replan_pressure),
         "reinforcement": float(reinforcement),
         "attenuation": float(attenuation),
         "bearing_effect": float(bearing_effect),
@@ -6782,6 +8332,17 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
         timestamp=timestamp,
         decision_tendency=decision_tendency,
     )
+
+    active_context_trace = _refresh_active_context_trace(
+        getattr(bot, "active_context_trace", {}) or {},
+        bot=bot,
+        runtime_result=runtime_payload,
+        market_tick_advanced=market_tick_advanced,
+    )
+    bot.active_context_trace = dict(active_context_trace or {})
+    bot.mcm_runtime_snapshot["active_context_trace"] = dict(active_context_trace or {})
+    bot.mcm_runtime_decision_state["active_context_trace"] = dict(active_context_trace or {})
+    bot.mcm_runtime_decision_state["entry_result"]["active_context_trace"] = dict(active_context_trace or {})
 
     return dict(runtime_result or {})
 
@@ -7094,6 +8655,15 @@ def _compact_in_trade_update_payload(payload):
         "recovery_balance": float(item.get("recovery_balance", field_after.get("recovery_balance", 0.0)) or 0.0),
         "regulated_courage": float(item.get("regulated_courage", 0.0) or 0.0),
         "courage_gap": float(item.get("courage_gap", 0.0) or 0.0),
+        "field_areal_count": int(item.get("field_areal_count", field_after.get("field_areal_count", 0)) or 0),
+        "field_areal_activation_mean": float(item.get("field_areal_activation_mean", field_after.get("field_areal_activation_mean", 0.0)) or 0.0),
+        "field_areal_stability_mean": float(item.get("field_areal_stability_mean", field_after.get("field_areal_stability_mean", 0.0)) or 0.0),
+        "field_areal_pressure_mean": float(item.get("field_areal_pressure_mean", field_after.get("field_areal_pressure_mean", 0.0)) or 0.0),
+        "field_areal_drift": float(item.get("field_areal_drift", field_after.get("field_areal_drift", 0.0)) or 0.0),
+        "field_areal_dominance": float(item.get("field_areal_dominance", field_after.get("field_areal_dominance", 0.0)) or 0.0),
+        "field_areal_fragmentation": float(item.get("field_areal_fragmentation", field_after.get("field_areal_fragmentation", 0.0)) or 0.0),
+        "field_areal_coherence_mean": float(item.get("field_areal_coherence_mean", field_after.get("field_areal_coherence_mean", 0.0)) or 0.0),
+        "field_areal_conflict_mean": float(item.get("field_areal_conflict_mean", field_after.get("field_areal_conflict_mean", 0.0)) or 0.0),
         "pre_action_phase": str(item.get("pre_action_phase", "hold") or "hold"),
         "dominant_tension_cause": str(item.get("dominant_tension_cause", "-") or "-"),
         "decision_tendency": str(item.get("decision_tendency", "hold") or "hold"),
@@ -7130,6 +8700,15 @@ def _summarize_in_trade_updates(in_trade_updates):
             "in_trade_avg_recovery_balance": 0.0,
             "in_trade_avg_regulated_courage": 0.0,
             "in_trade_avg_courage_gap": 0.0,
+            "in_trade_avg_field_areal_count": 0.0,
+            "in_trade_avg_field_areal_activation_mean": 0.0,
+            "in_trade_avg_field_areal_stability_mean": 0.0,
+            "in_trade_avg_field_areal_pressure_mean": 0.0,
+            "in_trade_avg_field_areal_drift": 0.0,
+            "in_trade_avg_field_areal_dominance": 0.0,
+            "in_trade_avg_field_areal_fragmentation": 0.0,
+            "in_trade_avg_field_areal_coherence_mean": 0.0,
+            "in_trade_avg_field_areal_conflict_mean": 0.0,
             "in_trade_last_pre_action_phase": "-",
             "in_trade_last_dominant_tension_cause": "-",
             "in_trade_last_state_before": {},
@@ -7155,6 +8734,15 @@ def _summarize_in_trade_updates(in_trade_updates):
     recovery_balance_values = [float(item.get("recovery_balance", 0.0) or 0.0) for item in payloads]
     regulated_courage_values = [float(item.get("regulated_courage", 0.0) or 0.0) for item in payloads]
     courage_gap_values = [float(item.get("courage_gap", 0.0) or 0.0) for item in payloads]
+    field_areal_count_values = [float(item.get("field_areal_count", 0.0) or 0.0) for item in payloads]
+    field_areal_activation_values = [float(item.get("field_areal_activation_mean", 0.0) or 0.0) for item in payloads]
+    field_areal_stability_values = [float(item.get("field_areal_stability_mean", 0.0) or 0.0) for item in payloads]
+    field_areal_pressure_values = [float(item.get("field_areal_pressure_mean", 0.0) or 0.0) for item in payloads]
+    field_areal_drift_values = [float(item.get("field_areal_drift", 0.0) or 0.0) for item in payloads]
+    field_areal_dominance_values = [float(item.get("field_areal_dominance", 0.0) or 0.0) for item in payloads]
+    field_areal_fragmentation_values = [float(item.get("field_areal_fragmentation", 0.0) or 0.0) for item in payloads]
+    field_areal_coherence_values = [float(item.get("field_areal_coherence_mean", 0.0) or 0.0) for item in payloads]
+    field_areal_conflict_values = [float(item.get("field_areal_conflict_mean", 0.0) or 0.0) for item in payloads]
 
     direction_values = []
     for item in payloads:
@@ -7192,6 +8780,15 @@ def _summarize_in_trade_updates(in_trade_updates):
         "in_trade_avg_recovery_balance": float(sum(recovery_balance_values) / max(1, len(recovery_balance_values))),
         "in_trade_avg_regulated_courage": float(sum(regulated_courage_values) / max(1, len(regulated_courage_values))),
         "in_trade_avg_courage_gap": float(sum(courage_gap_values) / max(1, len(courage_gap_values))),
+        "in_trade_avg_field_areal_count": float(sum(field_areal_count_values) / max(1, len(field_areal_count_values))),
+        "in_trade_avg_field_areal_activation_mean": float(sum(field_areal_activation_values) / max(1, len(field_areal_activation_values))),
+        "in_trade_avg_field_areal_stability_mean": float(sum(field_areal_stability_values) / max(1, len(field_areal_stability_values))),
+        "in_trade_avg_field_areal_pressure_mean": float(sum(field_areal_pressure_values) / max(1, len(field_areal_pressure_values))),
+        "in_trade_avg_field_areal_drift": float(sum(field_areal_drift_values) / max(1, len(field_areal_drift_values))),
+        "in_trade_avg_field_areal_dominance": float(sum(field_areal_dominance_values) / max(1, len(field_areal_dominance_values))),
+        "in_trade_avg_field_areal_fragmentation": float(sum(field_areal_fragmentation_values) / max(1, len(field_areal_fragmentation_values))),
+        "in_trade_avg_field_areal_coherence_mean": float(sum(field_areal_coherence_values) / max(1, len(field_areal_coherence_values))),
+        "in_trade_avg_field_areal_conflict_mean": float(sum(field_areal_conflict_values) / max(1, len(field_areal_conflict_values))),
         "in_trade_last_pre_action_phase": str(last_payload.get("pre_action_phase", "-") or "-"),
         "in_trade_last_dominant_tension_cause": str(last_payload.get("dominant_tension_cause", "-") or "-"),
         "in_trade_last_state_before": dict(last_payload.get("state_before", {}) or {}),

@@ -29,7 +29,7 @@ class Config:
     ORDER_SIZE = 0.5
     WORLD_TIME_LOOP_SECONDS = 1.0 # Live-Loop-Wartezeit für den äußeren Welt-/Chart-Loop.
     # WORLD_TIME_LOOP_SECONDS sollte fachlich  eher Polling-Intervall heißen, nicht Weltzeit. !!!!!
-    WORLD_REPLAY_LOOP_SECONDS = 0.1 # Replay-Verzögerung im Backtest/CSV-Feed.
+    WORLD_REPLAY_LOOP_SECONDS = 0.01 # Replay-Verzögerung im Backtest/CSV-Feed.
     # ==================================================
     # WORKSPACE
     # ==================================================
@@ -58,7 +58,7 @@ class Config:
     MCM_ENABLED = True # Aktiviert die MCM-Interne Simulation, um die Entscheidungsfindung der Agenten zu beeinflussen. Deaktivieren, um die MCM-Interne Simulation zu überspringen und direkt auf Marktinformationen zu reagieren.
     MCM_INTERNAL_CYCLES = 1 # Anzahl der MCM-Interne Zyklen pro Weltzeit-Tick. Je höher, desto intensiver die interne Simulation pro Weltzeit-Tick, aber auch rechenintensiver.
     MCM_REPLAY_SCALE = 0.012 # Skalierungsfaktor für die Geschwindigkeit der MCM-Interne Simulation im Vergleich zur Weltzeit. Je kleiner, desto schneller läuft die MCM-Interne Simulation im Verhältnis zur Weltzeit.
-    MCM_FIELD_AGENTS = 170 # Agentenzahl im MCM-Feld, beeinflusst die Granularität der Simulation und die Rechenzeit.
+    MCM_FIELD_AGENTS = 250 # Agentenzahl im MCM-Feld, beeinflusst die Granularität der Simulation und die Rechenzeit.
     MCM_FIELD_DIMS = 3 # Anzahl der Dimensionen im MCM-Feld, z.B. 3 für einen 3D-Raum.
     MCM_FIELD_LOCAL_NEIGHBORS = 8 # Anzahl der nächsten Nachbarn, die für lokale Interaktionen berücksichtigt werden.
     MCM_FIELD_COUPLING_SIGMA = 0.5 # Standardabweichung für die Kopplungsstärke in Abhängigkeit von der Entfernung im MCM-Feld. Je kleiner, desto stärker die Kopplung bei nahen Agenten und schwächer bei entfernten Agenten.

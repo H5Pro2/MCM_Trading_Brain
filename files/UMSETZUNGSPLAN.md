@@ -728,6 +728,73 @@ Sondern vor allem:
 
 ---
 
+### Informationscluster, Kohärenz und Reorganisation
+
+Informationscluster werden im Zielsystem nicht als starre Speicherblöcke verstanden.
+Sie sind lokale Informationsinseln im Innenfeld.
+
+Ein Informationscluster entsteht, wenn mehrere lokale Neuronen über Nachbarschaft,
+Ähnlichkeit, Resonanz und wiederkehrende Umwelt- oder Innenreize einen gemeinsamen Zustand tragen.
+
+Wichtig:
+
+- der Feldzustand bleibt mehrdimensional als `N x D` erhalten
+- Nachbarschaft wird pro Neuron lokal gebildet
+- weitergegeben werden nur lokale Nachbarn, nicht das gesamte Feld als globaler Deltablock
+- alle Neuronen können grundsätzlich dieselbe Umwelt wahrnehmen
+- informationsbildend ist aber ihre lokale Eigenreaktion, Kopplung, Kohärenz und Resonanz
+
+Dadurch können im Innenfeld Inseln entstehen:
+
+- aktive Informationsinseln
+- nachhallende Informationsinseln
+- latente Informationsinseln
+- frei werdende Organisationsräume
+
+Cluster werden dabei nicht durch Felddruck gelöscht.
+Hohe Spannung oder Belastung bedeutet nicht automatisch Informationsverlust.
+Sonst würde das System in Grenzbereichen einen Blackout erzeugen und getragene Erfahrung verlieren.
+
+Stattdessen gilt:
+
+- Felddruck verändert Priorität, Aktivierung und Zugänglichkeit
+- nicht getragene Information verliert aktive Bindungsstärke
+- nicht genutzte oder nicht mehr resonante Information geht in Nachhall oder Latenz über
+- dadurch wird lokaler Organisationsraum für neue Clusterbildung frei
+- tragfähige Muster können später durch ähnliche Umwelt wieder reaktiviert werden
+
+Reorganisation bedeutet daher nicht Zerstörung,
+sondern Informationsumschichtung:
+
+- aktiv getragen → nachhallend
+- nachhallend → latent
+- latent → reaktivierbar
+- nicht mehr tragend → gibt Bindungsraum frei
+- neues kohärentes Muster → kann sich lokal verdichten
+
+Die Kohärenzstärke beschreibt,
+wie verdichtet, stabil und tragfähig ein Informationscluster aktuell ist.
+
+Hohe Kohärenz bedeutet:
+
+- starke lokale Bindung
+- klare Informationsinsel
+- hohe Resonanz zwischen Nachbarn
+- stabile Trägerstruktur
+
+Niedrige Kohärenz bedeutet:
+
+- diffuse Information
+- schwache aktive Bindung
+- Übergang in Nachhall oder Latenz
+- frei werdender Raum für neue Organisation
+
+Später kann diese Kohärenzstärke in der GUI farblich sichtbar gemacht werden.
+Die Farbe beschreibt dann nicht einfach „gut“ oder „schlecht“,
+sondern den aktuellen Organisationszustand der Informationsinsel.
+
+---
+
 ### Innere Bezeichnung und Zustandsidentität
 
 Das System soll innere Zustände nicht nur numerisch tragen,
@@ -818,7 +885,50 @@ Replay ist damit nicht bloß Rückblick,
 sondern ein regulatorischer Vorausvergleich des eigenen Innenraums.
 
 ---
+### Aktive Kontextspur / Nachhall
 
+Ein gespeicherter Kontext soll im Zielsystem nicht nur als Archivwert existieren.
+Er soll bei Wiedererkennung als **aktive Kontextspur** wieder angeregt werden können.
+
+Das bedeutet:
+
+- ein früheres Innenmuster kann bei ähnlicher Lage wieder Aktivierung bekommen
+- diese Aktivierung bleibt nicht permanent gleich stark
+- sie klingt ab, wenn sie nicht mehr gebraucht wird
+- sie wird verstärkt, wenn sie wiederholt tragfähig aktiviert wird
+- sie wird abgeschwächt, wenn sie wiederholt Belastung, Konflikt oder Fehlanpassung erzeugt
+
+Diese aktive Kontextspur ist kein festes Long-/Short-Regelwerk.
+Sie beschreibt nur, welche gespeicherte Erfahrung im aktuellen Innenraum wieder mitwirkt.
+
+Technisch gehört diese Schicht zwischen:
+
+- `inner_context_clusters`
+- `mcm_experience_space`
+- `inner_field_perception_state`
+- MCM-Feld / Arealzustände
+
+Sie soll später tragen:
+
+- `activation`
+- `decay`
+- `reactivation_strength`
+- `bearing_effect`
+- `conflict_effect`
+- `support_effect`
+- `reorganization_pressure`
+- schwache Rückstreuung ins aktuelle Innenfeld
+
+Der Zweck ist:
+
+- Erfahrung wird nicht nur gespeichert
+- Erfahrung wird bei Relevanz aktiv
+- aktive Erfahrung beeinflusst Wahrnehmung, Regulation und Handlungstendenz
+- bei Kontextwechsel kann diese Aktivierung abklingen oder durch andere Kontextspuren ersetzt werden
+
+Damit entsteht ein Übergang von passivem Speicher zu aktivem Innenkontext.
+
+---
 ## Cluster-Bewertung
 
 Cluster werden nicht bewertet nach:

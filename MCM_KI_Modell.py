@@ -63,11 +63,28 @@ class MCMField:
         self.coupling_sigma = float(getattr(Config, "MCM_FIELD_COUPLING_SIGMA", 0.5) or 0.5)
         self.local_neighbor_count = max(1, int(getattr(Config, "MCM_FIELD_LOCAL_NEIGHBORS", 8) or 8))
         self.max_abs_state = 3.0
+        self.areal_radius = float(getattr(Config, "MCM_FIELD_AREAL_RADIUS", 0.78) or 0.78)
+        self.areal_min_size = max(2, int(getattr(Config, "MCM_FIELD_AREAL_MIN_SIZE", 3) or 3))
 
         self.neurons = [MCMNeuron(dims=self.D) for _ in range(self.N)]
         self.energy = np.zeros((self.N, self.D), dtype=float)
         self.velocity = np.zeros((self.N, self.D), dtype=float)
+        self.areal_state = {
+            "areal_count": 0,
+            "areal_activation_mean": 0.0,
+            "areal_stability_mean": 0.0,
+            "areal_pressure_mean": 0.0,
+            "areal_drift": 0.0,
+            "areal_dominance": 0.0,
+            "areal_fragmentation": 0.0,
+            "areal_coherence_mean": 0.0,
+            "areal_conflict_mean": 0.0,
+            "areal_states": [],
+            "areal_links": [],
+        }
+        self._last_areal_centers = []
         self._refresh_arrays_from_neurons()
+        self._refresh_areal_state()
 
     # --------------------------------------------------
     def _propagate_runtime_parameters(self):
@@ -133,29 +150,273 @@ class MCMField:
         neighbor_state_map = {index: [] for index in range(self.N)}
         energy = np.asarray(getattr(self, "energy", []), dtype=float)
 
-        if len(energy) <= 1:
+        if energy.ndim != 2 or len(energy) <= 1:
             return neighbor_state_map
 
+        agent_count = min(int(self.N), int(len(energy)))
+        local_neighbors = max(1, min(agent_count - 1, int(self.local_neighbor_count or 1)))
+
+        for index in range(agent_count):
+            local_delta = energy - energy[int(index)]
+            local_distances = np.linalg.norm(local_delta, axis=1)
+            local_distances[int(index)] = np.inf
+
+            if len(local_distances) > local_neighbors + 1:
+                order = np.argpartition(local_distances, local_neighbors)[:local_neighbors]
+                order = order[np.argsort(local_distances[order])]
+            else:
+                order = np.argsort(local_distances)
+
+            selected = []
+
+            for neighbor_index in list(order):
+                if len(selected) >= local_neighbors:
+                    break
+
+                if not np.isfinite(local_distances[int(neighbor_index)]):
+                    continue
+
+                selected.append(np.asarray(energy[int(neighbor_index)], dtype=float).copy())
+
+            neighbor_state_map[index] = list(selected or [])
+
+        return neighbor_state_map
+
+    # --------------------------------------------------
+    def _build_areal_components(self, distances):
+
+        if len(distances) <= 1:
+            return []
+
+        radius = max(float(self.areal_radius or 0.78), 1e-9)
+        expanded_radius = radius * 1.35
         local_neighbors = max(1, int(self.local_neighbor_count or 1))
-        deltas = energy[:, None, :] - energy[None, :, :]
-        distances = np.linalg.norm(deltas, axis=2)
+        adjacency = {index: set() for index in range(self.N)}
 
         for index in range(self.N):
             order = np.argsort(distances[index])
-            selected = []
+            selected_neighbors = []
 
             for neighbor_index in list(order):
                 if int(neighbor_index) == int(index):
                     continue
 
-                selected.append(np.asarray(energy[int(neighbor_index)], dtype=float).copy())
-
-                if len(selected) >= local_neighbors:
+                distance = float(distances[index, int(neighbor_index)])
+                if distance <= radius:
+                    selected_neighbors.append(int(neighbor_index))
+                elif len(selected_neighbors) < local_neighbors and distance <= expanded_radius:
+                    selected_neighbors.append(int(neighbor_index))
+                elif len(selected_neighbors) >= local_neighbors:
                     break
 
-            neighbor_state_map[index] = list(selected or [])
+            for neighbor_index in list(selected_neighbors or []):
+                adjacency[index].add(int(neighbor_index))
+                adjacency[int(neighbor_index)].add(int(index))
 
-        return neighbor_state_map
+        components = []
+        visited = set()
+
+        for start_index in range(self.N):
+            if start_index in visited:
+                continue
+
+            stack = [int(start_index)]
+            component = []
+            visited.add(int(start_index))
+
+            while stack:
+                current_index = int(stack.pop())
+                component.append(int(current_index))
+
+                for neighbor_index in list(adjacency.get(current_index, set()) or set()):
+                    if int(neighbor_index) in visited:
+                        continue
+
+                    visited.add(int(neighbor_index))
+                    stack.append(int(neighbor_index))
+
+            if len(component) >= int(self.areal_min_size):
+                components.append(sorted(int(item) for item in list(component or [])))
+
+        return list(components or [])
+
+    # --------------------------------------------------
+    def _build_areal_state(self):
+
+        energy = np.asarray(getattr(self, "energy", []), dtype=float)
+        velocity = np.asarray(getattr(self, "velocity", []), dtype=float)
+
+        if energy.ndim != 2 or len(energy) == 0:
+            self.areal_state = {
+                "areal_count": 0,
+                "areal_activation_mean": 0.0,
+                "areal_stability_mean": 0.0,
+                "areal_pressure_mean": 0.0,
+                "areal_drift": 0.0,
+                "areal_dominance": 0.0,
+                "areal_fragmentation": 0.0,
+                "areal_coherence_mean": 0.0,
+                "areal_conflict_mean": 0.0,
+                "areal_states": [],
+                "areal_links": [],
+            }
+            self._last_areal_centers = []
+            return dict(self.areal_state or {})
+
+        agent_count = int(len(energy))
+        distances = np.zeros((agent_count, agent_count), dtype=float)
+        for index in range(agent_count):
+            local_delta = energy - energy[int(index)]
+            distances[int(index)] = np.linalg.norm(local_delta, axis=1)
+
+        components = self._build_areal_components(distances)
+        areal_states = []
+        current_centers = []
+
+        for areal_index, component in enumerate(list(components or [])):
+            component_indices = [int(item) for item in list(component or [])]
+            component_energy = np.asarray(energy[component_indices], dtype=float)
+            component_velocity = np.asarray(velocity[component_indices], dtype=float)
+            component_distances = np.asarray(distances[np.ix_(component_indices, component_indices)], dtype=float)
+
+            activation_values = []
+            stability_values = []
+            pressure_values = []
+            memory_norm_values = []
+            coupling_norm_values = []
+            regulation_norm_values = []
+            external_norm_values = []
+
+            for neuron_index in list(component_indices or []):
+                neuron = self.neurons[int(neuron_index)]
+                activation_values.append(float(getattr(neuron, "activation", 0.0) or 0.0))
+                stability_values.append(float(getattr(neuron, "stability", 0.0) or 0.0))
+                pressure_values.append(float(getattr(neuron, "regulation_pressure", 0.0) or 0.0))
+                memory_norm_values.append(float(np.linalg.norm(np.asarray(getattr(neuron, "memory_trace", []), dtype=float))))
+                coupling_norm_values.append(float(np.linalg.norm(np.asarray(getattr(neuron, "last_coupling_force", []), dtype=float))))
+                regulation_norm_values.append(float(np.linalg.norm(np.asarray(getattr(neuron, "last_regulation_force", []), dtype=float))))
+                external_norm_values.append(float(np.linalg.norm(np.asarray(getattr(neuron, "last_external_impulse", []), dtype=float))))
+
+            center = np.mean(component_energy, axis=0)
+            mean_velocity_vector = np.mean(component_velocity, axis=0)
+            current_centers.append(np.asarray(center, dtype=float))
+
+            upper_triangle = component_distances[np.triu_indices(len(component_indices), k=1)]
+            mean_internal_distance = float(np.mean(upper_triangle)) if upper_triangle.size > 0 else 0.0
+            density = float(max(0.0, min(1.0, 1.0 - (mean_internal_distance / max(self.areal_radius * 1.35, 1e-9)))))
+            activation_mean = float(np.mean(activation_values)) if activation_values else 0.0
+            stability_mean = float(np.mean(stability_values)) if stability_values else 0.0
+            pressure_mean = float(np.mean(pressure_values)) if pressure_values else 0.0
+            velocity_mean = float(np.mean(np.linalg.norm(component_velocity, axis=1))) if len(component_velocity) > 0 else 0.0
+            center_abs = np.abs(np.asarray(center, dtype=float))
+            coherence = float(np.max(center_abs)) if center_abs.size > 0 else 0.0
+            conflict = float(np.std(component_energy[:, 0])) if component_energy.shape[1] > 0 else 0.0
+
+            areal_label = "adaptive_areal"
+            if pressure_mean >= 0.24 and stability_mean < 0.42:
+                areal_label = "strain_areal"
+            elif activation_mean >= 0.55 and velocity_mean >= 0.22:
+                areal_label = "active_areal"
+            elif stability_mean >= 0.68 and density >= 0.52:
+                areal_label = "settled_areal"
+            elif conflict >= 0.28:
+                areal_label = "conflict_areal"
+
+            bounds_min = np.min(component_energy, axis=0)
+            bounds_max = np.max(component_energy, axis=0)
+
+            areal_states.append({
+                "areal_id": f"areal_{int(areal_index)}",
+                "member_indices": [int(item) for item in list(component_indices or [])],
+                "center": [float(round(value, 4)) for value in np.asarray(center, dtype=float).tolist()],
+                "mean_velocity_vector": [float(round(value, 4)) for value in np.asarray(mean_velocity_vector, dtype=float).tolist()],
+                "bounds_min": [float(round(value, 4)) for value in np.asarray(bounds_min, dtype=float).tolist()],
+                "bounds_max": [float(round(value, 4)) for value in np.asarray(bounds_max, dtype=float).tolist()],
+                "mass": int(len(component_indices)),
+                "density": float(round(density, 4)),
+                "activation_mean": float(round(activation_mean, 4)),
+                "stability_mean": float(round(stability_mean, 4)),
+                "pressure_mean": float(round(pressure_mean, 4)),
+                "memory_norm_mean": float(round(float(np.mean(memory_norm_values)) if memory_norm_values else 0.0, 4)),
+                "coupling_norm_mean": float(round(float(np.mean(coupling_norm_values)) if coupling_norm_values else 0.0, 4)),
+                "regulation_force_norm_mean": float(round(float(np.mean(regulation_norm_values)) if regulation_norm_values else 0.0, 4)),
+                "external_impulse_norm_mean": float(round(float(np.mean(external_norm_values)) if external_norm_values else 0.0, 4)),
+                "velocity_mean": float(round(velocity_mean, 4)),
+                "coherence": float(round(coherence, 4)),
+                "conflict": float(round(conflict, 4)),
+                "state_label": str(areal_label),
+            })
+
+        areal_links = []
+
+        for left_index, left_state in enumerate(list(areal_states or [])):
+            left_center = np.asarray(left_state.get("center", []), dtype=float)
+
+            for right_index in range(left_index + 1, len(areal_states)):
+                right_state = dict(areal_states[right_index] or {})
+                right_center = np.asarray(right_state.get("center", []), dtype=float)
+                if len(left_center) == 0 or len(right_center) == 0:
+                    continue
+
+                distance = float(np.linalg.norm(left_center - right_center))
+                if distance > (self.areal_radius * 3.2):
+                    continue
+
+                relation_label = "bridged"
+                if np.sign(left_center[0] if len(left_center) > 0 else 0.0) != np.sign(right_center[0] if len(right_center) > 0 else 0.0):
+                    relation_label = "counter_tension"
+                elif distance <= (self.areal_radius * 1.6):
+                    relation_label = "coupled"
+
+                areal_links.append({
+                    "source_areal_id": str(left_state.get("areal_id", f"areal_{left_index}")),
+                    "target_areal_id": str(right_state.get("areal_id", f"areal_{right_index}")),
+                    "distance": float(round(distance, 4)),
+                    "relation_label": str(relation_label),
+                })
+
+        areal_drift = 0.0
+        previous_centers = [np.asarray(item, dtype=float) for item in list(self._last_areal_centers or [])]
+        if current_centers and previous_centers:
+            drift_values = []
+            for center in list(current_centers or []):
+                distances_to_previous = [
+                    float(np.linalg.norm(np.asarray(center, dtype=float) - np.asarray(previous_center, dtype=float)))
+                    for previous_center in list(previous_centers or [])
+                ]
+                if distances_to_previous:
+                    drift_values.append(float(min(distances_to_previous)))
+            if drift_values:
+                areal_drift = float(np.mean(drift_values))
+
+        areal_count = int(len(areal_states))
+        dominance = float(max((float(item.get("mass", 0) or 0) / max(1, self.N)) for item in list(areal_states or []))) if areal_states else 0.0
+        fragmentation = float(min(1.0, areal_count / max(1.0, float(self.N) / max(1.0, float(self.areal_min_size)))))
+        areal_activation_mean = float(np.mean([float(item.get("activation_mean", 0.0) or 0.0) for item in list(areal_states or [])])) if areal_states else 0.0
+        areal_stability_mean = float(np.mean([float(item.get("stability_mean", 0.0) or 0.0) for item in list(areal_states or [])])) if areal_states else 0.0
+        areal_pressure_mean = float(np.mean([float(item.get("pressure_mean", 0.0) or 0.0) for item in list(areal_states or [])])) if areal_states else 0.0
+        areal_coherence_mean = float(np.mean([float(item.get("coherence", 0.0) or 0.0) for item in list(areal_states or [])])) if areal_states else 0.0
+        areal_conflict_mean = float(np.mean([float(item.get("conflict", 0.0) or 0.0) for item in list(areal_states or [])])) if areal_states else 0.0
+
+        self.areal_state = {
+            "areal_count": int(areal_count),
+            "areal_activation_mean": float(round(areal_activation_mean, 4)),
+            "areal_stability_mean": float(round(areal_stability_mean, 4)),
+            "areal_pressure_mean": float(round(areal_pressure_mean, 4)),
+            "areal_drift": float(round(areal_drift, 4)),
+            "areal_dominance": float(round(dominance, 4)),
+            "areal_fragmentation": float(round(fragmentation, 4)),
+            "areal_coherence_mean": float(round(areal_coherence_mean, 4)),
+            "areal_conflict_mean": float(round(areal_conflict_mean, 4)),
+            "areal_states": list(areal_states or []),
+            "areal_links": list(areal_links or []),
+        }
+        self._last_areal_centers = [np.asarray(item, dtype=float) for item in list(current_centers or [])]
+        return dict(self.areal_state or {})
+
+    # --------------------------------------------------
+    def _refresh_areal_state(self):
+        return self._build_areal_state()
 
     # --------------------------------------------------
     def read_snapshot(self):
@@ -171,6 +432,9 @@ class MCMField:
             "energy": np.asarray(self.energy, dtype=float).copy(),
             "velocity": np.asarray(self.velocity, dtype=float).copy(),
             "neurons": list(neuron_payload or []),
+            "areal_state": dict(self.areal_state or {}),
+            "areal_states": [dict(item or {}) for item in list((self.areal_state or {}).get("areal_states", []) or []) if isinstance(item, dict)],
+            "areal_links": [dict(item or {}) for item in list((self.areal_state or {}).get("areal_links", []) or []) if isinstance(item, dict)],
         }
 
     # --------------------------------------------------
@@ -200,6 +464,7 @@ class MCMField:
         self.energy = np.clip(np.asarray(self.energy, dtype=float), -self.max_abs_state, self.max_abs_state)
         self._sync_neurons_from_arrays()
         self._refresh_arrays_from_neurons()
+        self._refresh_areal_state()
         return self.read_snapshot()
 
 # --------------------------------------------------

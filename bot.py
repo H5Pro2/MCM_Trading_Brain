@@ -2295,6 +2295,15 @@ class Bot:
                     "pressure_to_capacity": 0.0,
                     "capacity_reserve": 0.0,
                     "recovery_balance": 0.0,
+                    "field_areal_count": 0.0,
+                    "field_areal_activation_mean": 0.0,
+                    "field_areal_stability_mean": 0.0,
+                    "field_areal_pressure_mean": 0.0,
+                    "field_areal_drift": 0.0,
+                    "field_areal_dominance": 0.0,
+                    "field_areal_fragmentation": 0.0,
+                    "field_areal_coherence_mean": 0.0,
+                    "field_areal_conflict_mean": 0.0,
                 },
                 "experience": {
                     "approach_pressure": 0.0,
@@ -2310,6 +2319,7 @@ class Bot:
             }
 
         tension_state = dict(getattr(self, "tension_state", {}) or {})
+        inner_field_state = dict(getattr(self, "inner_field_perception_state", {}) or {})
         regulatory_load = float(getattr(self, "regulatory_load", 0.0) or 0.0)
         action_capacity = float(getattr(self, "action_capacity", 0.0) or 0.0)
         recovery_need = float(getattr(self, "recovery_need", 0.0) or 0.0)
@@ -2365,6 +2375,15 @@ class Bot:
                 "pressure_to_capacity": float(pressure_to_capacity),
                 "capacity_reserve": float(capacity_reserve),
                 "recovery_balance": float(recovery_balance),
+                "field_areal_count": float(inner_field_state.get("field_areal_count", 0.0) or 0.0),
+                "field_areal_activation_mean": float(inner_field_state.get("field_areal_activation_mean", 0.0) or 0.0),
+                "field_areal_stability_mean": float(inner_field_state.get("field_areal_stability_mean", 0.0) or 0.0),
+                "field_areal_pressure_mean": float(inner_field_state.get("field_areal_pressure_mean", 0.0) or 0.0),
+                "field_areal_drift": float(inner_field_state.get("field_areal_drift", 0.0) or 0.0),
+                "field_areal_dominance": float(inner_field_state.get("field_areal_dominance", 0.0) or 0.0),
+                "field_areal_fragmentation": float(inner_field_state.get("field_areal_fragmentation", 0.0) or 0.0),
+                "field_areal_coherence_mean": float(inner_field_state.get("field_areal_coherence_mean", 0.0) or 0.0),
+                "field_areal_conflict_mean": float(inner_field_state.get("field_areal_conflict_mean", 0.0) or 0.0),
             },
             "experience": {
                 "approach_pressure": float(getattr(self, "approach_pressure", 0.0) or 0.0),
@@ -2401,6 +2420,15 @@ class Bot:
                 "pressure_to_capacity": float(after.get("field", {}).get("pressure_to_capacity", 0.0) - before.get("field", {}).get("pressure_to_capacity", 0.0)),
                 "capacity_reserve": float(after.get("field", {}).get("capacity_reserve", 0.0) - before.get("field", {}).get("capacity_reserve", 0.0)),
                 "recovery_balance": float(after.get("field", {}).get("recovery_balance", 0.0) - before.get("field", {}).get("recovery_balance", 0.0)),
+                "field_areal_count": float(after.get("field", {}).get("field_areal_count", 0.0) - before.get("field", {}).get("field_areal_count", 0.0)),
+                "field_areal_activation_mean": float(after.get("field", {}).get("field_areal_activation_mean", 0.0) - before.get("field", {}).get("field_areal_activation_mean", 0.0)),
+                "field_areal_stability_mean": float(after.get("field", {}).get("field_areal_stability_mean", 0.0) - before.get("field", {}).get("field_areal_stability_mean", 0.0)),
+                "field_areal_pressure_mean": float(after.get("field", {}).get("field_areal_pressure_mean", 0.0) - before.get("field", {}).get("field_areal_pressure_mean", 0.0)),
+                "field_areal_drift": float(after.get("field", {}).get("field_areal_drift", 0.0) - before.get("field", {}).get("field_areal_drift", 0.0)),
+                "field_areal_dominance": float(after.get("field", {}).get("field_areal_dominance", 0.0) - before.get("field", {}).get("field_areal_dominance", 0.0)),
+                "field_areal_fragmentation": float(after.get("field", {}).get("field_areal_fragmentation", 0.0) - before.get("field", {}).get("field_areal_fragmentation", 0.0)),
+                "field_areal_coherence_mean": float(after.get("field", {}).get("field_areal_coherence_mean", 0.0) - before.get("field", {}).get("field_areal_coherence_mean", 0.0)),
+                "field_areal_conflict_mean": float(after.get("field", {}).get("field_areal_conflict_mean", 0.0) - before.get("field", {}).get("field_areal_conflict_mean", 0.0)),
             },
             "experience": {
                 "approach_pressure": float(after.get("experience", {}).get("approach_pressure", 0.0) - before.get("experience", {}).get("approach_pressure", 0.0)),

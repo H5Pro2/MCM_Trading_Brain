@@ -136,6 +136,32 @@ Folge:
 ---
 
 # --------------------------------------------------
+# 3.2 MCMField-Speicherfehler im lokalen Nachbarschafts-/Arealaufbau schließen
+# --------------------------------------------------
+
+Bereits korrigiert im aktuellen Dateistand:
+
+- `_build_local_neighbor_state_map()` nutzt zeilenweise Distanzberechnung
+- der alte permanente `N x N x D`-Zwischenspeicher ist an dieser Stelle entfernt
+- lokale `N x K` Nachbarschaften bleiben erhalten
+- jedes Neuron erhält nur lokale Nachbarn als Kopplungsumfeld
+- der Feldzustand selbst bleibt als `N x D` erhalten
+
+Fachliche Bedeutung:
+
+- Neuronen dürfen denselben Umweltreiz wahrnehmen
+- sie sollen aber nicht alle global vom gesamten Feld gleichgeschaltet werden
+- lokale Eigenreaktion, Nachbarschaft, Kohärenz und Resonanz bilden die Informationsinseln
+
+Weiter zu prüfen:
+
+- `_build_areal_state()` muss bei größerer Agentenzahl weiter beobachtet werden
+- Areal-Distanzen sollen dauerhaft ohne speicherintensiven 3D-Deltablock bleiben
+- Arealbildung soll lokale Informationsinseln sichtbar machen, nicht globale Feldgleichschaltung erzeugen
+
+---
+
+# --------------------------------------------------
 # 4. PRIO 2 – STRUKTURELLE KORREKTUREN
 # --------------------------------------------------
 
@@ -176,41 +202,68 @@ Ziel:
 ---
 
 # --------------------------------------------------
-# 4.3 Innenkontextcluster als Innenfeldspeicher vertiefen
+# 4.3 Innenkontextcluster als Innenfeldspeicher und aktive Kontextspur vertiefen
 # --------------------------------------------------
+
+Teilweise umgesetzt:
+
+- der Innenraum wird real über `felt_state`, `thought_state`, `meta_regulation_state`, `expectation_state`, `state_before`, `state_after`, `state_delta` und `mcm_experience_space` getragen
+- `inner_context_clusters` sind im aktuellen Code formal vorhanden, werden aktualisiert und persistiert
+- Pattern-Verdichtung ist begonnen über `inner_pattern_support`, `inner_pattern_conflict`, `inner_pattern_fragility`, `inner_pattern_bearing`, `pattern_reinforcement` und `pattern_attenuation`
+- `active_context_trace` ist als Runtime-Nachhall eingeführt
+- aktive Kontextspur besitzt `activation`, Decay und Reaktivierung aus `inner_context_clusters`
+- aktive Kontextspur wirkt schwach auf Pattern-Modulation zurück
+- aktive Kontextspur wirkt schwach auf Replay-/Feldimpuls zurück
 
 Offen:
 
-- der Innenraum wird bereits real über `felt_state`, `thought_state`, `meta_regulation_state`, `expectation_state`, `state_before`, `state_after`, `state_delta` und `mcm_experience_space` getragen
-- `inner_context_clusters` sind im aktuellen Code bereits formal vorhanden, werden aktualisiert und persistiert
-- noch nicht erreicht ist der Endausbau zu einem tieferen Innenmuster- und Innenfeldspeicher für wiederkehrende innere Spannungs-, Drift-, Regulations- und Reorganisationsmuster
+- Rückführung in lokale `MCMNeuron.memory_trace` ist noch nicht umgesetzt
+- wiederkehrende Feldformen sind noch nicht als echte lokale Erfahrungsareale im Neuronenfeld verankert
+- Replay-Rückwirkung ist bewusst schwach begrenzt und noch kein lokaler Erfahrungsumbau
+
+Ergänzte Zieldefinition:
+
+- Informationscluster werden nicht durch Felddruck gelöscht
+- Felddruck verändert Priorität, Aktivierung und Zugänglichkeit
+- nicht genutzte oder nicht mehr resonante Information verliert aktive Bindungsstärke
+- diese Information bleibt als Nachhall oder latente Erfahrung reaktivierbar
+- dadurch wird lokaler Organisationsraum frei für neue Clusterbildung
+- Reorganisation bedeutet Informationsumschichtung statt Informationsverlust
+- Kohärenzstärke beschreibt Verdichtung, Tragfähigkeit und aktuelle Bindung eines Clusters
+- GUI-Farben sollen später diese Kohärenzstärke und den Clusterzustand sichtbar machen
 
 Ziel:
 
 - `context_clusters` als äußerer / gesamt-situativer Signaturraum klar halten
 - `inner_context_clusters` fachlich davon getrennt als Innenmuster- / Innenfeldspeicher vertiefen
+- aktive Kontextspur im Replay-/Feldimpuls weiter kontrolliert beobachten und begrenzen
 - Vermeidungs-, Entlastungs-, Reorganisations- und Wiedererkennungslernen sauber auf Innenmuster abbilden
+- Clusterzustände als aktiv getragen, nachhallend, latent oder frei werdend unterscheidbar machen
 
 ---
 
 # --------------------------------------------------
-# 4.4 Experience-Bewertungslogik auf Zustandswirkung umstellen
+# 4.4 Experience-Bewertungslogik weiter auf Zustandswirkung umstellen
 # --------------------------------------------------
+
+Teilweise umgesetzt:
+
+- `_experience_reward_delta()` nutzt bereits `state_support` und `state_strain` als Bewertungszentrum
+- Areal-Stütze, Areal-Konflikt, Felt-Bearing und Regulationskosten laufen bereits in die Bewertung ein
+- formale Outcomes wirken im aktuellen Code stärker als Ereigniskontext und weniger als alleinige Bewertung
 
 Offen:
 
-- `_experience_reward_delta()` verzweigt weiterhin direkt über `tp_hit`, `sl_hit`, `cancel`, `timeout` und ähnliche Outcome-Wege
-- Outcome-Gewicht ist damit reduziert, aber noch nicht weit genug zurückgebaut
-- Experience bewertet bereits Teile von `state_delta`, aber das formale Ergebnis dominiert fachlich noch zu stark
-- lokale Rückführung auf `inner_context_clusters`, Feldmuster und neuronale Teilträger wäre so noch zu stark von Ergebnisetiketten geprägt
-- Nicht-Handlung, Cancel oder Timeout können regulatorisch sinnvoll sein, werden aber noch nicht konsequent primär als Zustandswirkung behandelt
+- `tp_hit`, `sl_hit`, `cancel`, `timeout` sind weiterhin im Bewertungsfluss sichtbar
+- aktive Kontextspur / Nachhall ist noch nicht als eigener Experience-Wirkraum vorhanden
+- lokale Rückführung auf `inner_context_clusters`, Feldmuster und neuronale Teilträger darf erst nach stabilerer Zustandswirkungslogik tiefer erfolgen
 
 Ziel:
 
 - Experience bewertet primär `state_before`, `state_after`, `state_delta` und Tragfähigkeitswirkung
 - `tp_hit`, `sl_hit`, `cancel`, `timeout` bleiben nur Ereigniskontext
 - positive und negative Rückführung entsteht aus Belastung, Entlastung, Stabilisierung, Fragilisierung und Handlungsfähigkeit
-- lokale Rückführung auf Innenmuster, `inner_context_clusters` und neuronale Teilträger erfolgt erst auf dieser Grundlage
+- aktive Kontextspuren verstärken oder schwächen sich aus Wiedererkennung und Zustandswirkung, nicht aus starren Ergebnisetiketten
 - Lernen wird dadurch sauberer als Umgangsfähigkeit statt Ergebnisreflex modelliert
 
 ---
@@ -316,68 +369,3 @@ Noch offen:
 ---
 
 # --------------------------------------------------
-# 6. AUS DER ALTEN OFFEN-LISTE ENTFERNEN
-# --------------------------------------------------
-
-Nicht mehr als offene Fix-Punkte führen:
-
-- `2.1 state_delta korrigieren`
-- `2.2 Statistik-Semantik korrigieren`
-- `2.3 structure_bands / Exit-Strukturdiagnose korrigieren`
-- `2.4 attempt_feedback / proof-Felder korrigieren`
-- äußere Wahrnehmungsbasis
-- MCM-Runtime-Grundmechanik
-- Entscheidungstendenz
-- Action-Intent- / Execution-State-Grundmechanik
-- technische Handlungsbahn
-- Nicht-Handlung als echter Pfad
-- Episode / Review / Experience-Basis
-- Persistenz-Grundmechanik
-- Snapshot-/GUI-Basis
-- GUI-Datenpufferung
-
----
-
-# --------------------------------------------------
-# 7. PRIORISIERTE REIHENFOLGE
-# --------------------------------------------------
-
-# --------------------------------------------------
-# PRIO 1
-# --------------------------------------------------
-
-- Live-Handoff zwischen Pending, Fill und Position im Bot-Nachweisraum schließen
-
-# --------------------------------------------------
-# PRIO 2
-# --------------------------------------------------
-
-- Persistenz weiter entkoppeln
-- Runtime / Bot-State weiter trennen
-- Experience-Bewertungslogik primär auf Zustandswirkung umstellen
-- `inner_context_clusters` als Innenmuster- / Innenfeldspeicher ausbauen
-- MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
-
-# --------------------------------------------------
-# PRIO 3
-# --------------------------------------------------
-
-- Review / Cluster-Bewertung nach der Zustandswirkungs-Umstellung nachziehen
-- KPI / Auswertung umbauen
-- GUI / Visualisierung weiter umbauen
-- dedizierte Tests ergänzen
-
----
-
-# --------------------------------------------------
-# 8. AKTUELLER KERNSATZ
-# --------------------------------------------------
-
-Offen ist nicht mehr die alte PRIO-1-Basisliste.
-
-Offen sind jetzt:
-
-- ein Restpunkt im Live-/Nachweisraum
-- danach der Architektur-Endausbau
-- darin ausdrücklich die Umstellung der Experience-Bewertung auf Zustandswirkung
-- danach der fachliche Ausbau von Review, KPI und Visualisierung

@@ -202,13 +202,33 @@ Episode / Experience führen bereits:
 
 Damit ist die Kopplung von Handlung / Nicht-Handlung und Zustandsveränderung bereits real umgesetzt.
 
-### Innenkontextcluster sind formal begonnen
+### Innenkontextcluster und Pattern-Verdichtung sind begonnen
 
 `inner_context_clusters` sind im aktuellen Code nicht mehr nur Zielidee,
 sondern bereits in `Bot`, Experience-Aktualisierung und Memory-State verankert.
 
-Noch nicht erreicht ist aber der Endausbau
-zu einem tieferen Innenmuster- und Innenfeldspeicher.
+Zusätzlich sind im aktuellen Stand Pattern-Werte vorhanden:
+
+- `inner_pattern_support`
+- `inner_pattern_conflict`
+- `inner_pattern_fragility`
+- `inner_pattern_bearing`
+- `pattern_reinforcement`
+- `pattern_attenuation`
+- `pattern_action_support`
+- `pattern_observe_pressure`
+- `pattern_replan_pressure`
+
+Neu ergänzt ist eine erste aktive Kontextspur:
+
+- `active_context_trace`
+- `activation`
+- Decay pro Runtime-Tick
+- Reaktivierung aus `inner_context_clusters`
+- schwache Rückwirkung auf Pattern-Modulation
+- schwache Rückwirkung auf Replay-/Feldimpuls
+
+Noch nicht erreicht ist die tiefe lokale Rückstreuung bis in `MCMNeuron.memory_trace`.
 
 ---
 
@@ -343,6 +363,32 @@ Folge:
 # --------------------------------------------------
 
 # --------------------------------------------------
+# 4.0 MCMField-Speicherfehler im lokalen Nachbarschaftsaufbau ist korrigiert
+# --------------------------------------------------
+
+Real vorhanden:
+
+- `MCM_KI_Modell.py` führt den Feldzustand weiterhin als mehrdimensionales `N x D`
+- `_build_local_neighbor_state_map()` berechnet Nachbarschaften zeilenweise pro Neuron
+- der alte permanente `N x N x D`-Deltablock ist im lokalen Nachbarschaftsaufbau entfernt
+- weitergegeben werden nur lokale Nachbarn, nicht das gesamte Feld als globaler Neuroneneinfluss
+
+Fachliche Bedeutung:
+
+- alle Neuronen können denselben Umweltreiz wahrnehmen
+- informationsbildend ist aber ihre lokale Eigenreaktion
+- lokale Nachbarschaft, Kopplung, Kohärenz und Resonanz können Informationsinseln bilden
+- Cluster sollen dadurch nicht aus globalem Gleichschalten entstehen, sondern aus lokaler Feldorganisation
+
+Weiter zu beobachten:
+
+- `_build_areal_state()` arbeitet noch mit `N x N`-Distanzen
+- das ist kein `N x N x D`-Deltablock, bleibt aber bei hoher Agentenzahl ein Optimierungspunkt
+- Arealbildung soll dauerhaft lokal begrenzt bleiben und keine globale Speicherexplosion erzeugen
+
+---
+
+# --------------------------------------------------
 # 4.1 Live-Handoff zwischen Pending, Fill und Position ist noch nicht vollständig geschlossen
 # --------------------------------------------------
 
@@ -360,26 +406,47 @@ Folge:
 ---
 
 # --------------------------------------------------
-# 4.2 Innenkontextcluster sind formal begonnen, aber noch nicht tief genug ausgebaut
+# 4.2 Innenkontextcluster sind formal und als Pattern-Verdichtung begonnen, aber noch nicht aktiv genug
 # --------------------------------------------------
+
+Real vorhanden:
+
+- `inner_context_clusters` sind bereits real in `Bot`, Experience-Aktualisierung und Persistenz verankert
+- die Trennung von `context_clusters` und `inner_context_clusters` ist fachlich begonnen
+- Pattern-Verdichtung ist real begonnen über Support, Conflict, Fragility, Bearing, Reinforcement und Attenuation
+- Pattern-Werte wirken bereits in Review-Feedback, Runtime-Meta-Regulation und Entscheidungstendenz hinein
+
+Neu real vorhanden:
+
+- `active_context_trace` ist als Runtime-Zustand eingeführt
+- aktive Kontextspur wird aus `inner_context_clusters` reaktiviert
+- `activation` klingt pro Runtime-Tick ab
+- Pattern-Werte werden schwach über aktive Kontextspur moduliert
+- Runtime-Snapshot führt `active_context_trace` mit
 
 Real offen:
 
-- `inner_context_clusters` sind bereits real in `Bot`, Experience-Aktualisierung und Persistenz verankert
-- sie sind aber noch nicht als tiefer Innenmuster-, Innenfeld- und Reorganisationsspeicher ausgebaut
-- die Trennung von `context_clusters` und `inner_context_clusters` ist fachlich begonnen, aber noch nicht vollständig durchgezogen
-- wiederkehrende innere Spannungs-, Drift- und Regulationsmuster sind damit noch nicht als eigenständiger Erfahrungsraum ausgereift
+- lokale Rückführung in `MCMNeuron.memory_trace` ist noch nicht umgesetzt
+- Nachhall ist aktuell Runtime-/Pattern-/Replay-Modulation, noch keine tiefe lokale Feldplastizität
+- Replay-Rückwirkung ist bewusst schwach begrenzt und noch kein lokaler Erfahrungsumbau
 
-Folge:
+Fachlich ergänzt:
 
-- der Innenraum ist schon stärker als eigener Erfahrungsraum angelegt
-- aber noch nicht in der Tiefe stabilisiert, die für echte Zustandsidentität und Innenmusterlernen nötig ist
+- Informationscluster sollen nicht durch Felddruck gelöscht werden
+- Felddruck verändert Priorität, Aktivierung und Zugänglichkeit von Information
+- nicht getragene Information verliert aktive Bindungsstärke und geht in Nachhall oder Latenz über
+- dadurch wird lokaler Organisationsraum frei, ohne gespeicherte Erfahrung zu vernichten
+- Reorganisation bedeutet Informationsumschichtung, nicht Blackout
+- Kohärenzstärke beschreibt, wie verdichtet und tragfähig ein Cluster aktuell getragen wird
+- diese Kohärenzstärke soll später farblich in der GUI sichtbar werden
 
 Ziel:
 
 - `context_clusters` als äußerer / gesamt-situativer Signaturraum klar halten
 - `inner_context_clusters` als wiederkehrenden Innenmusterraum weiter ausbauen
+- aktive Kontextspur im Replay-/Feldimpuls weiter kontrolliert beobachten und begrenzen
 - Vermeidungs-, Entlastungs-, Reorganisations- und Tragfähigkeitslernen sauber auf Innenmuster legen
+- Clusterzustände als aktiv getragen, nachhallend, latent oder frei werdend unterscheidbar machen
 
 ---
 
@@ -528,8 +595,8 @@ Die sinnvollste Reihenfolge ab jetzt ist:
 
 1. Live-Handoff `pending -> filled -> position` im Bot-/Episode-/Stats-Raum schließen
 2. Persistenz weiter entkoppeln und Runtime / Bot-State weiter trennen
-3. `inner_context_clusters` als Innenmusterraum weiter ausbauen
-4. Experience-Bewertungslogik primär auf Zustandswirkung umstellen
+3. `active_context_trace` Richtung Replay-/Feldimpuls prüfen
+4. Experience-Bewertungslogik primär auf Zustandswirkung und Nachhall-Wirkung umstellen
 5. MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher weiter ausbauen
 6. erst danach lokale Erfahrungsrückwirkung tiefer an Innenmuster und neuronale Teilträger legen
 
@@ -543,30 +610,3 @@ Die sinnvollste Reihenfolge ab jetzt ist:
 Der Bot steht nicht mehr am Anfang.
 
 Die Basismechanik,
-die äußere Wahrnehmung,
-die innere Runtime,
-die Entscheidungstendenz,
-die technische Handlungsbahn,
-die Experience-Ebene
-und die Persistenz sind real vorhanden.
-
-Die früheren Kernkorrekturen
-`state_delta`,
-`Statistik-Semantik`,
-`structure_bands`
-und `attempt_feedback / proof-Felder`
-sind im aktuellen Code bereits umgesetzt.
-
-`inner_context_clusters` sind im aktuellen Stand
-bereits formal im System verankert,
-aber noch nicht als tiefer Innenmuster- und Innenfeldspeicher ausgebaut.
-
-Offen sind jetzt nicht mehr die alten Basisfehler,
-sondern:
-
-- der noch unvollständige Live-Nachweisraum
-- die weitere Entkopplung von Persistenz sowie Runtime / Bot-State
-- der weitere Ausbau von `inner_context_clusters` als Innenmusterraum
-- die Umstellung von Experience auf primäre Zustandswirkungsbewertung
-- der Ausbau von Feldtopologie, Feldverlauf und Innenfeldspeicher
-- danach die tiefere lokale Erfahrungsrückwirkung auf Innenmuster und neuronale Teilträger
