@@ -2,7 +2,7 @@
 
 ![alt text](files/MCM_Trading_Brain.png)
 
-MCM Trading Brain ist ein experimentelles Trading-System mit MCM-Architektur.
+MCM Trading Brain ist ein experimentelles Trading-System mit [MCM-Architektur](https://github.com/H5Pro2/Mental-Core-Matrix-MCM).
 
 Ziel ist **nicht** ein klassischer Signal-Bot mit starren Regeln und festen Handelsfreigaben.  
 Ziel ist ein System, das:
@@ -360,6 +360,25 @@ Das heißt:
 - formal begonnen
 - fachlich wichtig
 - architektonisch noch nicht Endzustand
+
+### Informationscluster / Kohärenz / Reorganisation
+
+Informationscluster sind im Zielsystem keine starren Speicherblöcke.
+Sie sind lokale Informationsinseln im Innenfeld.
+
+Wichtig:
+
+- der Feldzustand bleibt als `N x D` erhalten
+- Nachbarschaft wird pro Neuron lokal gebildet
+- weitergegeben werden nur lokale Nachbarn
+- Felddruck löscht keine gespeicherte Information
+- nicht getragene Information verliert aktive Bindungsstärke
+- diese Information geht in Nachhall oder Latenz über
+- dadurch wird lokaler Organisationsraum für neue Clusterbildung frei
+- Reorganisation bedeutet Informationsumschichtung, nicht Informationsverlust
+- Kohärenzstärke beschreibt Verdichtung, Tragfähigkeit und aktuelle Bindung eines Clusters
+
+Diese Kohärenzstärke soll später in der GUI farblich sichtbar werden.
 
 ---
 
