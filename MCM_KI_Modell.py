@@ -183,25 +183,34 @@ class MCMField:
         return neighbor_state_map
 
     # --------------------------------------------------
-    def _build_areal_components(self, distances):
+    def _build_areal_components(self, energy):
 
-        if len(distances) <= 1:
+        energy = np.asarray(energy, dtype=float)
+
+        if energy.ndim != 2 or len(energy) <= 1:
             return []
 
+        agent_count = min(int(self.N), int(len(energy)))
         radius = max(float(self.areal_radius or 0.78), 1e-9)
         expanded_radius = radius * 1.35
-        local_neighbors = max(1, int(self.local_neighbor_count or 1))
-        adjacency = {index: set() for index in range(self.N)}
+        local_neighbors = max(1, min(agent_count - 1, int(self.local_neighbor_count or 1)))
+        adjacency = {index: set() for index in range(agent_count)}
 
-        for index in range(self.N):
-            order = np.argsort(distances[index])
+        for index in range(agent_count):
+            local_delta = energy[:agent_count] - energy[int(index)]
+            local_distances = np.linalg.norm(local_delta, axis=1)
+            local_distances[int(index)] = np.inf
+            order = np.argsort(local_distances)
             selected_neighbors = []
 
             for neighbor_index in list(order):
                 if int(neighbor_index) == int(index):
                     continue
 
-                distance = float(distances[index, int(neighbor_index)])
+                distance = float(local_distances[int(neighbor_index)])
+                if not np.isfinite(distance):
+                    continue
+
                 if distance <= radius:
                     selected_neighbors.append(int(neighbor_index))
                 elif len(selected_neighbors) < local_neighbors and distance <= expanded_radius:
@@ -216,7 +225,7 @@ class MCMField:
         components = []
         visited = set()
 
-        for start_index in range(self.N):
+        for start_index in range(agent_count):
             if start_index in visited:
                 continue
 
@@ -264,20 +273,27 @@ class MCMField:
             return dict(self.areal_state or {})
 
         agent_count = int(len(energy))
-        distances = np.zeros((agent_count, agent_count), dtype=float)
-        for index in range(agent_count):
-            local_delta = energy - energy[int(index)]
-            distances[int(index)] = np.linalg.norm(local_delta, axis=1)
 
-        components = self._build_areal_components(distances)
+        if velocity.ndim != 2 or len(velocity) < agent_count:
+            repaired_velocity = np.zeros((agent_count, energy.shape[1]), dtype=float)
+            if velocity.size > 0 and velocity.ndim == 2:
+                rows = min(int(len(velocity)), agent_count)
+                cols = min(int(velocity.shape[1]), int(energy.shape[1]))
+                if rows > 0 and cols > 0:
+                    repaired_velocity[:rows, :cols] = velocity[:rows, :cols]
+            velocity = repaired_velocity
+
+        components = self._build_areal_components(energy)
         areal_states = []
         current_centers = []
 
         for areal_index, component in enumerate(list(components or [])):
-            component_indices = [int(item) for item in list(component or [])]
+            component_indices = [int(item) for item in list(component or []) if 0 <= int(item) < agent_count]
+            if len(component_indices) <= 0:
+                continue
+
             component_energy = np.asarray(energy[component_indices], dtype=float)
             component_velocity = np.asarray(velocity[component_indices], dtype=float)
-            component_distances = np.asarray(distances[np.ix_(component_indices, component_indices)], dtype=float)
 
             activation_values = []
             stability_values = []
@@ -301,8 +317,7 @@ class MCMField:
             mean_velocity_vector = np.mean(component_velocity, axis=0)
             current_centers.append(np.asarray(center, dtype=float))
 
-            upper_triangle = component_distances[np.triu_indices(len(component_indices), k=1)]
-            mean_internal_distance = float(np.mean(upper_triangle)) if upper_triangle.size > 0 else 0.0
+            mean_internal_distance = self._build_component_internal_distance_mean(component_energy)
             density = float(max(0.0, min(1.0, 1.0 - (mean_internal_distance / max(self.areal_radius * 1.35, 1e-9)))))
             activation_mean = float(np.mean(activation_values)) if activation_values else 0.0
             stability_mean = float(np.mean(stability_values)) if stability_values else 0.0
@@ -419,6 +434,65 @@ class MCMField:
         return self._build_areal_state()
 
     # --------------------------------------------------
+    def _build_context_memory_vector(self, context_trace):
+
+        item = dict(context_trace or {})
+
+        try:
+            activation = float(item.get("activation", 0.0) or 0.0)
+        except Exception:
+            activation = 0.0
+
+        activation = max(0.0, min(1.0, activation))
+        if activation <= 0.001:
+            return np.zeros(self.D, dtype=float)
+
+        support = max(0.0, min(1.0, float(item.get("support", 0.0) or 0.0)))
+        conflict = max(0.0, min(1.0, float(item.get("conflict", 0.0) or 0.0)))
+        fragility = max(0.0, min(1.0, float(item.get("fragility", 0.0) or 0.0)))
+        bearing = max(0.0, min(1.0, float(item.get("bearing", 0.0) or 0.0)))
+        action_support = max(0.0, min(1.0, float(item.get("action_support", 0.0) or 0.0)))
+        observe_pressure = max(0.0, min(1.0, float(item.get("observe_pressure", 0.0) or 0.0)))
+        replan_pressure = max(0.0, min(1.0, float(item.get("replan_pressure", 0.0) or 0.0)))
+        reinforcement = max(0.0, min(1.0, float(item.get("reinforcement", 0.0) or 0.0)))
+        attenuation = max(0.0, min(1.0, float(item.get("attenuation", 0.0) or 0.0)))
+
+        scale = max(0.0, min(0.08, float(getattr(Config, "MCM_NEURON_CONTEXT_MEMORY_SCALE", 0.035) or 0.035)))
+        vector = np.zeros(self.D, dtype=float)
+
+        if self.D > 0:
+            vector[0] = (support + bearing + reinforcement - conflict - fragility - attenuation) * activation * scale
+
+        if self.D > 1:
+            vector[1] = (action_support + bearing + reinforcement - observe_pressure - replan_pressure) * activation * scale
+
+        if self.D > 2:
+            vector[2] = (conflict + fragility + attenuation - support - bearing) * activation * scale
+
+        return np.asarray(vector, dtype=float)
+
+    # --------------------------------------------------
+    def _build_local_context_memory_impulse(self, context_trace, neuron):
+
+        base_vector = self._build_context_memory_vector(context_trace)
+
+        if base_vector.size <= 0 or not np.any(base_vector):
+            return np.zeros(self.D, dtype=float)
+
+        local_state = np.asarray(getattr(neuron, "state", np.zeros(self.D, dtype=float)), dtype=float)
+        local_memory = np.asarray(getattr(neuron, "memory_trace", np.zeros(self.D, dtype=float)), dtype=float)
+
+        local_activity = float(np.mean(np.abs(local_state))) if local_state.size > 0 else 0.0
+        local_trace = float(np.linalg.norm(local_memory)) if local_memory.size > 0 else 0.0
+        local_activation = float(getattr(neuron, "activation", 0.0) or 0.0)
+        local_pressure = float(getattr(neuron, "regulation_pressure", 0.0) or 0.0)
+
+        resonance = (local_activation * 0.32) + (local_pressure * 0.24) + (local_activity * 0.28) + (local_trace * 0.16)
+        resonance = max(0.12, min(1.0, float(resonance)))
+
+        return np.asarray(base_vector, dtype=float) * float(resonance)
+
+    # --------------------------------------------------
     def read_snapshot(self):
 
         neuron_payload = []
@@ -444,6 +518,7 @@ class MCMField:
         motivation_impulse=0.0,
         risk_impulse=0.0,
         replay_impulse=None,
+        context_trace=None,
     ):
 
         self._propagate_runtime_parameters()
@@ -458,6 +533,7 @@ class MCMField:
                 replay_impulse=replay_impulse,
                 motivation_impulse=motivation_impulse,
                 risk_impulse=risk_impulse,
+                context_memory_impulse=self._build_local_context_memory_impulse(context_trace, neuron),
             )
 
         self._refresh_arrays_from_neurons()
@@ -466,7 +542,29 @@ class MCMField:
         self._refresh_arrays_from_neurons()
         self._refresh_areal_state()
         return self.read_snapshot()
+    
+    # --------------------------------------------------
+    def _build_component_internal_distance_mean(self, component_energy):
 
+        values = np.asarray(component_energy, dtype=float)
+
+        if values.ndim != 2 or len(values) <= 1:
+            return 0.0
+
+        distances = []
+
+        for index in range(len(values)):
+            if int(index) + 1 >= len(values):
+                continue
+
+            local_delta = values[int(index) + 1:] - values[int(index)]
+            if len(local_delta) <= 0:
+                continue
+
+            distances.extend(np.linalg.norm(local_delta, axis=1).tolist())
+
+        return float(np.mean(distances)) if distances else 0.0
+    
 # --------------------------------------------------
 # Clusterbildung
 # --------------------------------------------------
@@ -721,6 +819,7 @@ class MCMNeuron:
 
         self.last_external_impulse = np.zeros(self.dims, dtype=float)
         self.last_memory_impulse = np.zeros(self.dims, dtype=float)
+        self.last_context_memory_impulse = np.zeros(self.dims, dtype=float)
         self.last_coupling_force = np.zeros(self.dims, dtype=float)
         self.last_regulation_force = np.zeros(self.dims, dtype=float)
 
@@ -816,6 +915,7 @@ class MCMNeuron:
             "regulation_pressure": float(round(self.regulation_pressure, 4)),
             "external_impulse": [float(round(v, 4)) for v in self.last_external_impulse.tolist()],
             "memory_impulse": [float(round(v, 4)) for v in self.last_memory_impulse.tolist()],
+            "context_memory_impulse": [float(round(v, 4)) for v in self.last_context_memory_impulse.tolist()],
             "coupling_force": [float(round(v, 4)) for v in self.last_coupling_force.tolist()],
             "regulation_force": [float(round(v, 4)) for v in self.last_regulation_force.tolist()],
         }
@@ -828,6 +928,7 @@ class MCMNeuron:
         replay_impulse=None,
         motivation_impulse=0.0,
         risk_impulse=0.0,
+        context_memory_impulse=None,
     ):
         external_vector = self._resolve_impulse_vector(
             impulse=external_impulse,
@@ -839,9 +940,15 @@ class MCMNeuron:
             motivation_impulse=0.0,
             risk_impulse=0.0,
         )
+        context_memory_vector = self._resolve_impulse_vector(
+            impulse=context_memory_impulse,
+            motivation_impulse=0.0,
+            risk_impulse=0.0,
+        )
 
         self.last_external_impulse = np.asarray(external_vector, dtype=float)
         self.last_memory_impulse = np.asarray(replay_vector, dtype=float)
+        self.last_context_memory_impulse = np.asarray(context_memory_vector, dtype=float)
 
         coupling_force = self._build_coupling_force(neighbor_states)
         regulation_force = self._build_regulation_force()
@@ -850,7 +957,7 @@ class MCMNeuron:
         self.last_regulation_force = np.asarray(regulation_force, dtype=float)
 
         total_impulse = external_vector + replay_vector
-        memory_feedback = self._update_memory_trace(total_impulse) * 0.35
+        memory_feedback = self._update_memory_trace(total_impulse + context_memory_vector) * 0.35
         noise = np.random.randn(self.dims) * float(self.noise_strength)
 
         self.velocity = (self.velocity * self.inertia) + coupling_force + regulation_force + total_impulse + memory_feedback + noise

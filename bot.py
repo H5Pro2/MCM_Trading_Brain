@@ -55,11 +55,16 @@ class Bot:
             snapshot = get_active_order_snapshot()
 
         if snapshot:
-            self._apply_restart_recovery_snapshot(
+            recovered = self._apply_restart_recovery_snapshot(
                 snapshot,
             )
 
-        return bool(snapshot)
+            if recovered:
+                self._save_memory_state(force=True)
+
+            return bool(recovered)
+
+        return False
     # --------------------------------------------------    
     def start_runtime_thread(self):
 
@@ -1195,6 +1200,7 @@ class Bot:
         fill_risk = abs(float(entry_price) - float(sl_price))
 
         position_context = dict(position_meta or {})
+        position_context["handoff_reason"] = str(reason or "pending_fill_handoff")
         position_context["felt_bearing_score"] = float(position_context.get("felt_bearing_score", 0.0) or 0.0)
         position_context["felt_profile_label"] = str(position_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear")
         position_context["bearing_context"] = dict(position_context.get("bearing_context", {}) or {})
@@ -1698,6 +1704,21 @@ class Bot:
                 if live_entry_ts is None:
                     live_entry_ts = last.get("timestamp")
 
+                live_position_meta = dict(pending_meta or {})
+                live_position_meta["live_handoff"] = {
+                    "source": str(live_source or "position_context"),
+                    "order_id": self.pending_entry.get("order_id"),
+                    "pending_order_id": self.pending_entry.get("order_id"),
+                    "snapshot_id": live_snapshot.get("id"),
+                    "pending_side": str(side),
+                    "snapshot_side": str(live_snapshot.get("side", side) or side),
+                    "entry": float(live_entry_price),
+                    "tp": float(live_tp_price),
+                    "sl": float(live_sl_price),
+                    "entry_ts": live_entry_ts,
+                }
+                live_position_meta["execution_source"] = "live_position_context"
+
                 return self._finalize_pending_fill_handoff(
                     side=str(live_snapshot.get("side", side) or side),
                     entry_price=float(live_entry_price),
@@ -1705,7 +1726,7 @@ class Bot:
                     sl_price=float(live_sl_price),
                     entry_ts=live_entry_ts,
                     order_id=self.pending_entry.get("order_id"),
-                    position_meta=dict(pending_meta or {}),
+                    position_meta=dict(live_position_meta or {}),
                     reason="live_fill_handoff",
                 )
 
@@ -2489,11 +2510,35 @@ class Bot:
         if entry is None or tp_value is None or sl_value is None:
             return False
 
+        restart_state_before = bot._build_regulation_state_snapshot()
         risk = abs(entry - sl_value)
+        restart_entry_ts = snapshot.get("entry_ts")
+
+        if restart_entry_ts is None:
+            restart_entry_ts = getattr(bot, "current_timestamp", None)
+
+        if restart_entry_ts is None:
+            restart_entry_ts = int(time.time() * 1000)
+
+        restart_meta = {
+            "felt_bearing_score": 0.0,
+            "felt_profile_label": "mixed_unclear",
+            "episode_felt_summary": {},
+            "bearing_context": {},
+            "restart_recovery": True,
+            "recovery_source": str(snapshot_source or "unknown"),
+            "recovery_snapshot": dict(snapshot or {}),
+        }
 
         if snapshot_source == "open_order":
             print("RESTART RECOVERY → PENDING ORDER FOUND")
 
+            bot.execution_state = {
+                **dict(getattr(bot, "execution_state", {}) or {}),
+                "execution_phase": "pending_recovered",
+                "execution_ready": True,
+                "execution_blocked": False,
+            }
             bot.pending_entry = {
                 "side": snapshot.get("side"),
                 "entry": entry,
@@ -2503,17 +2548,35 @@ class Bot:
                 "order_id": snapshot.get("id"),
                 "created_index": 0,
                 "max_wait_bars": int(getattr(Config, "PENDING_ENTRY_MAX_WAIT_BARS", 20) or 20),
-                "meta": {
-                    "felt_bearing_score": 0.0,
-                    "felt_profile_label": "mixed_unclear",
-                    "episode_felt_summary": {},
-                    "bearing_context": {},
-                    "restart_recovery": True,
-                },
+                "meta": dict(restart_meta or {}),
             }
+            restart_state_after = bot._build_regulation_state_snapshot()
+            restart_state_delta = bot._build_regulation_state_delta(
+                restart_state_before,
+                restart_state_after,
+            )
+            mark_runtime_episode_event(
+                bot,
+                "pending_update",
+                {
+                    "pending_entry": dict(bot.pending_entry or {}),
+                    "reason": "restart_pending_recovery",
+                    "recovery_source": str(snapshot_source or "open_order"),
+                    "recovery_snapshot": dict(snapshot or {}),
+                    "state_before": dict(restart_state_before or {}),
+                    "state_after": dict(restart_state_after or {}),
+                    "state_delta": dict(restart_state_delta or {}),
+                },
+            )
         else:
             print("RESTART RECOVERY → ACTIVE POSITION FOUND")
 
+            bot.execution_state = {
+                **dict(getattr(bot, "execution_state", {}) or {}),
+                "execution_phase": "position_recovered",
+                "execution_ready": True,
+                "execution_blocked": False,
+            }
             bot.position = {
                 "side": snapshot.get("side"),
                 "entry": entry,
@@ -2523,17 +2586,32 @@ class Bot:
                 "mae": 0.0,
                 "risk": risk,
                 "order_id": snapshot.get("id"),
-                "entry_ts": snapshot.get("entry_ts"),
+                "entry_ts": restart_entry_ts,
                 "entry_index": None,
-                "last_checked_ts": snapshot.get("entry_ts"),
-                "meta": {
-                    "felt_bearing_score": 0.0,
-                    "felt_profile_label": "mixed_unclear",
-                    "episode_felt_summary": {},
-                    "restart_recovery": True,
-                },
+                "last_checked_ts": restart_entry_ts,
+                "meta": dict(restart_meta or {}),
             }
+            restart_state_after = bot._build_regulation_state_snapshot()
+            restart_state_delta = bot._build_regulation_state_delta(
+                restart_state_before,
+                restart_state_after,
+            )
+            mark_runtime_episode_event(
+                bot,
+                "position_update",
+                {
+                    "position": dict(bot.position or {}),
+                    "reason": "restart_position_recovery",
+                    "recovery_source": str(snapshot_source or "position_context"),
+                    "recovery_snapshot": dict(snapshot or {}),
+                    "state_before": dict(restart_state_before or {}),
+                    "state_after": dict(restart_state_after or {}),
+                    "state_delta": dict(restart_state_delta or {}),
+                },
+            )
 
+        bot._mark_memory_state_dirty()
+        bot._commit_regulation_state_snapshot(restart_state_after)
         return True
     # --------------------------------------------------  
     def _build_inner_pipeline_snapshot(self):

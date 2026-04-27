@@ -376,6 +376,16 @@ def place_order(order_type, price, amount, open_orders=None, tp=None, sl=None, p
     # sobald wir hier sind, ist Verbindung wieder da (best effort)
     of._CONNECTION_OK = True
 
+    # ----------------------------------------------------------------------------------------------------
+    # Params / Context vorbereiten
+    # ----------------------------------------------------------------------------------------------------
+    params_ = dict(params or {})
+
+    context_entry_reference = params_.pop("_entry_reference", price)
+    context_entry_distance = params_.pop("_entry_distance", 0.0)
+    context_risk_reference = params_.pop("_risk_reference", abs(float(price) - float(sl)) if sl is not None else 0.0)
+    context_entry_validity_band = dict(params_.pop("_entry_validity_band", {}) or {})
+
     # falls nach Restart Position offen erkannt wurde: fail-safe block
     if of._POSITION_OPEN is True:
         gate_debug("⚠️ place_order blockiert: POSITION OFFEN (failsafe) – erst Sync/Manuell klären")
@@ -408,7 +418,31 @@ def place_order(order_type, price, amount, open_orders=None, tp=None, sl=None, p
                 continue
 
         if identical_id:
+            identical_tp = None
+
+            try:
+                identical_info = dict((o or {}).get("info", {}) or {})
+                for key in ("takeProfitPrice", "takeProfitRp", "takeProfit", "tp"):
+                    if (o or {}).get(key) is not None:
+                        identical_tp = float((o or {}).get(key))
+                        break
+                    if identical_info.get(key) is not None:
+                        identical_tp = float(identical_info.get(key))
+                        break
+            except Exception:
+                identical_tp = None
+
             of._ACTIVE_ORDER_ID = identical_id
+            of._ACTIVE_TP = float(tp) if tp is not None else identical_tp
+            of._ACTIVE_SIDE = target_side
+
+            set_context(
+                entry_reference=context_entry_reference,
+                entry_distance=context_entry_distance,
+                risk_reference=context_risk_reference,
+                entry_validity_band=context_entry_validity_band,
+            )
+
             gate_debug(f"➡️ Order existiert bereits | id={of._ACTIVE_ORDER_ID}")
             gate_debug("---------------------------------------")
             return of._ACTIVE_ORDER_ID
@@ -459,13 +493,6 @@ def place_order(order_type, price, amount, open_orders=None, tp=None, sl=None, p
         # ----------------------------------------------------------------------------------------------------
         # Params (Future TP/SL)
         # ----------------------------------------------------------------------------------------------------
-        params_ = dict(params or {})
-
-        context_entry_reference = params_.pop("_entry_reference", price)
-        context_entry_distance = params_.pop("_entry_distance", 0.0)
-        context_risk_reference = params_.pop("_risk_reference", abs(float(price) - float(sl)) if sl is not None else 0.0)
-        context_entry_validity_band = dict(params_.pop("_entry_validity_band", {}) or {})
-
         if sl is not None:
             params_["stopLossPrice"] = float(sl)
         if tp is not None:

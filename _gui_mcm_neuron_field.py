@@ -298,7 +298,8 @@ class MCMNeuronFieldGUI:
     def _build_side_panel(self, parent: tk.Frame):
         sections = [
             ("FELD", ["tissue", "snapshot", "density", "stability", "load", "capacity"]),
-            ("AKTIVITÄT", ["activity", "coupling", "external", "input_drive"]),
+            ("AKTIVITÄT", ["activity", "coupling", "external", "context_memory", "input_drive"]),
+            ("TOPOLOGIE", ["topology_state", "topology_links", "topology_density", "topology_coherence", "topology_tension"]),
             ("VERBINDUNG", ["links", "active_links", "areal_flow", "hotspots"]),
             ("OUTCOME", ["trades", "winrate", "pnl", "attempts"]),
             ("ZUSTAND", ["reorganization"]),
@@ -502,9 +503,10 @@ class MCMNeuronFieldGUI:
         for item in list(points or []):
             activation = clamp(safe_float(item.get("activation", 0.0)))
             impulse = clamp(safe_float(item.get("external_impulse_norm", 0.0)) / 0.8)
+            context_memory = clamp(safe_float(item.get("context_memory_impulse_norm", 0.0)) / 0.8)
             coupling = clamp(safe_float(item.get("coupling_norm", 0.0)) / 0.8)
             pressure = clamp(safe_float(item.get("regulation_pressure", 0.0)))
-            source_values.append(clamp((activation * 0.58) + (impulse * 0.22) + (coupling * 0.12) + (pressure * 0.08)))
+            source_values.append(clamp((activation * 0.52) + (impulse * 0.20) + (context_memory * 0.12) + (coupling * 0.10) + (pressure * 0.06)))
 
         if not source_values:
             return np.zeros(max(1, int(count or 1)), dtype=float)
@@ -547,12 +549,13 @@ class MCMNeuronFieldGUI:
         processing = dict(inner.get("processing_state", {}) or {})
 
         return clamp(
-            (abs(safe_float(inner_field.get("field_neuron_external_impulse_norm_mean", 0.0))) * 0.34)
-            + (safe_float(outer.get("signal_relevance", 0.0)) * 0.22)
-            + (safe_float(outer.get("visual_contrast", 0.0)) * 0.14)
+            (abs(safe_float(inner_field.get("field_neuron_external_impulse_norm_mean", 0.0))) * 0.30)
+            + (abs(safe_float(inner_field.get("field_neuron_context_memory_impulse_norm_mean", 0.0))) * 0.12)
+            + (safe_float(outer.get("signal_relevance", 0.0)) * 0.20)
+            + (safe_float(outer.get("visual_contrast", 0.0)) * 0.12)
             + (safe_float(perception.get("novelty_score", 0.0)) * 0.10)
-            + (safe_float(processing.get("processing_intensity", 0.0)) * 0.10)
-            + (safe_float(inner_field.get("replay_impulse", 0.0)) * 0.10)
+            + (safe_float(processing.get("processing_intensity", 0.0)) * 0.08)
+            + (safe_float(inner_field.get("replay_impulse", 0.0)) * 0.08)
         )
 
     # --------------------------------------------------
@@ -844,6 +847,7 @@ class MCMNeuronFieldGUI:
         activity = self._activity_values(points, tissue_count)
         coupling = self._metric_values(points, tissue_count, "coupling_norm", scale=0.8)
         external = self._metric_values(points, tissue_count, "external_impulse_norm", scale=0.8)
+        context_memory = self._metric_values(points, tissue_count, "context_memory_impulse_norm", scale=0.8)
         heat = self._build_heat_field(layout, activity)
 
         field_density = clamp(field_state.get("field_density", 0.0))
@@ -854,6 +858,14 @@ class MCMNeuronFieldGUI:
         activity_max = float(np.max(activity)) if len(activity) else 0.0
         coupling_mean = float(np.mean(coupling)) if len(coupling) else 0.0
         external_mean = float(np.mean(external)) if len(external) else 0.0
+        context_memory_mean = float(np.mean(context_memory)) if len(context_memory) else 0.0
+        topology_state = dict(inner_field.get("field_topology_state", {}) or {})
+        topology_cluster_links = safe_int(inner_field.get("field_topology_cluster_link_count", topology_state.get("cluster_link_count", 0)), 0)
+        topology_areal_links = safe_int(inner_field.get("field_topology_areal_link_count", topology_state.get("areal_link_count", 0)), 0)
+        topology_link_density = clamp(safe_float(inner_field.get("field_topology_link_density", topology_state.get("link_density", 0.0))))
+        topology_coherence = clamp(safe_float(inner_field.get("field_topology_coherence", topology_state.get("topology_coherence", 0.0))))
+        topology_tension = clamp(safe_float(inner_field.get("field_topology_tension", topology_state.get("topology_tension", 0.0))))
+        topology_state_label = str(inner_field.get("field_topology_state_label", topology_state.get("topology_state_label", "sparse_topology")) or "sparse_topology")
         reorganization_direction = str(inner_field.get("field_reorganization_direction", "stable") or "stable")
         reorg_color = text_state_color(reorganization_direction)
         outcome_state = self._resolve_outcome_state(dict(outcome or {}))
@@ -936,7 +948,13 @@ class MCMNeuronFieldGUI:
         self._set_side_value("activity", fmt_num(activity_mean))
         self._set_side_value("coupling", fmt_num(coupling_mean))
         self._set_side_value("external", fmt_num(external_mean))
+        self._set_side_value("context_memory", fmt_num(context_memory_mean), numeric_color(context_memory_mean))
         self._set_side_value("input_drive", fmt_num(input_drive))
+        self._set_side_value("topology_state", topology_state_label, text_state_color(topology_state_label))
+        self._set_side_value("topology_links", f"{topology_cluster_links}/{topology_areal_links}")
+        self._set_side_value("topology_density", fmt_num(topology_link_density), numeric_color(topology_link_density))
+        self._set_side_value("topology_coherence", fmt_num(topology_coherence), numeric_color(topology_coherence))
+        self._set_side_value("topology_tension", fmt_num(topology_tension), numeric_color(topology_tension, invert=True))
         self._set_side_value("links", len(links))
         self._set_side_value("active_links", active_link_count, C["inn_blue"])
         self._set_side_value("areal_flow", areal_flow_count)

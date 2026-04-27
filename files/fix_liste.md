@@ -121,17 +121,36 @@ Folge:
 # 3.1 Nachweisraum / Live-Handoff zwischen Pending, Fill und Position schließen
 # --------------------------------------------------
 
-Zwingend offen:
+Teilweise korrigiert:
 
-- `_handle_pending_entry()` schreibt im Live-Pfad zwar `pending_update`, kehrt danach aber direkt mit `return True` zurück
-- der Bot-seitige `filled`-Übergang mit `stats.on_attempt(status="filled")`, Episode-Event und `self.position`-Aufbau existiert aktuell nur im Nicht-Live-/Backtest-Pfad
-- `get_active_order_snapshot()` liefert offene Orders, aber keinen Bot-seitig formalisierten Übergang von gefüllter Live-Order zu aktiver Position
-- der Exchange-Sync erkennt offene Positionen failsafe-seitig, aber dieser Zustand wird noch nicht als vollständiger Bot-/Episode-/Stats-Handoff geführt
+- `_handle_pending_entry()` fragt im Live-Pfad `get_active_order_snapshot()` ab
+- `source="position_context"` wird an `_finalize_pending_fill_handoff()` übergeben
+- `_finalize_pending_fill_handoff()` schreibt `stats.on_attempt(status="filled")`, Episode-Event und `self.position`
+- `get_active_order_snapshot()` erzwingt vor der Snapshot-Auswertung einmalig einen synchronen Bootstrap-/Exchange-Sync
+- `get_active_order_snapshot()` liest offene Order-TP/SL jetzt aus `takeProfitPrice/stopLossPrice` und `takeProfitRp/stopLossRp`
+- `get_active_order_snapshot()` bleibt bei offener Order auch ohne Exchange-`timestamp` verwertbar
+- `place_order()` übernimmt identische offene Orders jetzt inklusive `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext
+- `_sync_with_exchange()` übernimmt eindeutig offene Orders jetzt inklusive `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext
+- `_sync_with_exchange()` ergänzt bei bereits bestätigter aktiver Order fehlenden `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext aus `open_orders`
+- `get_active_order_snapshot()` synchronisiert jetzt bei verschwundener aktiver Order aktiv nach
+- wenn nach dem Sync eine Position offen ist, bleibt der Positionskontext für den Bot-Handoff erhalten
+- wenn keine Position offen ist, wird die verschwundene Order als `exchange_disappeared` in das Cancel-Tracking gegeben
+- Live-Fill schreibt den `live_handoff`-Kontext inklusive `pending_order_id`, `snapshot_id`, Entry/TP/SL, `entry_ts` und `handoff_reason` in `position_meta`
+- Restart-Recovery schreibt `recovery_source` und `recovery_snapshot` in `meta`
+- aktive Restart-Positionen erhalten einen verwertbaren `entry_ts` / `last_checked_ts`
+- Restart-Recovery setzt `execution_state` auf `pending_recovered` oder `position_recovered`
+- Restart-Recovery schreibt ein technisches Episode-Event über `pending_update` oder `position_update`
+- Restart-Recovery markiert Memory-State als dirty und committet den Regulationssnapshot
+- Restart-Recovery speichert den wiederhergestellten Zustand sofort per Forced-Save
+
+Weiter zu prüfen:
+
+- echter Live-Test `pending -> filled -> position` gegen Exchange-Zustand
+- ob TP/SL/Entry-Kontext nach Restart im echten Exchange-Fall vollständig belastbar bleibt
 
 Folge:
 
-- Backtest- und Live-Nachweisraum sind im Übergang `pending -> filled -> position` noch nicht gleichwertig
-- ein Teil des realen Live-Handlungsverlaufs bleibt im Bot-internen Nachweisraum strukturell unvollständig
+- der Live-Fill-Handoff ist bot-seitig nachgezogen, aber noch nicht real-live-validiert
 
 ---
 
@@ -153,10 +172,11 @@ Fachliche Bedeutung:
 - sie sollen aber nicht alle global vom gesamten Feld gleichgeschaltet werden
 - lokale Eigenreaktion, Nachbarschaft, Kohärenz und Resonanz bilden die Informationsinseln
 
-Weiter zu prüfen:
+Weiter zu beobachten:
 
-- `_build_areal_state()` muss bei größerer Agentenzahl weiter beobachtet werden
-- Areal-Distanzen sollen dauerhaft ohne speicherintensiven 3D-Deltablock bleiben
+- `_build_areal_state()` baut Areale jetzt ohne dauerhafte vollständige `N x N`-Distanzmatrix auf
+- `_build_areal_components()` berechnet Distanzen zeilenweise pro Neuron
+- interne Areal-Dichte wird pro Komponente zeilenweise berechnet
 - Arealbildung soll lokale Informationsinseln sichtbar machen, nicht globale Feldgleichschaltung erzeugen
 
 ---
@@ -214,12 +234,17 @@ Teilweise umgesetzt:
 - aktive Kontextspur besitzt `activation`, Decay und Reaktivierung aus `inner_context_clusters`
 - aktive Kontextspur wirkt schwach auf Pattern-Modulation zurück
 - aktive Kontextspur wirkt schwach auf Replay-/Feldimpuls zurück
+- Rückführung in lokale `MCMNeuron.memory_trace` ist als erste schwache aktive Kontextspur umgesetzt
+- `context_memory_impulse` wird im Inner-Snapshot und in der Neuron-GUI als eigene lokale Kontext-Memory-Kennzahl sichtbar
+- `field_neuron_context_memory_impulse_norm_mean` läuft jetzt in `inner_context_clusters`, `current_vector`, Experience-Link-Achsen und bleibt über `memory_state` persistierbar
+- `context_memory_impulse` wird in der inneren Musterbeschriftung als `memory_reactivated_neurons` sichtbar, wenn lokale Kontextreaktivierung dominiert
+- Experience-Similarity führt `context_memory_impulse_axis`, `active_context_activation_axis`, `active_context_balance_axis` und `context_memory_reactivation_axis`
+
 
 Offen:
 
-- Rückführung in lokale `MCMNeuron.memory_trace` ist noch nicht umgesetzt
 - wiederkehrende Feldformen sind noch nicht als echte lokale Erfahrungsareale im Neuronenfeld verankert
-- Replay-Rückwirkung ist bewusst schwach begrenzt und noch kein lokaler Erfahrungsumbau
+- Replay-Rückwirkung bleibt bewusst schwach begrenzt und ist noch kein vollständiger lokaler Erfahrungsumbau
 
 Ergänzte Zieldefinition:
 
@@ -248,15 +273,15 @@ Ziel:
 
 Teilweise umgesetzt:
 
-- `_experience_reward_delta()` nutzt bereits `state_support` und `state_strain` als Bewertungszentrum
-- Areal-Stütze, Areal-Konflikt, Felt-Bearing und Regulationskosten laufen bereits in die Bewertung ein
-- formale Outcomes wirken im aktuellen Code stärker als Ereigniskontext und weniger als alleinige Bewertung
+- `_experience_reward_delta()` nutzt `state_support`, `state_strain` und `state_effect_delta` als Bewertungszentrum
+- Areal-Stütze, Areal-Konflikt, Felt-Bearing und Regulationskosten laufen in die Bewertung ein
+- aktive Kontextspur und `field_neuron_context_memory_impulse_norm_mean` laufen als schwacher Experience-Wirkraum in Support/Strain ein
+- formale Outcomes wirken weiter als Ereigniskontext, aber ihre Wirkung wird stärker an `state_effect_delta` gebunden
 
 Offen:
 
-- `tp_hit`, `sl_hit`, `cancel`, `timeout` sind weiterhin im Bewertungsfluss sichtbar
-- aktive Kontextspur / Nachhall ist noch nicht als eigener Experience-Wirkraum vorhanden
-- lokale Rückführung auf `inner_context_clusters`, Feldmuster und neuronale Teilträger darf erst nach stabilerer Zustandswirkungslogik tiefer erfolgen
+- `tp_hit`, `sl_hit`, `cancel`, `timeout` sind weiterhin sichtbar, aber nicht mehr der Bewertungsanker
+- lokale Rückführung auf Feldmuster und neuronale Teilträger bleibt bewusst schwach und muss real beobachtet werden
 
 Ziel:
 
@@ -272,13 +297,18 @@ Ziel:
 # 4.5 MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
 # --------------------------------------------------
 
+Teilweise umgesetzt:
+
+- `field_cluster_links` und `field_areal_links` werden zu `field_topology_state` verdichtet
+- `field_topology_state` führt Link-Anzahl, Link-Dichte, mittlere Distanz, Topologie-Kohärenz, Topologie-Spannung und Topologie-Label
+- Feldtopologie läuft jetzt in `inner_field_perception_state`, `inner_context_clusters`, `current_vector`, Experience-Summary und `memory_state`
+- `field_topology_state` ist in der Neuron-GUI als Topologie-Zustand, Linkverhältnis, Link-Dichte, Kohärenz und Spannung sichtbar
+
 Offen:
 
-- das MCM-Feld erkennt bereits laufende Feldcluster, reduziert diese aktuell aber zu stark auf kompakte Feldwerte und verdichtete Memory-Formen
-- die Gesamtorganisation des Agentenfeldes ist noch nicht als eigene Feldwahrnehmung formalisiert
-- Feldtopologie, Clusterbeziehungen, Driftverlauf, Fragmentierung, Verschmelzung und Rückführungsbewegung werden noch nicht als eigener Innenkontext sauber mitgeführt
 - ein eigener persistenter Speicher für wiederkehrende Feldformen, Driftmuster und Regulationsverläufe fehlt aktuell
-- die Visualisierung bildet das MCM-Feld bislang noch nicht als räumlich-dynamischen Innenraum ab
+- Feldverlauf über mehrere Ticks ist noch nicht als eigener Innenfeldpfad gespeichert
+- die Visualisierung zeigt Feldformen, führt aber noch keinen persistenten Feldformverlauf
 
 Ziel:
 

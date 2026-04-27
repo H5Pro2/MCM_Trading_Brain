@@ -227,8 +227,13 @@ Neu ergänzt ist eine erste aktive Kontextspur:
 - Reaktivierung aus `inner_context_clusters`
 - schwache Rückwirkung auf Pattern-Modulation
 - schwache Rückwirkung auf Replay-/Feldimpuls
+- schwache lokale Rückstreuung bis in `MCMNeuron.memory_trace`
+- `context_memory_impulse` als lokale Kontext-Memory-Kennzahl
+- `field_neuron_context_memory_impulse_norm_mean` läuft in `inner_context_clusters`, `current_vector`, Experience-Link-Achsen und bleibt persistierbar
+- innere Musterbeschriftung kann `memory_reactivated_neurons` ausweisen
+- Experience-Similarity führt `context_memory_impulse_axis`, `active_context_activation_axis`, `active_context_balance_axis` und `context_memory_reactivation_axis`
 
-Noch nicht erreicht ist die tiefe lokale Rückstreuung bis in `MCMNeuron.memory_trace`.
+Eine erste schwache lokale Rückstreuung bis in `MCMNeuron.memory_trace` ist angebunden; die tiefe lokale Erfahrungsareal-Bildung ist noch offen.
 
 ---
 
@@ -382,31 +387,51 @@ Fachliche Bedeutung:
 
 Weiter zu beobachten:
 
-- `_build_areal_state()` arbeitet noch mit `N x N`-Distanzen
-- das ist kein `N x N x D`-Deltablock, bleibt aber bei hoher Agentenzahl ein Optimierungspunkt
-- Arealbildung soll dauerhaft lokal begrenzt bleiben und keine globale Speicherexplosion erzeugen
+- `_build_areal_state()` baut Areale jetzt ohne dauerhafte vollständige `N x N`-Distanzmatrix auf
+- `_build_areal_components()` berechnet Distanzen zeilenweise pro Neuron
+- interne Areal-Dichte wird pro Komponente zeilenweise berechnet
+- kein permanenter `N x N x D`-Deltablock und keine dauerhafte globale Distanzmatrix im Arealaufbau
 
 ---
 
 # --------------------------------------------------
-# 4.1 Live-Handoff zwischen Pending, Fill und Position ist noch nicht vollständig geschlossen
+# 4.1 Live-Handoff zwischen Pending, Fill und Position ist bot-seitig nachgezogen
 # --------------------------------------------------
 
-Real offen:
+Teilweise korrigiert:
 
-- `_handle_pending_entry()` schreibt im Live-Pfad `pending_update`, kehrt danach aber direkt zurück
-- der Bot-seitige `filled`-Übergang mit `stats.on_attempt(status="filled")`, Episode-Event und `self.position`-Aufbau existiert aktuell nur im Nicht-Live-/Backtest-Pfad
-- der Exchange-Sync erkennt offene Positionen failsafe-seitig, aber dieser Zustand wird noch nicht als vollständiger Bot-/Episode-/Stats-Handoff geführt
+- `_handle_pending_entry()` kann `source="position_context"` in den gemeinsamen Fill-Handoff überführen
+- `_finalize_pending_fill_handoff()` führt Live- und Backtest-Fill über denselben Bot-internen Pfad
+- `get_active_order_snapshot()` erzwingt vor der Snapshot-Auswertung einmalig einen synchronen Bootstrap-/Exchange-Sync
+- `get_active_order_snapshot()` liest offene Order-TP/SL jetzt aus `takeProfitPrice/stopLossPrice` und `takeProfitRp/stopLossRp`
+- `get_active_order_snapshot()` bleibt bei offener Order auch ohne Exchange-`timestamp` verwertbar
+- `place_order()` übernimmt identische offene Orders jetzt inklusive `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext
+- `_sync_with_exchange()` übernimmt eindeutig offene Orders jetzt inklusive `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext
+- `_sync_with_exchange()` ergänzt bei bereits bestätigter aktiver Order fehlenden `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext aus `open_orders`
+- `get_active_order_snapshot()` synchronisiert bei verschwundener aktiver Order aktiv nach
+- erkannte Live-Positionen können dadurch als Positionskontext an den Bot zurückgegeben werden
+- Live-Fill schreibt den `live_handoff`-Kontext inklusive `pending_order_id`, `snapshot_id`, Entry/TP/SL, `entry_ts` und `handoff_reason` in `position_meta`
+- Restart-Recovery schreibt `recovery_source` und `recovery_snapshot` in `meta`
+- aktive Restart-Positionen erhalten einen verwertbaren `entry_ts` / `last_checked_ts`
+- Restart-Recovery setzt `execution_state` auf `pending_recovered` oder `position_recovered`
+- Restart-Recovery schreibt ein technisches Episode-Event über `pending_update` oder `position_update`
+- Restart-Recovery markiert Memory-State als dirty und committet den Regulationssnapshot
+- Restart-Recovery speichert den wiederhergestellten Zustand sofort per Forced-Save
+
+Weiter zu prüfen:
+
+- echter Live-Test `pending -> filled -> position` gegen Exchange-Zustand
+- Restart-Fall mit bereits gefüllter Order gegen echten Exchange-Zustand validieren
+- ob TP/SL/Entry-Kontext nach Restart im echten Exchange-Fall vollständig belastbar bleibt
 
 Folge:
 
-- Backtest- und Live-Nachweisraum sind im Übergang `pending -> filled -> position` noch nicht gleichwertig
-- ein Teil des realen Live-Handlungsverlaufs bleibt im Bot-internen Nachweisraum strukturell unvollständig
+- Backtest- und Live-Handoff nutzen bot-seitig denselben Fill-Abschluss, müssen aber real-live-validiert werden
 
 ---
 
 # --------------------------------------------------
-# 4.2 Innenkontextcluster sind formal und als Pattern-Verdichtung begonnen, aber noch nicht aktiv genug
+# 4.2 Innenkontextcluster sind angebunden und als Pattern-Verdichtung begonnen
 # --------------------------------------------------
 
 Real vorhanden:
@@ -423,12 +448,16 @@ Neu real vorhanden:
 - `activation` klingt pro Runtime-Tick ab
 - Pattern-Werte werden schwach über aktive Kontextspur moduliert
 - Runtime-Snapshot führt `active_context_trace` mit
+- aktive Kontextspur wird schwach und lokal dosiert bis in `MCMNeuron.memory_trace` zurückgeführt
+- `context_memory_impulse` ist im Inner-Snapshot und in der Neuron-GUI als eigene lokale Kontext-Memory-Kennzahl sichtbar
+- `field_neuron_context_memory_impulse_norm_mean` läuft in `inner_context_clusters` und bleibt über `memory_state` persistierbar
+- `context_memory_impulse` wird in der inneren Musterbeschriftung als `memory_reactivated_neurons` sichtbar, wenn lokale Kontextreaktivierung dominiert
 
 Real offen:
 
-- lokale Rückführung in `MCMNeuron.memory_trace` ist noch nicht umgesetzt
-- Nachhall ist aktuell Runtime-/Pattern-/Replay-Modulation, noch keine tiefe lokale Feldplastizität
-- Replay-Rückwirkung ist bewusst schwach begrenzt und noch kein lokaler Erfahrungsumbau
+- wiederkehrende Feldformen sind noch nicht als echte lokale Erfahrungsareale im Neuronenfeld verankert
+- Nachhall ist jetzt erste lokale Memory-Trace-Modulation, aber noch keine tiefe lokale Feldplastizität
+- Replay-Rückwirkung bleibt bewusst schwach begrenzt und ist noch kein vollständiger lokaler Erfahrungsumbau
 
 Fachlich ergänzt:
 
@@ -479,13 +508,18 @@ Ziel:
 # 4.4 MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher sind noch nicht ausgebaut
 # --------------------------------------------------
 
+Teilweise umgesetzt:
+
+- `field_cluster_links` und `field_areal_links` werden zu `field_topology_state` verdichtet
+- `field_topology_state` führt Link-Anzahl, Link-Dichte, mittlere Distanz, Topologie-Kohärenz, Topologie-Spannung und Topologie-Label
+- Feldtopologie läuft jetzt in `inner_field_perception_state`, `inner_context_clusters`, `current_vector`, Experience-Summary und `memory_state`
+- `field_topology_state` ist in der Neuron-GUI als Topologie-Zustand, Linkverhältnis, Link-Dichte, Kohärenz und Spannung sichtbar
+
 Offen:
 
-- das MCM-Feld erkennt bereits laufende Feldcluster, reduziert diese aktuell aber zu stark auf kompakte Feldwerte und verdichtete Memory-Formen
-- die Gesamtorganisation des Agentenfeldes ist noch nicht als eigene Feldwahrnehmung formalisiert
-- Feldtopologie, Clusterbeziehungen, Driftverlauf, Fragmentierung, Verschmelzung und Rückführungsbewegung werden noch nicht als eigener Innenkontext sauber mitgeführt
 - ein eigener persistenter Speicher für wiederkehrende Feldformen, Driftmuster und Regulationsverläufe fehlt aktuell
-- die Visualisierung bildet das MCM-Feld bislang noch nicht als räumlich-dynamischen Innenraum ab
+- Feldverlauf über mehrere Ticks ist noch nicht als eigener Innenfeldpfad gespeichert
+- die Visualisierung zeigt Feldformen, führt aber noch keinen persistenten Feldformverlauf
 
 Ziel:
 
@@ -593,12 +627,13 @@ Noch offen ist:
 
 Die sinnvollste Reihenfolge ab jetzt ist:
 
-1. Live-Handoff `pending -> filled -> position` im Bot-/Episode-/Stats-Raum schließen
-2. Persistenz weiter entkoppeln und Runtime / Bot-State weiter trennen
-3. `active_context_trace` Richtung Replay-/Feldimpuls prüfen
-4. Experience-Bewertungslogik primär auf Zustandswirkung und Nachhall-Wirkung umstellen
+1. Live-Handoff real testen: `pending -> filled -> position` gegen Exchange-Zustand validieren
+2. Restart-Fall real testen: offene Order / gefüllte Position nach Bot-Neustart prüfen
+3. `_experience_reward_delta()` real im Backtest/Live prüfen: Zustandswirkung gegen Outcome-Etiketten kontrollieren
+4. aktive Kontextspur / Nachhall-Wirkung in Experience und Clusterbewertung weiter beobachten
 5. MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher weiter ausbauen
-6. erst danach lokale Erfahrungsrückwirkung tiefer an Innenmuster und neuronale Teilträger legen
+6. danach lokale Erfahrungsrückwirkung tiefer an Innenmuster, Feldformen und neuronale Teilträger koppeln
+7. Persistenz und Runtime-/Bot-State weiter entkoppeln, wenn die Erfahrungslogik stabiler ist
 
 ---
 
@@ -609,4 +644,27 @@ Die sinnvollste Reihenfolge ab jetzt ist:
 
 Der Bot steht nicht mehr am Anfang.
 
-Die Basismechanik,
+Die Basismechanik steht:
+
+- äußere Wahrnehmung
+- innere Runtime
+- Entscheidungstendenz
+- technische Handlungsbahn
+- Episode / Review / Experience
+- Persistenz
+- Snapshot / GUI
+
+Der aktuelle offene Kern ist nicht mehr der Grundaufbau, sondern:
+
+- Real-Live-Validierung des Live-Handoffs
+- Experience-Bewertung stärker auf Zustandswirkung statt Ergebnisetiketten ausrichten
+- Feldtopologie und Innenfeldspeicher weiter vertiefen
+- lokale Erfahrungsrückwirkung erst danach tiefer an Neuronen und Feldformen koppeln
+
+Der MCM-Umbau hat damit die erste echte Schwelle erreicht:
+
+`inner_context_clusters -> active_context_trace -> MCMField -> MCMNeuron.memory_trace`
+
+ist schwach angebunden und sichtbar.
+
+Die nächste Schwelle ist die fachlich saubere Umstellung von Experience auf Zustandswirkung.

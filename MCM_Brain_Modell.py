@@ -604,10 +604,33 @@ def _experience_reward_delta(summary):
     field_areal_fragmentation = float(item.get("field_areal_fragmentation", 0.0) or 0.0)
     field_areal_coherence_mean = float(item.get("field_areal_coherence_mean", 0.0) or 0.0)
     field_areal_conflict_mean = float(item.get("field_areal_conflict_mean", 0.0) or 0.0)
+    field_neuron_context_memory_impulse_norm_mean = float(item.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0)
     processing_areal_tension = float(item.get("processing_areal_tension", 0.0) or 0.0)
     processing_areal_support = float(item.get("processing_areal_support", 0.0) or 0.0)
     thought_areal_pressure = float(item.get("thought_areal_pressure", 0.0) or 0.0)
     thought_areal_support = float(item.get("thought_areal_support", 0.0) or 0.0)
+    active_context_trace = _normalize_active_context_trace(item.get("active_context_trace", {}) or {})
+    active_context_activation = float(active_context_trace.get("activation", 0.0) or 0.0)
+    active_context_support = float(active_context_trace.get("support", 0.0) or 0.0)
+    active_context_conflict = float(active_context_trace.get("conflict", 0.0) or 0.0)
+    active_context_bearing = float(active_context_trace.get("bearing", 0.0) or 0.0)
+    active_context_reinforcement = float(active_context_trace.get("reinforcement", 0.0) or 0.0)
+    active_context_attenuation = float(active_context_trace.get("attenuation", 0.0) or 0.0)
+    active_context_balance = max(
+        -1.0,
+        min(
+            1.0,
+            (
+                active_context_support
+                + active_context_bearing
+                + active_context_reinforcement
+                - active_context_conflict
+                - active_context_attenuation
+            ) / 3.0,
+        ),
+    )
+    active_context_support_effect = max(0.0, active_context_balance) * active_context_activation
+    active_context_strain_effect = max(0.0, -active_context_balance) * active_context_activation
     episode_felt_summary = dict(item.get("episode_felt_summary", {}) or {})
     felt_areal_support = float(episode_felt_summary.get("areal_support", 0.0) or 0.0)
     felt_areal_conflict = float(episode_felt_summary.get("areal_conflict_pressure", 0.0) or 0.0)
@@ -627,6 +650,7 @@ def _experience_reward_delta(summary):
         + (felt_areal_support * 0.08)
         + (processing_areal_support * 0.06)
         + (thought_areal_support * 0.04)
+        + (field_neuron_context_memory_impulse_norm_mean * active_context_support_effect * 0.10)
     )
 
     state_strain = float(
@@ -641,38 +665,41 @@ def _experience_reward_delta(summary):
         + (felt_areal_conflict * 0.08)
         + (processing_areal_tension * 0.06)
         + (thought_areal_pressure * 0.04)
+        + (field_neuron_context_memory_impulse_norm_mean * active_context_strain_effect * 0.10)
     )
 
-    base_delta = float((state_support * 0.64) - (state_strain * 0.58))
+    state_effect_delta = float(state_support - state_strain)
+    base_delta = float((state_support * 0.66) - (state_strain * 0.60))
     event_context_delta = 0.0
 
     if event_name in ("observed_only", "withheld", "replanned", "abandoned"):
-        event_context_delta += (observation_quality * 0.05) + (correction_timing_quality * 0.04)
+        event_context_delta += (observation_quality * 0.04) + (correction_timing_quality * 0.03)
         if decision_tendency in ("observe", "replan", "hold"):
-            event_context_delta += 0.02
+            event_context_delta += max(0.0, state_effect_delta) * 0.025
 
     elif event_name == "submitted":
-        event_context_delta += 0.01 + (plan_quality * 0.02)
+        event_context_delta += (plan_quality * 0.015) + max(0.0, state_effect_delta) * 0.015
 
     elif event_name == "filled":
-        event_context_delta += 0.01 + (execution_quality * 0.02)
+        event_context_delta += (execution_quality * 0.015) + max(0.0, state_effect_delta) * 0.015
 
     elif event_name in ("pending_update", "position_update", "in_trade_update", "monitor_update"):
-        event_context_delta += (execution_quality * 0.02) + (risk_fit_quality * 0.02)
+        event_context_delta += (execution_quality * 0.015) + (risk_fit_quality * 0.015)
+        event_context_delta += max(-0.015, min(0.015, state_effect_delta * 0.025))
 
     if outcome_reason == "tp_hit":
-        event_context_delta += 0.02 + (plan_quality * 0.02) + (execution_quality * 0.02)
-        event_context_delta += max(0.0, carrying_room - bearing_regulation_cost) * 0.03
+        event_context_delta += max(0.0, state_effect_delta) * 0.045
+        event_context_delta += (plan_quality * 0.01) + (execution_quality * 0.01)
 
     elif outcome_reason == "sl_hit":
-        event_context_delta -= 0.02 + ((1.0 - risk_fit_quality) * 0.03)
-        event_context_delta -= bearing_regulation_cost * 0.02
+        event_context_delta -= max(0.0, -state_effect_delta) * 0.045
+        event_context_delta -= ((1.0 - risk_fit_quality) * 0.012) + (bearing_regulation_cost * 0.010)
 
     elif outcome_reason in ("cancel", "timeout", "reward_too_small", "rr_too_low", "sl_distance_too_high"):
-        event_context_delta += (correction_timing_quality * 0.04) + (observation_quality * 0.03)
-        event_context_delta -= 0.01
+        event_context_delta += (correction_timing_quality * 0.025) + (observation_quality * 0.020)
+        event_context_delta += max(-0.018, min(0.018, state_effect_delta * 0.030))
 
-    return float(max(-0.28, min(0.28, (base_delta * 0.78) + event_context_delta)))
+    return float(max(-0.28, min(0.28, (base_delta * 0.82) + event_context_delta)))
 
 # --------------------------------------------------
 def _build_experience_similarity_axes(summary):
@@ -721,6 +748,16 @@ def _build_experience_similarity_axes(summary):
     processing_areal_support = float(item.get("processing_areal_support", 0.0) or 0.0)
     thought_areal_pressure = float(item.get("thought_areal_pressure", 0.0) or 0.0)
     thought_areal_support = float(item.get("thought_areal_support", 0.0) or 0.0)
+    field_neuron_context_memory_impulse_norm_mean = float(item.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0)
+    active_context_trace = _normalize_active_context_trace(item.get("active_context_trace", {}) or {})
+    active_context_activation = float(active_context_trace.get("activation", 0.0) or 0.0)
+    active_context_balance = float(
+        active_context_trace.get("support", 0.0)
+        + active_context_trace.get("bearing", 0.0)
+        + active_context_trace.get("reinforcement", 0.0)
+        - active_context_trace.get("conflict", 0.0)
+        - active_context_trace.get("attenuation", 0.0)
+    )
 
     return {
         "direction_axis": float(direction_value),
@@ -749,6 +786,10 @@ def _build_experience_similarity_axes(summary):
             + processing_areal_support
             + thought_areal_support
         ),
+        "context_memory_impulse_axis": float(field_neuron_context_memory_impulse_norm_mean),
+        "active_context_activation_axis": float(active_context_activation),
+        "active_context_balance_axis": float(active_context_balance),
+        "context_memory_reactivation_axis": float(field_neuron_context_memory_impulse_norm_mean * active_context_activation),
         "thought_conflict_axis": float(item.get("thought_decision_conflict", 0.0) or 0.0),
         "thought_maturity_axis": float(item.get("thought_state_maturity", 0.0) or 0.0),
         "delta_energy_axis": float(tension_delta.get("energy", 0.0) or 0.0),
@@ -781,6 +822,7 @@ def _derive_inner_pattern_label(inner_field_state, summary_item):
     neuron_stability_mean = float(field_state.get("field_neuron_stability_mean", 0.0) or 0.0)
     neuron_coupling_norm_mean = float(field_state.get("field_neuron_coupling_norm_mean", 0.0) or 0.0)
     neuron_external_impulse_norm_mean = float(field_state.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0)
+    neuron_context_memory_impulse_norm_mean = float(field_state.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0)
     areal_count = int(field_state.get("field_areal_count", 0) or 0)
     areal_stability_mean = float(field_state.get("field_areal_stability_mean", 0.0) or 0.0)
     areal_pressure_mean = float(field_state.get("field_areal_pressure_mean", 0.0) or 0.0)
@@ -845,6 +887,8 @@ def _derive_inner_pattern_label(inner_field_state, summary_item):
 
     if areal_conflict_mean >= 0.24 or competition_bias >= 0.34 or neuron_coupling_norm_mean >= 0.30:
         neuron_band = "contested_neurons"
+    elif neuron_context_memory_impulse_norm_mean >= max(0.035, neuron_external_impulse_norm_mean * 0.55):
+        neuron_band = "memory_reactivated_neurons"
     elif neuron_stability_mean >= 0.64 and field_stability >= 0.58 and areal_support >= 0.46:
         neuron_band = "settled_neurons"
     elif neuron_activation_mean >= 0.66 or neuron_external_impulse_norm_mean >= 0.34:
@@ -883,6 +927,11 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
     thought_areal_support = float(summary.get("thought_areal_support", 0.0) or 0.0)
     felt_bearing_score = float(summary.get("felt_bearing_score", 0.0) or 0.0)
     felt_recovery_cost = float(summary.get("felt_recovery_cost", 0.0) or 0.0)
+    field_topology_state = dict(field_state.get("field_topology_state", {}) or {})
+    field_topology_link_density = float(field_state.get("field_topology_link_density", field_topology_state.get("link_density", 0.0)) or 0.0)
+    field_topology_distance_mean = float(field_state.get("field_topology_distance_mean", field_topology_state.get("topology_distance_mean", 0.0)) or 0.0)
+    field_topology_coherence = float(field_state.get("field_topology_coherence", field_topology_state.get("topology_coherence", 0.0)) or 0.0)
+    field_topology_tension = float(field_state.get("field_topology_tension", field_topology_state.get("topology_tension", 0.0)) or 0.0)
 
     inner_pattern_support = max(
         0.0,
@@ -942,6 +991,7 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
         "field_neuron_coupling_norm_mean": float(field_state.get("field_neuron_coupling_norm_mean", 0.0) or 0.0),
         "field_neuron_regulation_force_norm_mean": float(field_state.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
         "field_neuron_external_impulse_norm_mean": float(field_state.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        "field_neuron_context_memory_impulse_norm_mean": float(field_state.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
         "field_areal_count": int(field_state.get("field_areal_count", 0) or 0),
         "field_areal_activation_mean": float(field_state.get("field_areal_activation_mean", 0.0) or 0.0),
         "field_areal_stability_mean": float(field_state.get("field_areal_stability_mean", 0.0) or 0.0),
@@ -951,6 +1001,14 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
         "field_areal_fragmentation": float(field_state.get("field_areal_fragmentation", 0.0) or 0.0),
         "field_areal_coherence_mean": float(field_state.get("field_areal_coherence_mean", 0.0) or 0.0),
         "field_areal_conflict_mean": float(field_state.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "field_topology_state": dict(field_topology_state or {}),
+        "field_topology_cluster_link_count": int(field_state.get("field_topology_cluster_link_count", field_topology_state.get("cluster_link_count", 0)) or 0),
+        "field_topology_areal_link_count": int(field_state.get("field_topology_areal_link_count", field_topology_state.get("areal_link_count", 0)) or 0),
+        "field_topology_link_density": float(field_topology_link_density),
+        "field_topology_distance_mean": float(field_topology_distance_mean),
+        "field_topology_coherence": float(field_topology_coherence),
+        "field_topology_tension": float(field_topology_tension),
+        "field_topology_state_label": str(field_state.get("field_topology_state_label", field_topology_state.get("topology_state_label", "sparse_topology")) or "sparse_topology"),
         "inner_pattern_support": float(inner_pattern_support),
         "inner_pattern_conflict": float(inner_pattern_conflict),
         "inner_pattern_fragility": float(inner_pattern_fragility),
@@ -995,6 +1053,7 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
         float(state_payload.get("field_neuron_coupling_norm_mean", 0.0) or 0.0),
         float(state_payload.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
         float(state_payload.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        float(state_payload.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
         float(state_payload.get("field_areal_count", 0.0) or 0.0),
         float(state_payload.get("field_areal_activation_mean", 0.0) or 0.0),
         float(state_payload.get("field_areal_stability_mean", 0.0) or 0.0),
@@ -1004,6 +1063,12 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
         float(state_payload.get("field_areal_fragmentation", 0.0) or 0.0),
         float(state_payload.get("field_areal_coherence_mean", 0.0) or 0.0),
         float(state_payload.get("field_areal_conflict_mean", 0.0) or 0.0),
+        float(state_payload.get("field_topology_cluster_link_count", 0.0) or 0.0),
+        float(state_payload.get("field_topology_areal_link_count", 0.0) or 0.0),
+        float(state_payload.get("field_topology_link_density", 0.0) or 0.0),
+        float(state_payload.get("field_topology_distance_mean", 0.0) or 0.0),
+        float(state_payload.get("field_topology_coherence", 0.0) or 0.0),
+        float(state_payload.get("field_topology_tension", 0.0) or 0.0),
         float(state_payload.get("inner_pattern_support", 0.0) or 0.0),
         float(state_payload.get("inner_pattern_conflict", 0.0) or 0.0),
         float(state_payload.get("inner_pattern_fragility", 0.0) or 0.0),
@@ -1232,6 +1297,7 @@ def _update_inner_context_cluster_memory(bot, summary):
         "field_neuron_coupling_norm_mean": float(nearest_cluster.get("field_neuron_coupling_norm_mean", 0.0) or 0.0),
         "field_neuron_regulation_force_norm_mean": float(nearest_cluster.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
         "field_neuron_external_impulse_norm_mean": float(nearest_cluster.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        "field_neuron_context_memory_impulse_norm_mean": float(nearest_cluster.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
         "field_areal_count": int(nearest_cluster.get("field_areal_count", 0) or 0),
         "field_areal_activation_mean": float(nearest_cluster.get("field_areal_activation_mean", 0.0) or 0.0),
         "field_areal_stability_mean": float(nearest_cluster.get("field_areal_stability_mean", 0.0) or 0.0),
@@ -1301,6 +1367,7 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         summary["inner_context_cluster_neuron_coupling_norm_mean"] = float(inner_context_result.get("field_neuron_coupling_norm_mean", 0.0) or 0.0)
         summary["inner_context_cluster_neuron_regulation_force_norm_mean"] = float(inner_context_result.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0)
         summary["inner_context_cluster_neuron_external_impulse_norm_mean"] = float(inner_context_result.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_neuron_context_memory_impulse_norm_mean"] = float(inner_context_result.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0)
         summary["inner_context_cluster_areal_count"] = int(inner_context_result.get("field_areal_count", 0) or 0)
         summary["inner_context_cluster_areal_activation_mean"] = float(inner_context_result.get("field_areal_activation_mean", 0.0) or 0.0)
         summary["inner_context_cluster_areal_stability_mean"] = float(inner_context_result.get("field_areal_stability_mean", 0.0) or 0.0)
@@ -1349,6 +1416,7 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         experience_space["last_inner_context_cluster_neuron_coupling_norm_mean"] = float(inner_context_result.get("field_neuron_coupling_norm_mean", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_neuron_regulation_force_norm_mean"] = float(inner_context_result.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_neuron_external_impulse_norm_mean"] = float(inner_context_result.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neuron_context_memory_impulse_norm_mean"] = float(inner_context_result.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_areal_count"] = int(inner_context_result.get("field_areal_count", 0) or 0)
         experience_space["last_inner_context_cluster_areal_activation_mean"] = float(inner_context_result.get("field_areal_activation_mean", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_areal_stability_mean"] = float(inner_context_result.get("field_areal_stability_mean", 0.0) or 0.0)
@@ -1396,6 +1464,7 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         summary["inner_context_cluster_neuron_coupling_norm_mean"] = 0.0
         summary["inner_context_cluster_neuron_regulation_force_norm_mean"] = 0.0
         summary["inner_context_cluster_neuron_external_impulse_norm_mean"] = 0.0
+        summary["inner_context_cluster_neuron_context_memory_impulse_norm_mean"] = 0.0
         summary["inner_context_cluster_areal_count"] = 0
         summary["inner_context_cluster_areal_activation_mean"] = 0.0
         summary["inner_context_cluster_areal_stability_mean"] = 0.0
@@ -1588,6 +1657,7 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
         "inner_context_cluster_reorganization_direction": str(summary_item.get("inner_context_cluster_reorganization_direction", "stable") or "stable"),
         "inner_context_cluster_mean_velocity": float(summary_item.get("inner_context_cluster_mean_velocity", 0.0) or 0.0),
         "inner_context_cluster_regulation_pressure": float(summary_item.get("inner_context_cluster_regulation_pressure", 0.0) or 0.0),
+        "inner_context_cluster_neuron_context_memory_impulse_norm_mean": float(summary_item.get("inner_context_cluster_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
         "episode_felt_summary": dict(summary_item.get("episode_felt_summary", {}) or {}),
         "felt_label": str(summary_item.get("felt_label", "mixed") or "mixed"),
         "axis_shift": float(axis_shift),
@@ -1640,6 +1710,7 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     item["last_field_reorganization_direction"] = str(summary_item.get("inner_context_cluster_reorganization_direction", item.get("last_field_reorganization_direction", "stable")) or "stable")
     item["avg_field_mean_velocity"] = float((float(item.get("avg_field_mean_velocity", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_mean_velocity", 0.0) or 0.0) * 0.32))
     item["avg_field_regulation_pressure"] = float((float(item.get("avg_field_regulation_pressure", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_regulation_pressure", 0.0) or 0.0) * 0.32))
+    item["avg_context_memory_impulse"] = float((float(item.get("avg_context_memory_impulse", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0) * 0.32))
     item["avg_field_areal_count"] = float((float(item.get("avg_field_areal_count", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_count", 0.0) or 0.0) * 0.32))
     item["avg_field_areal_activation_mean"] = float((float(item.get("avg_field_areal_activation_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_activation_mean", 0.0) or 0.0) * 0.32))
     item["avg_field_areal_stability_mean"] = float((float(item.get("avg_field_areal_stability_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_stability_mean", 0.0) or 0.0) * 0.32))
@@ -3076,6 +3147,83 @@ def create_mcm_brain():
     }
 
 # --------------------------------------------------
+# FIELD TOPOLOGY ANALYSIS
+# --------------------------------------------------
+def _build_field_topology_state(snapshot):
+
+    snap = dict(snapshot or {})
+    cluster_links = [dict(item or {}) for item in list(snap.get("field_cluster_links", []) or []) if isinstance(item, dict)]
+    areal_links = [dict(item or {}) for item in list(snap.get("field_areal_links", []) or []) if isinstance(item, dict)]
+
+    cluster_count = max(0, int(snap.get("cluster_count", snap.get("field_cluster_count", 0)) or 0))
+    areal_count = max(0, int(snap.get("field_areal_count", 0) or 0))
+
+    cluster_link_count = int(len(cluster_links))
+    areal_link_count = int(len(areal_links))
+
+    cluster_possible = float(cluster_count * max(0, cluster_count - 1) / 2.0)
+    areal_possible = float(areal_count * max(0, areal_count - 1) / 2.0)
+
+    cluster_link_density = float(cluster_link_count / cluster_possible) if cluster_possible > 0.0 else 0.0
+    areal_link_density = float(areal_link_count / areal_possible) if areal_possible > 0.0 else 0.0
+
+    cluster_distances = [float(item.get("distance", 0.0) or 0.0) for item in list(cluster_links or [])]
+    areal_distances = [float(item.get("distance", 0.0) or 0.0) for item in list(areal_links or [])]
+    all_distances = list(cluster_distances or []) + list(areal_distances or [])
+
+    cluster_distance_mean = float(np.mean(cluster_distances)) if cluster_distances else 0.0
+    areal_distance_mean = float(np.mean(areal_distances)) if areal_distances else 0.0
+    topology_distance_mean = float(np.mean(all_distances)) if all_distances else 0.0
+
+    areal_fragmentation = max(0.0, min(1.0, float(snap.get("field_areal_fragmentation", 0.0) or 0.0)))
+    areal_coherence = max(0.0, float(snap.get("field_areal_coherence_mean", 0.0) or 0.0))
+    areal_conflict = max(0.0, float(snap.get("field_areal_conflict_mean", 0.0) or 0.0))
+    link_density = max(0.0, min(1.0, (cluster_link_density * 0.44) + (areal_link_density * 0.56)))
+
+    topology_coherence = max(
+        0.0,
+        min(
+            1.0,
+            (link_density * 0.30)
+            + (areal_coherence * 0.42)
+            - (areal_fragmentation * 0.28)
+            - (areal_conflict * 0.20),
+        ),
+    )
+    topology_tension = max(
+        0.0,
+        min(
+            1.0,
+            (areal_fragmentation * 0.38)
+            + (areal_conflict * 0.34)
+            + (max(0.0, 1.0 - link_density) * 0.18),
+        ),
+    )
+
+    if topology_tension >= 0.62:
+        topology_state_label = "fragmented_topology"
+    elif topology_coherence >= 0.54 and link_density >= 0.08:
+        topology_state_label = "coherent_topology"
+    elif cluster_link_count > 0 or areal_link_count > 0:
+        topology_state_label = "linked_topology"
+    else:
+        topology_state_label = "sparse_topology"
+
+    return {
+        "cluster_link_count": int(cluster_link_count),
+        "areal_link_count": int(areal_link_count),
+        "cluster_link_density": float(cluster_link_density),
+        "areal_link_density": float(areal_link_density),
+        "link_density": float(link_density),
+        "cluster_distance_mean": float(cluster_distance_mean),
+        "areal_distance_mean": float(areal_distance_mean),
+        "topology_distance_mean": float(topology_distance_mean),
+        "topology_coherence": float(topology_coherence),
+        "topology_tension": float(topology_tension),
+        "topology_state_label": str(topology_state_label),
+    }
+
+# --------------------------------------------------
 # STIMULUS
 # --------------------------------------------------
 def build_market_vision(candle_state, tension_state):
@@ -3433,6 +3581,7 @@ def build_outcome_stimulus(outcome_reason, position=None):
         "memory_boost": float(max(0.0, min(8.0, memory_boost))),
         "outcome_label": outcome_label,
     }
+
 # --------------------------------------------------
 def _snapshot_float_vector(values, digits=4):
 
@@ -3514,6 +3663,7 @@ def _snapshot_agent_field_points(field, limit=48):
         coupling_force = np.asarray(neuron_item.get("coupling_force", []), dtype=float)
         regulation_force = np.asarray(neuron_item.get("regulation_force", []), dtype=float)
         external_impulse = np.asarray(neuron_item.get("external_impulse", []), dtype=float)
+        context_memory_impulse = np.asarray(neuron_item.get("context_memory_impulse", []), dtype=float)
 
         points.append({
             "agent_index": int(index),
@@ -3526,6 +3676,7 @@ def _snapshot_agent_field_points(field, limit=48):
             "coupling_norm": float(np.linalg.norm(coupling_force)) if coupling_force.size > 0 else 0.0,
             "regulation_force_norm": float(np.linalg.norm(regulation_force)) if regulation_force.size > 0 else 0.0,
             "external_impulse_norm": float(np.linalg.norm(external_impulse)) if external_impulse.size > 0 else 0.0,
+            "context_memory_impulse_norm": float(np.linalg.norm(context_memory_impulse)) if context_memory_impulse.size > 0 else 0.0,
             "areal_id": str(areal_membership.get(int(index), "") or ""),
             "areal_state_label": str(areal_label_map.get(int(index), "") or ""),
         })
@@ -3545,6 +3696,7 @@ def _snapshot_neuron_population(field, limit=24):
         "neuron_coupling_norm_mean": 0.0,
         "neuron_regulation_force_norm_mean": 0.0,
         "neuron_external_impulse_norm_mean": 0.0,
+        "neuron_context_memory_impulse_norm_mean": 0.0,
     }
     population = []
 
@@ -3567,12 +3719,14 @@ def _snapshot_neuron_population(field, limit=24):
     coupling_norm_values = []
     regulation_force_norm_values = []
     external_impulse_norm_values = []
+    context_memory_impulse_norm_values = []
 
     for neuron_index, neuron_item in enumerate(list(neurons or [])):
         memory_trace = np.asarray(neuron_item.get("memory_trace", []), dtype=float)
         coupling_force = np.asarray(neuron_item.get("coupling_force", []), dtype=float)
         regulation_force = np.asarray(neuron_item.get("regulation_force", []), dtype=float)
         external_impulse = np.asarray(neuron_item.get("external_impulse", []), dtype=float)
+        context_memory_impulse = np.asarray(neuron_item.get("context_memory_impulse", []), dtype=float)
 
         activation_values.append(float(neuron_item.get("activation", 0.0) or 0.0))
         stability_values.append(float(neuron_item.get("stability", 0.0) or 0.0))
@@ -3581,6 +3735,7 @@ def _snapshot_neuron_population(field, limit=24):
         coupling_norm_values.append(float(np.linalg.norm(coupling_force)) if coupling_force.size > 0 else 0.0)
         regulation_force_norm_values.append(float(np.linalg.norm(regulation_force)) if regulation_force.size > 0 else 0.0)
         external_impulse_norm_values.append(float(np.linalg.norm(external_impulse)) if external_impulse.size > 0 else 0.0)
+        context_memory_impulse_norm_values.append(float(np.linalg.norm(context_memory_impulse)) if context_memory_impulse.size > 0 else 0.0)
 
     summary = {
         "neuron_count": int(len(neurons)),
@@ -3592,6 +3747,7 @@ def _snapshot_neuron_population(field, limit=24):
         "neuron_coupling_norm_mean": float(np.mean(coupling_norm_values)) if coupling_norm_values else 0.0,
         "neuron_regulation_force_norm_mean": float(np.mean(regulation_force_norm_values)) if regulation_force_norm_values else 0.0,
         "neuron_external_impulse_norm_mean": float(np.mean(external_impulse_norm_values)) if external_impulse_norm_values else 0.0,
+        "neuron_context_memory_impulse_norm_mean": float(np.mean(context_memory_impulse_norm_values)) if context_memory_impulse_norm_values else 0.0,
     }
 
     sample_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_NEURON_LIMIT", limit) or limit))
@@ -3611,6 +3767,7 @@ def _snapshot_neuron_population(field, limit=24):
         coupling_force = np.asarray(neuron_item.get("coupling_force", []), dtype=float)
         regulation_force = np.asarray(neuron_item.get("regulation_force", []), dtype=float)
         external_impulse = np.asarray(neuron_item.get("external_impulse", []), dtype=float)
+        context_memory_impulse = np.asarray(neuron_item.get("context_memory_impulse", []), dtype=float)
 
         population.append({
             "agent_index": int(neuron_item.get("agent_index", index) or index),
@@ -3621,6 +3778,7 @@ def _snapshot_neuron_population(field, limit=24):
             "coupling_norm": float(np.linalg.norm(coupling_force)) if coupling_force.size > 0 else 0.0,
             "regulation_force_norm": float(np.linalg.norm(regulation_force)) if regulation_force.size > 0 else 0.0,
             "external_impulse_norm": float(np.linalg.norm(external_impulse)) if external_impulse.size > 0 else 0.0,
+            "context_memory_impulse_norm": float(np.linalg.norm(context_memory_impulse)) if context_memory_impulse.size > 0 else 0.0,
             "state": _snapshot_float_vector(neuron_item.get("state", [])),
             "velocity": _snapshot_float_vector(neuron_item.get("velocity", [])),
         })
@@ -3836,7 +3994,10 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         field.energy[:, 2] += risk_impulse - (opportunity_bias * 0.08)
 
     field.energy = np.clip(field.energy, -2.2, 2.2)
-    field.step(total_energy_impulse * 0.55)
+    field.step(
+        total_energy_impulse * 0.55,
+        context_trace=active_context_trace,
+    )
     field.energy = np.clip(field.energy, -2.2, 2.2)
 
     clusters = cluster.detect(
@@ -3947,6 +4108,15 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     field_agent_points = _snapshot_agent_field_points(field)
     neuron_population_summary, neuron_population = _snapshot_neuron_population(field)
     areal_population_summary, areal_population, areal_links = _snapshot_areal_population(field)
+    field_topology_state = _build_field_topology_state({
+        "cluster_count": int(len(clusters)),
+        "field_cluster_links": list(cluster_links or []),
+        "field_areal_count": int(areal_population_summary.get("areal_count", 0) or 0),
+        "field_areal_links": list(areal_links or []),
+        "field_areal_fragmentation": float(areal_population_summary.get("areal_fragmentation", 0.0) or 0.0),
+        "field_areal_coherence_mean": float(areal_population_summary.get("areal_coherence_mean", 0.0) or 0.0),
+        "field_areal_conflict_mean": float(areal_population_summary.get("areal_conflict_mean", 0.0) or 0.0),
+    })
 
     cluster_topology = dict(getattr(cluster, "last_topology", {}) or {})
     cluster_center_drift = float(cluster_topology.get("cluster_center_drift", 0.0) or 0.0)
@@ -3993,6 +4163,7 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "field_neuron_coupling_norm_mean": float(neuron_population_summary.get("neuron_coupling_norm_mean", 0.0) or 0.0),
         "field_neuron_regulation_force_norm_mean": float(neuron_population_summary.get("neuron_regulation_force_norm_mean", 0.0) or 0.0),
         "field_neuron_external_impulse_norm_mean": float(neuron_population_summary.get("neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        "field_neuron_context_memory_impulse_norm_mean": float(neuron_population_summary.get("neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
         "field_neuron_population": list(neuron_population or []),
         "field_areal_count": int(areal_population_summary.get("areal_count", 0) or 0),
         "field_areal_activation_mean": float(areal_population_summary.get("areal_activation_mean", 0.0) or 0.0),
@@ -4005,6 +4176,7 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "field_areal_conflict_mean": float(areal_population_summary.get("areal_conflict_mean", 0.0) or 0.0),
         "field_areal_states": list(areal_population or []),
         "field_areal_links": list(areal_links or []),
+        "field_topology_state": dict(field_topology_state or {}),
     }
 
     _mcm_state_debug(
@@ -4209,6 +4381,7 @@ def build_outer_visual_perception_state(world_state):
 def build_inner_field_perception_state(snapshot, bot=None):
     snap = dict(snapshot or {})
     prior_regulation = float(getattr(bot, "experience_regulation", 0.0) or 0.0) if bot is not None else 0.0
+    field_topology_state = _build_field_topology_state(snap)
     return {
         "field_mean_energy": float(snap.get("mean_energy", 0.0) or 0.0),
         "field_mean_motivation": float(snap.get("mean_motivation", 0.0) or 0.0),
@@ -4239,6 +4412,7 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "field_neuron_coupling_norm_mean": float(snap.get("field_neuron_coupling_norm_mean", 0.0) or 0.0),
         "field_neuron_regulation_force_norm_mean": float(snap.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
         "field_neuron_external_impulse_norm_mean": float(snap.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
+        "field_neuron_context_memory_impulse_norm_mean": float(snap.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
         "field_neuron_population": [dict(item or {}) for item in list(snap.get("field_neuron_population", []) or []) if isinstance(item, dict)],
         "field_areal_count": int(snap.get("field_areal_count", 0) or 0),
         "field_areal_activation_mean": float(snap.get("field_areal_activation_mean", 0.0) or 0.0),
@@ -4251,6 +4425,14 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "field_areal_conflict_mean": float(snap.get("field_areal_conflict_mean", 0.0) or 0.0),
         "field_areal_states": [dict(item or {}) for item in list(snap.get("field_areal_states", []) or []) if isinstance(item, dict)],
         "field_areal_links": [dict(item or {}) for item in list(snap.get("field_areal_links", []) or []) if isinstance(item, dict)],
+        "field_topology_state": dict(field_topology_state or {}),
+        "field_topology_cluster_link_count": int(field_topology_state.get("cluster_link_count", 0) or 0),
+        "field_topology_areal_link_count": int(field_topology_state.get("areal_link_count", 0) or 0),
+        "field_topology_link_density": float(field_topology_state.get("link_density", 0.0) or 0.0),
+        "field_topology_distance_mean": float(field_topology_state.get("topology_distance_mean", 0.0) or 0.0),
+        "field_topology_coherence": float(field_topology_state.get("topology_coherence", 0.0) or 0.0),
+        "field_topology_tension": float(field_topology_state.get("topology_tension", 0.0) or 0.0),
+        "field_topology_state_label": str(field_topology_state.get("topology_state_label", "sparse_topology") or "sparse_topology"),
         "self_state": str(snap.get("self_state", "stable") or "stable"),
         "attractor": str(snap.get("attractor", "neutral") or "neutral"),
         "prior_experience_regulation": float(prior_regulation),

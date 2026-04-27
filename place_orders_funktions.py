@@ -100,7 +100,24 @@ def _detect_open_position(positions):
     return False
 # --------------------------------------------------
 def _sync_with_exchange(reason="startup"):
-    global _ACTIVE_ORDER_ID, _ACTIVE_TP, _ACTIVE_SIDE, _POSITION_OPEN, _LAST_SYNC_TS, _CONNECTION_OK
+    global _ACTIVE_ORDER_ID, _ACTIVE_TP, _ACTIVE_SIDE, _POSITION_OPEN, _LAST_SYNC_TS, _CONNECTION_OK, _ENTRY_REFERENCE, _RISK_REFERENCE
+
+    def _read_order_float(order_payload, info_payload, keys):
+        for source in (dict(order_payload or {}), dict(info_payload or {})):
+            for key in list(keys or []):
+                value = source.get(key)
+                if value is None:
+                    continue
+
+                try:
+                    number = float(value)
+                except Exception:
+                    continue
+
+                if number > 0.0:
+                    return float(number)
+
+        return None
 
     exchange = _ensure_exchange()
 
@@ -134,6 +151,37 @@ def _sync_with_exchange(reason="startup"):
     if _ACTIVE_ORDER_ID is not None:
         exists = ph_ohlcv.check_order_id_exist(exchange, _SYMBOL, _ACTIVE_ORDER_ID)
         if exists:
+            confirmed_order = None
+
+            for order_item in list(open_orders or []):
+                if str((order_item or {}).get("id")) == str(_ACTIVE_ORDER_ID):
+                    confirmed_order = dict(order_item or {})
+                    break
+
+            if confirmed_order:
+                info = dict(confirmed_order.get("info", {}) or {})
+                side = str(confirmed_order.get("side") or "").lower() or None
+                entry = _read_order_float(confirmed_order, info, ("price", "entryPrice", "avgPrice", "average"))
+                tp = _read_order_float(confirmed_order, info, ("takeProfitPrice", "takeProfitRp", "takeProfit", "tp"))
+                sl = _read_order_float(confirmed_order, info, ("stopLossPrice", "stopLossRp", "stopLoss", "sl"))
+
+                if _ACTIVE_SIDE is None and side is not None:
+                    _ACTIVE_SIDE = side
+
+                if _ACTIVE_TP is None and tp is not None:
+                    _ACTIVE_TP = float(tp)
+
+                if _ENTRY_REFERENCE is None and entry is not None:
+                    _ENTRY_REFERENCE = float(entry)
+
+                try:
+                    risk_missing = _RISK_REFERENCE is None or float(_RISK_REFERENCE) <= 0.0
+                except Exception:
+                    risk_missing = True
+
+                if risk_missing and entry is not None and sl is not None:
+                    _RISK_REFERENCE = abs(float(entry) - float(sl))
+
             gate_debug(f"🟡 SYNC: aktive Order bestätigt | id={_ACTIVE_ORDER_ID}")
             _LAST_SYNC_TS = time.time()
             gate_debug("---------------------------------------")
@@ -148,11 +196,23 @@ def _sync_with_exchange(reason="startup"):
     if open_orders:
         if len(open_orders) == 1:
             o = open_orders[0]
+            info = dict((o or {}).get("info", {}) or {})
             oid = o.get("id")
             side = str(o.get("side") or "").lower() or None
+            entry = _read_order_float(o, info, ("price", "entryPrice", "avgPrice", "average"))
+            tp = _read_order_float(o, info, ("takeProfitPrice", "takeProfitRp", "takeProfit", "tp"))
+            sl = _read_order_float(o, info, ("stopLossPrice", "stopLossRp", "stopLoss", "sl"))
+
             _ACTIVE_ORDER_ID = oid
             _ACTIVE_SIDE = side
-            _ACTIVE_TP = None  # TP unbekannt nach Restart
+            _ACTIVE_TP = float(tp) if tp is not None else None
+
+            if entry is not None:
+                _ENTRY_REFERENCE = float(entry)
+
+            if entry is not None and sl is not None:
+                _RISK_REFERENCE = abs(float(entry) - float(sl))
+
             gate_debug(f"🟡 SYNC: 1 offene Order übernommen | id={_ACTIVE_ORDER_ID} | side={_ACTIVE_SIDE}")
         else:
             gate_debug(f"⚠️ SYNC: {len(open_orders)} offene Orders gefunden → keine automatische Übernahme")
@@ -183,13 +243,135 @@ def _bootstrap_once():
             gate_debug(f"❌ BOOTSTRAP Fehler: {e}")
         _BOOTSTRAPPED = True
 # --------------------------------------------------
+def _extract_position_context_from_positions(positions):
+    if not positions:
+        return None
+
+    def _read_float(payload, keys):
+        for key in list(keys or []):
+            try:
+                value = payload.get(key)
+            except Exception:
+                value = None
+
+            if value is None:
+                continue
+
+            try:
+                number = float(value)
+            except Exception:
+                continue
+
+            if number > 0.0:
+                return float(number)
+
+        return None
+
+    for position in list(positions or []):
+        if not isinstance(position, dict):
+            continue
+
+        contracts = position.get("contracts")
+        try:
+            if contracts is None or abs(float(contracts)) <= 0.0:
+                continue
+        except Exception:
+            continue
+
+        info = dict(position.get("info", {}) or {})
+
+        side_raw = str(
+            position.get(
+                "side",
+                info.get("side", info.get("posSide", info.get("positionSide", ""))),
+            )
+            or ""
+        ).strip().lower()
+
+        if side_raw in ("long", "buy"):
+            side = "LONG"
+        elif side_raw in ("short", "sell"):
+            side = "SHORT"
+        else:
+            continue
+
+        entry = _read_float(
+            position,
+            ("entryPrice", "entry_price", "avgPrice", "average", "avgEntryPrice"),
+        )
+        if entry is None:
+            entry = _read_float(
+                info,
+                ("entryPrice", "avgEntryPrice", "avgEntryPx", "avgEntryPriceRp", "avgPx"),
+            )
+
+        tp = _read_float(
+            position,
+            ("takeProfitPrice", "takeProfit", "tp", "takeProfitRp"),
+        )
+        if tp is None:
+            tp = _read_float(
+                info,
+                ("takeProfitPrice", "takeProfit", "takeProfitPx", "takeProfitRp", "tp"),
+            )
+
+        sl = _read_float(
+            position,
+            ("stopLossPrice", "stopLoss", "sl", "stopLossRp"),
+        )
+        if sl is None:
+            sl = _read_float(
+                info,
+                ("stopLossPrice", "stopLoss", "stopLossPx", "stopLossRp", "sl"),
+            )
+
+        if entry is None or tp is None or sl is None:
+            continue
+
+        entry_ts = position.get("timestamp", info.get("timestamp", None))
+
+        try:
+            entry_ts = int(float(entry_ts)) if entry_ts is not None else None
+        except Exception:
+            entry_ts = None
+
+        return {
+            "id": position.get("id", info.get("orderID", info.get("orderId", None))),
+            "source": "position_context",
+            "side": str(side),
+            "entry": float(entry),
+            "tp": float(tp),
+            "sl": float(sl),
+            "entry_ts": entry_ts,
+        }
+
+    return None
+# --------------------------------------------------
 # get_active_order_snapshot - wird in rl_structure_bot.py genutz
 # - prüft, ob aktuell eine Order offen ist (über _ACTIVE_ORDER_ID oder _POSITION_OPEN) 
 # # --------------------------------------------------       
 def get_active_order_snapshot():
-    global _ACTIVE_ORDER_ID, _ACTIVE_SIDE, _ACTIVE_TP, _POSITION_OPEN
+    global _ACTIVE_ORDER_ID, _ACTIVE_SIDE, _ACTIVE_TP, _POSITION_OPEN, _ENTRY_REFERENCE, _RISK_REFERENCE
+
+    def _read_order_float(order_payload, info_payload, keys):
+        for source in (dict(order_payload or {}), dict(info_payload or {})):
+            for key in list(keys or []):
+                value = source.get(key)
+                if value is None:
+                    continue
+
+                try:
+                    number = float(value)
+                except Exception:
+                    continue
+
+                if number > 0.0:
+                    return float(number)
+
+        return None
 
     exchange = _ensure_exchange()
+    _bootstrap_once()
     open_orders = _safe_fetch_open_orders(exchange)
 
     if open_orders and len(open_orders) == 1:
@@ -200,7 +382,12 @@ def get_active_order_snapshot():
             # --------------------------------------------------
             # Exchange Timestamp (ms)
             # --------------------------------------------------
-            order_ts = int(o.get("timestamp"))
+            order_ts_raw = o.get("timestamp")
+
+            try:
+                order_ts = int(float(order_ts_raw)) if order_ts_raw is not None else None
+            except Exception:
+                order_ts = None
 
             # --------------------------------------------------
             # Timeframe → ms berechnen
@@ -219,7 +406,9 @@ def get_active_order_snapshot():
             # --------------------------------------------------
             # Floor auf Candle-Open
             # --------------------------------------------------
-            entry_ts = (order_ts // timeframe_ms) * timeframe_ms
+            entry_ts = None
+            if order_ts is not None:
+                entry_ts = (order_ts // timeframe_ms) * timeframe_ms
 
             order_side = str(o.get("side") or "").strip().lower()
             side = "LONG"
@@ -231,15 +420,48 @@ def get_active_order_snapshot():
                 "source": "open_order",
                 "side": str(side),
                 "entry": float(o.get("price")),
-                "tp": float(info.get("takeProfitRp")) if info.get("takeProfitRp") else None,
-                "sl": float(info.get("stopLossRp")) if info.get("stopLossRp") else None,
+                "tp": _read_order_float(o, info, ("takeProfitPrice", "takeProfitRp", "takeProfit", "tp")),
+                "sl": _read_order_float(o, info, ("stopLossPrice", "stopLossRp", "stopLoss", "sl")),
                 "entry_ts": entry_ts,
             }
 
         except Exception:
             return None
 
-    if (not open_orders) and bool(_POSITION_OPEN):
+    if isinstance(open_orders, list) and (not open_orders) and _ACTIVE_ORDER_ID is not None and str(_ACTIVE_ORDER_ID) != "MULTI_OPEN_ORDERS":
+        vanished_order_id = _ACTIVE_ORDER_ID
+        vanished_side = _ACTIVE_SIDE
+        vanished_tp = _ACTIVE_TP
+
+        _sync_with_exchange(reason="snapshot_order_missing_sync")
+
+        if _POSITION_OPEN is True:
+            if vanished_side is not None and _ACTIVE_SIDE is None:
+                _ACTIVE_SIDE = vanished_side
+
+            if vanished_tp is not None and _ACTIVE_TP is None:
+                _ACTIVE_TP = vanished_tp
+
+            gate_debug("🟢 Snapshot: LIVE FILL erkannt → Positionskontext für Bot-Handoff bereit")
+        elif vanished_order_id is not None:
+            mark_order_cancelled(vanished_order_id, cause="exchange_disappeared")
+            return None
+
+    if isinstance(open_orders, list) and (not open_orders) and bool(_POSITION_OPEN):
+        positions = _safe_fetch_positions(exchange)
+        position_snapshot = _extract_position_context_from_positions(positions)
+
+        if isinstance(position_snapshot, dict):
+            try:
+                _ACTIVE_SIDE = "buy" if str(position_snapshot.get("side", "")).upper() == "LONG" else "sell"
+                _ACTIVE_TP = float(position_snapshot.get("tp"))
+                _ENTRY_REFERENCE = float(position_snapshot.get("entry"))
+                _RISK_REFERENCE = abs(float(position_snapshot.get("entry")) - float(position_snapshot.get("sl")))
+            except Exception:
+                pass
+
+            return dict(position_snapshot or {})
+
         try:
             side = str(_ACTIVE_SIDE or "").strip().lower()
             entry = float(_ENTRY_REFERENCE) if _ENTRY_REFERENCE is not None else None
@@ -260,7 +482,7 @@ def get_active_order_snapshot():
                 sl = float(entry + risk)
 
             return {
-                "id": None,
+                "id": vanished_order_id if "vanished_order_id" in locals() else None,
                 "source": "position_context",
                 "side": str(position_side),
                 "entry": float(entry),
