@@ -28,13 +28,13 @@ Dieses `README.md` ist der **Einstieg**.
 
 Die weiteren Kern-Dokumente sind:
 
-- `UMSETZUNGSPLAN.md`  
+- `files/UMSETZUNGSPLAN.md`  
   architektonischer Bauplan / Zielbild
 
-- `aktueller_stand.md`  
+- `files/aktueller_stand.md`  
   realer Ist-Zustand des aktuellen Dateistands
 
-- `fix_liste.md`  
+- `files/fix_liste.md`  
   reale offene Korrekturen und priorisierte Ausbaurichtung
 
 ---
@@ -65,6 +65,30 @@ Sondern:
 - Beobachtung, Hold und Replan als echte Reaktionen zu nutzen
 - mit Situationen besser umgehen zu können
 - innere Muster über Zeit tragfähiger zu organisieren
+
+---
+
+## Reflexion und Denkkomplexitaet
+
+Ein wichtiger Teil der Zielarchitektur ist, dass das System nicht nur
+Aussenreize verarbeitet, sondern auch die eigene Verarbeitung mitwahrnimmt.
+
+Das System koppelt dadurch mehrere Akteure:
+
+- aeussere Wahrnehmung: Markt, Struktur, Impuls, Risiko, Timing
+- innere Wahrnehmung: Tragfaehigkeit, Spannung, Stabilitaet, Ueberlastung, Klarheit, Hemmung
+- Denken und Organisation: Musterdeutung, Teilmuster-Ergaenzung, Erfahrungsvergleich, Verdichtung, Reorganisation
+- Handlung: `observe`, `hold`, `replan`, kontrolliertes `act`
+- Lernen: Rueckwirkung auf Prozessqualitaet, Tragfaehigkeit, Stabilitaet, Varianz und Erfahrungsspuren
+
+Memory ist dabei nicht nur Archiv.
+Es wirkt als Resonanz-, Unterstuetzungs- und Konfliktflaeche fuer innere Organisation.
+
+Denken ist ebenfalls nicht kostenlos.
+Erfahrungsvergleich, Musterdeutung und Reorganisation koennen kognitive Last erzeugen.
+Diese Last soll spaeter sichtbar werden und ueber eine energieeffiziente Meta-Regulation
+behandelt werden: weiterdenken, verdichten, beobachten, halten, reorganisieren
+oder kontrolliert handeln.
 
 ---
 
@@ -479,6 +503,15 @@ Die nächste architektonische Richtung ist:
 6. MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
 7. lokale Erfahrungsrückwirkung erst danach tiefer an Innenmuster und neuronale Teilträger koppeln
 
+Aktuelle operative Prioritaet:
+
+1. neuronale Aktivitaet und MCM-Feldmechanik sauber stabilisieren
+2. MCM-Feld als Wahrnehmungsfeld mit Aktivitaetsinseln, Kopplung und Feldwahrnehmung schaerfen
+3. Backtest-Logik als sauberen Kontrollpfad fuer Brain-Entscheidungen nutzen
+4. Denkstruktur-Komplexitaet mit Memory sichtbar machen
+5. energieeffiziente Meta-Regulation fuer Erfahrungsvergleich, kognitive Last und Handlungsreife ausbauen
+6. Live-Handoff erst nach stabiler Brain-/Backtest-Basis im Nachweisraum schliessen
+
 ---
 
 ## Value Gate
@@ -528,6 +561,8 @@ sondern in:
 - tieferem Innenmuster- und Innenfeldspeicher
 - Feldtopologie / Feldverlauf
 - weiterer struktureller Trennung der Ebenen
+- sichtbarer Denkkomplexitaet und energieeffizienter Meta-Regulation
+- Live-Handoff erst nach stabiler Brain-/Backtest-Basis
 
 ---
 
@@ -550,10 +585,10 @@ Der Modus wird in `config.py` gesetzt (`BACKTEST` oder `LIVE`).
 ## Hinweise
 
 Für Architektur und Zielbild:
-siehe `UMSETZUNGSPLAN.md`
+siehe `files/UMSETZUNGSPLAN.md`
 
 Für realen Ist-Zustand:
-siehe `aktueller_stand.md`
+siehe `files/aktueller_stand.md`
 
 Für reale offene Korrekturen:
-siehe `fix_liste.md`
+siehe `files/fix_liste.md`

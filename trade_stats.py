@@ -9,7 +9,9 @@
 
 import json
 import os
+import time
 from config import Config
+from debug_reader import dbr_file_write_profile
 
 class TradeStats:
 
@@ -72,10 +74,11 @@ class TradeStats:
             "max_drawdown_pct": 0.0,
             "kpi_summary": {},
         }
+        self._json_save_seq = 0
 
         if reset:
             # JSON zurücksetzen
-            self._save()
+            self._save(force=True)
 
             # CSV bei Neustart überschreiben
             if os.path.exists(self.csv_path):
@@ -133,8 +136,17 @@ class TradeStats:
     def _append_record_file(self, path: str, record: dict):
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
+            line = json.dumps(dict(record or {}), ensure_ascii=False) + "\n"
+            write_start = time.perf_counter()
             with open(path, "a", encoding="utf-8") as f:
-                f.write(json.dumps(dict(record or {}), ensure_ascii=False) + "\n")
+                f.write(line)
+            dbr_file_write_profile(
+                path,
+                (time.perf_counter() - write_start) * 1000.0,
+                bytes_written=len(line.encode("utf-8")),
+                operation="trade_stats_jsonl_append",
+                extra=f"event={str((record or {}).get('event', '-'))}|status={str((record or {}).get('status', '-'))}",
+            )
         except Exception:
             pass
 
@@ -341,6 +353,41 @@ class TradeStats:
     # ─────────────────────────────────────────────
     def _compact_context(self, context: dict) -> dict:
         normalized_context = self._normalize_record_value(context or {})
+        compact_attempt = bool(getattr(Config, "TRADE_STATS_ATTEMPT_RECORD_COMPACT", True))
+
+        def _compact_snapshot(value):
+            item = self._normalize_record_value(value or {})
+            if not isinstance(item, dict):
+                return {}
+            return {
+                "tension": self._pick_fields(item.get("tension", {}), [
+                    "stability",
+                    "clarity",
+                    "pressure",
+                    "conflict",
+                    "recovery_balance",
+                ]),
+                "field": self._pick_fields(item.get("field", {}), [
+                    "pressure_to_capacity",
+                    "regulatory_load",
+                    "action_capacity",
+                    "recovery_need",
+                    "survival_pressure",
+                    "capacity_reserve",
+                    "recovery_balance",
+                    "field_perception_label",
+                    "field_perception_clarity",
+                    "field_perception_fragmentation",
+                    "field_perception_strain",
+                ]),
+                "experience": self._pick_fields(item.get("experience", {}), [
+                    "pressure_release",
+                    "load_bearing_capacity",
+                    "process_quality",
+                    "carrying_capacity_delta",
+                    "self_confidence_delta",
+                ]),
+            }
 
         compact = {
             "state": self._pick_fields(normalized_context.get("state", {}), [
@@ -381,11 +428,17 @@ class TradeStats:
                 "capacity_reserve",
                 "recovery_balance",
             ]),
-            "bearing_context": self._normalize_record_value(normalized_context.get("bearing_context", {})),
-            "regulation_snapshot": self._normalize_record_value(normalized_context.get("regulation_snapshot", {})),
-            "state_before": self._normalize_record_value(normalized_context.get("state_before", {})),
-            "state_after": self._normalize_record_value(normalized_context.get("state_after", {})),
-            "state_delta": self._normalize_record_value(normalized_context.get("state_delta", {})),
+            "bearing_context": self._pick_fields(normalized_context.get("bearing_context", {}), [
+                "structure_quality",
+                "bearing_pressure",
+                "load_bearing_capacity",
+                "regulation_cost",
+                "relief_quality",
+            ]),
+            "regulation_snapshot": _compact_snapshot(normalized_context.get("regulation_snapshot", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("regulation_snapshot", {})),
+            "state_before": _compact_snapshot(normalized_context.get("state_before", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("state_before", {})),
+            "state_after": _compact_snapshot(normalized_context.get("state_after", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("state_after", {})),
+            "state_delta": _compact_snapshot(normalized_context.get("state_delta", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("state_delta", {})),
             "felt_state": self._pick_fields(normalized_context.get("felt_state", {}), [
                 "confidence",
                 "urgency",
@@ -457,11 +510,30 @@ class TradeStats:
         }
         return {key: value for key, value in compact.items() if value}
     # ─────────────────────────────────────────────
-    def _save(self):
+    def _save(self, force: bool = False):
         try:
+            if not bool(force):
+                every_n = max(1, int(getattr(Config, "TRADE_STATS_JSON_SAVE_EVERY_N", 1) or 1))
+                self._json_save_seq = int(getattr(self, "_json_save_seq", 0) or 0) + 1
+                if every_n > 1 and (self._json_save_seq % every_n) != 0:
+                    return
+
             os.makedirs(os.path.dirname(self.path), exist_ok=True)
+            write_start = time.perf_counter()
             with open(self.path, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, indent=2)
+            elapsed_ms = (time.perf_counter() - write_start) * 1000.0
+            try:
+                bytes_written = int(os.path.getsize(self.path))
+            except Exception:
+                bytes_written = 0
+            dbr_file_write_profile(
+                self.path,
+                elapsed_ms,
+                bytes_written=bytes_written,
+                operation="trade_stats_json_dump",
+                extra=f"force={bool(force)}|trades={int(self.data.get('trades', 0) or 0)}|attempts={int(self.data.get('attempts', 0) or 0)}",
+            )
         except Exception:
             pass
 
@@ -507,6 +579,21 @@ class TradeStats:
             "structure_bucket": str(structure_bucket),
             "context": compact_context,
         }
+
+    # ─────────────────────────────────────────────
+    def _should_write_attempt_record(self, status_key: str) -> bool:
+        if not bool(getattr(Config, "TRADE_STATS_ATTEMPT_RECORD_DEBUG", True)):
+            return False
+
+        status = str(status_key or "").strip().lower()
+        if status in ("submitted", "filled", "cancelled", "timeout", "blocked_value_gate"):
+            return True
+
+        every_n = max(1, int(getattr(Config, "TRADE_STATS_ATTEMPT_RECORD_EVERY_N", 1) or 1))
+        if every_n <= 1:
+            return True
+
+        return (int(self.data.get("attempts", 0) or 0) % every_n) == 0
 
     # ─────────────────────────────────────────────
     def get_attempt_feedback(self, window: int = 24) -> dict:
@@ -805,7 +892,8 @@ class TradeStats:
             }
         )
         self.data["recent_attempts"] = recent[-80:]
-        self._append_record_file(self.attempt_path, attempt_record)
+        if self._should_write_attempt_record(status_key):
+            self._append_record_file(self.attempt_path, attempt_record)
         self._rebuild_kpi_summary()
         self._save()
 
@@ -918,7 +1006,7 @@ class TradeStats:
         self.data["max_drawdown_pct"] = float(max(float(self.data.get("max_drawdown_pct", 0.0) or 0.0), drawdown_pct))
 
         self._rebuild_kpi_summary()
-        self._save()
+        self._save(force=True)
 
         try:
             os.makedirs(os.path.dirname(self.csv_path), exist_ok=True)
@@ -1056,6 +1144,6 @@ class TradeStats:
 
             self._append_record_file(self.outcome_path, outcome_record)
             self._rebuild_kpi_summary()
-            self._save()
+            self._save(force=True)
         except Exception:
             pass

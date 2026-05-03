@@ -14,7 +14,7 @@ class Config:
     # ==================================================
     # DATENQUELLE
     # ==================================================
-    BACKTEST_FILEPATH = "data/1_month.csv" 
+    BACKTEST_FILEPATH = "data/1-12_2025_5m_SOLUSDT.csv" 
     # workspace | 1-12_2023_5m_SOLUSDT | 1-12_2024_5m_SOLUSDT | 1-12_2025_5m_SOLUSDT | 1-2_2026_5m_SOLUSDT 
     
     CSV_OHLCV_PATH = "data/workspace.csv"   # Live Mode OHLCV Daten Börse
@@ -29,7 +29,7 @@ class Config:
     ORDER_SIZE = 0.5
     WORLD_TIME_LOOP_SECONDS = 1.0 # Live-Loop-Wartezeit für den äußeren Welt-/Chart-Loop.
     # WORLD_TIME_LOOP_SECONDS sollte fachlich  eher Polling-Intervall heißen, nicht Weltzeit. !!!!!
-    WORLD_REPLAY_LOOP_SECONDS = 0.01 # Replay-Verzögerung im Backtest/CSV-Feed.
+    WORLD_REPLAY_LOOP_SECONDS = 0.001 # Replay-Verzögerung im Backtest/CSV-Feed.
     # ==================================================
     # WORKSPACE
     # ==================================================
@@ -54,13 +54,31 @@ class Config:
     # ==================================================
     MCM_DEBUG = True
     MCM_OUTCOME_DEBUG = True
+    MCM_RUNTIME_PROFILE_DEBUG = True # Schreibt Laufzeitprofile nach debug/mcm_profile.csv, um Rechenzeit, Snapshot- und Schreibkosten sichtbar zu machen.
+    MCM_RUNTIME_PROFILE_MIN_MS = 0.05 # Mindestdauer in Millisekunden, ab der Profiling-Zeilen geschrieben werden.
+    MCM_RUNTIME_PROFILE_EVERY_N = 10 # Schreibt jede n-te Profiling-Zeile. Höher setzen, wenn der Profiling-Output zu groß wird.
+    MCM_FILE_WRITE_PROFILE_DEBUG = True # Schreibt kompakte Dateischreibprofile nach debug/mcm_file_write_profile.csv.
+    MCM_FILE_WRITE_PROFILE_MIN_MS = 0.05 # Mindestdauer in Millisekunden, ab der Dateischreibprofile geschrieben werden.
+    MCM_FILE_WRITE_PROFILE_EVERY_N = 5 # Schreibt jede n-te Dateischreib-Profilzeile, damit die Messung selbst leicht bleibt.
+    TRADE_STATS_ATTEMPT_RECORD_DEBUG = True # Schreibt Attempt-Replay-Zeilen; In-Memory-Zaehler bleiben auch bei Sampling aktiv.
+    TRADE_STATS_ATTEMPT_RECORD_EVERY_N = 10 # Schreibt nur jede n-te Attempt-Zeile; echte Submitted/Filled/Cancel/Timeout-Events bleiben sichtbar.
+    TRADE_STATS_ATTEMPT_RECORD_COMPACT = True # Entfernt schwere Snapshot-Nester aus Attempt-JSONL und behaelt nur Diagnoseachsen.
+    TRADE_STATS_JSON_SAVE_EVERY_N = 25 # Schreibt trade_stats.json auf Attempt-Pfaden nur periodisch; Exits/Cancels schreiben weiterhin sofort.
+    MCM_FIELD_DECISION_PROTOCOL_DEBUG = True # Schreibt ein kompaktes Feldentscheidungs-Protokoll nach debug/mcm_field_decision_protocol.csv.
+    MCM_FIELD_DECISION_PROTOCOL_EVERY_N = 5 # Schreibt jede n-te Feldentscheidung; Phasenwechsel werden trotzdem sofort geschrieben.
+    MCM_VISUAL_SNAPSHOT_WRITE_EVERY_N = 25 # Schreibt Visual-/Inner-Snapshots nur jeden n-ten Runtime-Markt-Tick.
+    MCM_VISUAL_SNAPSHOT_MIN_INTERVAL_SECONDS = 0.0 # Optionale Mindestzeit zwischen Visual-/Inner-Snapshot-Schreibvorgängen.
+    MCM_VISUAL_SNAPSHOT_FORCE_ON_STATE_CHANGE = False # Schreibt sofort, wenn Pending-/Position-/Execution-Zustand wechselt.
+    MCM_INNER_PATTERN_IDENTITY_STABILITY_TICKS = 5 # Anzahl gleicher Innenmuster-Ticks, ab der inner_pattern_identity als wiederkehrend lesbar wird.
 
     MCM_ENABLED = True # Aktiviert die MCM-Interne Simulation, um die Entscheidungsfindung der Agenten zu beeinflussen. Deaktivieren, um die MCM-Interne Simulation zu überspringen und direkt auf Marktinformationen zu reagieren.
     MCM_INTERNAL_CYCLES = 1 # Anzahl der MCM-Interne Zyklen pro Weltzeit-Tick. Je höher, desto intensiver die interne Simulation pro Weltzeit-Tick, aber auch rechenintensiver.
     MCM_REPLAY_SCALE = 0.012 # Skalierungsfaktor für die Geschwindigkeit der MCM-Interne Simulation im Vergleich zur Weltzeit. Je kleiner, desto schneller läuft die MCM-Interne Simulation im Verhältnis zur Weltzeit.
-    MCM_FIELD_AGENTS = 170 # Agentenzahl im MCM-Feld, beeinflusst die Granularität der Simulation und die Rechenzeit.
+    MCM_FIELD_AGENTS = 230 # Agentenzahl im MCM-Feld, beeinflusst die Granularität der Simulation und die Rechenzeit.
     MCM_FIELD_DIMS = 3 # Anzahl der Dimensionen im MCM-Feld, z.B. 3 für einen 3D-Raum.
     MCM_FIELD_LOCAL_NEIGHBORS = 8 # Anzahl der nächsten Nachbarn, die für lokale Interaktionen berücksichtigt werden.
+    MCM_NEURON_STEP_RETURN_SNAPSHOT = False # Gibt pro Neuron-Step keinen Snapshot zurueck; das Feld liest Snapshots zentral.
+    MCM_FIELD_AREAL_REFRESH_EVERY_N = 2 # Berechnet schwere Areal-/Topologie-Metriken nur jeden n-ten Feldtick voll.
     MCM_FIELD_COUPLING_SIGMA = 0.5 # Standardabweichung für die Kopplungsstärke in Abhängigkeit von der Entfernung im MCM-Feld. Je kleiner, desto stärker die Kopplung bei nahen Agenten und schwächer bei entfernten Agenten.
     MCM_COUPLING = 0.045 # Grundlegende Kopplungsstärke zwischen den Agenten im MCM-Feld. Beeinflusst, wie stark die Agenten sich gegenseitig beeinflussen.
     MCM_NOISE = 0.08 # Stärke des Rauschens in der MCM-Interne Simulation. Beeinflusst die Zufälligkeit der Agentenbewegungen und Entscheidungen.
@@ -119,7 +137,7 @@ class Config:
     MCM_RUNTIME_IDLE_SLEEP_MIN_SECONDS = 0.10 # Minimale Schlafzeit in Sekunden, die die Agenten im MCM-Feld während der Idle-Phase der Laufzeit verbringen. Beeinflusst, wie kurz die Agenten inaktiv bleiben können, bevor sie wieder aktiv werden.
     MCM_RUNTIME_IDLE_SLEEP_MAX_SECONDS = 0.45 # Maximale Schlafzeit in Sekunden, die die Agenten im MCM-Feld während der Idle-Phase der Laufzeit verbringen. Beeinflusst, wie lange die Agenten inaktiv bleiben können, bevor sie wieder aktiv werden.
     MCM_MEMORY_STATE_PATH = "bot_memory/memory_state.json" # Dateipfad für das Speichern des Memory-Zustands der MCM-Interne Simulation. Beeinflusst, wo die Memory-Daten gespeichert werden, um Einblicke in die interne Dynamik zu erhalten.
-    MCM_MEMORY_SAVE_COOLDOWN_SECONDS = 1.25 # Minimale Zeit in Sekunden zwischen dem Speichern von Memory-Zuständen, um die Leistung zu optimieren und übermäßiges Schreiben zu vermeiden.
+    MCM_MEMORY_SAVE_COOLDOWN_SECONDS = 5.0 # Minimale Zeit in Sekunden zwischen dem Speichern von Memory-Zuständen, um die Leistung zu optimieren und übermäßiges Schreiben zu vermeiden.
     MCM_SAVE_RUNTIME_STATE = False # Aktiviert das Speichern des Runtime-Zustands der MCM-Interne Simulation, um Einblicke in die interne Dynamik zu erhalten, aber auch mit einem gewissen Leistungsaufwand verbunden.
     DEBUG_WRITE_EVERY_N = 8 # Anzahl der MCM-Interne Zyklen, nach denen Debug-Informationen geschrieben werden. Je höher, desto seltener werden Debug-Informationen geschrieben, was die Leistung verbessern kann, aber weniger Einblicke in die interne Dynamik bietet.
 

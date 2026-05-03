@@ -9,6 +9,7 @@ import json
 import os
 import time
 from config import Config
+from debug_reader import dbr_file_write_profile, dbr_profile
 
 # --------------------------------------------------
 # PATH
@@ -176,6 +177,65 @@ def _to_str_list(values) -> list[str]:
 
     return cleaned
 # --------------------------------------------------
+def normalize_inner_field_history_state(history_state) -> dict:
+
+    item = dict(history_state or {})
+    raw_history = item.get("inner_field_history", [])
+
+    if not isinstance(raw_history, list):
+        raw_history = []
+
+    limit = max(
+        4,
+        min(
+            256,
+            _to_int(getattr(Config, "MCM_INNER_FIELD_HISTORY_LIMIT", 48), 48),
+        ),
+    )
+
+    normalized_history = []
+
+    for raw_entry in list(raw_history or [])[-limit:]:
+        if not isinstance(raw_entry, dict):
+            continue
+
+        entry = dict(raw_entry or {})
+        normalized_history.append(
+            {
+                "timestamp": entry.get("timestamp", None),
+                "runtime_tick_seq": max(0, _to_int(entry.get("runtime_tick_seq", 0), 0)),
+                "field_mean_energy": _to_float(entry.get("field_mean_energy", 0.0), 0.0),
+                "field_mean_velocity": _to_float(entry.get("field_mean_velocity", 0.0), 0.0),
+                "field_pressure": max(0.0, _to_float(entry.get("field_pressure", 0.0), 0.0)),
+                "field_cluster_count": max(0, _to_int(entry.get("field_cluster_count", 0), 0)),
+                "field_areal_count": max(0, _to_int(entry.get("field_areal_count", 0), 0)),
+                "field_areal_pressure_mean": max(0.0, _to_float(entry.get("field_areal_pressure_mean", 0.0), 0.0)),
+                "field_areal_coherence_mean": max(0.0, _to_float(entry.get("field_areal_coherence_mean", 0.0), 0.0)),
+                "field_areal_conflict_mean": max(0.0, _to_float(entry.get("field_areal_conflict_mean", 0.0), 0.0)),
+                "field_topology_coherence": max(0.0, min(1.0, _to_float(entry.get("field_topology_coherence", 0.0), 0.0))),
+                "field_topology_tension": max(0.0, min(1.0, _to_float(entry.get("field_topology_tension", 0.0), 0.0))),
+                "neural_felt_bearing": max(0.0, min(1.0, _to_float(entry.get("neural_felt_bearing", 0.0), 0.0))),
+                "neural_felt_pressure": max(0.0, min(1.0, _to_float(entry.get("neural_felt_pressure", 0.0), 0.0))),
+                "neural_felt_memory_resonance": max(0.0, min(1.0, _to_float(entry.get("neural_felt_memory_resonance", 0.0), 0.0))),
+                "neural_felt_context_reactivation": max(0.0, min(1.0, _to_float(entry.get("neural_felt_context_reactivation", 0.0), 0.0))),
+                "neural_felt_label": _to_str(entry.get("neural_felt_label"), "quiet_neural_felt"),
+                "delta_field_pressure": max(-1.0, min(1.0, _to_float(entry.get("delta_field_pressure", 0.0), 0.0))),
+                "delta_neural_felt_bearing": max(-1.0, min(1.0, _to_float(entry.get("delta_neural_felt_bearing", 0.0), 0.0))),
+                "delta_topology_tension": max(-1.0, min(1.0, _to_float(entry.get("delta_topology_tension", 0.0), 0.0))),
+                "delta_memory_resonance": max(-1.0, min(1.0, _to_float(entry.get("delta_memory_resonance", 0.0), 0.0))),
+            }
+        )
+
+    return {
+        "inner_field_history": list(normalized_history or []),
+        "inner_field_history_length": int(len(normalized_history)),
+        "inner_field_pressure_trend": max(-1.0, min(1.0, _to_float(item.get("inner_field_pressure_trend", 0.0), 0.0))),
+        "inner_field_bearing_trend": max(-1.0, min(1.0, _to_float(item.get("inner_field_bearing_trend", 0.0), 0.0))),
+        "inner_field_topology_tension_trend": max(-1.0, min(1.0, _to_float(item.get("inner_field_topology_tension_trend", 0.0), 0.0))),
+        "inner_field_memory_resonance_trend": max(-1.0, min(1.0, _to_float(item.get("inner_field_memory_resonance_trend", 0.0), 0.0))),
+        "inner_field_history_label": _to_str(item.get("inner_field_history_label"), "empty_field_history" if not normalized_history else "stable_field_trace"),
+    }
+# --------------------------------------------------
 # NORMALIZE SIGNATURE MEMORY
 # --------------------------------------------------
 def normalize_signature_memory(signature_memory) -> dict:
@@ -321,7 +381,17 @@ def normalize_inner_context_clusters(inner_context_clusters) -> dict:
             "field_areal_fragmentation": max(0.0, min(1.0, _to_float(item.get("field_areal_fragmentation", 0.0), 0.0))),
             "field_areal_coherence_mean": max(0.0, _to_float(item.get("field_areal_coherence_mean", 0.0), 0.0)),
             "field_areal_conflict_mean": max(0.0, _to_float(item.get("field_areal_conflict_mean", 0.0), 0.0)),
+            "field_areal_topology_density_mean": max(0.0, min(1.0, _to_float(item.get("field_areal_topology_density_mean", 0.0), 0.0))),
+            "field_areal_topology_span_mean": max(0.0, _to_float(item.get("field_areal_topology_span_mean", 0.0), 0.0)),
+            "field_areal_topology_boundary_mean": max(0.0, _to_float(item.get("field_areal_topology_boundary_mean", 0.0), 0.0)),
             "field_topology_state": normalize_json_state(item.get("field_topology_state", {}) or {}),
+            "field_topology_layout_state": normalize_json_state(item.get("field_topology_layout_state", {}) or {}),
+            "field_topology_rows": max(0, _to_int(item.get("field_topology_rows", 0), 0)),
+            "field_topology_cols": max(0, _to_int(item.get("field_topology_cols", 0), 0)),
+            "field_topology_position_count": max(0, _to_int(item.get("field_topology_position_count", 0), 0)),
+            "field_topology_neighbor_link_count": max(0, _to_int(item.get("field_topology_neighbor_link_count", 0), 0)),
+            "field_topology_neighbor_count_mean": max(0.0, _to_float(item.get("field_topology_neighbor_count_mean", 0.0), 0.0)),
+            "field_topology_neighbor_count_max": max(0, _to_int(item.get("field_topology_neighbor_count_max", 0), 0)),
             "field_topology_cluster_link_count": max(0, _to_int(item.get("field_topology_cluster_link_count", 0), 0)),
             "field_topology_areal_link_count": max(0, _to_int(item.get("field_topology_areal_link_count", 0), 0)),
             "field_topology_link_density": max(0.0, min(1.0, _to_float(item.get("field_topology_link_density", 0.0), 0.0))),
@@ -329,6 +399,36 @@ def normalize_inner_context_clusters(inner_context_clusters) -> dict:
             "field_topology_coherence": max(0.0, min(1.0, _to_float(item.get("field_topology_coherence", 0.0), 0.0))),
             "field_topology_tension": max(0.0, min(1.0, _to_float(item.get("field_topology_tension", 0.0), 0.0))),
             "field_topology_state_label": _to_str(item.get("field_topology_state_label"), "sparse_topology"),
+            "field_perception_state": normalize_json_state(item.get("field_perception_state", {}) or {}),
+            "field_activity_island_count": max(0, _to_int(item.get("field_activity_island_count", 0), 0)),
+            "field_activity_island_mass_mean": max(0.0, min(1.0, _to_float(item.get("field_activity_island_mass_mean", 0.0), 0.0))),
+            "field_activity_island_mass_max": max(0.0, min(1.0, _to_float(item.get("field_activity_island_mass_max", 0.0), 0.0))),
+            "field_activity_island_activation_mean": max(0.0, min(1.0, _to_float(item.get("field_activity_island_activation_mean", 0.0), 0.0))),
+            "field_activity_island_pressure_mean": max(0.0, min(1.0, _to_float(item.get("field_activity_island_pressure_mean", 0.0), 0.0))),
+            "field_activity_island_coherence_mean": max(0.0, min(1.0, _to_float(item.get("field_activity_island_coherence_mean", 0.0), 0.0))),
+            "field_activity_island_context_reactivation_mean": max(0.0, min(1.0, _to_float(item.get("field_activity_island_context_reactivation_mean", 0.0), 0.0))),
+            "field_activity_island_spread": max(0.0, min(1.0, _to_float(item.get("field_activity_island_spread", 0.0), 0.0))),
+            "field_perception_focus": max(0.0, min(1.0, _to_float(item.get("field_perception_focus", 0.0), 0.0))),
+            "field_perception_clarity": max(0.0, min(1.0, _to_float(item.get("field_perception_clarity", 0.0), 0.0))),
+            "field_perception_stability": max(0.0, min(1.0, _to_float(item.get("field_perception_stability", 0.0), 0.0))),
+            "field_perception_fragmentation": max(0.0, min(1.0, _to_float(item.get("field_perception_fragmentation", 0.0), 0.0))),
+            "field_perception_strain": max(0.0, min(1.0, _to_float(item.get("field_perception_strain", 0.0), 0.0))),
+            "dominant_activity_island_id": _to_str(item.get("dominant_activity_island_id"), "-"),
+            "field_perception_label": _to_str(item.get("field_perception_label"), "quiet_field"),
+            "field_activity_islands": normalize_json_state(item.get("field_activity_islands", []) or []),
+            "neural_felt_state": normalize_json_state(item.get("neural_felt_state", {}) or {}),
+            "neural_felt_bearing": max(0.0, min(1.0, _to_float(item.get("neural_felt_bearing", 0.0), 0.0))),
+            "neural_felt_pressure": max(0.0, min(1.0, _to_float(item.get("neural_felt_pressure", 0.0), 0.0))),
+            "neural_felt_memory_resonance": max(0.0, min(1.0, _to_float(item.get("neural_felt_memory_resonance", 0.0), 0.0))),
+            "neural_felt_context_reactivation": max(0.0, min(1.0, _to_float(item.get("neural_felt_context_reactivation", 0.0), 0.0))),
+            "neural_felt_label": _to_str(item.get("neural_felt_label"), "quiet_neural_felt"),
+            "inner_field_history_state": normalize_json_state(item.get("inner_field_history_state", {}) or {}),
+            "inner_field_history_length": max(0, _to_int(item.get("inner_field_history_length", 0), 0)),
+            "inner_field_pressure_trend": max(-1.0, min(1.0, _to_float(item.get("inner_field_pressure_trend", 0.0), 0.0))),
+            "inner_field_bearing_trend": max(-1.0, min(1.0, _to_float(item.get("inner_field_bearing_trend", 0.0), 0.0))),
+            "inner_field_topology_tension_trend": max(-1.0, min(1.0, _to_float(item.get("inner_field_topology_tension_trend", 0.0), 0.0))),
+            "inner_field_memory_resonance_trend": max(-1.0, min(1.0, _to_float(item.get("inner_field_memory_resonance_trend", 0.0), 0.0))),
+            "inner_field_history_label": _to_str(item.get("inner_field_history_label"), "stable_field_trace"),
             "inner_pattern_support": max(0.0, min(1.0, _to_float(item.get("inner_pattern_support", 0.0), 0.0))),
             "inner_pattern_conflict": max(0.0, min(1.0, _to_float(item.get("inner_pattern_conflict", 0.0), 0.0))),
             "inner_pattern_fragility": max(0.0, min(1.0, _to_float(item.get("inner_pattern_fragility", 0.0), 0.0))),
@@ -340,7 +440,39 @@ def normalize_inner_context_clusters(inner_context_clusters) -> dict:
             "pattern_bearing_score": max(0.0, min(1.0, _to_float(item.get("pattern_bearing_score", 0.0), 0.0))),
             "pattern_reinforcement": max(0.0, min(1.0, _to_float(item.get("pattern_reinforcement", 0.0), 0.0))),
             "pattern_attenuation": max(0.0, min(1.0, _to_float(item.get("pattern_attenuation", 0.0), 0.0))),
+            "experience_neurochemical_profile": normalize_json_state(item.get("experience_neurochemical_profile", {}) or {}),
+            "neurochemical_support": max(0.0, min(1.0, _to_float(item.get("neurochemical_support", 0.0), 0.0))),
+            "neurochemical_strain": max(0.0, min(1.0, _to_float(item.get("neurochemical_strain", 0.0), 0.0))),
+            "avg_experience_effect_score": max(-0.28, min(0.28, _to_float(item.get("avg_experience_effect_score", 0.0), 0.0))),
+            "avg_profit_reward": max(-1.0, min(1.0, _to_float(item.get("avg_profit_reward", 0.0), 0.0))),
+            "avg_relief_signal": max(0.0, min(1.0, _to_float(item.get("avg_relief_signal", 0.0), 0.0))),
+            "avg_stability_signal": max(0.0, min(1.0, _to_float(item.get("avg_stability_signal", 0.0), 0.0))),
+            "avg_discipline_signal": max(0.0, min(1.0, _to_float(item.get("avg_discipline_signal", 0.0), 0.0))),
+            "avg_confidence_signal": max(0.0, min(1.0, _to_float(item.get("avg_confidence_signal", 0.0), 0.0))),
+            "avg_overactivation_signal": max(0.0, min(1.0, _to_float(item.get("avg_overactivation_signal", 0.0), 0.0))),
+            "avg_chaos_penalty": max(0.0, min(1.0, _to_float(item.get("avg_chaos_penalty", 0.0), 0.0))),
+            "avg_variance_penalty": max(0.0, min(1.0, _to_float(item.get("avg_variance_penalty", 0.0), 0.0))),
+            "avg_overstrain_penalty": max(0.0, min(1.0, _to_float(item.get("avg_overstrain_penalty", 0.0), 0.0))),
+            "avg_carrying_capacity_delta": max(-1.0, min(1.0, _to_float(item.get("avg_carrying_capacity_delta", 0.0), 0.0))),
+            "avg_self_confidence_delta": max(-0.28, min(0.28, _to_float(item.get("avg_self_confidence_delta", 0.0), 0.0))),
+            "avg_process_quality": max(0.0, min(1.0, _to_float(item.get("avg_process_quality", 0.0), 0.0))),
             "inner_pattern_label": _to_str(item.get("inner_pattern_label"), ""),
+            "field_pattern_signature": normalize_json_state(item.get("field_pattern_signature", {}) or {}),
+            "field_pattern_signature_key": _to_str(item.get("field_pattern_signature_key"), ""),
+            "field_pattern_vector": _to_float_list(item.get("field_pattern_vector", [])),
+            "inner_pattern_identity": _to_str(item.get("inner_pattern_identity"), ""),
+            "inner_pattern_identity_label": _to_str(item.get("inner_pattern_identity_label"), ""),
+            "inner_pattern_identity_confidence": max(0.0, min(1.0, _to_float(item.get("inner_pattern_identity_confidence", 0.0), 0.0))),
+            "inner_pattern_identity_streak": max(0, _to_int(item.get("inner_pattern_identity_streak", 0), 0)),
+            "inner_pattern_identity_stability": max(0.0, min(1.0, _to_float(item.get("inner_pattern_identity_stability", 0.0), 0.0))),
+            "inner_pattern_identity_recurrent": bool(item.get("inner_pattern_identity_recurrent", False)),
+            "inner_pattern_identity_changed": bool(item.get("inner_pattern_identity_changed", False)),
+            "inner_pattern_identity_last_seen_tick": max(0, _to_int(item.get("inner_pattern_identity_last_seen_tick", 0), 0)),
+            "inner_pattern_recognition_state": normalize_json_state(item.get("inner_pattern_recognition_state", {}) or {}),
+            "inner_pattern_recognition_label": _to_str(item.get("inner_pattern_recognition_label"), "unsettled_inner_pattern"),
+            "inner_pattern_recognition_strength": max(0.0, min(1.0, _to_float(item.get("inner_pattern_recognition_strength", 0.0), 0.0))),
+            "inner_pattern_recognition_recurrent": bool(item.get("inner_pattern_recognition_recurrent", False)),
+            "inner_pattern_recognition_changed": bool(item.get("inner_pattern_recognition_changed", False)),
             "inner_self_state": _to_str(item.get("inner_self_state"), "stable"),
             "inner_attractor": _to_str(item.get("inner_attractor"), "neutral"),
         }
@@ -376,6 +508,8 @@ def normalize_mcm_memory(memory_items) -> list[dict]:
 # --------------------------------------------------
 def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
 
+    profile_start = time.perf_counter() if bool(getattr(Config, "MCM_RUNTIME_PROFILE_DEBUG", False)) else 0.0
+
     if bot is None:
         return {
             "signature_memory": {},
@@ -390,6 +524,12 @@ def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
             "inner_context_cluster_seq": 0,
             "last_inner_context_cluster_id": None,
             "last_inner_context_cluster_key": None,
+            "last_inner_pattern_identity": None,
+            "inner_pattern_identity_streak": 0,
+            "inner_pattern_identity_last_seen_tick": 0,
+            "inner_pattern_identity_stability": 0.0,
+            "inner_field_history_state": {},
+            "inner_field_history": [],
             "mcm_runtime_snapshot": {},
             "mcm_runtime_decision_state": {},
             "mcm_runtime_brain_snapshot": {},
@@ -423,6 +563,12 @@ def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
         "inner_context_cluster_seq": max(0, _to_int(getattr(bot, "inner_context_cluster_seq", 0), 0)),
         "last_inner_context_cluster_id": _to_str(getattr(bot, "last_inner_context_cluster_id", None), None),
         "last_inner_context_cluster_key": _to_str(getattr(bot, "last_inner_context_cluster_key", None), None),
+        "last_inner_pattern_identity": _to_str(getattr(bot, "last_inner_pattern_identity", None), None),
+        "inner_pattern_identity_streak": max(0, _to_int(getattr(bot, "inner_pattern_identity_streak", 0), 0)),
+        "inner_pattern_identity_last_seen_tick": max(0, _to_int(getattr(bot, "inner_pattern_identity_last_seen_tick", 0), 0)),
+        "inner_pattern_identity_stability": max(0.0, min(1.0, _to_float(getattr(bot, "inner_pattern_identity_stability", 0.0), 0.0))),
+        "inner_field_history_state": normalize_inner_field_history_state(getattr(bot, "inner_field_history_state", {})),
+        "inner_field_history": list(normalize_inner_field_history_state(getattr(bot, "inner_field_history_state", {})).get("inner_field_history", []) or []),
         "focus_point": _to_float(getattr(bot, "focus_point", 0.0), 0.0),
         "focus_confidence": _to_float(getattr(bot, "focus_confidence", 0.0), 0.0),
         "target_lock": _to_float(getattr(bot, "target_lock", 0.0), 0.0),
@@ -474,6 +620,13 @@ def build_memory_state(bot, include_runtime_state: bool = True) -> dict:
             "mcm_last_observe_timestamp": getattr(bot, "mcm_last_observe_timestamp", None),
         })
 
+    if profile_start:
+        dbr_profile(
+            "memory_state.build_memory_state",
+            (time.perf_counter() - profile_start) * 1000.0,
+            extra=f"keys={int(len(payload or {}))}|include_runtime_state={bool(include_runtime_state)}",
+        )
+
     return payload
 # --------------------------------------------------
 # APPLY STATE
@@ -498,6 +651,18 @@ def apply_memory_state(bot, state: dict | None) -> dict:
     bot.last_context_cluster_key = _to_str(payload.get("last_context_cluster_key"), None)
     bot.last_inner_context_cluster_id = _to_str(payload.get("last_inner_context_cluster_id"), None)
     bot.last_inner_context_cluster_key = _to_str(payload.get("last_inner_context_cluster_key"), None)
+    bot.last_inner_pattern_identity = _to_str(payload.get("last_inner_pattern_identity"), None)
+    bot.inner_pattern_identity_streak = max(0, _to_int(payload.get("inner_pattern_identity_streak", 0), 0))
+    bot.inner_pattern_identity_last_seen_tick = max(0, _to_int(payload.get("inner_pattern_identity_last_seen_tick", 0), 0))
+    bot.inner_pattern_identity_stability = max(0.0, min(1.0, _to_float(payload.get("inner_pattern_identity_stability", 0.0), 0.0)))
+    inner_field_history_state = normalize_inner_field_history_state(
+        payload.get(
+            "inner_field_history_state",
+            {"inner_field_history": payload.get("inner_field_history", [])},
+        )
+    )
+    bot.inner_field_history_state = dict(inner_field_history_state or {})
+    bot.inner_field_history = list(inner_field_history_state.get("inner_field_history", []) or [])
     bot.focus_point = _to_float(payload.get("focus_point", 0.0), 0.0)
     bot.focus_confidence = _to_float(payload.get("focus_confidence", 0.0), 0.0)
     bot.target_lock = _to_float(payload.get("target_lock", 0.0), 0.0)
@@ -570,6 +735,12 @@ def read_memory_state(path: str | None = None) -> dict:
         "inner_context_cluster_seq": 0,
         "last_inner_context_cluster_id": None,
         "last_inner_context_cluster_key": None,
+        "last_inner_pattern_identity": None,
+        "inner_pattern_identity_streak": 0,
+        "inner_pattern_identity_last_seen_tick": 0,
+        "inner_pattern_identity_stability": 0.0,
+        "inner_field_history_state": {},
+        "inner_field_history": [],
         "focus_point": 0.0,
         "focus_confidence": 0.0,
         "target_lock": 0.0,
@@ -639,6 +810,24 @@ def read_memory_state(path: str | None = None) -> dict:
         "inner_context_cluster_seq": max(0, _to_int((raw or {}).get("inner_context_cluster_seq", 0), 0)),
         "last_inner_context_cluster_id": _to_str((raw or {}).get("last_inner_context_cluster_id"), None),
         "last_inner_context_cluster_key": _to_str((raw or {}).get("last_inner_context_cluster_key"), None),
+        "last_inner_pattern_identity": _to_str((raw or {}).get("last_inner_pattern_identity"), None),
+        "inner_pattern_identity_streak": max(0, _to_int((raw or {}).get("inner_pattern_identity_streak", 0), 0)),
+        "inner_pattern_identity_last_seen_tick": max(0, _to_int((raw or {}).get("inner_pattern_identity_last_seen_tick", 0), 0)),
+        "inner_pattern_identity_stability": max(0.0, min(1.0, _to_float((raw or {}).get("inner_pattern_identity_stability", 0.0), 0.0))),
+        "inner_field_history_state": normalize_inner_field_history_state(
+            (raw or {}).get(
+                "inner_field_history_state",
+                {"inner_field_history": (raw or {}).get("inner_field_history", [])},
+            )
+        ),
+        "inner_field_history": list(
+            normalize_inner_field_history_state(
+                (raw or {}).get(
+                    "inner_field_history_state",
+                    {"inner_field_history": (raw or {}).get("inner_field_history", [])},
+                )
+            ).get("inner_field_history", []) or []
+        ),
         "focus_point": _to_float((raw or {}).get("focus_point", 0.0), 0.0),
         "focus_confidence": _to_float((raw or {}).get("focus_confidence", 0.0), 0.0),
         "target_lock": _to_float((raw or {}).get("target_lock", 0.0), 0.0),
@@ -733,13 +922,34 @@ def write_memory_state_payload(payload: dict | None, path: str | None = None) ->
         return None
 
     filepath = _memory_state_path(path)
+    profile_start = time.perf_counter() if bool(getattr(Config, "MCM_RUNTIME_PROFILE_DEBUG", False)) else 0.0
 
     try:
         _ensure_dir(filepath)
+        write_start = time.perf_counter()
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(dict(payload or {}), f, indent=2)
+        elapsed_ms = (time.perf_counter() - write_start) * 1000.0
+        try:
+            bytes_written = int(os.path.getsize(filepath))
+        except Exception:
+            bytes_written = 0
+        dbr_file_write_profile(
+            filepath,
+            elapsed_ms,
+            bytes_written=bytes_written,
+            operation="memory_state_json_dump",
+            extra=f"keys={int(len(payload or {}))}",
+        )
     except Exception:
         return None
+
+    if profile_start:
+        dbr_profile(
+            "memory_state.write_payload",
+            (time.perf_counter() - profile_start) * 1000.0,
+            extra=f"path={filepath}|keys={int(len(payload or {}))}",
+        )
 
     return dict(payload or {})
 # --------------------------------------------------

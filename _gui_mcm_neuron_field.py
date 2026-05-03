@@ -26,10 +26,10 @@ LINK_NEIGHBORS = 4
 LINK_MAX_DISTANCE = 0.115
 LINK_LOCAL_RADIUS_FACTOR = 1.36
 LINK_SMALL_FIELD_NEIGHBORS = 3
-HEAT_SIGMA = 0.030
-SAMPLE_ACTIVITY_FLOOR = 0.018
+HEAT_SIGMA = 0.038
+SAMPLE_ACTIVITY_FLOOR = 0.010
 TRACE_DECAY = 0.90
-CLUSTER_CONTOUR_LEVELS = (0.36, 0.54, 0.72)
+CLUSTER_CONTOUR_LEVELS = (0.28, 0.46, 0.66)
 INPUT_HOTSPOT_COUNT = 8
 INPUT_HOTSPOT_MIN_STRENGTH = 0.035
 ACTIVE_LINK_FLOOR = 0.16
@@ -225,6 +225,8 @@ class MCMNeuronFieldGUI:
         self._heat_memory = None
         self._heat_trace = None
         self._last_heat = None
+        self._layout_source = "fallback"
+        self._link_source = "fallback"
 
         self.root.title("MCM Neuron Tissue Field")
         self.root.configure(bg=C["bg_root"])
@@ -297,12 +299,12 @@ class MCMNeuronFieldGUI:
     # --------------------------------------------------
     def _build_side_panel(self, parent: tk.Frame):
         sections = [
-            ("FELD", ["tissue", "snapshot", "density", "stability", "load", "capacity"]),
-            ("AKTIVITÄT", ["activity", "coupling", "external", "context_memory", "input_drive"]),
+            ("GEWEBE", ["tissue", "snapshot", "layout", "density", "stability"]),
+            ("AKTIVITÄT", ["activity", "external", "context_memory", "coupling", "input_drive"]),
             ("TOPOLOGIE", ["topology_state", "topology_links", "topology_density", "topology_coherence", "topology_tension"]),
-            ("VERBINDUNG", ["links", "active_links", "areal_flow", "hotspots"]),
-            ("OUTCOME", ["trades", "winrate", "pnl", "attempts"]),
-            ("ZUSTAND", ["reorganization"]),
+            ("VERBINDUNG", ["link_source", "links", "active_links", "areal_flow", "hotspots"]),
+            ("REGULATION", ["load", "capacity", "reorganization"]),
+            ("OUTCOME", ["trades", "tp_sl", "winrate", "pnl"]),
         ]
 
         for section_title, keys in sections:
@@ -353,6 +355,10 @@ class MCMNeuronFieldGUI:
         data = dict(stats or {})
         kpi = dict(data.get("kpi_summary", {}) or {})
         proof = dict(kpi.get("proof", {}) or {})
+        economics = dict(kpi.get("economics", {}) or {})
+        regulation_core = dict(kpi.get("regulation_core", {}) or {})
+        state_core = dict(kpi.get("state_core", {}) or {})
+        last_decomposition = dict(data.get("last_outcome_decomposition", {}) or {})
 
         trades = safe_int(data.get("trades", 0), 0)
         tp = safe_int(data.get("tp", 0), 0)
@@ -360,7 +366,33 @@ class MCMNeuronFieldGUI:
         cancels = safe_int(data.get("cancels", 0), 0)
         attempts = safe_int(data.get("attempts", 0), 0)
         pnl = safe_float(data.get("pnl_netto", 0.0), 0.0)
-        winrate = float(tp / trades) if trades > 0 else 0.0
+        winrate = safe_float(economics.get("winrate", proof.get("winrate", 0.0)), 0.0)
+        if winrate <= 0.0 and trades > 0:
+            winrate = float(tp / trades)
+
+        reason = str(last_decomposition.get("reason", data.get("last_outcome_reason", "-")) or "-").strip()
+        structure_bucket = str(last_decomposition.get("structure_bucket", data.get("last_structure_bucket", "-")) or "-").strip()
+        structure_quality = safe_float(
+            last_decomposition.get(
+                "structure_quality",
+                data.get("last_structure_quality", 0.0),
+            ),
+            0.0,
+        )
+        outcome_bias = safe_float(
+            last_decomposition.get(
+                "outcome_bias",
+                last_decomposition.get("reward_delta", last_decomposition.get("state_delta", 0.0)),
+            ),
+            0.0,
+        )
+        outcome_pressure = safe_float(
+            last_decomposition.get(
+                "outcome_pressure",
+                last_decomposition.get("pressure_delta", last_decomposition.get("regulatory_delta", 0.0)),
+            ),
+            0.0,
+        )
 
         return {
             "trades": int(trades),
@@ -370,10 +402,22 @@ class MCMNeuronFieldGUI:
             "attempts": int(attempts),
             "pnl_netto": float(pnl),
             "winrate": float(winrate),
-            "regulatory_load": safe_float(proof.get("regulatory_load", 0.0), 0.0),
-            "action_capacity": safe_float(proof.get("action_capacity", 0.0), 0.0),
-            "survival_pressure": safe_float(proof.get("survival_pressure", 0.0), 0.0),
-            "state_stability": safe_float(proof.get("state_stability", 0.0), 0.0),
+            "expectancy": safe_float(economics.get("expectancy", proof.get("expectancy", data.get("expectancy", 0.0))), 0.0),
+            "profit_factor": safe_float(economics.get("profit_factor", proof.get("profit_factor", data.get("profit_factor", 0.0))), 0.0),
+            "avg_win": safe_float(economics.get("avg_win", data.get("avg_win", 0.0)), 0.0),
+            "avg_loss": safe_float(economics.get("avg_loss", data.get("avg_loss", 0.0)), 0.0),
+            "max_drawdown_pct": safe_float(economics.get("max_drawdown_pct", proof.get("max_drawdown_pct", data.get("max_drawdown_pct", 0.0))), 0.0),
+            "last_reason": reason or "-",
+            "last_structure": structure_bucket or "-",
+            "last_quality": float(structure_quality),
+            "outcome_bias": float(outcome_bias),
+            "outcome_pressure": float(outcome_pressure),
+            "regulatory_load": safe_float(regulation_core.get("regulatory_load", proof.get("regulatory_load", 0.0)), 0.0),
+            "action_capacity": safe_float(regulation_core.get("action_capacity", proof.get("action_capacity", 0.0)), 0.0),
+            "survival_pressure": safe_float(regulation_core.get("survival_pressure", proof.get("survival_pressure", 0.0)), 0.0),
+            "state_stability": safe_float(state_core.get("state_stability", proof.get("state_stability", 0.0)), 0.0),
+            "recovery_need": safe_float(regulation_core.get("recovery_need", proof.get("recovery_need", 0.0)), 0.0),
+            "pressure_to_capacity": safe_float(regulation_core.get("pressure_to_capacity", proof.get("pressure_to_capacity", 0.0)), 0.0),
         }
 
     # --------------------------------------------------
@@ -399,13 +443,161 @@ class MCMNeuronFieldGUI:
     # --------------------------------------------------
     def _resolve_tissue_count(self, inner: dict, points: list[dict]) -> int:
         inner_field = dict(inner.get("inner_field_perception_state", {}) or {})
+        topology_positions = [
+            dict(item or {})
+            for item in list(inner_field.get("field_topology_positions", []) or [])
+            if isinstance(item, dict)
+        ]
+
+        if topology_positions:
+            return max(1, min(MAX_DRAW_NEURONS, int(len(topology_positions))))
+
+        if points:
+            return max(1, min(MAX_DRAW_NEURONS, int(len(points))))
+
         configured_count = safe_int(inner_field.get("field_neuron_count", 0), 0)
         if configured_count <= 0:
             configured_count = safe_int(inner_field.get("field_agent_count", 0), 0)
-        if configured_count <= 0:
-            configured_count = len(points)
-        return max(1, min(MAX_DRAW_NEURONS, int(configured_count or len(points) or 1)))
+        return max(1, min(MAX_DRAW_NEURONS, int(configured_count or 1)))
+    # --------------------------------------------------
+    def _draw_metric_halos(self, layout: np.ndarray, values: np.ndarray, color: str, max_markers: int = 48, zorder: float = 6.8) -> int:
+        if len(layout) <= 0 or len(values) <= 0:
+            return 0
 
+        usable = min(len(layout), len(values))
+        local_values = np.asarray(values[:usable], dtype=float)
+        if float(np.max(local_values)) <= 0.025:
+            return 0
+
+        threshold = max(0.045, float(np.percentile(local_values, 72.0)))
+        indices = [int(index) for index in np.argsort(local_values)[::-1] if float(local_values[int(index)]) >= threshold]
+        indices = indices[:max(1, int(max_markers or 1))]
+        if not indices:
+            return 0
+
+        selected = np.asarray(indices, dtype=int)
+        selected_values = local_values[selected]
+        sizes = 18.0 + (selected_values * 150.0)
+
+        self.ax.scatter(
+            layout[selected, 0],
+            layout[selected, 1],
+            s=sizes,
+            c=[color for _ in selected],
+            alpha=0.055 + (selected_values * 0.070),
+            linewidths=0.0,
+            zorder=zorder,
+        )
+        return int(len(selected))    
+    
+    # --------------------------------------------------
+    def _resolve_tissue_links(self, inner: dict, points: list[dict], layout: np.ndarray) -> list[tuple[int, int]]:
+        inner_field = dict(inner.get("inner_field_perception_state", {}) or {})
+        count = int(len(layout))
+        index_map = {}
+
+        for local_index, item in enumerate(list(inner_field.get("field_topology_positions", []) or [])[:count]):
+            if not isinstance(item, dict):
+                continue
+            agent_index = safe_int(item.get("agent_index", local_index), local_index)
+            index_map[int(agent_index)] = int(local_index)
+
+        for local_index, item in enumerate(list(points or [])[:count]):
+            if not isinstance(item, dict):
+                continue
+            agent_index = safe_int(item.get("agent_index", local_index), local_index)
+            index_map.setdefault(int(agent_index), int(local_index))
+
+        links = set()
+
+        for item in list(inner_field.get("field_topology_links", []) or []):
+            if not isinstance(item, dict):
+                continue
+
+            source = safe_int(item.get("source", -1), -1)
+            target = safe_int(item.get("target", -1), -1)
+            if source in index_map and target in index_map:
+                a, b = sorted((index_map[source], index_map[target]))
+                if a != b and a < count and b < count:
+                    links.add((a, b))
+
+        for local_index, item in enumerate(list(points or [])[:count]):
+            if not isinstance(item, dict):
+                continue
+
+            source_agent = safe_int(item.get("agent_index", local_index), local_index)
+            source_local = index_map.get(source_agent, local_index)
+            for neighbor in list(item.get("topology_neighbors", []) or []):
+                neighbor_agent = safe_int(neighbor, -1)
+                if neighbor_agent not in index_map:
+                    continue
+
+                target_local = index_map[neighbor_agent]
+                a, b = sorted((int(source_local), int(target_local)))
+                if a != b and a < count and b < count:
+                    links.add((a, b))
+
+        if links:
+            self._link_source = "topology"
+            return sorted(links)
+
+        self._link_source = "layout_nearest"
+        return self._links_for_layout(layout)    
+    # --------------------------------------------------
+    def _normalize_layout_positions(self, positions: np.ndarray, fallback: np.ndarray) -> np.ndarray:
+        source = np.asarray(positions, dtype=float)
+        if source.ndim != 2 or source.shape[1] < 2 or len(source) <= 0:
+            return np.asarray(fallback, dtype=float)
+
+        layout = np.asarray(fallback, dtype=float).copy()
+        usable = min(len(layout), len(source))
+        raw = source[:usable, :2]
+
+        finite_mask = np.isfinite(raw).all(axis=1)
+        if not np.any(finite_mask):
+            return layout
+
+        valid = raw[finite_mask]
+        min_xy = np.min(valid, axis=0)
+        max_xy = np.max(valid, axis=0)
+        span = np.maximum(max_xy - min_xy, 1e-9)
+        normalized = np.clip((raw - min_xy) / span, 0.0, 1.0)
+
+        layout[:usable, 0] = 0.035 + (normalized[:, 0] * 0.930)
+        layout[:usable, 1] = 0.045 + ((1.0 - normalized[:, 1]) * 0.910)
+        return layout
+
+    # --------------------------------------------------
+    def _resolve_tissue_layout(self, inner: dict, points: list[dict], count: int) -> np.ndarray:
+        inner_field = dict(inner.get("inner_field_perception_state", {}) or {})
+        fallback = self._fixed_tissue_layout(count)
+        layout_by_index: dict[int, list[float]] = {}
+
+        for item in list(inner_field.get("field_topology_positions", []) or []):
+            if not isinstance(item, dict):
+                continue
+
+            agent_index = safe_int(item.get("agent_index", len(layout_by_index)), len(layout_by_index))
+            field_position = item.get("field_position", [])
+            if isinstance(field_position, (list, tuple)) and len(field_position) >= 2:
+                layout_by_index[int(agent_index)] = [safe_float(field_position[0]), safe_float(field_position[1])]
+
+        for item in list(points or []):
+            if not isinstance(item, dict):
+                continue
+
+            agent_index = safe_int(item.get("agent_index", len(layout_by_index)), len(layout_by_index))
+            field_position = item.get("field_position", [])
+            if isinstance(field_position, (list, tuple)) and len(field_position) >= 2:
+                layout_by_index[int(agent_index)] = [safe_float(field_position[0]), safe_float(field_position[1])]
+
+        if not layout_by_index:
+            self._layout_source = "fallback_grid"
+            return fallback
+
+        self._layout_source = "field_position"
+        source = np.asarray([layout_by_index[index] for index in sorted(layout_by_index)[:count]], dtype=float)
+        return self._normalize_layout_positions(source, fallback)
     # --------------------------------------------------
     def _fixed_tissue_layout(self, count: int) -> np.ndarray:
         n = max(1, int(count or 1))
@@ -498,49 +690,113 @@ class MCMNeuronFieldGUI:
         return resolved
 
     # --------------------------------------------------
-    def _activity_values(self, points: list[dict], count: int) -> np.ndarray:
+    def _topology_local_index_map(self, inner: dict, points: list[dict], count: int) -> dict[int, int]:
+        inner_field = dict(inner.get("inner_field_perception_state", {}) or {})
+        layout_indices = []
+
+        for item in list(inner_field.get("field_topology_positions", []) or []):
+            if not isinstance(item, dict):
+                continue
+
+            fallback_index = len(layout_indices)
+            agent_index = safe_int(item.get("agent_index", fallback_index), fallback_index)
+            layout_indices.append(int(agent_index))
+
+        if not layout_indices:
+            for item in list(points or []):
+                if not isinstance(item, dict):
+                    continue
+
+                fallback_index = len(layout_indices)
+                agent_index = safe_int(item.get("agent_index", fallback_index), fallback_index)
+                layout_indices.append(int(agent_index))
+
+        if not layout_indices:
+            return {}
+
+        ordered = sorted(dict.fromkeys(int(index) for index in layout_indices))[:max(1, int(count or 1))]
+        return {int(agent_index): int(local_index) for local_index, agent_index in enumerate(ordered)}
+
+    # --------------------------------------------------
+    def _activity_values(self, points: list[dict], count: int, index_map: dict[int, int] | None = None) -> np.ndarray:
+        target_count = max(1, int(count or 1))
+        mapped_values = np.zeros(target_count, dtype=float)
+        mapped_hits = np.zeros(target_count, dtype=float)
         source_values = []
-        for item in list(points or []):
+
+        for source_index, item in enumerate(list(points or [])):
+            if not isinstance(item, dict):
+                continue
+
             activation = clamp(safe_float(item.get("activation", 0.0)))
             impulse = clamp(safe_float(item.get("external_impulse_norm", 0.0)) / 0.8)
             context_memory = clamp(safe_float(item.get("context_memory_impulse_norm", 0.0)) / 0.8)
             coupling = clamp(safe_float(item.get("coupling_norm", 0.0)) / 0.8)
             pressure = clamp(safe_float(item.get("regulation_pressure", 0.0)))
-            source_values.append(clamp((activation * 0.52) + (impulse * 0.20) + (context_memory * 0.12) + (coupling * 0.10) + (pressure * 0.06)))
+            value = clamp((activation * 0.52) + (impulse * 0.20) + (context_memory * 0.12) + (coupling * 0.10) + (pressure * 0.06))
+            source_values.append(float(value))
+
+            if index_map:
+                agent_index = safe_int(item.get("agent_index", source_index), source_index)
+                local_index = index_map.get(int(agent_index))
+                if local_index is not None and 0 <= int(local_index) < target_count:
+                    mapped_values[int(local_index)] += float(value)
+                    mapped_hits[int(local_index)] += 1.0
+
+        if index_map and float(np.sum(mapped_hits)) > 0.0:
+            hit_mask = mapped_hits > 0.0
+            mapped_values[hit_mask] = mapped_values[hit_mask] / mapped_hits[hit_mask]
+            return mapped_values
 
         if not source_values:
-            return np.zeros(max(1, int(count or 1)), dtype=float)
+            return np.zeros(target_count, dtype=float)
 
         source = np.asarray(source_values, dtype=float)
-        target_count = max(1, int(count or len(source)))
-
         if len(source) == target_count:
             return source
 
-        old_x = np.linspace(0.0, 1.0, len(source))
-        new_x = np.linspace(0.0, 1.0, target_count)
-        interpolated = np.interp(new_x, old_x, source)
-        return np.asarray(interpolated, dtype=float)
+        legacy = np.zeros(target_count, dtype=float)
+        usable = min(len(source), target_count)
+        legacy[:usable] = source[:usable]
+        return legacy
 
     # --------------------------------------------------
-    def _metric_values(self, points: list[dict], count: int, key: str, scale: float = 1.0) -> np.ndarray:
+    def _metric_values(self, points: list[dict], count: int, key: str, scale: float = 1.0, index_map: dict[int, int] | None = None) -> np.ndarray:
+        target_count = max(1, int(count or 1))
+        mapped_values = np.zeros(target_count, dtype=float)
+        mapped_hits = np.zeros(target_count, dtype=float)
         source_values = []
-        for item in list(points or []):
-            source_values.append(clamp(safe_float(item.get(key, 0.0)) / max(1e-9, float(scale or 1.0))))
+
+        for source_index, item in enumerate(list(points or [])):
+            if not isinstance(item, dict):
+                continue
+
+            value = clamp(safe_float(item.get(key, 0.0)) / max(1e-9, float(scale or 1.0)))
+            source_values.append(float(value))
+
+            if index_map:
+                agent_index = safe_int(item.get("agent_index", source_index), source_index)
+                local_index = index_map.get(int(agent_index))
+                if local_index is not None and 0 <= int(local_index) < target_count:
+                    mapped_values[int(local_index)] += float(value)
+                    mapped_hits[int(local_index)] += 1.0
+
+        if index_map and float(np.sum(mapped_hits)) > 0.0:
+            hit_mask = mapped_hits > 0.0
+            mapped_values[hit_mask] = mapped_values[hit_mask] / mapped_hits[hit_mask]
+            return mapped_values
 
         if not source_values:
-            return np.zeros(max(1, int(count or 1)), dtype=float)
+            return np.zeros(target_count, dtype=float)
 
         source = np.asarray(source_values, dtype=float)
-        target_count = max(1, int(count or len(source)))
-
         if len(source) == target_count:
             return source
 
-        old_x = np.linspace(0.0, 1.0, len(source))
-        new_x = np.linspace(0.0, 1.0, target_count)
-        interpolated = np.interp(new_x, old_x, source)
-        return np.asarray(interpolated, dtype=float)
+        legacy = np.zeros(target_count, dtype=float)
+        usable = min(len(source), target_count)
+        legacy[:usable] = source[:usable]
+        return legacy
 
     # --------------------------------------------------
     def _input_drive_strength(self, inner: dict, inner_field: dict) -> float:
@@ -559,18 +815,32 @@ class MCMNeuronFieldGUI:
         )
 
     # --------------------------------------------------
-    def _input_hotspot_indices(self, points: list[dict], activity: np.ndarray, input_drive: float) -> np.ndarray:
+    def _input_hotspot_indices(self, points: list[dict], activity: np.ndarray, input_drive: float, index_map: dict[int, int] | None = None) -> np.ndarray:
         if len(activity) <= 0:
             return np.asarray([], dtype=int)
 
         source_scores = np.zeros(len(activity), dtype=float)
-        usable_points = list(points or [])[:len(activity)]
 
-        for index, item in enumerate(usable_points):
+        for source_index, item in enumerate(list(points or [])):
+            if not isinstance(item, dict):
+                continue
+
+            if index_map:
+                agent_index = safe_int(item.get("agent_index", source_index), source_index)
+                target_index = index_map.get(int(agent_index))
+            else:
+                target_index = int(source_index)
+
+            if target_index is None or int(target_index) < 0 or int(target_index) >= len(source_scores):
+                continue
+
             external = clamp(safe_float(item.get("external_impulse_norm", 0.0)) / 0.8)
             pressure = clamp(safe_float(item.get("regulation_pressure", 0.0)))
             activation = clamp(safe_float(item.get("activation", 0.0)))
-            source_scores[index] = (external * 0.56) + (pressure * 0.22) + (activation * 0.22)
+            source_scores[int(target_index)] = max(
+                float(source_scores[int(target_index)]),
+                float((external * 0.56) + (pressure * 0.22) + (activation * 0.22)),
+            )
 
         if float(np.max(source_scores)) <= 1e-9:
             source_scores = np.asarray(activity, dtype=float)
@@ -616,9 +886,10 @@ class MCMNeuronFieldGUI:
         if len(layout) <= 1 or len(activity) <= 1:
             return 0
 
-        activity_mean = float(np.mean(activity)) if len(activity) else 0.0
-        threshold = max(float(AREAL_FLOW_MIN_ACTIVITY), activity_mean * 1.18)
-        candidates = [int(idx) for idx in np.argsort(activity)[::-1] if float(activity[int(idx)]) >= threshold]
+        local_activity = np.asarray(activity[:len(layout)], dtype=float)
+        activity_mean = float(np.mean(local_activity)) if len(local_activity) else 0.0
+        threshold = max(float(AREAL_FLOW_MIN_ACTIVITY) * 0.72, activity_mean * 1.10)
+        candidates = [int(idx) for idx in np.argsort(local_activity)[::-1] if float(local_activity[int(idx)]) >= threshold]
         centers = []
 
         for idx in candidates:
@@ -717,15 +988,15 @@ class MCMNeuronFieldGUI:
                 LineCollection(
                     base_lines,
                     colors="#2f4058",
-                    linewidths=0.22,
-                    alpha=0.24,
+                    linewidths=0.18,
+                    alpha=0.11,
                     zorder=4.8,
                 )
             )
 
         strengths = np.asarray([float(value) for value, _ in scored_links], dtype=float)
-        percentile_threshold = float(np.percentile(strengths, 78.0)) if len(strengths) else 0.0
-        dynamic_threshold = max(float(ACTIVE_LINK_FLOOR) * 0.34, activity_mean * 0.72, percentile_threshold)
+        percentile_threshold = float(np.percentile(strengths, 84.0)) if len(strengths) else 0.0
+        dynamic_threshold = max(float(ACTIVE_LINK_FLOOR) * 0.42, activity_mean * 0.86, percentile_threshold)
         active_payload = [(value, line) for value, line in scored_links if float(value) >= dynamic_threshold]
 
         min_active = min(int(ACTIVE_LINK_MIN_DRAW), len(scored_links))
@@ -752,7 +1023,18 @@ class MCMNeuronFieldGUI:
         )
 
         return int(len(active_payload))
+    # --------------------------------------------------
+    def _draw_snapshot_hit_rings(self, layout: np.ndarray, activity: np.ndarray, hit_mask: np.ndarray | None = None) -> int:
+        if hit_mask is None or len(layout) <= 0 or len(activity) <= 0:
+            return 0
 
+        mask = np.asarray(hit_mask, dtype=bool)
+        if len(mask) != len(layout):
+            return 0
+
+        indices = np.asarray([int(index) for index in np.where(mask)[0]], dtype=int)
+        if len(indices) <= 0:
+            return 0
     # --------------------------------------------------
     def _build_heat_field(self, layout: np.ndarray, activity: np.ndarray) -> np.ndarray:
         grid_x = np.linspace(0.0, 1.0, GRID_SIZE)
@@ -818,7 +1100,51 @@ class MCMNeuronFieldGUI:
             alpha=0.26,
             zorder=3,
         )
+    # --------------------------------------------------
+    def _snapshot_hit_mask(self, points: list[dict], count: int, index_map: dict[int, int] | None = None) -> np.ndarray:
+        target_count = max(1, int(count or 1))
+        mask = np.zeros(target_count, dtype=bool)
 
+        for source_index, item in enumerate(list(points or [])):
+            if not isinstance(item, dict):
+                continue
+
+            if index_map:
+                agent_index = safe_int(item.get("agent_index", source_index), source_index)
+                local_index = index_map.get(int(agent_index))
+            else:
+                local_index = int(source_index)
+
+            if local_index is not None and 0 <= int(local_index) < target_count:
+                mask[int(local_index)] = True
+
+        return mask
+
+    # --------------------------------------------------
+    def _visual_activity_values(self, activity: np.ndarray, links: list[tuple[int, int]], hit_mask: np.ndarray | None = None) -> np.ndarray:
+        base = np.asarray(activity, dtype=float).copy()
+        if len(base) <= 0:
+            return base
+
+        visual = np.maximum(base, 0.022)
+
+        if links:
+            spread = np.zeros(len(base), dtype=float)
+            for a, b in list(links or []):
+                ai = int(a)
+                bi = int(b)
+                if ai < 0 or bi < 0 or ai >= len(base) or bi >= len(base):
+                    continue
+                spread[ai] = max(float(spread[ai]), float(base[bi]) * 0.34)
+                spread[bi] = max(float(spread[bi]), float(base[ai]) * 0.34)
+
+            visual = np.maximum(visual, spread)
+
+        if hit_mask is not None and len(hit_mask) == len(visual):
+            visual = np.asarray(visual, dtype=float)
+            visual[~np.asarray(hit_mask, dtype=bool)] *= 0.58
+
+        return np.clip(visual, 0.0, 1.0)
     # --------------------------------------------------
     def _draw_neuron_tissue(self, inner: dict, outcome: dict | None = None):
         self.ax.clear()
@@ -842,13 +1168,16 @@ class MCMNeuronFieldGUI:
             self.canvas.draw_idle()
             return
 
-        layout = self._fixed_tissue_layout(tissue_count)
-        links = self._links_for_layout(layout)
-        activity = self._activity_values(points, tissue_count)
-        coupling = self._metric_values(points, tissue_count, "coupling_norm", scale=0.8)
-        external = self._metric_values(points, tissue_count, "external_impulse_norm", scale=0.8)
-        context_memory = self._metric_values(points, tissue_count, "context_memory_impulse_norm", scale=0.8)
-        heat = self._build_heat_field(layout, activity)
+        layout = self._resolve_tissue_layout(inner, points, tissue_count)
+        links = self._resolve_tissue_links(inner, points, layout)
+        topology_index_map = self._topology_local_index_map(inner, points, tissue_count)
+        activity = self._activity_values(points, tissue_count, index_map=topology_index_map)
+        coupling = self._metric_values(points, tissue_count, "coupling_norm", scale=0.8, index_map=topology_index_map)
+        external = self._metric_values(points, tissue_count, "external_impulse_norm", scale=0.8, index_map=topology_index_map)
+        context_memory = self._metric_values(points, tissue_count, "context_memory_impulse_norm", scale=0.8, index_map=topology_index_map)
+        snapshot_hit_mask = self._snapshot_hit_mask(points, tissue_count, index_map=topology_index_map)
+        visual_activity = self._visual_activity_values(activity, links, snapshot_hit_mask)
+        heat = self._build_heat_field(layout, visual_activity)
 
         field_density = clamp(field_state.get("field_density", 0.0))
         field_stability = clamp(field_state.get("field_stability", 0.0))
@@ -896,13 +1225,13 @@ class MCMNeuronFieldGUI:
         self._draw_cluster_contours(heat)
 
         input_drive = self._input_drive_strength(inner, inner_field)
-        hotspot_indices = self._input_hotspot_indices(points, activity, input_drive)
-        areal_flow_count = self._draw_areal_flow_markers(layout, activity, heat)
-        active_link_count = self._draw_active_links(layout, links, activity, coupling, external, hotspot_indices)
+        hotspot_indices = self._input_hotspot_indices(points, activity, input_drive, index_map=topology_index_map)
+        areal_flow_count = self._draw_areal_flow_markers(layout, visual_activity, heat)
+        active_link_count = self._draw_active_links(layout, links, visual_activity, coupling, external, hotspot_indices)
 
-        node_sizes = 2.4 + (activity * 14.0)
-        glow_sizes = 18.0 + (activity * 95.0)
-        node_colors = [numeric_color(v) for v in activity]
+        node_sizes = 7.0 + (visual_activity * 30.0) + (activity * 42.0)
+        glow_sizes = 28.0 + (visual_activity * 170.0) + (activity * 135.0)
+        node_colors = [numeric_color(v) for v in np.maximum(visual_activity, activity)]
 
         self.ax.scatter(
             layout[:, 0],
@@ -913,26 +1242,31 @@ class MCMNeuronFieldGUI:
             linewidths=0.0,
             zorder=7,
         )
+        self._draw_metric_halos(layout, context_memory, C["inn_purple"], max_markers=54, zorder=6.9)
+        self._draw_metric_halos(layout, external, C["inn_orange"], max_markers=42, zorder=7.0)
+        self._draw_metric_halos(layout, coupling, C["inn_blue"], max_markers=64, zorder=7.1)
+
         self.ax.scatter(
             layout[:, 0],
             layout[:, 1],
             s=node_sizes,
             c=node_colors,
-            alpha=0.78,
+            alpha=0.72 + (visual_activity * 0.18),
             edgecolors="#102030",
-            linewidths=0.16,
+            linewidths=0.18,
             zorder=8,
         )
+        self._draw_snapshot_hit_rings(layout, activity, snapshot_hit_mask)
 
-        top_count = min(36, tissue_count)
+        top_count = min(48, tissue_count)
         if top_count > 0:
-            top_indices = np.argsort(activity)[-top_count:]
+            top_indices = np.argsort(visual_activity)[-top_count:]
             self.ax.scatter(
                 layout[top_indices, 0],
                 layout[top_indices, 1],
-                s=70 + (activity[top_indices] * 220),
-                c=[numeric_color(v) for v in activity[top_indices]],
-                alpha=0.11 + (activity[top_indices] * 0.16),
+                s=76 + (visual_activity[top_indices] * 260) + (activity[top_indices] * 180),
+                c=[numeric_color(v) for v in np.maximum(visual_activity[top_indices], activity[top_indices])],
+                alpha=0.13 + (visual_activity[top_indices] * 0.18),
                 linewidths=0.0,
                 zorder=8,
             )
@@ -941,6 +1275,7 @@ class MCMNeuronFieldGUI:
 
         self._set_side_value("tissue", tissue_count)
         self._set_side_value("snapshot", source_count)
+        self._set_side_value("layout", str(getattr(self, "_layout_source", "fallback")))
         self._set_side_value("density", fmt_num(field_density))
         self._set_side_value("stability", fmt_num(field_stability), numeric_color(field_stability))
         self._set_side_value("load", fmt_num(regulatory_load), numeric_color(regulatory_load, invert=True))
@@ -955,14 +1290,29 @@ class MCMNeuronFieldGUI:
         self._set_side_value("topology_density", fmt_num(topology_link_density), numeric_color(topology_link_density))
         self._set_side_value("topology_coherence", fmt_num(topology_coherence), numeric_color(topology_coherence))
         self._set_side_value("topology_tension", fmt_num(topology_tension), numeric_color(topology_tension, invert=True))
+        self._set_side_value("link_source", str(getattr(self, "_link_source", "fallback")))
         self._set_side_value("links", len(links))
         self._set_side_value("active_links", active_link_count, C["inn_blue"])
         self._set_side_value("areal_flow", areal_flow_count)
         self._set_side_value("hotspots", input_hotspot_count, C["inn_orange"])
         self._set_side_value("trades", outcome_state["trades"])
+        self._set_side_value("tp_sl", f"{outcome_state['tp']}/{outcome_state['sl']}")
+        self._set_side_value("cancels", outcome_state["cancels"])
         self._set_side_value("winrate", fmt_num(outcome_state["winrate"]), numeric_color(outcome_state.get("winrate", 0.0)))
-        self._set_side_value("pnl", fmt_num(outcome_state["pnl_netto"]))
+        self._set_side_value("pnl", fmt_num(outcome_state["pnl_netto"]), numeric_color(outcome_state.get("pnl_netto", 0.0)))
+        self._set_side_value("expectancy", fmt_num(outcome_state["expectancy"]), numeric_color(outcome_state.get("expectancy", 0.0)))
+        self._set_side_value("profit_factor", fmt_num(outcome_state["profit_factor"]), numeric_color(outcome_state.get("profit_factor", 0.0)))
         self._set_side_value("attempts", outcome_state["attempts"])
+        self._set_side_value("last_reason", outcome_state["last_reason"], text_state_color(outcome_state.get("last_reason", "-")))
+        self._set_side_value("last_structure", outcome_state["last_structure"], text_state_color(outcome_state.get("last_structure", "-")))
+        self._set_side_value("last_quality", fmt_num(outcome_state["last_quality"]), numeric_color(outcome_state.get("last_quality", 0.0)))
+        self._set_side_value("outcome_bias", fmt_num(outcome_state["outcome_bias"]), numeric_color(outcome_state.get("outcome_bias", 0.0)))
+        self._set_side_value("outcome_pressure", fmt_num(outcome_state["outcome_pressure"]), numeric_color(outcome_state.get("outcome_pressure", 0.0), invert=True))
+        self._set_side_value("proof_load", fmt_num(outcome_state["regulatory_load"]), numeric_color(outcome_state.get("regulatory_load", 0.0), invert=True))
+        self._set_side_value("proof_capacity", fmt_num(outcome_state["action_capacity"]), numeric_color(outcome_state.get("action_capacity", 0.0)))
+        self._set_side_value("proof_survival", fmt_num(outcome_state["survival_pressure"]), numeric_color(outcome_state.get("survival_pressure", 0.0), invert=True))
+        self._set_side_value("proof_stability", fmt_num(outcome_state["state_stability"]), numeric_color(outcome_state.get("state_stability", 0.0)))
+        self._set_side_value("proof_recovery", fmt_num(outcome_state["recovery_need"]), numeric_color(outcome_state.get("recovery_need", 0.0), invert=True))
         self._set_side_value("reorganization", reorganization_direction, reorg_color)
 
         self.canvas.draw_idle()
@@ -976,8 +1326,10 @@ class MCMNeuronFieldGUI:
         self.lbl_outcome.config(
             text=(
                 f"OUTCOME: trades={outcome_state['trades']} "
+                f"tp/sl={outcome_state['tp']}/{outcome_state['sl']} "
                 f"pnl={fmt_num(outcome_state['pnl_netto'])} "
-                f"win={fmt_num(outcome_state['winrate'])}"
+                f"win={fmt_num(outcome_state['winrate'])} "
+                f"last={outcome_state['last_reason']}"
             ),
             fg=numeric_color(outcome_state.get("winrate", 0.0)),
         )

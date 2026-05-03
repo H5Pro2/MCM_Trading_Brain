@@ -4,13 +4,16 @@
 # ==================================================
 import json
 import os
+import time
 
 from config import Config
-from debug_reader import dbr_debug
+from debug_reader import dbr_debug, dbr_file_write_profile, dbr_profile
 from bot_engine.mcm_core_engine import build_tension_state_from_window, build_visual_market_state
 from MCM_KI_Modell import MCMField, ClusterDetector, Memory, SelfModel, AttractorSystem, RegulationLayer
 from bot_engine.strukture_engine import StructureEngine
 import numpy as np
+
+_FIELD_DECISION_PROTOCOL_HEADER_DONE = set()
 
 # --------------------------------------------------
 class MCMBrainRuntime:
@@ -232,10 +235,71 @@ def _resolve_active_context_replay_impulse(trace):
         + float(item.get("fragility", 0.0) or 0.0)
         + float(item.get("attenuation", 0.0) or 0.0)
     )
+    neuro_support = (
+        max(0.0, float(item.get("experience_effect_score", 0.0) or 0.0)) * 2.0
+        + float(item.get("confidence_signal", 0.0) or 0.0)
+        + float(item.get("stability_signal", 0.0) or 0.0)
+        + float(item.get("discipline_signal", 0.0) or 0.0)
+        + max(0.0, float(item.get("carrying_capacity_delta", 0.0) or 0.0))
+    )
+    neuro_strain = (
+        max(0.0, -float(item.get("experience_effect_score", 0.0) or 0.0)) * 2.0
+        + float(item.get("chaos_penalty", 0.0) or 0.0)
+        + float(item.get("variance_penalty", 0.0) or 0.0)
+        + float(item.get("overactivation_signal", 0.0) or 0.0)
+        + float(item.get("overstrain_penalty", 0.0) or 0.0)
+    )
+    support_pressure += max(0.0, min(1.0, neuro_support / 4.0)) * 0.18
+    regulation_pressure += max(0.0, min(1.0, neuro_strain / 4.0)) * 0.22
     context_balance = max(-1.0, min(1.0, (support_pressure - regulation_pressure) / 3.0))
     replay_weight = max(0.0, min(0.18, float(getattr(Config, "MCM_ACTIVE_CONTEXT_REPLAY_WEIGHT", 0.06) or 0.06)))
+    replay_weight = max(
+        0.0,
+        min(
+            0.18,
+            replay_weight
+            * (1.0 + (max(0.0, min(1.0, neuro_support / 4.0)) * 0.08))
+            * (1.0 - (max(0.0, min(1.0, neuro_strain / 4.0)) * 0.12)),
+        ),
+    )
 
     return float(max(-0.12, min(0.12, activation * context_balance * replay_weight)))
+
+# --------------------------------------------------
+def _extract_neurochemical_profile(source):
+
+    item = dict(source or {})
+    effect = dict(item.get("experience_neurochemical_effect", {}) or {})
+
+    def _read(key, default=0.0):
+        return float(
+            item.get(
+                key,
+                item.get(
+                    f"avg_{key}",
+                    item.get(
+                        f"last_{key}",
+                        effect.get(key, default),
+                    ),
+                ),
+            ) or default
+        )
+
+    return {
+        "experience_effect_score": float(_read("experience_effect_score")),
+        "profit_reward": float(_read("profit_reward")),
+        "relief_signal": float(_read("relief_signal")),
+        "stability_signal": float(_read("stability_signal")),
+        "discipline_signal": float(_read("discipline_signal")),
+        "confidence_signal": float(_read("confidence_signal")),
+        "overactivation_signal": float(_read("overactivation_signal")),
+        "chaos_penalty": float(_read("chaos_penalty")),
+        "variance_penalty": float(_read("variance_penalty")),
+        "overstrain_penalty": float(_read("overstrain_penalty")),
+        "carrying_capacity_delta": float(_read("carrying_capacity_delta")),
+        "self_confidence_delta": float(_read("self_confidence_delta")),
+        "process_quality": float(_read("process_quality")),
+    }
 
 # --------------------------------------------------
 def _normalize_active_context_trace(trace):
@@ -255,6 +319,13 @@ def _normalize_active_context_trace(trace):
     if activation <= 0.001:
         return {}
 
+    neural_felt_state = dict(item.get("neural_felt_state", {}) or {})
+    inner_field_history_state = dict(item.get("inner_field_history_state", {}) or {})
+    field_topology_layout_state = dict(item.get("field_topology_layout_state", {}) or {})
+    field_pattern_signature = dict(item.get("field_pattern_signature", {}) or {})
+    inner_pattern_recognition_state = dict(item.get("inner_pattern_recognition_state", {}) or {})
+    neurochemical_profile = _extract_neurochemical_profile(item)
+
     return {
         "cluster_id": str(cluster_id),
         "activation": float(activation),
@@ -267,8 +338,173 @@ def _normalize_active_context_trace(trace):
         "replan_pressure": max(0.0, min(1.0, float(item.get("replan_pressure", 0.0) or 0.0))),
         "reinforcement": max(0.0, min(1.0, float(item.get("reinforcement", 0.0) or 0.0))),
         "attenuation": max(0.0, min(1.0, float(item.get("attenuation", 0.0) or 0.0))),
+        "experience_neurochemical_profile": dict(neurochemical_profile or {}),
+        "experience_effect_score": max(-0.28, min(0.28, float(neurochemical_profile.get("experience_effect_score", 0.0) or 0.0))),
+        "profit_reward": max(-1.0, min(1.0, float(neurochemical_profile.get("profit_reward", 0.0) or 0.0))),
+        "relief_signal": max(0.0, min(1.0, float(neurochemical_profile.get("relief_signal", 0.0) or 0.0))),
+        "stability_signal": max(0.0, min(1.0, float(neurochemical_profile.get("stability_signal", 0.0) or 0.0))),
+        "discipline_signal": max(0.0, min(1.0, float(neurochemical_profile.get("discipline_signal", 0.0) or 0.0))),
+        "confidence_signal": max(0.0, min(1.0, float(neurochemical_profile.get("confidence_signal", 0.0) or 0.0))),
+        "overactivation_signal": max(0.0, min(1.0, float(neurochemical_profile.get("overactivation_signal", 0.0) or 0.0))),
+        "chaos_penalty": max(0.0, min(1.0, float(neurochemical_profile.get("chaos_penalty", 0.0) or 0.0))),
+        "variance_penalty": max(0.0, min(1.0, float(neurochemical_profile.get("variance_penalty", 0.0) or 0.0))),
+        "overstrain_penalty": max(0.0, min(1.0, float(neurochemical_profile.get("overstrain_penalty", 0.0) or 0.0))),
+        "carrying_capacity_delta": max(-1.0, min(1.0, float(neurochemical_profile.get("carrying_capacity_delta", 0.0) or 0.0))),
+        "self_confidence_delta": max(-0.28, min(0.28, float(neurochemical_profile.get("self_confidence_delta", 0.0) or 0.0))),
+        "process_quality": max(0.0, min(1.0, float(neurochemical_profile.get("process_quality", 0.0) or 0.0))),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": max(0.0, min(1.0, float(item.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", 0.0)) or 0.0))),
+        "neural_felt_pressure": max(0.0, min(1.0, float(item.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", 0.0)) or 0.0))),
+        "neural_felt_memory_resonance": max(0.0, min(1.0, float(item.get("neural_felt_memory_resonance", neural_felt_state.get("neural_felt_memory_resonance", 0.0)) or 0.0))),
+        "neural_felt_context_reactivation": max(0.0, min(1.0, float(item.get("neural_felt_context_reactivation", neural_felt_state.get("neural_felt_context_reactivation", 0.0)) or 0.0))),
+        "neural_felt_label": str(item.get("neural_felt_label", neural_felt_state.get("neural_felt_label", "quiet_neural_felt")) or "quiet_neural_felt"),
+        "inner_field_history_state": dict(inner_field_history_state or {}),
+        "inner_field_history_length": max(0, int(float(item.get("inner_field_history_length", inner_field_history_state.get("inner_field_history_length", 0)) or 0))),
+        "inner_field_pressure_trend": max(-1.0, min(1.0, float(item.get("inner_field_pressure_trend", inner_field_history_state.get("inner_field_pressure_trend", 0.0)) or 0.0))),
+        "inner_field_bearing_trend": max(-1.0, min(1.0, float(item.get("inner_field_bearing_trend", inner_field_history_state.get("inner_field_bearing_trend", 0.0)) or 0.0))),
+        "inner_field_topology_tension_trend": max(-1.0, min(1.0, float(item.get("inner_field_topology_tension_trend", inner_field_history_state.get("inner_field_topology_tension_trend", 0.0)) or 0.0))),
+        "inner_field_memory_resonance_trend": max(-1.0, min(1.0, float(item.get("inner_field_memory_resonance_trend", inner_field_history_state.get("inner_field_memory_resonance_trend", 0.0)) or 0.0))),
+        "inner_field_history_label": str(item.get("inner_field_history_label", inner_field_history_state.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace"),
+        "field_topology_layout_state": dict(field_topology_layout_state or {}),
+        "field_topology_rows": max(0, int(float(item.get("field_topology_rows", field_topology_layout_state.get("topology_rows", 0)) or 0))),
+        "field_topology_cols": max(0, int(float(item.get("field_topology_cols", field_topology_layout_state.get("topology_cols", 0)) or 0))),
+        "field_topology_position_count": max(0, int(float(item.get("field_topology_position_count", field_topology_layout_state.get("topology_position_count", 0)) or 0))),
+        "field_topology_neighbor_link_count": max(0, int(float(item.get("field_topology_neighbor_link_count", field_topology_layout_state.get("topology_neighbor_link_count", 0)) or 0))),
+        "field_topology_neighbor_count_mean": max(0.0, float(item.get("field_topology_neighbor_count_mean", field_topology_layout_state.get("topology_neighbor_count_mean", 0.0)) or 0.0)),
+        "field_topology_neighbor_count_max": max(0, int(float(item.get("field_topology_neighbor_count_max", field_topology_layout_state.get("topology_neighbor_count_max", 0)) or 0))),
+        "field_areal_topology_density_mean": max(0.0, min(1.0, float(item.get("field_areal_topology_density_mean", 0.0) or 0.0))),
+        "field_areal_topology_span_mean": max(0.0, float(item.get("field_areal_topology_span_mean", 0.0) or 0.0)),
+        "field_areal_topology_boundary_mean": max(0.0, float(item.get("field_areal_topology_boundary_mean", 0.0) or 0.0)),
+        "field_perception_focus": max(0.0, min(1.0, float(item.get("field_perception_focus", 0.0) or 0.0))),
+        "field_perception_clarity": max(0.0, min(1.0, float(item.get("field_perception_clarity", 0.0) or 0.0))),
+        "field_perception_stability": max(0.0, min(1.0, float(item.get("field_perception_stability", 0.0) or 0.0))),
+        "field_perception_fragmentation": max(0.0, min(1.0, float(item.get("field_perception_fragmentation", 0.0) or 0.0))),
+        "field_perception_strain": max(0.0, min(1.0, float(item.get("field_perception_strain", 0.0) or 0.0))),
+        "dominant_activity_island_id": str(item.get("dominant_activity_island_id", "-") or "-"),
+        "field_pattern_signature": dict(field_pattern_signature or {}),
+        "field_pattern_signature_key": str(item.get("field_pattern_signature_key", field_pattern_signature.get("signature_key", "")) or ""),
+        "field_pattern_vector": [float(value) for value in list(item.get("field_pattern_vector", field_pattern_signature.get("field_pattern_vector", [])) or [])],
+        "inner_pattern_identity": str(item.get("inner_pattern_identity", "") or ""),
+        "inner_pattern_identity_label": str(item.get("inner_pattern_identity_label", field_pattern_signature.get("identity_label", "")) or ""),
+        "inner_pattern_identity_confidence": max(0.0, min(1.0, float(item.get("inner_pattern_identity_confidence", 0.0) or 0.0))),
+        "inner_pattern_identity_streak": max(0, int(float(item.get("inner_pattern_identity_streak", 0) or 0))),
+        "inner_pattern_identity_stability": max(0.0, min(1.0, float(item.get("inner_pattern_identity_stability", 0.0) or 0.0))),
+        "inner_pattern_identity_recurrent": bool(item.get("inner_pattern_identity_recurrent", False)),
+        "inner_pattern_identity_changed": bool(item.get("inner_pattern_identity_changed", False)),
+        "inner_pattern_identity_last_seen_tick": max(0, int(float(item.get("inner_pattern_identity_last_seen_tick", 0) or 0))),
+        "inner_pattern_recognition_state": dict(inner_pattern_recognition_state or {}),
+        "inner_pattern_recognition_label": str(item.get("inner_pattern_recognition_label", inner_pattern_recognition_state.get("recognition_label", "unsettled_inner_pattern")) or "unsettled_inner_pattern"),
+        "inner_pattern_recognition_strength": max(0.0, min(1.0, float(item.get("inner_pattern_recognition_strength", inner_pattern_recognition_state.get("recognition_strength", 0.0)) or 0.0))),
+        "inner_pattern_recognition_recurrent": bool(item.get("inner_pattern_recognition_recurrent", inner_pattern_recognition_state.get("recurrent", False))),
+        "inner_pattern_recognition_changed": bool(item.get("inner_pattern_recognition_changed", inner_pattern_recognition_state.get("changed", False))),
         "last_seen_tick": int(float(item.get("last_seen_tick", 0) or 0)),
     }
+
+# --------------------------------------------------
+def _snapshot_field_topology_layout(field, limit=96, field_snapshot=None):
+
+    layout_state = {
+        "topology_rows": 0,
+        "topology_cols": 0,
+        "topology_position_count": 0,
+        "topology_neighbor_link_count": 0,
+        "topology_neighbor_count_mean": 0.0,
+        "topology_neighbor_count_max": 0,
+        "topology_positions": [],
+        "topology_links": [],
+    }
+
+    if field_snapshot is None:
+        if field is None or not hasattr(field, "read_snapshot"):
+            return dict(layout_state or {})
+
+        try:
+            field_snapshot = dict(field.read_snapshot() or {})
+        except Exception:
+            return dict(layout_state or {})
+    else:
+        field_snapshot = dict(field_snapshot or {})
+
+    positions = np.asarray(field_snapshot.get("topology_positions", []), dtype=float)
+    neighbor_map = dict(field_snapshot.get("topology_neighbor_indices", {}) or {})
+
+    if positions.ndim != 2 or len(positions) <= 0:
+        return dict(layout_state or {})
+
+    position_count = int(len(positions))
+    sample_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_TOPOLOGY_LIMIT", limit) or limit))
+
+    if position_count <= sample_limit:
+        indices = list(range(position_count))
+    else:
+        indices = []
+        for value in np.linspace(0, position_count - 1, num=sample_limit):
+            index = int(round(float(value)))
+            if index not in indices:
+                indices.append(index)
+
+    index_set = set(int(item) for item in list(indices or []))
+    topology_positions = []
+    topology_links = []
+    neighbor_counts = []
+
+    for index in range(position_count):
+        raw_neighbors = []
+
+        for neighbor_index in list(neighbor_map.get(int(index), neighbor_map.get(str(index), [])) or []):
+            try:
+                resolved_neighbor = int(neighbor_index)
+            except Exception:
+                continue
+
+            if resolved_neighbor < 0 or resolved_neighbor >= position_count:
+                continue
+
+            if resolved_neighbor == int(index):
+                continue
+
+            raw_neighbors.append(int(resolved_neighbor))
+
+        neighbor_counts.append(int(len(raw_neighbors)))
+
+        if int(index) not in index_set:
+            continue
+
+        topology_positions.append(
+            {
+                "agent_index": int(index),
+                "field_position": _snapshot_float_vector(positions[int(index)]),
+                "topology_neighbors": [int(item) for item in list(raw_neighbors or [])],
+            }
+        )
+
+        for neighbor_index in list(raw_neighbors or []):
+            if int(neighbor_index) not in index_set:
+                continue
+
+            if int(index) >= int(neighbor_index):
+                continue
+
+            topology_links.append(
+                {
+                    "source": int(index),
+                    "target": int(neighbor_index),
+                    "distance": float(np.linalg.norm(positions[int(index)] - positions[int(neighbor_index)])),
+                }
+            )
+
+    layout_state = {
+        "topology_rows": int(field_snapshot.get("topology_rows", 0) or 0),
+        "topology_cols": int(field_snapshot.get("topology_cols", 0) or 0),
+        "topology_position_count": int(position_count),
+        "topology_neighbor_link_count": int(sum(neighbor_counts)),
+        "topology_neighbor_count_mean": float(np.mean(neighbor_counts)) if neighbor_counts else 0.0,
+        "topology_neighbor_count_max": int(max(neighbor_counts)) if neighbor_counts else 0,
+        "topology_positions": list(topology_positions or []),
+        "topology_links": list(topology_links or []),
+    }
+
+    return dict(layout_state or {})
 
 # --------------------------------------------------
 def _decay_active_context_trace(trace, market_tick_advanced=True):
@@ -313,7 +549,81 @@ def _build_active_context_trace_from_inner_cluster(bot=None):
     bearing = max(0.0, min(1.0, float(source.get("pattern_bearing_score", source.get("inner_pattern_bearing", 0.0)) or 0.0)))
     reinforcement = max(0.0, min(1.0, float(source.get("pattern_reinforcement", source.get("reinforcement", 0.0)) or 0.0)))
     attenuation = max(0.0, min(1.0, float(source.get("pattern_attenuation", source.get("attenuation", 0.0)) or 0.0)))
+    neurochemical_profile = _extract_neurochemical_profile(source)
+    neuro_support = max(
+        0.0,
+        min(
+            1.0,
+            (
+                max(0.0, float(neurochemical_profile.get("experience_effect_score", 0.0) or 0.0)) * 2.0
+                + float(neurochemical_profile.get("confidence_signal", 0.0) or 0.0)
+                + float(neurochemical_profile.get("stability_signal", 0.0) or 0.0)
+                + float(neurochemical_profile.get("discipline_signal", 0.0) or 0.0)
+                + max(0.0, float(neurochemical_profile.get("carrying_capacity_delta", 0.0) or 0.0))
+            ) / 4.0,
+        ),
+    )
+    neuro_strain = max(
+        0.0,
+        min(
+            1.0,
+            (
+                max(0.0, -float(neurochemical_profile.get("experience_effect_score", 0.0) or 0.0)) * 2.0
+                + float(neurochemical_profile.get("chaos_penalty", 0.0) or 0.0)
+                + float(neurochemical_profile.get("variance_penalty", 0.0) or 0.0)
+                + float(neurochemical_profile.get("overactivation_signal", 0.0) or 0.0)
+                + float(neurochemical_profile.get("overstrain_penalty", 0.0) or 0.0)
+            ) / 4.0,
+        ),
+    )
+    reinforcement = max(0.0, min(1.0, reinforcement + (neuro_support * 0.10) - (neuro_strain * 0.08)))
+    attenuation = max(0.0, min(1.0, attenuation + (neuro_strain * 0.12) - (neuro_support * 0.06)))
     trust = max(0.0, min(1.0, float(source.get("trust", 0.0) or 0.0)))
+    neural_felt_state = dict(source.get("neural_felt_state", {}) or {})
+    neural_felt_bearing = max(0.0, min(1.0, float(source.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", 0.0)) or 0.0)))
+    neural_felt_pressure = max(0.0, min(1.0, float(source.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", 0.0)) or 0.0)))
+    neural_felt_memory_resonance = max(0.0, min(1.0, float(source.get("neural_felt_memory_resonance", neural_felt_state.get("neural_felt_memory_resonance", 0.0)) or 0.0)))
+    neural_felt_context_reactivation = max(0.0, min(1.0, float(source.get("neural_felt_context_reactivation", neural_felt_state.get("neural_felt_context_reactivation", 0.0)) or 0.0)))
+    neural_felt_label = str(source.get("neural_felt_label", neural_felt_state.get("neural_felt_label", "quiet_neural_felt")) or "quiet_neural_felt")
+    inner_field_history_state = dict(source.get("inner_field_history_state", {}) or {})
+    inner_field_history_length = max(0, int(float(source.get("inner_field_history_length", inner_field_history_state.get("inner_field_history_length", 0)) or 0)))
+    inner_field_pressure_trend = max(-1.0, min(1.0, float(source.get("inner_field_pressure_trend", inner_field_history_state.get("inner_field_pressure_trend", 0.0)) or 0.0)))
+    inner_field_bearing_trend = max(-1.0, min(1.0, float(source.get("inner_field_bearing_trend", inner_field_history_state.get("inner_field_bearing_trend", 0.0)) or 0.0)))
+    inner_field_topology_tension_trend = max(-1.0, min(1.0, float(source.get("inner_field_topology_tension_trend", inner_field_history_state.get("inner_field_topology_tension_trend", 0.0)) or 0.0)))
+    inner_field_memory_resonance_trend = max(-1.0, min(1.0, float(source.get("inner_field_memory_resonance_trend", inner_field_history_state.get("inner_field_memory_resonance_trend", 0.0)) or 0.0)))
+    inner_field_history_label = str(source.get("inner_field_history_label", inner_field_history_state.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace")
+    field_topology_layout_state = dict(source.get("field_topology_layout_state", {}) or {})
+    field_topology_rows = max(0, int(float(source.get("field_topology_rows", field_topology_layout_state.get("topology_rows", 0)) or 0)))
+    field_topology_cols = max(0, int(float(source.get("field_topology_cols", field_topology_layout_state.get("topology_cols", 0)) or 0)))
+    field_topology_position_count = max(0, int(float(source.get("field_topology_position_count", field_topology_layout_state.get("topology_position_count", 0)) or 0)))
+    field_topology_neighbor_link_count = max(0, int(float(source.get("field_topology_neighbor_link_count", field_topology_layout_state.get("topology_neighbor_link_count", 0)) or 0)))
+    field_topology_neighbor_count_mean = max(0.0, float(source.get("field_topology_neighbor_count_mean", field_topology_layout_state.get("topology_neighbor_count_mean", 0.0)) or 0.0))
+    field_topology_neighbor_count_max = max(0, int(float(source.get("field_topology_neighbor_count_max", field_topology_layout_state.get("topology_neighbor_count_max", 0)) or 0)))
+    field_areal_topology_density_mean = max(0.0, min(1.0, float(source.get("field_areal_topology_density_mean", 0.0) or 0.0)))
+    field_areal_topology_span_mean = max(0.0, float(source.get("field_areal_topology_span_mean", 0.0) or 0.0))
+    field_areal_topology_boundary_mean = max(0.0, float(source.get("field_areal_topology_boundary_mean", 0.0) or 0.0))
+    field_perception_focus = max(0.0, min(1.0, float(source.get("field_perception_focus", 0.0) or 0.0)))
+    field_perception_clarity = max(0.0, min(1.0, float(source.get("field_perception_clarity", 0.0) or 0.0)))
+    field_perception_stability = max(0.0, min(1.0, float(source.get("field_perception_stability", 0.0) or 0.0)))
+    field_perception_fragmentation = max(0.0, min(1.0, float(source.get("field_perception_fragmentation", 0.0) or 0.0)))
+    field_perception_strain = max(0.0, min(1.0, float(source.get("field_perception_strain", 0.0) or 0.0)))
+    dominant_activity_island_id = str(source.get("dominant_activity_island_id", "-") or "-")
+    field_pattern_signature = dict(source.get("field_pattern_signature", {}) or {})
+    field_pattern_signature_key = str(source.get("field_pattern_signature_key", field_pattern_signature.get("signature_key", "")) or "")
+    field_pattern_vector = [float(value) for value in list(source.get("field_pattern_vector", field_pattern_signature.get("field_pattern_vector", [])) or [])]
+    inner_pattern_identity = str(source.get("inner_pattern_identity", "") or "")
+    inner_pattern_identity_label = str(source.get("inner_pattern_identity_label", field_pattern_signature.get("identity_label", "")) or "")
+    inner_pattern_identity_confidence = max(0.0, min(1.0, float(source.get("inner_pattern_identity_confidence", 0.0) or 0.0)))
+    inner_pattern_identity_streak = max(0, int(float(source.get("inner_pattern_identity_streak", 0) or 0)))
+    inner_pattern_identity_stability = max(0.0, min(1.0, float(source.get("inner_pattern_identity_stability", 0.0) or 0.0)))
+    inner_pattern_identity_recurrent = bool(source.get("inner_pattern_identity_recurrent", False))
+    inner_pattern_identity_changed = bool(source.get("inner_pattern_identity_changed", False))
+    inner_pattern_identity_last_seen_tick = max(0, int(float(source.get("inner_pattern_identity_last_seen_tick", 0) or 0)))
+    inner_pattern_recognition_state = dict(source.get("inner_pattern_recognition_state", {}) or {})
+    inner_pattern_recognition_label = str(source.get("inner_pattern_recognition_label", inner_pattern_recognition_state.get("recognition_label", "unsettled_inner_pattern")) or "unsettled_inner_pattern")
+    inner_pattern_recognition_strength = max(0.0, min(1.0, float(source.get("inner_pattern_recognition_strength", inner_pattern_recognition_state.get("recognition_strength", 0.0)) or 0.0)))
+    inner_pattern_recognition_recurrent = bool(source.get("inner_pattern_recognition_recurrent", inner_pattern_recognition_state.get("recurrent", False)))
+    inner_pattern_recognition_changed = bool(source.get("inner_pattern_recognition_changed", inner_pattern_recognition_state.get("changed", False)))
 
     activation = max(
         0.0,
@@ -324,14 +634,16 @@ def _build_active_context_trace_from_inner_cluster(bot=None):
             + (support * 0.18)
             + (bearing * 0.18)
             + (reinforcement * 0.18)
+            + (neuro_support * 0.08)
             - (conflict * 0.10)
-            - (attenuation * 0.08),
+            - (attenuation * 0.08)
+            - (neuro_strain * 0.07),
         ),
     )
 
-    action_support = max(0.0, min(1.0, (support * 0.28) + (bearing * 0.34) + (reinforcement * 0.24) - (conflict * 0.14)))
-    observe_pressure = max(0.0, min(1.0, (conflict * 0.30) + (fragility * 0.34) + (attenuation * 0.24) - (reinforcement * 0.08)))
-    replan_pressure = max(0.0, min(1.0, (conflict * 0.34) + (attenuation * 0.28) + (fragility * 0.18) - (support * 0.10)))
+    action_support = max(0.0, min(1.0, (support * 0.28) + (bearing * 0.34) + (reinforcement * 0.24) + (neuro_support * 0.08) - (conflict * 0.14) - (neuro_strain * 0.06)))
+    observe_pressure = max(0.0, min(1.0, (conflict * 0.30) + (fragility * 0.34) + (attenuation * 0.24) + (neuro_strain * 0.08) - (reinforcement * 0.08)))
+    replan_pressure = max(0.0, min(1.0, (conflict * 0.34) + (attenuation * 0.28) + (fragility * 0.18) + (neuro_strain * 0.07) - (support * 0.10) - (neuro_support * 0.04)))
 
     return {
         "cluster_id": str(cluster_id),
@@ -345,6 +657,67 @@ def _build_active_context_trace_from_inner_cluster(bot=None):
         "replan_pressure": float(replan_pressure),
         "reinforcement": float(reinforcement),
         "attenuation": float(attenuation),
+        "experience_neurochemical_profile": dict(neurochemical_profile or {}),
+        "experience_effect_score": float(neurochemical_profile.get("experience_effect_score", 0.0) or 0.0),
+        "profit_reward": float(neurochemical_profile.get("profit_reward", 0.0) or 0.0),
+        "relief_signal": float(neurochemical_profile.get("relief_signal", 0.0) or 0.0),
+        "stability_signal": float(neurochemical_profile.get("stability_signal", 0.0) or 0.0),
+        "discipline_signal": float(neurochemical_profile.get("discipline_signal", 0.0) or 0.0),
+        "confidence_signal": float(neurochemical_profile.get("confidence_signal", 0.0) or 0.0),
+        "overactivation_signal": float(neurochemical_profile.get("overactivation_signal", 0.0) or 0.0),
+        "chaos_penalty": float(neurochemical_profile.get("chaos_penalty", 0.0) or 0.0),
+        "variance_penalty": float(neurochemical_profile.get("variance_penalty", 0.0) or 0.0),
+        "overstrain_penalty": float(neurochemical_profile.get("overstrain_penalty", 0.0) or 0.0),
+        "carrying_capacity_delta": float(neurochemical_profile.get("carrying_capacity_delta", 0.0) or 0.0),
+        "self_confidence_delta": float(neurochemical_profile.get("self_confidence_delta", 0.0) or 0.0),
+        "process_quality": float(neurochemical_profile.get("process_quality", 0.0) or 0.0),
+        "neurochemical_support": float(neuro_support),
+        "neurochemical_strain": float(neuro_strain),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+        "neural_felt_label": str(neural_felt_label),
+        "inner_field_history_state": dict(inner_field_history_state or {}),
+        "inner_field_history_length": int(inner_field_history_length),
+        "inner_field_pressure_trend": float(inner_field_pressure_trend),
+        "inner_field_bearing_trend": float(inner_field_bearing_trend),
+        "inner_field_topology_tension_trend": float(inner_field_topology_tension_trend),
+        "inner_field_memory_resonance_trend": float(inner_field_memory_resonance_trend),
+        "inner_field_history_label": str(inner_field_history_label),
+        "field_topology_layout_state": dict(field_topology_layout_state or {}),
+        "field_topology_rows": int(field_topology_rows),
+        "field_topology_cols": int(field_topology_cols),
+        "field_topology_position_count": int(field_topology_position_count),
+        "field_topology_neighbor_link_count": int(field_topology_neighbor_link_count),
+        "field_topology_neighbor_count_mean": float(field_topology_neighbor_count_mean),
+        "field_topology_neighbor_count_max": int(field_topology_neighbor_count_max),
+        "field_areal_topology_density_mean": float(field_areal_topology_density_mean),
+        "field_areal_topology_span_mean": float(field_areal_topology_span_mean),
+        "field_areal_topology_boundary_mean": float(field_areal_topology_boundary_mean),
+        "field_perception_focus": float(field_perception_focus),
+        "field_perception_clarity": float(field_perception_clarity),
+        "field_perception_stability": float(field_perception_stability),
+        "field_perception_fragmentation": float(field_perception_fragmentation),
+        "field_perception_strain": float(field_perception_strain),
+        "dominant_activity_island_id": str(dominant_activity_island_id),
+        "field_pattern_signature": dict(field_pattern_signature or {}),
+        "field_pattern_signature_key": str(field_pattern_signature_key),
+        "field_pattern_vector": [float(value) for value in list(field_pattern_vector or [])],
+        "inner_pattern_identity": str(inner_pattern_identity),
+        "inner_pattern_identity_label": str(inner_pattern_identity_label),
+        "inner_pattern_identity_confidence": float(inner_pattern_identity_confidence),
+        "inner_pattern_identity_streak": int(inner_pattern_identity_streak),
+        "inner_pattern_identity_stability": float(inner_pattern_identity_stability),
+        "inner_pattern_identity_recurrent": bool(inner_pattern_identity_recurrent),
+        "inner_pattern_identity_changed": bool(inner_pattern_identity_changed),
+        "inner_pattern_identity_last_seen_tick": int(inner_pattern_identity_last_seen_tick),
+        "inner_pattern_recognition_state": dict(inner_pattern_recognition_state or {}),
+        "inner_pattern_recognition_label": str(inner_pattern_recognition_label),
+        "inner_pattern_recognition_strength": float(inner_pattern_recognition_strength),
+        "inner_pattern_recognition_recurrent": bool(inner_pattern_recognition_recurrent),
+        "inner_pattern_recognition_changed": bool(inner_pattern_recognition_changed),
         "last_seen_tick": int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0),
     }
 
@@ -382,9 +755,81 @@ def _refresh_active_context_trace(trace, bot=None, runtime_result=None, market_t
         "replan_pressure",
         "reinforcement",
         "attenuation",
+        "experience_effect_score",
+        "profit_reward",
+        "relief_signal",
+        "stability_signal",
+        "discipline_signal",
+        "confidence_signal",
+        "overactivation_signal",
+        "chaos_penalty",
+        "variance_penalty",
+        "overstrain_penalty",
+        "carrying_capacity_delta",
+        "self_confidence_delta",
+        "process_quality",
+        "neurochemical_support",
+        "neurochemical_strain",
     ):
         merged[key] = float((float(current.get(key, 0.0) or 0.0) * (1.0 - alpha)) + (float(candidate.get(key, 0.0) or 0.0) * alpha))
 
+    for key in (
+        "neural_felt_bearing",
+        "neural_felt_pressure",
+        "neural_felt_memory_resonance",
+        "neural_felt_context_reactivation",
+    ):
+        merged[key] = float((float(current.get(key, 0.0) or 0.0) * (1.0 - alpha)) + (float(candidate.get(key, 0.0) or 0.0) * alpha))
+
+    for key in (
+        "inner_field_pressure_trend",
+        "inner_field_bearing_trend",
+        "inner_field_topology_tension_trend",
+        "inner_field_memory_resonance_trend",
+    ):
+        merged[key] = float((float(current.get(key, 0.0) or 0.0) * (1.0 - alpha)) + (float(candidate.get(key, 0.0) or 0.0) * alpha))
+
+    merged["neural_felt_state"] = dict(candidate.get("neural_felt_state", current.get("neural_felt_state", {})) or {})
+    merged["neural_felt_label"] = str(candidate.get("neural_felt_label", current.get("neural_felt_label", "quiet_neural_felt")) or "quiet_neural_felt")
+    merged["inner_field_history_state"] = dict(candidate.get("inner_field_history_state", current.get("inner_field_history_state", {})) or {})
+    merged["experience_neurochemical_profile"] = dict(candidate.get("experience_neurochemical_profile", current.get("experience_neurochemical_profile", {})) or {})
+    merged["inner_field_history_length"] = int(candidate.get("inner_field_history_length", current.get("inner_field_history_length", 0)) or 0)
+    merged["inner_field_history_label"] = str(candidate.get("inner_field_history_label", current.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace")
+    merged["field_topology_layout_state"] = dict(candidate.get("field_topology_layout_state", current.get("field_topology_layout_state", {})) or {})
+    merged["field_topology_rows"] = int(candidate.get("field_topology_rows", current.get("field_topology_rows", 0)) or 0)
+    merged["field_topology_cols"] = int(candidate.get("field_topology_cols", current.get("field_topology_cols", 0)) or 0)
+    merged["field_topology_position_count"] = int(candidate.get("field_topology_position_count", current.get("field_topology_position_count", 0)) or 0)
+    merged["field_topology_neighbor_link_count"] = int(candidate.get("field_topology_neighbor_link_count", current.get("field_topology_neighbor_link_count", 0)) or 0)
+    merged["field_topology_neighbor_count_mean"] = float(candidate.get("field_topology_neighbor_count_mean", current.get("field_topology_neighbor_count_mean", 0.0)) or 0.0)
+    merged["field_topology_neighbor_count_max"] = int(candidate.get("field_topology_neighbor_count_max", current.get("field_topology_neighbor_count_max", 0)) or 0)
+    merged["field_areal_topology_density_mean"] = float(candidate.get("field_areal_topology_density_mean", current.get("field_areal_topology_density_mean", 0.0)) or 0.0)
+    merged["field_areal_topology_span_mean"] = float(candidate.get("field_areal_topology_span_mean", current.get("field_areal_topology_span_mean", 0.0)) or 0.0)
+    merged["field_areal_topology_boundary_mean"] = float(candidate.get("field_areal_topology_boundary_mean", current.get("field_areal_topology_boundary_mean", 0.0)) or 0.0)
+    for key in (
+        "field_perception_focus",
+        "field_perception_clarity",
+        "field_perception_stability",
+        "field_perception_fragmentation",
+        "field_perception_strain",
+    ):
+        merged[key] = float((float(current.get(key, 0.0) or 0.0) * (1.0 - alpha)) + (float(candidate.get(key, 0.0) or 0.0) * alpha))
+    merged["dominant_activity_island_id"] = str(candidate.get("dominant_activity_island_id", current.get("dominant_activity_island_id", "-")) or "-")
+    merged["field_pattern_signature"] = dict(candidate.get("field_pattern_signature", current.get("field_pattern_signature", {})) or {})
+    merged["field_pattern_signature_key"] = str(candidate.get("field_pattern_signature_key", current.get("field_pattern_signature_key", "")) or "")
+    merged["field_pattern_vector"] = [float(value) for value in list(candidate.get("field_pattern_vector", current.get("field_pattern_vector", [])) or [])]
+    merged["inner_pattern_identity"] = str(candidate.get("inner_pattern_identity", current.get("inner_pattern_identity", "")) or "")
+    merged["inner_pattern_identity_label"] = str(candidate.get("inner_pattern_identity_label", current.get("inner_pattern_identity_label", "")) or "")
+    merged["inner_pattern_identity_confidence"] = float(candidate.get("inner_pattern_identity_confidence", current.get("inner_pattern_identity_confidence", 0.0)) or 0.0)
+    merged["inner_pattern_identity_streak"] = int(candidate.get("inner_pattern_identity_streak", current.get("inner_pattern_identity_streak", 0)) or 0)
+    merged["inner_pattern_identity_stability"] = float(candidate.get("inner_pattern_identity_stability", current.get("inner_pattern_identity_stability", 0.0)) or 0.0)
+    merged["inner_pattern_identity_recurrent"] = bool(candidate.get("inner_pattern_identity_recurrent", current.get("inner_pattern_identity_recurrent", False)))
+    merged["inner_pattern_identity_changed"] = bool(candidate.get("inner_pattern_identity_changed", current.get("inner_pattern_identity_changed", False)))
+    merged["inner_pattern_identity_last_seen_tick"] = int(candidate.get("inner_pattern_identity_last_seen_tick", current.get("inner_pattern_identity_last_seen_tick", 0)) or 0)
+    merged["inner_pattern_recognition_state"] = dict(candidate.get("inner_pattern_recognition_state", current.get("inner_pattern_recognition_state", {})) or {})
+    merged["inner_pattern_recognition_label"] = str(candidate.get("inner_pattern_recognition_label", current.get("inner_pattern_recognition_label", "unsettled_inner_pattern")) or "unsettled_inner_pattern")
+    merged["inner_pattern_recognition_strength"] = float(candidate.get("inner_pattern_recognition_strength", current.get("inner_pattern_recognition_strength", 0.0)) or 0.0)
+    merged["inner_pattern_recognition_recurrent"] = bool(candidate.get("inner_pattern_recognition_recurrent", current.get("inner_pattern_recognition_recurrent", False)))
+    merged["inner_pattern_recognition_changed"] = bool(candidate.get("inner_pattern_recognition_changed", current.get("inner_pattern_recognition_changed", False)))
     merged["last_seen_tick"] = int(candidate.get("last_seen_tick", current.get("last_seen_tick", 0)) or 0)
     return _normalize_active_context_trace(merged)    
 
@@ -411,6 +856,295 @@ def create_mcm_runtime(bot=None):
 
 # --------------------------------------------------
 # RUNTIME HELPERS
+# --------------------------------------------------
+
+# --------------------------------------------------
+def _build_inner_pattern_recognition_state(identity_state):
+
+    item = dict(identity_state or {})
+    identity = str(item.get("inner_pattern_identity", item.get("field_pattern_signature_key", "")) or "").strip()
+    confidence = max(0.0, min(1.0, float(item.get("inner_pattern_identity_confidence", 0.0) or 0.0)))
+    stability = max(0.0, min(1.0, float(item.get("inner_pattern_identity_stability", 0.0) or 0.0)))
+    streak = max(0, int(float(item.get("inner_pattern_identity_streak", 0) or 0)))
+    recurrent = bool(item.get("inner_pattern_identity_recurrent", False))
+    changed = bool(item.get("inner_pattern_identity_changed", False))
+    stability_ticks = max(2, int(getattr(Config, "MCM_INNER_PATTERN_IDENTITY_STABILITY_TICKS", 5) or 5))
+    streak_axis = max(0.0, min(1.0, float(streak) / float(stability_ticks)))
+
+    recognition_strength = max(
+        0.0,
+        min(
+            1.0,
+            (confidence * 0.30)
+            + (stability * 0.38)
+            + (streak_axis * 0.22)
+            + (0.10 if recurrent else 0.0)
+            - (0.18 if changed else 0.0),
+        ),
+    )
+
+    if not identity:
+        recognition_label = "no_inner_pattern_identity"
+    elif changed:
+        recognition_label = "identity_shift"
+    elif recurrent and stability >= 0.62:
+        recognition_label = "recurrent_inner_pattern"
+    elif stability >= 0.42:
+        recognition_label = "forming_inner_pattern"
+    elif confidence >= 0.35:
+        recognition_label = "weak_inner_pattern"
+    else:
+        recognition_label = "unsettled_inner_pattern"
+
+    return {
+        "inner_pattern_recognition_state": {
+            "identity": str(identity),
+            "recognition_label": str(recognition_label),
+            "recognition_strength": float(recognition_strength),
+            "stability": float(stability),
+            "confidence": float(confidence),
+            "streak": int(streak),
+            "recurrent": bool(recurrent),
+            "changed": bool(changed),
+        },
+        "inner_pattern_recognition_label": str(recognition_label),
+        "inner_pattern_recognition_strength": float(recognition_strength),
+        "inner_pattern_recognition_recurrent": bool(recurrent),
+        "inner_pattern_recognition_changed": bool(changed),
+    }
+
+# --------------------------------------------------
+def _build_inner_pattern_identity_stability(bot, identity_state):
+
+    item = dict(identity_state or {})
+    identity = str(item.get("inner_pattern_identity", item.get("field_pattern_signature_key", "")) or "").strip()
+    confidence = max(0.0, min(1.0, float(item.get("inner_pattern_identity_confidence", 0.0) or 0.0)))
+
+    if not identity:
+        return {
+            "inner_pattern_identity_streak": 0,
+            "inner_pattern_identity_stability": 0.0,
+            "inner_pattern_identity_recurrent": False,
+            "inner_pattern_identity_changed": False,
+            "inner_pattern_identity_last_seen_tick": 0,
+        }
+
+    current_tick = int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0) if bot is not None else 0
+    last_identity = str(getattr(bot, "last_inner_pattern_identity", "") or "").strip() if bot is not None else ""
+    previous_streak = max(0, int(getattr(bot, "inner_pattern_identity_streak", 0) or 0)) if bot is not None else 0
+    identity_changed = bool(last_identity and identity != last_identity)
+
+    if identity == last_identity:
+        streak = previous_streak + 1
+    else:
+        streak = 1
+
+    stability_ticks = max(2, int(getattr(Config, "MCM_INNER_PATTERN_IDENTITY_STABILITY_TICKS", 5) or 5))
+    streak_ratio = max(0.0, min(1.0, float(streak) / float(stability_ticks)))
+    stability = max(0.0, min(1.0, (streak_ratio * 0.68) + (confidence * 0.32)))
+    recurrent = bool(streak >= stability_ticks and confidence >= 0.35)
+
+    if bot is not None:
+        setattr(bot, "last_inner_pattern_identity", str(identity))
+        setattr(bot, "inner_pattern_identity_streak", int(streak))
+        setattr(bot, "inner_pattern_identity_last_seen_tick", int(current_tick))
+        setattr(bot, "inner_pattern_identity_stability", float(stability))
+
+    return {
+        "inner_pattern_identity_streak": int(streak),
+        "inner_pattern_identity_stability": float(stability),
+        "inner_pattern_identity_recurrent": bool(recurrent),
+        "inner_pattern_identity_changed": bool(identity_changed),
+        "inner_pattern_identity_last_seen_tick": int(current_tick),
+    }
+
+# --------------------------------------------------
+def _build_inner_pattern_identity(inner_field_state, summary_item, state_payload=None):
+
+    field_state = dict(inner_field_state or {})
+    summary = dict(summary_item or {})
+    payload = dict(state_payload or {})
+
+    def _band(value, low=0.33, high=0.66):
+        number = max(0.0, min(1.0, float(value or 0.0)))
+
+        if number >= high:
+            return "high", 2.0
+
+        if number >= low:
+            return "mid", 1.0
+
+        return "low", 0.0
+
+    field_density = float(payload.get("field_density", field_state.get("field_density", 0.0)) or 0.0)
+    field_stability = float(payload.get("field_stability", field_state.get("field_stability", 0.0)) or 0.0)
+    field_regulation_pressure = float(payload.get("field_regulation_pressure", field_state.get("field_regulation_pressure", 0.0)) or 0.0)
+    field_neuron_activation_mean = float(payload.get("field_neuron_activation_mean", field_state.get("field_neuron_activation_mean", 0.0)) or 0.0)
+    field_neuron_memory_norm_mean = float(payload.get("field_neuron_memory_norm_mean", field_state.get("field_neuron_memory_norm_mean", 0.0)) or 0.0)
+    field_neuron_context_memory_impulse_norm_mean = float(payload.get("field_neuron_context_memory_impulse_norm_mean", field_state.get("field_neuron_context_memory_impulse_norm_mean", 0.0)) or 0.0)
+    field_areal_coherence_mean = float(payload.get("field_areal_coherence_mean", field_state.get("field_areal_coherence_mean", 0.0)) or 0.0)
+    field_areal_conflict_mean = float(payload.get("field_areal_conflict_mean", field_state.get("field_areal_conflict_mean", 0.0)) or 0.0)
+    field_areal_topology_density_mean = float(payload.get("field_areal_topology_density_mean", field_state.get("field_areal_topology_density_mean", 0.0)) or 0.0)
+    field_areal_topology_boundary_mean = float(payload.get("field_areal_topology_boundary_mean", field_state.get("field_areal_topology_boundary_mean", 0.0)) or 0.0)
+    field_topology_coherence = float(payload.get("field_topology_coherence", field_state.get("field_topology_coherence", 0.0)) or 0.0)
+    field_topology_tension = float(payload.get("field_topology_tension", field_state.get("field_topology_tension", 0.0)) or 0.0)
+    field_activity_island_count = int(payload.get("field_activity_island_count", field_state.get("field_activity_island_count", 0)) or 0)
+    field_activity_island_mass_mean = float(payload.get("field_activity_island_mass_mean", field_state.get("field_activity_island_mass_mean", 0.0)) or 0.0)
+    field_activity_island_mass_max = float(payload.get("field_activity_island_mass_max", field_state.get("field_activity_island_mass_max", 0.0)) or 0.0)
+    field_activity_island_activation_mean = float(payload.get("field_activity_island_activation_mean", field_state.get("field_activity_island_activation_mean", 0.0)) or 0.0)
+    field_activity_island_pressure_mean = float(payload.get("field_activity_island_pressure_mean", field_state.get("field_activity_island_pressure_mean", 0.0)) or 0.0)
+    field_activity_island_coherence_mean = float(payload.get("field_activity_island_coherence_mean", field_state.get("field_activity_island_coherence_mean", 0.0)) or 0.0)
+    field_activity_island_context_reactivation_mean = float(payload.get("field_activity_island_context_reactivation_mean", field_state.get("field_activity_island_context_reactivation_mean", 0.0)) or 0.0)
+    field_activity_island_spread = float(payload.get("field_activity_island_spread", field_state.get("field_activity_island_spread", 0.0)) or 0.0)
+    field_perception_label = str(payload.get("field_perception_label", field_state.get("field_perception_label", "quiet_field")) or "quiet_field").strip().lower()
+    neural_felt_bearing = float(payload.get("neural_felt_bearing", field_state.get("neural_felt_bearing", 0.0)) or 0.0)
+    neural_felt_pressure = float(payload.get("neural_felt_pressure", field_state.get("neural_felt_pressure", 0.0)) or 0.0)
+    neural_felt_memory_resonance = float(payload.get("neural_felt_memory_resonance", field_state.get("neural_felt_memory_resonance", 0.0)) or 0.0)
+    inner_field_bearing_trend = float(payload.get("inner_field_bearing_trend", field_state.get("inner_field_bearing_trend", 0.0)) or 0.0)
+    inner_field_pressure_trend = float(payload.get("inner_field_pressure_trend", field_state.get("inner_field_pressure_trend", 0.0)) or 0.0)
+    inner_pattern_support = float(payload.get("inner_pattern_support", 0.0) or 0.0)
+    inner_pattern_conflict = float(payload.get("inner_pattern_conflict", 0.0) or 0.0)
+    inner_pattern_bearing = float(payload.get("inner_pattern_bearing", 0.0) or 0.0)
+    inner_pattern_fragility = float(payload.get("inner_pattern_fragility", 0.0) or 0.0)
+    field_cluster_count = int(payload.get("field_cluster_count", field_state.get("field_cluster_count", 0)) or 0)
+    field_areal_count = int(payload.get("field_areal_count", field_state.get("field_areal_count", 0)) or 0)
+    field_topology_position_count = int(payload.get("field_topology_position_count", field_state.get("field_topology_position_count", 0)) or 0)
+    field_reorganization_direction = str(payload.get("field_reorganization_direction", field_state.get("field_reorganization_direction", "stable")) or "stable").strip().lower()
+    inner_pattern_state = str(payload.get("inner_pattern_state", "bearing") or "bearing").strip().lower()
+    inner_pattern_label = str(payload.get("inner_pattern_label", _derive_inner_pattern_label(field_state, summary)) or "").strip().lower()
+    neural_felt_label = str(payload.get("neural_felt_label", field_state.get("neural_felt_label", "quiet_neural_felt")) or "quiet_neural_felt").strip().lower()
+    inner_field_history_label = str(payload.get("inner_field_history_label", field_state.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace").strip().lower()
+
+    density_band, density_axis = _band(field_density)
+    stability_band, stability_axis = _band(field_stability)
+    regulation_band, regulation_axis = _band(field_regulation_pressure)
+    activation_band, activation_axis = _band(field_neuron_activation_mean)
+    memory_band, memory_axis = _band(max(field_neuron_memory_norm_mean, field_neuron_context_memory_impulse_norm_mean))
+    areal_coherence_band, areal_coherence_axis = _band(field_areal_coherence_mean)
+    areal_conflict_band, areal_conflict_axis = _band(field_areal_conflict_mean)
+    areal_topology_band, areal_topology_axis = _band(field_areal_topology_density_mean)
+    areal_boundary_band, areal_boundary_axis = _band(field_areal_topology_boundary_mean)
+    topology_coherence_band, topology_coherence_axis = _band(field_topology_coherence)
+    topology_tension_band, topology_tension_axis = _band(field_topology_tension)
+    island_mass_band, island_mass_axis = _band(max(field_activity_island_mass_mean, field_activity_island_mass_max))
+    island_activation_band, island_activation_axis = _band(field_activity_island_activation_mean)
+    island_pressure_band, island_pressure_axis = _band(field_activity_island_pressure_mean)
+    island_coherence_band, island_coherence_axis = _band(field_activity_island_coherence_mean)
+    island_context_band, island_context_axis = _band(field_activity_island_context_reactivation_mean)
+    island_spread_band, island_spread_axis = _band(field_activity_island_spread)
+    neural_bearing_band, neural_bearing_axis = _band(neural_felt_bearing)
+    neural_pressure_band, neural_pressure_axis = _band(neural_felt_pressure)
+    neural_memory_band, neural_memory_axis = _band(neural_felt_memory_resonance)
+    pattern_support_band, pattern_support_axis = _band(inner_pattern_support)
+    pattern_conflict_band, pattern_conflict_axis = _band(inner_pattern_conflict)
+    pattern_bearing_band, pattern_bearing_axis = _band(inner_pattern_bearing)
+    pattern_fragility_band, pattern_fragility_axis = _band(inner_pattern_fragility)
+
+    history_balance_axis = max(-1.0, min(1.0, inner_field_bearing_trend - inner_field_pressure_trend))
+    cluster_axis = max(0.0, min(1.0, float(field_cluster_count) / 6.0))
+    areal_axis = max(0.0, min(1.0, float(field_areal_count) / 6.0))
+    topology_presence_axis = 1.0 if field_topology_position_count > 0 else 0.0
+    island_count_axis = max(0.0, min(1.0, float(field_activity_island_count) / 6.0))
+
+    field_pattern_vector = [
+        float(density_axis / 2.0),
+        float(stability_axis / 2.0),
+        float(regulation_axis / 2.0),
+        float(activation_axis / 2.0),
+        float(memory_axis / 2.0),
+        float(areal_coherence_axis / 2.0),
+        float(areal_conflict_axis / 2.0),
+        float(areal_topology_axis / 2.0),
+        float(areal_boundary_axis / 2.0),
+        float(topology_coherence_axis / 2.0),
+        float(topology_tension_axis / 2.0),
+        float(island_count_axis),
+        float(island_mass_axis / 2.0),
+        float(island_activation_axis / 2.0),
+        float(island_pressure_axis / 2.0),
+        float(island_coherence_axis / 2.0),
+        float(island_context_axis / 2.0),
+        float(island_spread_axis / 2.0),
+        float(neural_bearing_axis / 2.0),
+        float(neural_pressure_axis / 2.0),
+        float(neural_memory_axis / 2.0),
+        float(pattern_support_axis / 2.0),
+        float(pattern_conflict_axis / 2.0),
+        float(pattern_bearing_axis / 2.0),
+        float(pattern_fragility_axis / 2.0),
+        float(history_balance_axis),
+        float(cluster_axis),
+        float(areal_axis),
+        float(topology_presence_axis),
+    ]
+
+    signature_parts = [
+        f"fd_{density_band}",
+        f"fs_{stability_band}",
+        f"rp_{regulation_band}",
+        f"na_{activation_band}",
+        f"mem_{memory_band}",
+        f"acoh_{areal_coherence_band}",
+        f"acon_{areal_conflict_band}",
+        f"atop_{areal_topology_band}",
+        f"abnd_{areal_boundary_band}",
+        f"tcoh_{topology_coherence_band}",
+        f"tten_{topology_tension_band}",
+        f"fp_{field_perception_label}",
+        f"icnt_{field_activity_island_count}",
+        f"imass_{island_mass_band}",
+        f"iact_{island_activation_band}",
+        f"iprs_{island_pressure_band}",
+        f"icoh_{island_coherence_band}",
+        f"ictx_{island_context_band}",
+        f"ispd_{island_spread_band}",
+        f"nb_{neural_bearing_band}",
+        f"np_{neural_pressure_band}",
+        f"nm_{neural_memory_band}",
+        f"ps_{pattern_support_band}",
+        f"pc_{pattern_conflict_band}",
+        f"pb_{pattern_bearing_band}",
+        f"pf_{pattern_fragility_band}",
+        f"org_{field_reorganization_direction}",
+        f"ips_{inner_pattern_state}",
+    ]
+    signature_key = "::".join(signature_parts)
+    identity_label = f"{inner_pattern_state}::{field_perception_label}::{neural_felt_label}::{inner_field_history_label}"
+    identity_confidence = max(
+        0.0,
+        min(
+            1.0,
+            (topology_presence_axis * 0.14)
+            + (max(0.0, min(1.0, field_stability)) * 0.12)
+            + (max(0.0, min(1.0, field_areal_coherence_mean)) * 0.10)
+            + (max(0.0, min(1.0, inner_pattern_bearing)) * 0.14)
+            + (max(0.0, min(1.0, neural_felt_memory_resonance)) * 0.10)
+            + (max(0.0, min(1.0, field_areal_topology_density_mean)) * 0.08)
+            + (max(0.0, min(1.0, 1.0 - field_areal_conflict_mean)) * 0.08)
+            + (max(0.0, min(1.0, 1.0 - field_topology_tension)) * 0.06)
+            + (max(0.0, min(1.0, field_activity_island_coherence_mean)) * 0.08)
+            + (max(0.0, min(1.0, field_activity_island_activation_mean)) * 0.05)
+            + (max(0.0, min(1.0, field_activity_island_mass_max)) * 0.03)
+            + (max(0.0, min(1.0, 1.0 - field_activity_island_pressure_mean)) * 0.02),
+        ),
+    )
+
+    return {
+        "field_pattern_signature": {
+            "signature_key": str(signature_key),
+            "signature_parts": [str(item) for item in list(signature_parts or [])],
+            "pattern_label": str(inner_pattern_label),
+            "identity_label": str(identity_label),
+            "field_perception_label": str(field_perception_label),
+            "field_pattern_vector": [float(round(value, 4)) for value in list(field_pattern_vector or [])],
+        },
+        "field_pattern_signature_key": str(signature_key),
+        "field_pattern_vector": [float(round(value, 4)) for value in list(field_pattern_vector or [])],
+        "inner_pattern_identity": str(f"inner_identity::{signature_key}"),
+        "inner_pattern_identity_label": str(identity_label),
+        "inner_pattern_identity_confidence": float(identity_confidence),
+    }
+
 # --------------------------------------------------
 def _build_runtime_hold_decision(bot, candle_state=None, tension_state=None, decision_tendency="hold", reason="runtime_hold"):
 
@@ -576,7 +1310,7 @@ def _experience_bearing_delta(summary):
     )
 
 # --------------------------------------------------
-def _experience_reward_delta(summary):
+def build_experience_neurochemical_effect(summary):
 
     item = dict(summary or {})
     event_name = str(item.get("event_name", "") or "").strip().lower()
@@ -596,19 +1330,38 @@ def _experience_reward_delta(summary):
     felt_regulation_quality = float(item.get("felt_regulation_quality", 0.0) or 0.0)
     felt_recovery_cost = float(item.get("felt_recovery_cost", 0.0) or 0.0)
     felt_burden = float(item.get("felt_burden", 0.0) or 0.0)
+    felt_overactivation = float(item.get("felt_overactivation", 0.0) or 0.0)
+    felt_confidence = float(item.get("felt_confidence", 0.0) or 0.0)
+    felt_stability = float(item.get("felt_stability", 0.0) or 0.0)
     experience_friction_cost = float(item.get("experience_friction_cost", 0.0) or 0.0)
     experience_energy_cost = float(item.get("experience_energy_cost", 0.0) or 0.0)
+    experience_bearing_room = float(item.get("experience_bearing_room", 0.0) or 0.0)
+    in_trade_direction_stability = float(item.get("in_trade_direction_stability", 0.0) or 0.0)
+    in_trade_avg_state_stability = float(item.get("in_trade_avg_state_stability", 0.0) or 0.0)
+    in_trade_avg_action_capacity = float(item.get("in_trade_avg_action_capacity", 0.0) or 0.0)
+    in_trade_avg_recovery_need = float(item.get("in_trade_avg_recovery_need", 0.0) or 0.0)
+    in_trade_avg_survival_pressure = float(item.get("in_trade_avg_survival_pressure", 0.0) or 0.0)
+    in_trade_avg_pressure_to_capacity = float(item.get("in_trade_avg_pressure_to_capacity", 0.0) or 0.0)
+    in_trade_avg_load_bearing_capacity = float(item.get("in_trade_avg_load_bearing_capacity", 0.0) or 0.0)
+    in_trade_max_mfe = float(item.get("in_trade_max_mfe", 0.0) or 0.0)
+    in_trade_max_mae = float(item.get("in_trade_max_mae", 0.0) or 0.0)
     field_areal_stability_mean = float(item.get("field_areal_stability_mean", 0.0) or 0.0)
     field_areal_pressure_mean = float(item.get("field_areal_pressure_mean", 0.0) or 0.0)
     field_areal_dominance = float(item.get("field_areal_dominance", 0.0) or 0.0)
     field_areal_fragmentation = float(item.get("field_areal_fragmentation", 0.0) or 0.0)
     field_areal_coherence_mean = float(item.get("field_areal_coherence_mean", 0.0) or 0.0)
     field_areal_conflict_mean = float(item.get("field_areal_conflict_mean", 0.0) or 0.0)
+    field_areal_drift = float(item.get("field_areal_drift", 0.0) or 0.0)
     field_neuron_context_memory_impulse_norm_mean = float(item.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0)
     processing_areal_tension = float(item.get("processing_areal_tension", 0.0) or 0.0)
     processing_areal_support = float(item.get("processing_areal_support", 0.0) or 0.0)
     thought_areal_pressure = float(item.get("thought_areal_pressure", 0.0) or 0.0)
     thought_areal_support = float(item.get("thought_areal_support", 0.0) or 0.0)
+    field_perception_pressure = float(item.get("field_perception_pressure", item.get("inner_context_cluster_activity_island_pressure_mean", 0.0)) or 0.0)
+    field_perception_support = float(item.get("field_perception_support", item.get("inner_context_cluster_activity_island_coherence_mean", 0.0)) or 0.0)
+    field_perception_clarity = float(item.get("field_perception_clarity", item.get("inner_context_cluster_activity_island_coherence_mean", 0.0)) or 0.0)
+    field_activity_island_spread = float(item.get("field_activity_island_spread", item.get("inner_context_cluster_activity_island_spread", 0.0)) or 0.0)
+    field_perception_label = str(item.get("field_perception_label", item.get("inner_context_cluster_field_perception_label", "quiet_field")) or "quiet_field").strip().lower()
     active_context_trace = _normalize_active_context_trace(item.get("active_context_trace", {}) or {})
     active_context_activation = float(active_context_trace.get("activation", 0.0) or 0.0)
     active_context_support = float(active_context_trace.get("support", 0.0) or 0.0)
@@ -671,6 +1424,175 @@ def _experience_reward_delta(summary):
     state_effect_delta = float(state_support - state_strain)
     base_delta = float((state_support * 0.66) - (state_strain * 0.60))
     event_context_delta = 0.0
+    process_quality = max(
+        0.0,
+        min(
+            1.0,
+            (plan_quality * 0.22)
+            + (execution_quality * 0.18)
+            + (risk_fit_quality * 0.18)
+            + (structural_bearing_quality * 0.14)
+            + (review_score * 0.10)
+            + (correction_timing_quality * 0.08)
+            + (observation_quality * 0.06)
+            + (felt_regulation_quality * 0.04),
+        ),
+    )
+    carrying_capacity_delta = float(
+        (bearing_delta * 0.38)
+        + (carrying_room * 0.18)
+        + (experience_bearing_room * 0.14)
+        + (in_trade_avg_load_bearing_capacity * 0.10)
+        + (in_trade_avg_action_capacity * 0.10)
+        - (in_trade_avg_recovery_need * 0.12)
+        - (in_trade_avg_survival_pressure * 0.10)
+    )
+    relief_signal = max(
+        0.0,
+        min(
+            1.0,
+            (relief_quality * 0.30)
+            + (max(0.0, bearing_delta) * 0.18)
+            + (max(0.0, state_effect_delta) * 0.18)
+            + (max(0.0, 1.0 - felt_burden) * 0.12)
+            + (max(0.0, 1.0 - in_trade_avg_pressure_to_capacity / 2.0) * 0.10)
+            + (field_perception_clarity * 0.12),
+        ),
+    )
+    stability_signal = max(
+        0.0,
+        min(
+            1.0,
+            (field_areal_stability_mean * 0.20)
+            + (field_areal_coherence_mean * 0.16)
+            + (felt_stability * 0.14)
+            + (in_trade_avg_state_stability * 0.12)
+            + (in_trade_direction_stability * 0.10)
+            + (processing_areal_support * 0.10)
+            + (thought_areal_support * 0.08)
+            + (field_perception_clarity * 0.10),
+        ),
+    )
+    discipline_signal = max(
+        0.0,
+        min(
+            1.0,
+            (process_quality * 0.36)
+            + (correction_timing_quality * 0.16)
+            + (risk_fit_quality * 0.14)
+            + (observation_quality * 0.10)
+            + (max(0.0, 1.0 - bearing_regulation_cost) * 0.10)
+            + (max(0.0, 1.0 - experience_friction_cost) * 0.08)
+            + (0.06 if decision_tendency in ("observe", "replan", "hold") and event_name in ("observed_only", "withheld", "replanned", "abandoned") else 0.0),
+        ),
+    )
+    chaos_penalty = max(
+        0.0,
+        min(
+            1.0,
+            (experience_friction_cost * 0.20)
+            + (experience_energy_cost * 0.16)
+            + (field_areal_fragmentation * 0.14)
+            + (field_areal_conflict_mean * 0.12)
+            + (field_activity_island_spread * 0.08)
+            + (field_perception_pressure * 0.12)
+            + (processing_areal_tension * 0.08)
+            + (thought_areal_pressure * 0.06)
+            + (0.04 if field_perception_label in ("fragmented_perception_field", "strained_field") else 0.0),
+        ),
+    )
+    variance_penalty = max(
+        0.0,
+        min(
+            1.0,
+            (max(0.0, 1.0 - in_trade_direction_stability) * 0.20)
+            + (max(0.0, 1.0 - field_areal_stability_mean) * 0.14)
+            + (field_areal_drift * 0.12)
+            + (field_areal_fragmentation * 0.14)
+            + (abs(in_trade_max_mfe - in_trade_max_mae) * 0.08)
+            + (field_activity_island_spread * 0.12)
+            + (active_context_strain_effect * 0.10),
+        ),
+    )
+    overstrain_penalty = max(
+        0.0,
+        min(
+            1.0,
+            (felt_recovery_cost * 0.18)
+            + (felt_burden * 0.14)
+            + (bearing_regulation_cost * 0.12)
+            + (in_trade_avg_recovery_need * 0.14)
+            + (in_trade_avg_survival_pressure * 0.10)
+            + (min(1.0, in_trade_avg_pressure_to_capacity / 2.0) * 0.10)
+            + (field_areal_pressure_mean * 0.10)
+            + (field_perception_pressure * 0.12),
+        ),
+    )
+    overactivation_signal = max(
+        0.0,
+        min(
+            1.0,
+            (felt_overactivation * 0.28)
+            + (max(0.0, in_trade_max_mfe - in_trade_max_mae) * 0.08)
+            + (max(0.0, 1.0 - process_quality) * 0.12)
+            + (chaos_penalty * 0.18)
+            + (0.18 if outcome_reason == "tp_hit" and process_quality < 0.42 else 0.0)
+            + (0.10 if outcome_reason == "tp_hit" and variance_penalty > 0.46 else 0.0),
+        ),
+    )
+    profit_reward = 0.0
+    if outcome_reason == "tp_hit":
+        profit_reward = max(
+            0.0,
+            min(
+                1.0,
+                0.18
+                + (process_quality * 0.24)
+                + (risk_fit_quality * 0.16)
+                + (stability_signal * 0.14)
+                + (relief_signal * 0.10)
+                - (chaos_penalty * 0.16)
+                - (overactivation_signal * 0.10),
+            ),
+        )
+    elif outcome_reason == "sl_hit":
+        profit_reward = -max(
+            0.0,
+            min(
+                1.0,
+                0.16
+                + ((1.0 - risk_fit_quality) * 0.18)
+                + (overstrain_penalty * 0.12)
+                + (chaos_penalty * 0.10)
+                - (process_quality * 0.16)
+                - (discipline_signal * 0.10),
+            ),
+        )
+    elif outcome_reason in ("cancel", "timeout", "reward_too_small", "rr_too_low", "sl_distance_too_high"):
+        profit_reward = max(-0.12, min(0.12, (discipline_signal * 0.10) + (relief_signal * 0.06) - (overstrain_penalty * 0.08)))
+
+    confidence_signal = max(
+        0.0,
+        min(
+            1.0,
+            (discipline_signal * 0.22)
+            + (stability_signal * 0.20)
+            + (max(0.0, profit_reward) * 0.16)
+            + (felt_confidence * 0.12)
+            + (max(0.0, carrying_capacity_delta) * 0.12)
+            + (field_perception_support * 0.08)
+            - (variance_penalty * 0.14)
+            - (chaos_penalty * 0.12),
+        ),
+    )
+    self_confidence_delta = float(
+        (confidence_signal * 0.16)
+        + (discipline_signal * 0.08)
+        + (max(0.0, profit_reward) * 0.06)
+        - (variance_penalty * 0.10)
+        - (overactivation_signal * 0.08)
+        - (max(0.0, -profit_reward) * 0.06)
+    )
 
     if event_name in ("observed_only", "withheld", "replanned", "abandoned"):
         event_context_delta += (observation_quality * 0.04) + (correction_timing_quality * 0.03)
@@ -699,7 +1621,84 @@ def _experience_reward_delta(summary):
         event_context_delta += (correction_timing_quality * 0.025) + (observation_quality * 0.020)
         event_context_delta += max(-0.018, min(0.018, state_effect_delta * 0.030))
 
-    return float(max(-0.28, min(0.28, (base_delta * 0.82) + event_context_delta)))
+    effect_upper_bound = 0.28
+    effect_lower_bound = -0.28
+
+    if outcome_reason == "sl_hit":
+        effect_upper_bound = max(
+            -0.02,
+            min(
+                0.16,
+                0.04
+                + (discipline_signal * 0.06)
+                + (stability_signal * 0.05)
+                + (risk_fit_quality * 0.03)
+                - (chaos_penalty * 0.05)
+                - (overstrain_penalty * 0.04),
+            ),
+        )
+    elif outcome_reason in ("cancel", "timeout", "reward_too_small", "rr_too_low", "sl_distance_too_high"):
+        effect_upper_bound = max(
+            0.02,
+            min(
+                0.18,
+                0.05
+                + (discipline_signal * 0.06)
+                + (observation_quality * 0.04)
+                + (relief_signal * 0.03)
+                - (chaos_penalty * 0.04),
+            ),
+        )
+
+    experience_effect_score = float(
+        max(
+            effect_lower_bound,
+            min(
+                effect_upper_bound,
+                (base_delta * 0.46)
+                + (profit_reward * 0.16)
+                + (relief_signal * 0.06)
+                + (stability_signal * 0.06)
+                + (discipline_signal * 0.07)
+                + (confidence_signal * 0.05)
+                + (carrying_capacity_delta * 0.12)
+                + (self_confidence_delta * 0.06)
+                + event_context_delta
+                - (chaos_penalty * 0.08)
+                - (variance_penalty * 0.06)
+                - (overstrain_penalty * 0.08)
+                - (overactivation_signal * 0.05),
+            ),
+        )
+    )
+
+    return {
+        "profit_reward": float(profit_reward),
+        "relief_signal": float(relief_signal),
+        "stability_signal": float(stability_signal),
+        "discipline_signal": float(discipline_signal),
+        "confidence_signal": float(confidence_signal),
+        "overactivation_signal": float(overactivation_signal),
+        "chaos_penalty": float(chaos_penalty),
+        "variance_penalty": float(variance_penalty),
+        "overstrain_penalty": float(overstrain_penalty),
+        "carrying_capacity_delta": float(carrying_capacity_delta),
+        "self_confidence_delta": float(max(-0.28, min(0.28, self_confidence_delta))),
+        "process_quality": float(process_quality),
+        "state_support": float(state_support),
+        "state_strain": float(state_strain),
+        "state_effect_delta": float(state_effect_delta),
+        "event_context_delta": float(event_context_delta),
+        "effect_upper_bound": float(effect_upper_bound),
+        "effect_lower_bound": float(effect_lower_bound),
+        "experience_effect_score": float(experience_effect_score),
+    }
+
+# --------------------------------------------------
+def _experience_reward_delta(summary):
+
+    effect = build_experience_neurochemical_effect(summary)
+    return float(dict(effect or {}).get("experience_effect_score", 0.0) or 0.0)
 
 # --------------------------------------------------
 def _build_experience_similarity_axes(summary):
@@ -749,6 +1748,11 @@ def _build_experience_similarity_axes(summary):
     thought_areal_pressure = float(item.get("thought_areal_pressure", 0.0) or 0.0)
     thought_areal_support = float(item.get("thought_areal_support", 0.0) or 0.0)
     field_neuron_context_memory_impulse_norm_mean = float(item.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0)
+    neural_felt_state = dict(item.get("neural_felt_state", {}) or {})
+    neural_felt_bearing = float(item.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", 0.0)) or 0.0)
+    neural_felt_pressure = float(item.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", 0.0)) or 0.0)
+    neural_felt_memory_resonance = float(item.get("neural_felt_memory_resonance", neural_felt_state.get("neural_felt_memory_resonance", 0.0)) or 0.0)
+    neural_felt_context_reactivation = float(item.get("neural_felt_context_reactivation", neural_felt_state.get("neural_felt_context_reactivation", 0.0)) or 0.0)
     active_context_trace = _normalize_active_context_trace(item.get("active_context_trace", {}) or {})
     active_context_activation = float(active_context_trace.get("activation", 0.0) or 0.0)
     active_context_balance = float(
@@ -758,6 +1762,110 @@ def _build_experience_similarity_axes(summary):
         - active_context_trace.get("conflict", 0.0)
         - active_context_trace.get("attenuation", 0.0)
     )
+    inner_field_history_state = dict(item.get("inner_field_history_state", {}) or {})
+    inner_field_pressure_trend = float(item.get("inner_field_pressure_trend", item.get("inner_context_cluster_pressure_trend", inner_field_history_state.get("inner_field_pressure_trend", 0.0))) or 0.0)
+    inner_field_bearing_trend = float(item.get("inner_field_bearing_trend", item.get("inner_context_cluster_bearing_trend", inner_field_history_state.get("inner_field_bearing_trend", 0.0))) or 0.0)
+    inner_field_topology_tension_trend = float(item.get("inner_field_topology_tension_trend", item.get("inner_context_cluster_topology_tension_trend", inner_field_history_state.get("inner_field_topology_tension_trend", 0.0))) or 0.0)
+    inner_field_memory_resonance_trend = float(item.get("inner_field_memory_resonance_trend", item.get("inner_context_cluster_memory_resonance_trend", inner_field_history_state.get("inner_field_memory_resonance_trend", 0.0))) or 0.0)
+    active_context_pressure_trend = float(active_context_trace.get("inner_field_pressure_trend", 0.0) or 0.0)
+    active_context_bearing_trend = float(active_context_trace.get("inner_field_bearing_trend", 0.0) or 0.0)
+    active_context_topology_tension_trend = float(active_context_trace.get("inner_field_topology_tension_trend", 0.0) or 0.0)
+    active_context_memory_resonance_trend = float(active_context_trace.get("inner_field_memory_resonance_trend", 0.0) or 0.0)
+    field_topology_layout_state = dict(item.get("field_topology_layout_state", {}) or {})
+    field_topology_rows = float(item.get("field_topology_rows", item.get("inner_context_cluster_topology_rows", field_topology_layout_state.get("topology_rows", 0.0))) or 0.0)
+    field_topology_cols = float(item.get("field_topology_cols", item.get("inner_context_cluster_topology_cols", field_topology_layout_state.get("topology_cols", 0.0))) or 0.0)
+    field_topology_position_count = float(item.get("field_topology_position_count", item.get("inner_context_cluster_topology_position_count", field_topology_layout_state.get("topology_position_count", 0.0))) or 0.0)
+    field_topology_neighbor_link_count = float(item.get("field_topology_neighbor_link_count", item.get("inner_context_cluster_topology_neighbor_link_count", field_topology_layout_state.get("topology_neighbor_link_count", 0.0))) or 0.0)
+    field_topology_neighbor_count_mean = float(item.get("field_topology_neighbor_count_mean", item.get("inner_context_cluster_topology_neighbor_count_mean", field_topology_layout_state.get("topology_neighbor_count_mean", 0.0))) or 0.0)
+    field_topology_neighbor_count_max = float(item.get("field_topology_neighbor_count_max", item.get("inner_context_cluster_topology_neighbor_count_max", field_topology_layout_state.get("topology_neighbor_count_max", 0.0))) or 0.0)
+    active_context_topology_rows = float(active_context_trace.get("field_topology_rows", 0.0) or 0.0)
+    active_context_topology_cols = float(active_context_trace.get("field_topology_cols", 0.0) or 0.0)
+    active_context_topology_position_count = float(active_context_trace.get("field_topology_position_count", 0.0) or 0.0)
+    active_context_topology_neighbor_link_count = float(active_context_trace.get("field_topology_neighbor_link_count", 0.0) or 0.0)
+    active_context_topology_neighbor_count_mean = float(active_context_trace.get("field_topology_neighbor_count_mean", 0.0) or 0.0)
+    active_context_topology_neighbor_count_max = float(active_context_trace.get("field_topology_neighbor_count_max", 0.0) or 0.0)
+    field_areal_topology_density_mean = float(item.get("field_areal_topology_density_mean", item.get("inner_context_cluster_areal_topology_density_mean", 0.0)) or 0.0)
+    field_areal_topology_span_mean = float(item.get("field_areal_topology_span_mean", item.get("inner_context_cluster_areal_topology_span_mean", 0.0)) or 0.0)
+    field_areal_topology_boundary_mean = float(item.get("field_areal_topology_boundary_mean", item.get("inner_context_cluster_areal_topology_boundary_mean", 0.0)) or 0.0)
+    active_context_areal_topology_density_mean = float(active_context_trace.get("field_areal_topology_density_mean", 0.0) or 0.0)
+    active_context_areal_topology_span_mean = float(active_context_trace.get("field_areal_topology_span_mean", 0.0) or 0.0)
+    active_context_areal_topology_boundary_mean = float(active_context_trace.get("field_areal_topology_boundary_mean", 0.0) or 0.0)
+    field_pattern_signature = dict(item.get("field_pattern_signature", {}) or {})
+    field_pattern_signature_key = str(item.get("field_pattern_signature_key", item.get("inner_context_cluster_field_pattern_signature_key", field_pattern_signature.get("signature_key", ""))) or "")
+    field_pattern_vector = [float(value) for value in list(item.get("field_pattern_vector", item.get("inner_context_cluster_field_pattern_vector", field_pattern_signature.get("field_pattern_vector", []))) or [])]
+    inner_pattern_identity = str(item.get("inner_pattern_identity", item.get("inner_context_cluster_pattern_identity", "")) or "")
+    inner_pattern_identity_confidence = float(item.get("inner_pattern_identity_confidence", item.get("inner_context_cluster_pattern_identity_confidence", 0.0)) or 0.0)
+    inner_pattern_identity_stability = float(item.get("inner_pattern_identity_stability", item.get("inner_context_cluster_pattern_identity_stability", 0.0)) or 0.0)
+    inner_pattern_identity_streak = float(item.get("inner_pattern_identity_streak", item.get("inner_context_cluster_pattern_identity_streak", 0.0)) or 0.0)
+    inner_pattern_recognition_state = dict(item.get("inner_pattern_recognition_state", item.get("inner_context_cluster_pattern_recognition_state", {})) or {})
+    inner_pattern_recognition_strength = float(item.get("inner_pattern_recognition_strength", item.get("inner_context_cluster_pattern_recognition_strength", inner_pattern_recognition_state.get("recognition_strength", 0.0))) or 0.0)
+    inner_pattern_recognition_recurrent = bool(item.get("inner_pattern_recognition_recurrent", item.get("inner_context_cluster_pattern_recognition_recurrent", inner_pattern_recognition_state.get("recurrent", False))))
+    inner_pattern_recognition_changed = bool(item.get("inner_pattern_recognition_changed", item.get("inner_context_cluster_pattern_recognition_changed", inner_pattern_recognition_state.get("changed", False))))
+    active_context_field_pattern_signature_key = str(active_context_trace.get("field_pattern_signature_key", "") or "")
+    active_context_field_pattern_vector = [float(value) for value in list(active_context_trace.get("field_pattern_vector", []) or [])]
+    active_context_inner_pattern_identity = str(active_context_trace.get("inner_pattern_identity", "") or "")
+    active_context_inner_pattern_identity_confidence = float(active_context_trace.get("inner_pattern_identity_confidence", 0.0) or 0.0)
+    active_context_inner_pattern_identity_stability = float(active_context_trace.get("inner_pattern_identity_stability", 0.0) or 0.0)
+    active_context_inner_pattern_identity_streak = float(active_context_trace.get("inner_pattern_identity_streak", 0.0) or 0.0)
+    active_context_inner_pattern_recognition_strength = float(active_context_trace.get("inner_pattern_recognition_strength", 0.0) or 0.0)
+    active_context_inner_pattern_recognition_recurrent = bool(active_context_trace.get("inner_pattern_recognition_recurrent", False))
+    active_context_inner_pattern_recognition_changed = bool(active_context_trace.get("inner_pattern_recognition_changed", False))
+    topology_agent_scale = max(1.0, float(getattr(Config, "MCM_FIELD_AGENTS", field_topology_position_count or 1.0) or 1.0))
+    topology_neighbor_scale = max(1.0, float(getattr(Config, "MCM_FIELD_LOCAL_NEIGHBORS", field_topology_neighbor_count_max or 1.0) or 1.0))
+    topology_grid_capacity = max(1.0, field_topology_rows * field_topology_cols)
+    active_context_topology_grid_capacity = max(1.0, active_context_topology_rows * active_context_topology_cols)
+    field_topology_shape_balance = float((min(field_topology_rows, field_topology_cols) / max(1.0, max(field_topology_rows, field_topology_cols))) if max(field_topology_rows, field_topology_cols) > 0.0 else 0.0)
+    field_topology_position_scale = float(max(0.0, min(1.0, field_topology_position_count / topology_agent_scale)))
+    field_topology_grid_fill = float(max(0.0, min(1.0, field_topology_position_count / topology_grid_capacity)))
+    field_topology_neighbor_density = float(max(0.0, min(1.0, field_topology_neighbor_count_mean / topology_neighbor_scale)))
+    field_topology_link_density_axis = float(max(0.0, min(1.0, field_topology_neighbor_link_count / max(1.0, field_topology_position_count * topology_neighbor_scale))))
+    active_context_topology_shape_balance = float((min(active_context_topology_rows, active_context_topology_cols) / max(1.0, max(active_context_topology_rows, active_context_topology_cols))) if max(active_context_topology_rows, active_context_topology_cols) > 0.0 else 0.0)
+    active_context_topology_position_scale = float(max(0.0, min(1.0, active_context_topology_position_count / topology_agent_scale)))
+    active_context_topology_grid_fill = float(max(0.0, min(1.0, active_context_topology_position_count / active_context_topology_grid_capacity)))
+    active_context_topology_neighbor_density = float(max(0.0, min(1.0, active_context_topology_neighbor_count_mean / topology_neighbor_scale)))
+    active_context_topology_link_density_axis = float(max(0.0, min(1.0, active_context_topology_neighbor_link_count / max(1.0, active_context_topology_position_count * topology_neighbor_scale))))
+    topology_span_scale = max(1.0, float(np.sqrt(8.0)))
+    field_areal_topology_density_axis = float(max(0.0, min(1.0, field_areal_topology_density_mean)))
+    field_areal_topology_span_axis = float(max(0.0, min(1.0, field_areal_topology_span_mean / topology_span_scale)))
+    field_areal_topology_boundary_axis = float(max(0.0, min(1.0, field_areal_topology_boundary_mean / topology_neighbor_scale)))
+    field_areal_topology_integrity_axis = float(field_areal_topology_density_axis - field_areal_topology_boundary_axis)
+    active_context_areal_topology_density_axis = float(max(0.0, min(1.0, active_context_areal_topology_density_mean)))
+    active_context_areal_topology_span_axis = float(max(0.0, min(1.0, active_context_areal_topology_span_mean / topology_span_scale)))
+    active_context_areal_topology_boundary_axis = float(max(0.0, min(1.0, active_context_areal_topology_boundary_mean / topology_neighbor_scale)))
+    active_context_areal_topology_integrity_axis = float(active_context_areal_topology_density_axis - active_context_areal_topology_boundary_axis)
+    field_pattern_vector_length_axis = float(max(0.0, min(1.0, len(field_pattern_vector) / 32.0)))
+    field_pattern_vector_mean_axis = float(max(-1.0, min(1.0, float(np.mean(field_pattern_vector)) if field_pattern_vector else 0.0)))
+    field_pattern_vector_max_axis = float(max(0.0, min(1.0, float(np.max(np.abs(field_pattern_vector))) if field_pattern_vector else 0.0)))
+    field_pattern_vector_spread_axis = float(max(0.0, min(1.0, float(np.std(field_pattern_vector)) if field_pattern_vector else 0.0)))
+    active_context_pattern_vector_length_axis = float(max(0.0, min(1.0, len(active_context_field_pattern_vector) / 32.0)))
+    active_context_pattern_vector_mean_axis = float(max(-1.0, min(1.0, float(np.mean(active_context_field_pattern_vector)) if active_context_field_pattern_vector else 0.0)))
+    active_context_pattern_vector_max_axis = float(max(0.0, min(1.0, float(np.max(np.abs(active_context_field_pattern_vector))) if active_context_field_pattern_vector else 0.0)))
+    active_context_pattern_vector_spread_axis = float(max(0.0, min(1.0, float(np.std(active_context_field_pattern_vector)) if active_context_field_pattern_vector else 0.0)))
+    inner_pattern_identity_confidence_axis = float(max(0.0, min(1.0, inner_pattern_identity_confidence)))
+    active_context_inner_pattern_identity_confidence_axis = float(max(0.0, min(1.0, active_context_inner_pattern_identity_confidence)))
+    stability_tick_scale = max(2.0, float(getattr(Config, "MCM_INNER_PATTERN_IDENTITY_STABILITY_TICKS", 5) or 5))
+    inner_pattern_identity_stability_axis = float(max(0.0, min(1.0, inner_pattern_identity_stability)))
+    active_context_inner_pattern_identity_stability_axis = float(max(0.0, min(1.0, active_context_inner_pattern_identity_stability)))
+    inner_pattern_identity_streak_axis = float(max(0.0, min(1.0, inner_pattern_identity_streak / stability_tick_scale)))
+    active_context_inner_pattern_identity_streak_axis = float(max(0.0, min(1.0, active_context_inner_pattern_identity_streak / stability_tick_scale)))
+    inner_pattern_identity_match_axis = float(
+        1.0
+        if field_pattern_signature_key
+        and active_context_field_pattern_signature_key
+        and field_pattern_signature_key == active_context_field_pattern_signature_key
+        else 0.0
+    )
+    inner_pattern_identity_reactivation_axis = float(active_context_activation * active_context_inner_pattern_identity_confidence_axis)
+    inner_pattern_identity_presence_axis = float(1.0 if inner_pattern_identity or field_pattern_signature_key else 0.0)
+    active_context_inner_pattern_identity_presence_axis = float(1.0 if active_context_inner_pattern_identity or active_context_field_pattern_signature_key else 0.0)
+    inner_pattern_recognition_strength_axis = float(max(0.0, min(1.0, inner_pattern_recognition_strength)))
+    active_context_inner_pattern_recognition_strength_axis = float(max(0.0, min(1.0, active_context_inner_pattern_recognition_strength)))
+    inner_pattern_recognition_recurrent_axis = float(1.0 if inner_pattern_recognition_recurrent else 0.0)
+    active_context_inner_pattern_recognition_recurrent_axis = float(1.0 if active_context_inner_pattern_recognition_recurrent else 0.0)
+    inner_pattern_recognition_changed_axis = float(1.0 if inner_pattern_recognition_changed else 0.0)
+    active_context_inner_pattern_recognition_changed_axis = float(1.0 if active_context_inner_pattern_recognition_changed else 0.0)
+    inner_pattern_recognition_alignment_axis = float(inner_pattern_recognition_strength_axis * active_context_inner_pattern_recognition_strength_axis)
+    inner_pattern_recognition_instability_axis = float(max(inner_pattern_recognition_changed_axis, active_context_inner_pattern_recognition_changed_axis))
 
     return {
         "direction_axis": float(direction_value),
@@ -769,6 +1877,18 @@ def _build_experience_similarity_axes(summary):
         "bearing_axis": float(item.get("structural_bearing_quality", 0.0) or 0.0),
         "path_axis": float(item.get("decision_path_quality", 0.0) or 0.0),
         "reward_axis": float(_experience_reward_delta(item) or 0.0),
+        "profit_reward_axis": float(item.get("profit_reward", 0.0) or 0.0),
+        "relief_signal_axis": float(item.get("relief_signal", 0.0) or 0.0),
+        "stability_signal_axis": float(item.get("stability_signal", 0.0) or 0.0),
+        "discipline_signal_axis": float(item.get("discipline_signal", 0.0) or 0.0),
+        "neurochemical_confidence_axis": float(item.get("confidence_signal", 0.0) or 0.0),
+        "overactivation_axis": float(item.get("overactivation_signal", 0.0) or 0.0),
+        "chaos_penalty_axis": float(item.get("chaos_penalty", 0.0) or 0.0),
+        "variance_penalty_axis": float(item.get("variance_penalty", 0.0) or 0.0),
+        "overstrain_penalty_axis": float(item.get("overstrain_penalty", 0.0) or 0.0),
+        "carrying_capacity_axis": float(item.get("carrying_capacity_delta", 0.0) or 0.0),
+        "self_confidence_axis": float(item.get("self_confidence_delta", 0.0) or 0.0),
+        "process_quality_axis": float(item.get("process_quality", 0.0) or 0.0),
         "bearing_effect_axis": float(bearing_effect),
         "strain_axis": float(pressure_delta + recovery_delta + survival_delta),
         "relief_axis": float(release_delta + bearing_delta),
@@ -790,6 +1910,65 @@ def _build_experience_similarity_axes(summary):
         "active_context_activation_axis": float(active_context_activation),
         "active_context_balance_axis": float(active_context_balance),
         "context_memory_reactivation_axis": float(field_neuron_context_memory_impulse_norm_mean * active_context_activation),
+        "neural_felt_bearing_axis": float(neural_felt_bearing),
+        "neural_felt_pressure_axis": float(neural_felt_pressure),
+        "neural_felt_memory_resonance_axis": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation_axis": float(neural_felt_context_reactivation),
+        "neural_felt_resonance_balance_axis": float(neural_felt_memory_resonance + neural_felt_context_reactivation - neural_felt_pressure),
+        "inner_field_pressure_trend_axis": float(inner_field_pressure_trend),
+        "inner_field_bearing_trend_axis": float(inner_field_bearing_trend),
+        "inner_field_topology_tension_trend_axis": float(inner_field_topology_tension_trend),
+        "inner_field_memory_resonance_trend_axis": float(inner_field_memory_resonance_trend),
+        "inner_field_history_balance_axis": float(inner_field_bearing_trend + inner_field_memory_resonance_trend - inner_field_pressure_trend - inner_field_topology_tension_trend),
+        "active_context_pressure_trend_axis": float(active_context_pressure_trend),
+        "active_context_bearing_trend_axis": float(active_context_bearing_trend),
+        "active_context_topology_tension_trend_axis": float(active_context_topology_tension_trend),
+        "active_context_memory_resonance_trend_axis": float(active_context_memory_resonance_trend),
+        "active_context_history_balance_axis": float(active_context_bearing_trend + active_context_memory_resonance_trend - active_context_pressure_trend - active_context_topology_tension_trend),
+        "field_topology_shape_balance_axis": float(field_topology_shape_balance),
+        "field_topology_position_scale_axis": float(field_topology_position_scale),
+        "field_topology_grid_fill_axis": float(field_topology_grid_fill),
+        "field_topology_neighbor_density_axis": float(field_topology_neighbor_density),
+        "field_topology_link_density_axis": float(field_topology_link_density_axis),
+        "active_context_topology_shape_balance_axis": float(active_context_topology_shape_balance),
+        "active_context_topology_position_scale_axis": float(active_context_topology_position_scale),
+        "active_context_topology_grid_fill_axis": float(active_context_topology_grid_fill),
+        "active_context_topology_neighbor_density_axis": float(active_context_topology_neighbor_density),
+        "active_context_topology_link_density_axis": float(active_context_topology_link_density_axis),
+        "field_areal_topology_density_axis": float(field_areal_topology_density_axis),
+        "field_areal_topology_span_axis": float(field_areal_topology_span_axis),
+        "field_areal_topology_boundary_axis": float(field_areal_topology_boundary_axis),
+        "field_areal_topology_integrity_axis": float(field_areal_topology_integrity_axis),
+        "active_context_areal_topology_density_axis": float(active_context_areal_topology_density_axis),
+        "active_context_areal_topology_span_axis": float(active_context_areal_topology_span_axis),
+        "active_context_areal_topology_boundary_axis": float(active_context_areal_topology_boundary_axis),
+        "active_context_areal_topology_integrity_axis": float(active_context_areal_topology_integrity_axis),
+        "field_pattern_vector_length_axis": float(field_pattern_vector_length_axis),
+        "field_pattern_vector_mean_axis": float(field_pattern_vector_mean_axis),
+        "field_pattern_vector_max_axis": float(field_pattern_vector_max_axis),
+        "field_pattern_vector_spread_axis": float(field_pattern_vector_spread_axis),
+        "active_context_pattern_vector_length_axis": float(active_context_pattern_vector_length_axis),
+        "active_context_pattern_vector_mean_axis": float(active_context_pattern_vector_mean_axis),
+        "active_context_pattern_vector_max_axis": float(active_context_pattern_vector_max_axis),
+        "active_context_pattern_vector_spread_axis": float(active_context_pattern_vector_spread_axis),
+        "inner_pattern_identity_confidence_axis": float(inner_pattern_identity_confidence_axis),
+        "active_context_inner_pattern_identity_confidence_axis": float(active_context_inner_pattern_identity_confidence_axis),
+        "inner_pattern_identity_stability_axis": float(inner_pattern_identity_stability_axis),
+        "active_context_inner_pattern_identity_stability_axis": float(active_context_inner_pattern_identity_stability_axis),
+        "inner_pattern_identity_streak_axis": float(inner_pattern_identity_streak_axis),
+        "active_context_inner_pattern_identity_streak_axis": float(active_context_inner_pattern_identity_streak_axis),
+        "inner_pattern_identity_match_axis": float(inner_pattern_identity_match_axis),
+        "inner_pattern_identity_reactivation_axis": float(inner_pattern_identity_reactivation_axis),
+        "inner_pattern_identity_presence_axis": float(inner_pattern_identity_presence_axis),
+        "active_context_inner_pattern_identity_presence_axis": float(active_context_inner_pattern_identity_presence_axis),
+        "inner_pattern_recognition_strength_axis": float(inner_pattern_recognition_strength_axis),
+        "active_context_inner_pattern_recognition_strength_axis": float(active_context_inner_pattern_recognition_strength_axis),
+        "inner_pattern_recognition_recurrent_axis": float(inner_pattern_recognition_recurrent_axis),
+        "active_context_inner_pattern_recognition_recurrent_axis": float(active_context_inner_pattern_recognition_recurrent_axis),
+        "inner_pattern_recognition_changed_axis": float(inner_pattern_recognition_changed_axis),
+        "active_context_inner_pattern_recognition_changed_axis": float(active_context_inner_pattern_recognition_changed_axis),
+        "inner_pattern_recognition_alignment_axis": float(inner_pattern_recognition_alignment_axis),
+        "inner_pattern_recognition_instability_axis": float(inner_pattern_recognition_instability_axis),
         "thought_conflict_axis": float(item.get("thought_decision_conflict", 0.0) or 0.0),
         "thought_maturity_axis": float(item.get("thought_state_maturity", 0.0) or 0.0),
         "delta_energy_axis": float(tension_delta.get("energy", 0.0) or 0.0),
@@ -921,6 +2100,9 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
     areal_fragmentation = float(field_state.get("field_areal_fragmentation", 0.0) or 0.0)
     areal_coherence_mean = float(field_state.get("field_areal_coherence_mean", 0.0) or 0.0)
     areal_conflict_mean = float(field_state.get("field_areal_conflict_mean", 0.0) or 0.0)
+    areal_topology_density_mean = float(field_state.get("field_areal_topology_density_mean", 0.0) or 0.0)
+    areal_topology_span_mean = float(field_state.get("field_areal_topology_span_mean", 0.0) or 0.0)
+    areal_topology_boundary_mean = float(field_state.get("field_areal_topology_boundary_mean", 0.0) or 0.0)
     processing_areal_tension = float(summary.get("processing_areal_tension", 0.0) or 0.0)
     processing_areal_support = float(summary.get("processing_areal_support", 0.0) or 0.0)
     thought_areal_pressure = float(summary.get("thought_areal_pressure", 0.0) or 0.0)
@@ -928,10 +2110,51 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
     felt_bearing_score = float(summary.get("felt_bearing_score", 0.0) or 0.0)
     felt_recovery_cost = float(summary.get("felt_recovery_cost", 0.0) or 0.0)
     field_topology_state = dict(field_state.get("field_topology_state", {}) or {})
+    field_topology_layout_state = dict(field_state.get("field_topology_layout_state", {}) or {})
+    field_topology_rows = int(field_state.get("field_topology_rows", field_topology_layout_state.get("topology_rows", 0)) or 0)
+    field_topology_cols = int(field_state.get("field_topology_cols", field_topology_layout_state.get("topology_cols", 0)) or 0)
+    field_topology_position_count = int(field_state.get("field_topology_position_count", field_topology_layout_state.get("topology_position_count", 0)) or 0)
+    field_topology_neighbor_link_count = int(field_state.get("field_topology_neighbor_link_count", field_topology_layout_state.get("topology_neighbor_link_count", 0)) or 0)
+    field_topology_neighbor_count_mean = float(field_state.get("field_topology_neighbor_count_mean", field_topology_layout_state.get("topology_neighbor_count_mean", 0.0)) or 0.0)
+    field_topology_neighbor_count_max = int(field_state.get("field_topology_neighbor_count_max", field_topology_layout_state.get("topology_neighbor_count_max", 0)) or 0)
     field_topology_link_density = float(field_state.get("field_topology_link_density", field_topology_state.get("link_density", 0.0)) or 0.0)
     field_topology_distance_mean = float(field_state.get("field_topology_distance_mean", field_topology_state.get("topology_distance_mean", 0.0)) or 0.0)
     field_topology_coherence = float(field_state.get("field_topology_coherence", field_topology_state.get("topology_coherence", 0.0)) or 0.0)
     field_topology_tension = float(field_state.get("field_topology_tension", field_topology_state.get("topology_tension", 0.0)) or 0.0)
+    field_perception_state = dict(field_state.get("field_perception_state", {}) or {})
+    field_activity_island_count = int(field_state.get("field_activity_island_count", field_perception_state.get("activity_island_count", 0)) or 0)
+    field_activity_island_mass_mean = float(field_state.get("field_activity_island_mass_mean", field_perception_state.get("activity_island_mass_mean", 0.0)) or 0.0)
+    field_activity_island_mass_max = float(field_state.get("field_activity_island_mass_max", field_perception_state.get("activity_island_mass_max", 0.0)) or 0.0)
+    field_activity_island_activation_mean = float(field_state.get("field_activity_island_activation_mean", field_perception_state.get("activity_island_activation_mean", 0.0)) or 0.0)
+    field_activity_island_pressure_mean = float(field_state.get("field_activity_island_pressure_mean", field_perception_state.get("activity_island_pressure_mean", 0.0)) or 0.0)
+    field_activity_island_coherence_mean = float(field_state.get("field_activity_island_coherence_mean", field_perception_state.get("activity_island_coherence_mean", 0.0)) or 0.0)
+    field_activity_island_context_reactivation_mean = float(field_state.get("field_activity_island_context_reactivation_mean", field_perception_state.get("activity_island_context_reactivation_mean", 0.0)) or 0.0)
+    field_activity_island_spread = float(field_state.get("field_activity_island_spread", field_perception_state.get("activity_island_spread", 0.0)) or 0.0)
+    field_perception_focus = float(field_state.get("field_perception_focus", field_perception_state.get("field_perception_focus", 0.0)) or 0.0)
+    field_perception_clarity = float(field_state.get("field_perception_clarity", field_perception_state.get("field_perception_clarity", field_activity_island_coherence_mean)) or 0.0)
+    field_perception_stability = float(field_state.get("field_perception_stability", field_perception_state.get("field_perception_stability", field_activity_island_coherence_mean)) or 0.0)
+    field_perception_fragmentation = float(field_state.get("field_perception_fragmentation", field_perception_state.get("field_perception_fragmentation", 0.0)) or 0.0)
+    field_perception_strain = float(field_state.get("field_perception_strain", field_perception_state.get("field_perception_strain", field_activity_island_pressure_mean)) or 0.0)
+    dominant_activity_island_id = str(field_state.get("dominant_activity_island_id", field_perception_state.get("dominant_activity_island_id", "-")) or "-")
+    field_perception_label = str(field_state.get("field_perception_label", field_perception_state.get("field_perception_label", "quiet_field")) or "quiet_field")
+    field_activity_islands = [
+        dict(item or {})
+        for item in list(field_state.get("field_activity_islands", field_perception_state.get("activity_islands", [])) or [])
+        if isinstance(item, dict)
+    ]
+    neural_felt_state = dict(field_state.get("neural_felt_state", {}) or {})
+    neural_felt_bearing = float(field_state.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", 0.0)) or 0.0)
+    neural_felt_pressure = float(field_state.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", 0.0)) or 0.0)
+    neural_felt_memory_resonance = float(neural_felt_state.get("neural_felt_memory_resonance", 0.0) or 0.0)
+    neural_felt_context_reactivation = float(neural_felt_state.get("neural_felt_context_reactivation", 0.0) or 0.0)
+    neural_felt_label = str(field_state.get("neural_felt_label", neural_felt_state.get("neural_felt_label", "quiet_neural_felt")) or "quiet_neural_felt")
+    inner_field_history_state = dict(field_state.get("inner_field_history_state", {}) or {})
+    inner_field_history_length = int(inner_field_history_state.get("inner_field_history_length", field_state.get("inner_field_history_length", 0)) or 0)
+    inner_field_pressure_trend = float(inner_field_history_state.get("inner_field_pressure_trend", field_state.get("inner_field_pressure_trend", 0.0)) or 0.0)
+    inner_field_bearing_trend = float(inner_field_history_state.get("inner_field_bearing_trend", field_state.get("inner_field_bearing_trend", 0.0)) or 0.0)
+    inner_field_topology_tension_trend = float(inner_field_history_state.get("inner_field_topology_tension_trend", field_state.get("inner_field_topology_tension_trend", 0.0)) or 0.0)
+    inner_field_memory_resonance_trend = float(inner_field_history_state.get("inner_field_memory_resonance_trend", field_state.get("inner_field_memory_resonance_trend", 0.0)) or 0.0)
+    inner_field_history_label = str(inner_field_history_state.get("inner_field_history_label", field_state.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace")
 
     inner_pattern_support = max(
         0.0,
@@ -941,6 +2164,8 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
             + (areal_stability_mean * 0.18)
             + (areal_coherence_mean * 0.16)
             + (areal_dominance * 0.08)
+            + (field_perception_stability * 0.10)
+            + (field_perception_focus * 0.06)
             + (processing_areal_support * 0.16)
             + (thought_areal_support * 0.14)
             + (felt_bearing_score * 0.16),
@@ -953,6 +2178,8 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
             (areal_pressure_mean * 0.16)
             + (areal_fragmentation * 0.18)
             + (areal_conflict_mean * 0.22)
+            + (field_perception_fragmentation * 0.12)
+            + (field_perception_strain * 0.10)
             + (processing_areal_tension * 0.16)
             + (thought_areal_pressure * 0.16)
             + (felt_recovery_cost * 0.12),
@@ -967,6 +2194,8 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
         inner_pattern_state = "fragile"
     elif inner_pattern_support >= 0.54 and inner_pattern_conflict <= 0.36:
         inner_pattern_state = "supported"
+
+    inner_pattern_label = _derive_inner_pattern_label(field_state, summary)
 
     state_payload = {
         "field_density": float(field_density),
@@ -1001,7 +2230,17 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
         "field_areal_fragmentation": float(field_state.get("field_areal_fragmentation", 0.0) or 0.0),
         "field_areal_coherence_mean": float(field_state.get("field_areal_coherence_mean", 0.0) or 0.0),
         "field_areal_conflict_mean": float(field_state.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "field_areal_topology_density_mean": float(areal_topology_density_mean),
+        "field_areal_topology_span_mean": float(areal_topology_span_mean),
+        "field_areal_topology_boundary_mean": float(areal_topology_boundary_mean),
         "field_topology_state": dict(field_topology_state or {}),
+        "field_topology_layout_state": dict(field_topology_layout_state or {}),
+        "field_topology_rows": int(field_topology_rows),
+        "field_topology_cols": int(field_topology_cols),
+        "field_topology_position_count": int(field_topology_position_count),
+        "field_topology_neighbor_link_count": int(field_topology_neighbor_link_count),
+        "field_topology_neighbor_count_mean": float(field_topology_neighbor_count_mean),
+        "field_topology_neighbor_count_max": int(field_topology_neighbor_count_max),
         "field_topology_cluster_link_count": int(field_state.get("field_topology_cluster_link_count", field_topology_state.get("cluster_link_count", 0)) or 0),
         "field_topology_areal_link_count": int(field_state.get("field_topology_areal_link_count", field_topology_state.get("areal_link_count", 0)) or 0),
         "field_topology_link_density": float(field_topology_link_density),
@@ -1009,15 +2248,62 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
         "field_topology_coherence": float(field_topology_coherence),
         "field_topology_tension": float(field_topology_tension),
         "field_topology_state_label": str(field_state.get("field_topology_state_label", field_topology_state.get("topology_state_label", "sparse_topology")) or "sparse_topology"),
+        "field_perception_state": dict(field_perception_state or {}),
+        "field_activity_island_count": int(field_activity_island_count),
+        "field_activity_island_mass_mean": float(field_activity_island_mass_mean),
+        "field_activity_island_mass_max": float(field_activity_island_mass_max),
+        "field_activity_island_activation_mean": float(field_activity_island_activation_mean),
+        "field_activity_island_pressure_mean": float(field_activity_island_pressure_mean),
+        "field_activity_island_coherence_mean": float(field_activity_island_coherence_mean),
+        "field_activity_island_context_reactivation_mean": float(field_activity_island_context_reactivation_mean),
+        "field_activity_island_spread": float(field_activity_island_spread),
+        "field_perception_focus": float(field_perception_focus),
+        "field_perception_clarity": float(field_perception_clarity),
+        "field_perception_stability": float(field_perception_stability),
+        "field_perception_fragmentation": float(field_perception_fragmentation),
+        "field_perception_strain": float(field_perception_strain),
+        "dominant_activity_island_id": str(dominant_activity_island_id),
+        "field_perception_label": str(field_perception_label),
+        "field_activity_islands": list(field_activity_islands or []),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+        "neural_felt_label": str(neural_felt_label),
+        "inner_field_history_state": dict(inner_field_history_state or {}),
+        "inner_field_history_length": int(inner_field_history_length),
+        "inner_field_pressure_trend": float(inner_field_pressure_trend),
+        "inner_field_bearing_trend": float(inner_field_bearing_trend),
+        "inner_field_topology_tension_trend": float(inner_field_topology_tension_trend),
+        "inner_field_memory_resonance_trend": float(inner_field_memory_resonance_trend),
+        "inner_field_history_label": str(inner_field_history_label),
         "inner_pattern_support": float(inner_pattern_support),
         "inner_pattern_conflict": float(inner_pattern_conflict),
         "inner_pattern_fragility": float(inner_pattern_fragility),
         "inner_pattern_bearing": float(inner_pattern_bearing),
         "inner_pattern_state": str(inner_pattern_state),
-        "inner_pattern_label": _derive_inner_pattern_label(field_state, summary),
+        "inner_pattern_label": str(inner_pattern_label),
         "inner_self_state": str(field_state.get("self_state", summary.get("self_state", "stable")) or "stable"),
         "inner_attractor": str(field_state.get("attractor", summary.get("attractor", "neutral")) or "neutral"),
     }
+
+    inner_pattern_identity_state = _build_inner_pattern_identity(
+        field_state,
+        summary,
+        state_payload=state_payload,
+    )
+    state_payload.update(dict(inner_pattern_identity_state or {}))
+    inner_pattern_identity_stability_state = _build_inner_pattern_identity_stability(
+        bot,
+        inner_pattern_identity_state,
+    )
+    state_payload.update(dict(inner_pattern_identity_stability_state or {}))
+    state_payload.update(
+        _build_inner_pattern_recognition_state(
+            state_payload,
+        )
+    )
 
     current_vector = [
         float(summary.get("in_trade_avg_regulatory_load", 0.0) or 0.0),
@@ -1063,17 +2349,60 @@ def _build_inner_context_cluster_state(inner_field_state, summary_item, bot=None
         float(state_payload.get("field_areal_fragmentation", 0.0) or 0.0),
         float(state_payload.get("field_areal_coherence_mean", 0.0) or 0.0),
         float(state_payload.get("field_areal_conflict_mean", 0.0) or 0.0),
+        float(state_payload.get("field_areal_topology_density_mean", 0.0) or 0.0),
+        float(state_payload.get("field_areal_topology_span_mean", 0.0) or 0.0),
+        float(state_payload.get("field_areal_topology_boundary_mean", 0.0) or 0.0),
+        float(state_payload.get("field_topology_rows", 0.0) or 0.0),
+        float(state_payload.get("field_topology_cols", 0.0) or 0.0),
+        float(state_payload.get("field_topology_position_count", 0.0) or 0.0),
+        float(state_payload.get("field_topology_neighbor_link_count", 0.0) or 0.0),
+        float(state_payload.get("field_topology_neighbor_count_mean", 0.0) or 0.0),
+        float(state_payload.get("field_topology_neighbor_count_max", 0.0) or 0.0),
         float(state_payload.get("field_topology_cluster_link_count", 0.0) or 0.0),
         float(state_payload.get("field_topology_areal_link_count", 0.0) or 0.0),
         float(state_payload.get("field_topology_link_density", 0.0) or 0.0),
         float(state_payload.get("field_topology_distance_mean", 0.0) or 0.0),
         float(state_payload.get("field_topology_coherence", 0.0) or 0.0),
         float(state_payload.get("field_topology_tension", 0.0) or 0.0),
+        float(state_payload.get("field_activity_island_count", 0.0) or 0.0),
+        float(state_payload.get("field_activity_island_mass_mean", 0.0) or 0.0),
+        float(state_payload.get("field_activity_island_mass_max", 0.0) or 0.0),
+        float(state_payload.get("field_activity_island_activation_mean", 0.0) or 0.0),
+        float(state_payload.get("field_activity_island_pressure_mean", 0.0) or 0.0),
+        float(state_payload.get("field_activity_island_coherence_mean", 0.0) or 0.0),
+        float(state_payload.get("field_activity_island_context_reactivation_mean", 0.0) or 0.0),
+        float(state_payload.get("field_activity_island_spread", 0.0) or 0.0),
+        float(state_payload.get("field_perception_focus", 0.0) or 0.0),
+        float(state_payload.get("field_perception_clarity", 0.0) or 0.0),
+        float(state_payload.get("field_perception_stability", 0.0) or 0.0),
+        float(state_payload.get("field_perception_fragmentation", 0.0) or 0.0),
+        float(state_payload.get("field_perception_strain", 0.0) or 0.0),
+        float(state_payload.get("neural_felt_bearing", 0.0) or 0.0),
+        float(state_payload.get("neural_felt_pressure", 0.0) or 0.0),
+        float(state_payload.get("neural_felt_memory_resonance", 0.0) or 0.0),
+        float(state_payload.get("neural_felt_context_reactivation", 0.0) or 0.0),
+        float(state_payload.get("inner_field_pressure_trend", 0.0) or 0.0),
+        float(state_payload.get("inner_field_bearing_trend", 0.0) or 0.0),
+        float(state_payload.get("inner_field_topology_tension_trend", 0.0) or 0.0),
+        float(state_payload.get("inner_field_memory_resonance_trend", 0.0) or 0.0),
         float(state_payload.get("inner_pattern_support", 0.0) or 0.0),
         float(state_payload.get("inner_pattern_conflict", 0.0) or 0.0),
         float(state_payload.get("inner_pattern_fragility", 0.0) or 0.0),
         float(state_payload.get("inner_pattern_bearing", 0.0) or 0.0),
+        float(state_payload.get("inner_pattern_identity_confidence", 0.0) or 0.0),
+        float(state_payload.get("inner_pattern_identity_stability", 0.0) or 0.0),
+        float(max(0.0, min(1.0, float(state_payload.get("inner_pattern_identity_streak", 0.0) or 0.0) / max(2.0, float(getattr(Config, "MCM_INNER_PATTERN_IDENTITY_STABILITY_TICKS", 5) or 5))))),
+        float(state_payload.get("inner_pattern_recognition_strength", 0.0) or 0.0),
+        1.0 if bool(state_payload.get("inner_pattern_recognition_recurrent", False)) else 0.0,
+        1.0 if bool(state_payload.get("inner_pattern_recognition_changed", False)) else 0.0,
     ]
+
+    current_vector.extend(
+        [
+            float(value)
+            for value in list(state_payload.get("field_pattern_vector", []) or [])
+        ]
+    )
 
     return {
         "state_payload": dict(state_payload or {}),
@@ -1092,6 +2421,33 @@ def _update_inner_context_cluster_memory(bot, summary):
     signature_key = str(summary_item.get("signature_key", "") or "").strip()
     outcome_reason = str(summary_item.get("outcome_reason", "-") or "-").strip().lower()
     outcome_delta = float(_experience_reward_delta(summary_item) or 0.0)
+    neurochemical_profile = _extract_neurochemical_profile(summary_item)
+    neuro_support = max(
+        0.0,
+        min(
+            1.0,
+            (
+                max(0.0, float(neurochemical_profile.get("experience_effect_score", 0.0) or 0.0)) * 2.0
+                + float(neurochemical_profile.get("confidence_signal", 0.0) or 0.0)
+                + float(neurochemical_profile.get("stability_signal", 0.0) or 0.0)
+                + float(neurochemical_profile.get("discipline_signal", 0.0) or 0.0)
+                + max(0.0, float(neurochemical_profile.get("carrying_capacity_delta", 0.0) or 0.0))
+            ) / 4.0,
+        ),
+    )
+    neuro_strain = max(
+        0.0,
+        min(
+            1.0,
+            (
+                max(0.0, -float(neurochemical_profile.get("experience_effect_score", 0.0) or 0.0)) * 2.0
+                + float(neurochemical_profile.get("chaos_penalty", 0.0) or 0.0)
+                + float(neurochemical_profile.get("variance_penalty", 0.0) or 0.0)
+                + float(neurochemical_profile.get("overactivation_signal", 0.0) or 0.0)
+                + float(neurochemical_profile.get("overstrain_penalty", 0.0) or 0.0)
+            ) / 4.0,
+        ),
+    )
 
     cluster_state = _build_inner_context_cluster_state(
         inner_field_state,
@@ -1106,8 +2462,41 @@ def _update_inner_context_cluster_memory(bot, summary):
     inner_pattern_fragility = float(state_payload.get("inner_pattern_fragility", 0.0) or 0.0)
     inner_pattern_bearing = float(state_payload.get("inner_pattern_bearing", 0.0) or 0.0)
     inner_pattern_state = str(state_payload.get("inner_pattern_state", "bearing") or "bearing")
-    pattern_reinforcement = max(0.0, min(1.0, inner_pattern_support + max(0.0, outcome_delta) - (inner_pattern_conflict * 0.52)))
-    pattern_attenuation = max(0.0, min(1.0, inner_pattern_conflict + max(0.0, -outcome_delta) - (inner_pattern_support * 0.42)))
+    neural_felt_state = dict(state_payload.get("neural_felt_state", {}) or {})
+    neural_felt_bearing = float(state_payload.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", 0.0)) or 0.0)
+    neural_felt_pressure = float(state_payload.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", 0.0)) or 0.0)
+    neural_felt_memory_resonance = float(state_payload.get("neural_felt_memory_resonance", neural_felt_state.get("neural_felt_memory_resonance", 0.0)) or 0.0)
+    neural_felt_context_reactivation = float(state_payload.get("neural_felt_context_reactivation", neural_felt_state.get("neural_felt_context_reactivation", 0.0)) or 0.0)
+    neural_felt_label = str(state_payload.get("neural_felt_label", neural_felt_state.get("neural_felt_label", "quiet_neural_felt")) or "quiet_neural_felt")
+    inner_field_history_state = dict(state_payload.get("inner_field_history_state", {}) or {})
+    inner_field_history_length = int(state_payload.get("inner_field_history_length", inner_field_history_state.get("inner_field_history_length", 0)) or 0)
+    inner_field_pressure_trend = float(state_payload.get("inner_field_pressure_trend", inner_field_history_state.get("inner_field_pressure_trend", 0.0)) or 0.0)
+    inner_field_bearing_trend = float(state_payload.get("inner_field_bearing_trend", inner_field_history_state.get("inner_field_bearing_trend", 0.0)) or 0.0)
+    inner_field_topology_tension_trend = float(state_payload.get("inner_field_topology_tension_trend", inner_field_history_state.get("inner_field_topology_tension_trend", 0.0)) or 0.0)
+    inner_field_memory_resonance_trend = float(state_payload.get("inner_field_memory_resonance_trend", inner_field_history_state.get("inner_field_memory_resonance_trend", 0.0)) or 0.0)
+    inner_field_history_label = str(state_payload.get("inner_field_history_label", inner_field_history_state.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace")
+    pattern_reinforcement = max(
+        0.0,
+        min(
+            1.0,
+            inner_pattern_support
+            + max(0.0, outcome_delta)
+            + (neuro_support * 0.14)
+            - (inner_pattern_conflict * 0.52)
+            - (neuro_strain * 0.10),
+        ),
+    )
+    pattern_attenuation = max(
+        0.0,
+        min(
+            1.0,
+            inner_pattern_conflict
+            + max(0.0, -outcome_delta)
+            + (neuro_strain * 0.16)
+            - (inner_pattern_support * 0.42)
+            - (neuro_support * 0.06),
+        ),
+    )
 
     nearest_cluster_id = None
     nearest_cluster = None
@@ -1158,6 +2547,22 @@ def _update_inner_context_cluster_memory(bot, summary):
             "pattern_bearing_score": float(inner_pattern_bearing),
             "pattern_reinforcement": 0.0,
             "pattern_attenuation": 0.0,
+            "experience_neurochemical_profile": dict(neurochemical_profile or {}),
+            "neurochemical_support": float(neuro_support),
+            "neurochemical_strain": float(neuro_strain),
+            "neural_felt_state": dict(neural_felt_state or {}),
+            "neural_felt_bearing": float(neural_felt_bearing),
+            "neural_felt_pressure": float(neural_felt_pressure),
+            "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+            "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+            "neural_felt_label": str(neural_felt_label),
+            "inner_field_history_state": dict(inner_field_history_state or {}),
+            "inner_field_history_length": int(inner_field_history_length),
+            "inner_field_pressure_trend": float(inner_field_pressure_trend),
+            "inner_field_bearing_trend": float(inner_field_bearing_trend),
+            "inner_field_topology_tension_trend": float(inner_field_topology_tension_trend),
+            "inner_field_memory_resonance_trend": float(inner_field_memory_resonance_trend),
+            "inner_field_history_label": str(inner_field_history_label),
             **dict(state_payload or {}),
         }
     else:
@@ -1218,14 +2623,37 @@ def _update_inner_context_cluster_memory(bot, summary):
         (float(nearest_cluster.get("pattern_attenuation", 0.0) or 0.0) * 0.78)
         + (pattern_attenuation * 0.22)
     )
+    for neuro_key, neuro_value in dict(neurochemical_profile or {}).items():
+        value = float(neuro_value or 0.0)
+        nearest_cluster[f"avg_{neuro_key}"] = float(
+            (float(nearest_cluster.get(f"avg_{neuro_key}", 0.0) or 0.0) * 0.76)
+            + (value * 0.24)
+        )
+        nearest_cluster[f"last_{neuro_key}"] = float(value)
+    nearest_cluster["experience_neurochemical_profile"] = dict(neurochemical_profile or {})
+    nearest_cluster["neurochemical_support"] = float(
+        (float(nearest_cluster.get("neurochemical_support", 0.0) or 0.0) * 0.76)
+        + (neuro_support * 0.24)
+    )
+    nearest_cluster["neurochemical_strain"] = float(
+        (float(nearest_cluster.get("neurochemical_strain", 0.0) or 0.0) * 0.76)
+        + (neuro_strain * 0.24)
+    )
+
+    prior_neural_felt_bearing = float(nearest_cluster.get("neural_felt_bearing", neural_felt_bearing) or 0.0)
+    prior_neural_felt_pressure = float(nearest_cluster.get("neural_felt_pressure", neural_felt_pressure) or 0.0)
+    prior_neural_felt_memory_resonance = float(nearest_cluster.get("neural_felt_memory_resonance", neural_felt_memory_resonance) or 0.0)
+    prior_neural_felt_context_reactivation = float(nearest_cluster.get("neural_felt_context_reactivation", neural_felt_context_reactivation) or 0.0)
 
     trust_base = float(nearest_cluster.get("trust", 0.0) or 0.0)
     trust_shift = (
         (0.04 if outcome_delta >= 0.0 else -0.03)
         + (inner_pattern_support * 0.05)
         + (inner_pattern_bearing * 0.04)
+        + (neuro_support * 0.025)
         - (inner_pattern_conflict * 0.06)
         - (inner_pattern_fragility * 0.04)
+        - (neuro_strain * 0.035)
     )
     nearest_cluster["trust"] = float(
         min(
@@ -1243,6 +2671,13 @@ def _update_inner_context_cluster_memory(bot, summary):
 
     for key, value in dict(state_payload or {}).items():
         nearest_cluster[str(key)] = value
+
+    nearest_cluster["neural_felt_state"] = dict(neural_felt_state or {})
+    nearest_cluster["neural_felt_bearing"] = float((prior_neural_felt_bearing * 0.74) + (neural_felt_bearing * 0.26))
+    nearest_cluster["neural_felt_pressure"] = float((prior_neural_felt_pressure * 0.74) + (neural_felt_pressure * 0.26))
+    nearest_cluster["neural_felt_memory_resonance"] = float((prior_neural_felt_memory_resonance * 0.74) + (neural_felt_memory_resonance * 0.26))
+    nearest_cluster["neural_felt_context_reactivation"] = float((prior_neural_felt_context_reactivation * 0.74) + (neural_felt_context_reactivation * 0.26))
+    nearest_cluster["neural_felt_label"] = str(neural_felt_label)
 
     signature_keys = list(nearest_cluster.get("signature_keys", []) or [])
     if signature_key and signature_key not in signature_keys:
@@ -1307,6 +2742,53 @@ def _update_inner_context_cluster_memory(bot, summary):
         "field_areal_fragmentation": float(nearest_cluster.get("field_areal_fragmentation", 0.0) or 0.0),
         "field_areal_coherence_mean": float(nearest_cluster.get("field_areal_coherence_mean", 0.0) or 0.0),
         "field_areal_conflict_mean": float(nearest_cluster.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "field_areal_topology_density_mean": float(nearest_cluster.get("field_areal_topology_density_mean", 0.0) or 0.0),
+        "field_areal_topology_span_mean": float(nearest_cluster.get("field_areal_topology_span_mean", 0.0) or 0.0),
+        "field_areal_topology_boundary_mean": float(nearest_cluster.get("field_areal_topology_boundary_mean", 0.0) or 0.0),
+        "field_topology_layout_state": dict(nearest_cluster.get("field_topology_layout_state", {}) or {}),
+        "field_topology_rows": int(nearest_cluster.get("field_topology_rows", 0) or 0),
+        "field_topology_cols": int(nearest_cluster.get("field_topology_cols", 0) or 0),
+        "field_topology_position_count": int(nearest_cluster.get("field_topology_position_count", 0) or 0),
+        "field_topology_neighbor_link_count": int(nearest_cluster.get("field_topology_neighbor_link_count", 0) or 0),
+        "field_topology_neighbor_count_mean": float(nearest_cluster.get("field_topology_neighbor_count_mean", 0.0) or 0.0),
+        "field_topology_neighbor_count_max": int(nearest_cluster.get("field_topology_neighbor_count_max", 0) or 0),
+        "field_topology_cluster_link_count": int(nearest_cluster.get("field_topology_cluster_link_count", 0) or 0),
+        "field_topology_areal_link_count": int(nearest_cluster.get("field_topology_areal_link_count", 0) or 0),
+        "field_topology_link_density": float(nearest_cluster.get("field_topology_link_density", 0.0) or 0.0),
+        "field_topology_distance_mean": float(nearest_cluster.get("field_topology_distance_mean", 0.0) or 0.0),
+        "field_topology_coherence": float(nearest_cluster.get("field_topology_coherence", 0.0) or 0.0),
+        "field_topology_tension": float(nearest_cluster.get("field_topology_tension", 0.0) or 0.0),
+        "field_topology_state_label": str(nearest_cluster.get("field_topology_state_label", "sparse_topology") or "sparse_topology"),
+        "field_perception_state": dict(nearest_cluster.get("field_perception_state", {}) or {}),
+        "field_activity_island_count": int(nearest_cluster.get("field_activity_island_count", 0) or 0),
+        "field_activity_island_mass_mean": float(nearest_cluster.get("field_activity_island_mass_mean", 0.0) or 0.0),
+        "field_activity_island_mass_max": float(nearest_cluster.get("field_activity_island_mass_max", 0.0) or 0.0),
+        "field_activity_island_activation_mean": float(nearest_cluster.get("field_activity_island_activation_mean", 0.0) or 0.0),
+        "field_activity_island_pressure_mean": float(nearest_cluster.get("field_activity_island_pressure_mean", 0.0) or 0.0),
+        "field_activity_island_coherence_mean": float(nearest_cluster.get("field_activity_island_coherence_mean", 0.0) or 0.0),
+        "field_activity_island_context_reactivation_mean": float(nearest_cluster.get("field_activity_island_context_reactivation_mean", 0.0) or 0.0),
+        "field_activity_island_spread": float(nearest_cluster.get("field_activity_island_spread", 0.0) or 0.0),
+        "field_perception_focus": float(nearest_cluster.get("field_perception_focus", 0.0) or 0.0),
+        "field_perception_clarity": float(nearest_cluster.get("field_perception_clarity", 0.0) or 0.0),
+        "field_perception_stability": float(nearest_cluster.get("field_perception_stability", 0.0) or 0.0),
+        "field_perception_fragmentation": float(nearest_cluster.get("field_perception_fragmentation", 0.0) or 0.0),
+        "field_perception_strain": float(nearest_cluster.get("field_perception_strain", 0.0) or 0.0),
+        "dominant_activity_island_id": str(nearest_cluster.get("dominant_activity_island_id", "-") or "-"),
+        "field_perception_label": str(nearest_cluster.get("field_perception_label", "quiet_field") or "quiet_field"),
+        "field_activity_islands": [dict(item or {}) for item in list(nearest_cluster.get("field_activity_islands", []) or []) if isinstance(item, dict)],
+        "neural_felt_state": dict(nearest_cluster.get("neural_felt_state", {}) or {}),
+        "neural_felt_bearing": float(nearest_cluster.get("neural_felt_bearing", 0.0) or 0.0),
+        "neural_felt_pressure": float(nearest_cluster.get("neural_felt_pressure", 0.0) or 0.0),
+        "neural_felt_memory_resonance": float(nearest_cluster.get("neural_felt_memory_resonance", 0.0) or 0.0),
+        "neural_felt_context_reactivation": float(nearest_cluster.get("neural_felt_context_reactivation", 0.0) or 0.0),
+        "neural_felt_label": str(nearest_cluster.get("neural_felt_label", "quiet_neural_felt") or "quiet_neural_felt"),
+        "inner_field_history_state": dict(nearest_cluster.get("inner_field_history_state", {}) or {}),
+        "inner_field_history_length": int(nearest_cluster.get("inner_field_history_length", 0) or 0),
+        "inner_field_pressure_trend": float(nearest_cluster.get("inner_field_pressure_trend", 0.0) or 0.0),
+        "inner_field_bearing_trend": float(nearest_cluster.get("inner_field_bearing_trend", 0.0) or 0.0),
+        "inner_field_topology_tension_trend": float(nearest_cluster.get("inner_field_topology_tension_trend", 0.0) or 0.0),
+        "inner_field_memory_resonance_trend": float(nearest_cluster.get("inner_field_memory_resonance_trend", 0.0) or 0.0),
+        "inner_field_history_label": str(nearest_cluster.get("inner_field_history_label", "stable_field_trace") or "stable_field_trace"),
         "inner_pattern_support": float(nearest_cluster.get("inner_pattern_support", 0.0) or 0.0),
         "inner_pattern_conflict": float(nearest_cluster.get("inner_pattern_conflict", 0.0) or 0.0),
         "inner_pattern_fragility": float(nearest_cluster.get("inner_pattern_fragility", 0.0) or 0.0),
@@ -1318,7 +2800,35 @@ def _update_inner_context_cluster_memory(bot, summary):
         "pattern_bearing_score": float(nearest_cluster.get("pattern_bearing_score", 0.0) or 0.0),
         "pattern_reinforcement": float(nearest_cluster.get("pattern_reinforcement", 0.0) or 0.0),
         "pattern_attenuation": float(nearest_cluster.get("pattern_attenuation", 0.0) or 0.0),
+        "experience_neurochemical_profile": dict(nearest_cluster.get("experience_neurochemical_profile", {}) or {}),
+        "neurochemical_support": float(nearest_cluster.get("neurochemical_support", 0.0) or 0.0),
+        "neurochemical_strain": float(nearest_cluster.get("neurochemical_strain", 0.0) or 0.0),
+        "avg_experience_effect_score": float(nearest_cluster.get("avg_experience_effect_score", 0.0) or 0.0),
+        "avg_confidence_signal": float(nearest_cluster.get("avg_confidence_signal", 0.0) or 0.0),
+        "avg_stability_signal": float(nearest_cluster.get("avg_stability_signal", 0.0) or 0.0),
+        "avg_discipline_signal": float(nearest_cluster.get("avg_discipline_signal", 0.0) or 0.0),
+        "avg_chaos_penalty": float(nearest_cluster.get("avg_chaos_penalty", 0.0) or 0.0),
+        "avg_variance_penalty": float(nearest_cluster.get("avg_variance_penalty", 0.0) or 0.0),
+        "avg_overactivation_signal": float(nearest_cluster.get("avg_overactivation_signal", 0.0) or 0.0),
+        "avg_overstrain_penalty": float(nearest_cluster.get("avg_overstrain_penalty", 0.0) or 0.0),
+        "avg_carrying_capacity_delta": float(nearest_cluster.get("avg_carrying_capacity_delta", 0.0) or 0.0),
         "inner_pattern_label": str(nearest_cluster.get("inner_pattern_label", "") or ""),
+        "field_pattern_signature": dict(nearest_cluster.get("field_pattern_signature", {}) or {}),
+        "field_pattern_signature_key": str(nearest_cluster.get("field_pattern_signature_key", "") or ""),
+        "field_pattern_vector": [float(value) for value in list(nearest_cluster.get("field_pattern_vector", []) or [])],
+        "inner_pattern_identity": str(nearest_cluster.get("inner_pattern_identity", "") or ""),
+        "inner_pattern_identity_label": str(nearest_cluster.get("inner_pattern_identity_label", "") or ""),
+        "inner_pattern_identity_confidence": float(nearest_cluster.get("inner_pattern_identity_confidence", 0.0) or 0.0),
+        "inner_pattern_identity_streak": int(nearest_cluster.get("inner_pattern_identity_streak", 0) or 0),
+        "inner_pattern_identity_stability": float(nearest_cluster.get("inner_pattern_identity_stability", 0.0) or 0.0),
+        "inner_pattern_identity_recurrent": bool(nearest_cluster.get("inner_pattern_identity_recurrent", False)),
+        "inner_pattern_identity_changed": bool(nearest_cluster.get("inner_pattern_identity_changed", False)),
+        "inner_pattern_identity_last_seen_tick": int(nearest_cluster.get("inner_pattern_identity_last_seen_tick", 0) or 0),
+        "inner_pattern_recognition_state": dict(nearest_cluster.get("inner_pattern_recognition_state", {}) or {}),
+        "inner_pattern_recognition_label": str(nearest_cluster.get("inner_pattern_recognition_label", "unsettled_inner_pattern") or "unsettled_inner_pattern"),
+        "inner_pattern_recognition_strength": float(nearest_cluster.get("inner_pattern_recognition_strength", 0.0) or 0.0),
+        "inner_pattern_recognition_recurrent": bool(nearest_cluster.get("inner_pattern_recognition_recurrent", False)),
+        "inner_pattern_recognition_changed": bool(nearest_cluster.get("inner_pattern_recognition_changed", False)),
         "inner_self_state": str(nearest_cluster.get("inner_self_state", "stable") or "stable"),
         "inner_attractor": str(nearest_cluster.get("inner_attractor", "neutral") or "neutral"),
         "last_outcome": nearest_cluster.get("last_outcome"),
@@ -1377,12 +2887,65 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         summary["inner_context_cluster_areal_fragmentation"] = float(inner_context_result.get("field_areal_fragmentation", 0.0) or 0.0)
         summary["inner_context_cluster_areal_coherence_mean"] = float(inner_context_result.get("field_areal_coherence_mean", 0.0) or 0.0)
         summary["inner_context_cluster_areal_conflict_mean"] = float(inner_context_result.get("field_areal_conflict_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_topology_density_mean"] = float(inner_context_result.get("field_areal_topology_density_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_topology_span_mean"] = float(inner_context_result.get("field_areal_topology_span_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_areal_topology_boundary_mean"] = float(inner_context_result.get("field_areal_topology_boundary_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_topology_rows"] = int(inner_context_result.get("field_topology_rows", 0) or 0)
+        summary["inner_context_cluster_topology_cols"] = int(inner_context_result.get("field_topology_cols", 0) or 0)
+        summary["inner_context_cluster_topology_position_count"] = int(inner_context_result.get("field_topology_position_count", 0) or 0)
+        summary["inner_context_cluster_topology_neighbor_link_count"] = int(inner_context_result.get("field_topology_neighbor_link_count", 0) or 0)
+        summary["inner_context_cluster_topology_neighbor_count_mean"] = float(inner_context_result.get("field_topology_neighbor_count_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_topology_neighbor_count_max"] = int(inner_context_result.get("field_topology_neighbor_count_max", 0) or 0)
+        summary["inner_context_cluster_topology_cluster_link_count"] = int(inner_context_result.get("field_topology_cluster_link_count", 0) or 0)
+        summary["inner_context_cluster_topology_areal_link_count"] = int(inner_context_result.get("field_topology_areal_link_count", 0) or 0)
+        summary["inner_context_cluster_topology_link_density"] = float(inner_context_result.get("field_topology_link_density", 0.0) or 0.0)
+        summary["inner_context_cluster_topology_distance_mean"] = float(inner_context_result.get("field_topology_distance_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_topology_coherence"] = float(inner_context_result.get("field_topology_coherence", 0.0) or 0.0)
+        summary["inner_context_cluster_topology_tension"] = float(inner_context_result.get("field_topology_tension", 0.0) or 0.0)
+        summary["inner_context_cluster_topology_state_label"] = str(inner_context_result.get("field_topology_state_label", "sparse_topology") or "sparse_topology")
+        summary["inner_context_cluster_field_perception_state"] = dict(inner_context_result.get("field_perception_state", {}) or {})
+        summary["inner_context_cluster_activity_island_count"] = int(inner_context_result.get("field_activity_island_count", 0) or 0)
+        summary["inner_context_cluster_activity_island_mass_mean"] = float(inner_context_result.get("field_activity_island_mass_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_activity_island_mass_max"] = float(inner_context_result.get("field_activity_island_mass_max", 0.0) or 0.0)
+        summary["inner_context_cluster_activity_island_activation_mean"] = float(inner_context_result.get("field_activity_island_activation_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_activity_island_pressure_mean"] = float(inner_context_result.get("field_activity_island_pressure_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_activity_island_coherence_mean"] = float(inner_context_result.get("field_activity_island_coherence_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_activity_island_context_reactivation_mean"] = float(inner_context_result.get("field_activity_island_context_reactivation_mean", 0.0) or 0.0)
+        summary["inner_context_cluster_activity_island_spread"] = float(inner_context_result.get("field_activity_island_spread", 0.0) or 0.0)
+        summary["inner_context_cluster_field_perception_label"] = str(inner_context_result.get("field_perception_label", "quiet_field") or "quiet_field")
+        summary["inner_context_cluster_neural_felt_bearing"] = float(inner_context_result.get("neural_felt_bearing", 0.0) or 0.0)
+        summary["inner_context_cluster_neural_felt_pressure"] = float(inner_context_result.get("neural_felt_pressure", 0.0) or 0.0)
+        summary["inner_context_cluster_neural_felt_memory_resonance"] = float(inner_context_result.get("neural_felt_memory_resonance", 0.0) or 0.0)
+        summary["inner_context_cluster_neural_felt_context_reactivation"] = float(inner_context_result.get("neural_felt_context_reactivation", 0.0) or 0.0)
+        summary["inner_context_cluster_neural_felt_label"] = str(inner_context_result.get("neural_felt_label", "quiet_neural_felt") or "quiet_neural_felt")
+        summary["inner_context_cluster_history_length"] = int(inner_context_result.get("inner_field_history_length", 0) or 0)
+        summary["inner_context_cluster_pressure_trend"] = float(inner_context_result.get("inner_field_pressure_trend", 0.0) or 0.0)
+        summary["inner_context_cluster_bearing_trend"] = float(inner_context_result.get("inner_field_bearing_trend", 0.0) or 0.0)
+        summary["inner_context_cluster_topology_tension_trend"] = float(inner_context_result.get("inner_field_topology_tension_trend", 0.0) or 0.0)
+        summary["inner_context_cluster_memory_resonance_trend"] = float(inner_context_result.get("inner_field_memory_resonance_trend", 0.0) or 0.0)
+        summary["inner_context_cluster_history_label"] = str(inner_context_result.get("inner_field_history_label", "stable_field_trace") or "stable_field_trace")
         summary["inner_context_cluster_pattern_label"] = str(inner_context_result.get("inner_pattern_label", "") or "")
         summary["inner_context_cluster_pattern_support"] = float(inner_context_result.get("inner_pattern_support", 0.0) or 0.0)
         summary["inner_context_cluster_pattern_conflict"] = float(inner_context_result.get("inner_pattern_conflict", 0.0) or 0.0)
         summary["inner_context_cluster_pattern_fragility"] = float(inner_context_result.get("inner_pattern_fragility", 0.0) or 0.0)
         summary["inner_context_cluster_pattern_bearing"] = float(inner_context_result.get("inner_pattern_bearing", 0.0) or 0.0)
         summary["inner_context_cluster_pattern_state"] = str(inner_context_result.get("inner_pattern_state", "bearing") or "bearing")
+        summary["inner_context_cluster_field_pattern_signature"] = dict(inner_context_result.get("field_pattern_signature", {}) or {})
+        summary["inner_context_cluster_field_pattern_signature_key"] = str(inner_context_result.get("field_pattern_signature_key", "") or "")
+        summary["inner_context_cluster_field_pattern_vector"] = [float(value) for value in list(inner_context_result.get("field_pattern_vector", []) or [])]
+        summary["inner_context_cluster_pattern_identity"] = str(inner_context_result.get("inner_pattern_identity", "") or "")
+        summary["inner_context_cluster_pattern_identity_label"] = str(inner_context_result.get("inner_pattern_identity_label", "") or "")
+        summary["inner_context_cluster_pattern_identity_confidence"] = float(inner_context_result.get("inner_pattern_identity_confidence", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_identity_streak"] = int(inner_context_result.get("inner_pattern_identity_streak", 0) or 0)
+        summary["inner_context_cluster_pattern_identity_stability"] = float(inner_context_result.get("inner_pattern_identity_stability", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_identity_recurrent"] = bool(inner_context_result.get("inner_pattern_identity_recurrent", False))
+        summary["inner_context_cluster_pattern_identity_changed"] = bool(inner_context_result.get("inner_pattern_identity_changed", False))
+        summary["inner_context_cluster_pattern_identity_last_seen_tick"] = int(inner_context_result.get("inner_pattern_identity_last_seen_tick", 0) or 0)
+        summary["inner_context_cluster_pattern_recognition_state"] = dict(inner_context_result.get("inner_pattern_recognition_state", {}) or {})
+        summary["inner_context_cluster_pattern_recognition_label"] = str(inner_context_result.get("inner_pattern_recognition_label", "unsettled_inner_pattern") or "unsettled_inner_pattern")
+        summary["inner_context_cluster_pattern_recognition_strength"] = float(inner_context_result.get("inner_pattern_recognition_strength", 0.0) or 0.0)
+        summary["inner_context_cluster_pattern_recognition_recurrent"] = bool(inner_context_result.get("inner_pattern_recognition_recurrent", False))
+        summary["inner_context_cluster_pattern_recognition_changed"] = bool(inner_context_result.get("inner_pattern_recognition_changed", False))
         summary["inner_context_cluster_pattern_support_score"] = float(inner_context_result.get("pattern_support_score", 0.0) or 0.0)
         summary["inner_context_cluster_pattern_conflict_score"] = float(inner_context_result.get("pattern_conflict_score", 0.0) or 0.0)
         summary["inner_context_cluster_pattern_fragility_score"] = float(inner_context_result.get("pattern_fragility_score", 0.0) or 0.0)
@@ -1426,12 +2989,53 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         experience_space["last_inner_context_cluster_areal_fragmentation"] = float(inner_context_result.get("field_areal_fragmentation", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_areal_coherence_mean"] = float(inner_context_result.get("field_areal_coherence_mean", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_areal_conflict_mean"] = float(inner_context_result.get("field_areal_conflict_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_topology_density_mean"] = float(inner_context_result.get("field_areal_topology_density_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_topology_span_mean"] = float(inner_context_result.get("field_areal_topology_span_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_areal_topology_boundary_mean"] = float(inner_context_result.get("field_areal_topology_boundary_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_topology_cluster_link_count"] = int(inner_context_result.get("field_topology_cluster_link_count", 0) or 0)
+        experience_space["last_inner_context_cluster_topology_areal_link_count"] = int(inner_context_result.get("field_topology_areal_link_count", 0) or 0)
+        experience_space["last_inner_context_cluster_topology_link_density"] = float(inner_context_result.get("field_topology_link_density", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_topology_distance_mean"] = float(inner_context_result.get("field_topology_distance_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_topology_coherence"] = float(inner_context_result.get("field_topology_coherence", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_topology_tension"] = float(inner_context_result.get("field_topology_tension", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_topology_state_label"] = str(inner_context_result.get("field_topology_state_label", "sparse_topology") or "sparse_topology")
+        experience_space["last_inner_context_cluster_field_perception_state"] = dict(inner_context_result.get("field_perception_state", {}) or {})
+        experience_space["last_inner_context_cluster_activity_island_count"] = int(inner_context_result.get("field_activity_island_count", 0) or 0)
+        experience_space["last_inner_context_cluster_activity_island_mass_mean"] = float(inner_context_result.get("field_activity_island_mass_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_activity_island_mass_max"] = float(inner_context_result.get("field_activity_island_mass_max", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_activity_island_activation_mean"] = float(inner_context_result.get("field_activity_island_activation_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_activity_island_pressure_mean"] = float(inner_context_result.get("field_activity_island_pressure_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_activity_island_coherence_mean"] = float(inner_context_result.get("field_activity_island_coherence_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_activity_island_context_reactivation_mean"] = float(inner_context_result.get("field_activity_island_context_reactivation_mean", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_activity_island_spread"] = float(inner_context_result.get("field_activity_island_spread", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_field_perception_label"] = str(inner_context_result.get("field_perception_label", "quiet_field") or "quiet_field")
+        experience_space["last_inner_context_cluster_neural_felt_bearing"] = float(inner_context_result.get("neural_felt_bearing", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neural_felt_pressure"] = float(inner_context_result.get("neural_felt_pressure", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neural_felt_memory_resonance"] = float(inner_context_result.get("neural_felt_memory_resonance", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neural_felt_context_reactivation"] = float(inner_context_result.get("neural_felt_context_reactivation", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_neural_felt_label"] = str(inner_context_result.get("neural_felt_label", "quiet_neural_felt") or "quiet_neural_felt")
         experience_space["last_inner_context_cluster_pattern_label"] = str(inner_context_result.get("inner_pattern_label", "") or "")
         experience_space["last_inner_context_cluster_pattern_support"] = float(inner_context_result.get("inner_pattern_support", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_pattern_conflict"] = float(inner_context_result.get("inner_pattern_conflict", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_pattern_fragility"] = float(inner_context_result.get("inner_pattern_fragility", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_pattern_bearing"] = float(inner_context_result.get("inner_pattern_bearing", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_pattern_state"] = str(inner_context_result.get("inner_pattern_state", "bearing") or "bearing")
+        experience_space["last_inner_context_cluster_field_pattern_signature"] = dict(inner_context_result.get("field_pattern_signature", {}) or {})
+        experience_space["last_inner_context_cluster_field_pattern_signature_key"] = str(inner_context_result.get("field_pattern_signature_key", "") or "")
+        experience_space["last_inner_context_cluster_field_pattern_vector"] = [float(value) for value in list(inner_context_result.get("field_pattern_vector", []) or [])]
+        experience_space["last_inner_context_cluster_pattern_identity"] = str(inner_context_result.get("inner_pattern_identity", "") or "")
+        experience_space["last_inner_context_cluster_pattern_identity_label"] = str(inner_context_result.get("inner_pattern_identity_label", "") or "")
+        experience_space["last_inner_context_cluster_pattern_identity_confidence"] = float(inner_context_result.get("inner_pattern_identity_confidence", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_identity_streak"] = int(inner_context_result.get("inner_pattern_identity_streak", 0) or 0)
+        experience_space["last_inner_context_cluster_pattern_identity_stability"] = float(inner_context_result.get("inner_pattern_identity_stability", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_identity_recurrent"] = bool(inner_context_result.get("inner_pattern_identity_recurrent", False))
+        experience_space["last_inner_context_cluster_pattern_identity_changed"] = bool(inner_context_result.get("inner_pattern_identity_changed", False))
+        experience_space["last_inner_context_cluster_pattern_identity_last_seen_tick"] = int(inner_context_result.get("inner_pattern_identity_last_seen_tick", 0) or 0)
+        experience_space["last_inner_context_cluster_pattern_recognition_state"] = dict(inner_context_result.get("inner_pattern_recognition_state", {}) or {})
+        experience_space["last_inner_context_cluster_pattern_recognition_label"] = str(inner_context_result.get("inner_pattern_recognition_label", "unsettled_inner_pattern") or "unsettled_inner_pattern")
+        experience_space["last_inner_context_cluster_pattern_recognition_strength"] = float(inner_context_result.get("inner_pattern_recognition_strength", 0.0) or 0.0)
+        experience_space["last_inner_context_cluster_pattern_recognition_recurrent"] = bool(inner_context_result.get("inner_pattern_recognition_recurrent", False))
+        experience_space["last_inner_context_cluster_pattern_recognition_changed"] = bool(inner_context_result.get("inner_pattern_recognition_changed", False))
         experience_space["last_inner_context_cluster_pattern_support_score"] = float(inner_context_result.get("pattern_support_score", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_pattern_conflict_score"] = float(inner_context_result.get("pattern_conflict_score", 0.0) or 0.0)
         experience_space["last_inner_context_cluster_pattern_fragility_score"] = float(inner_context_result.get("pattern_fragility_score", 0.0) or 0.0)
@@ -1474,7 +3078,48 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
         summary["inner_context_cluster_areal_fragmentation"] = 0.0
         summary["inner_context_cluster_areal_coherence_mean"] = 0.0
         summary["inner_context_cluster_areal_conflict_mean"] = 0.0
+        summary["inner_context_cluster_areal_topology_density_mean"] = 0.0
+        summary["inner_context_cluster_areal_topology_span_mean"] = 0.0
+        summary["inner_context_cluster_areal_topology_boundary_mean"] = 0.0
+        summary["inner_context_cluster_topology_cluster_link_count"] = 0
+        summary["inner_context_cluster_topology_areal_link_count"] = 0
+        summary["inner_context_cluster_topology_link_density"] = 0.0
+        summary["inner_context_cluster_topology_distance_mean"] = 0.0
+        summary["inner_context_cluster_topology_coherence"] = 0.0
+        summary["inner_context_cluster_topology_tension"] = 0.0
+        summary["inner_context_cluster_topology_state_label"] = "sparse_topology"
+        summary["inner_context_cluster_field_perception_state"] = {}
+        summary["inner_context_cluster_activity_island_count"] = 0
+        summary["inner_context_cluster_activity_island_mass_mean"] = 0.0
+        summary["inner_context_cluster_activity_island_mass_max"] = 0.0
+        summary["inner_context_cluster_activity_island_activation_mean"] = 0.0
+        summary["inner_context_cluster_activity_island_pressure_mean"] = 0.0
+        summary["inner_context_cluster_activity_island_coherence_mean"] = 0.0
+        summary["inner_context_cluster_activity_island_context_reactivation_mean"] = 0.0
+        summary["inner_context_cluster_activity_island_spread"] = 0.0
+        summary["inner_context_cluster_field_perception_label"] = "quiet_field"
+        summary["inner_context_cluster_neural_felt_bearing"] = 0.0
+        summary["inner_context_cluster_neural_felt_pressure"] = 0.0
+        summary["inner_context_cluster_neural_felt_memory_resonance"] = 0.0
+        summary["inner_context_cluster_neural_felt_context_reactivation"] = 0.0
+        summary["inner_context_cluster_neural_felt_label"] = "quiet_neural_felt"
         summary["inner_context_cluster_pattern_label"] = ""
+        summary["inner_context_cluster_field_pattern_signature"] = {}
+        summary["inner_context_cluster_field_pattern_signature_key"] = ""
+        summary["inner_context_cluster_field_pattern_vector"] = []
+        summary["inner_context_cluster_pattern_identity"] = ""
+        summary["inner_context_cluster_pattern_identity_label"] = ""
+        summary["inner_context_cluster_pattern_identity_confidence"] = 0.0
+        summary["inner_context_cluster_pattern_identity_streak"] = 0
+        summary["inner_context_cluster_pattern_identity_stability"] = 0.0
+        summary["inner_context_cluster_pattern_identity_recurrent"] = False
+        summary["inner_context_cluster_pattern_identity_changed"] = False
+        summary["inner_context_cluster_pattern_identity_last_seen_tick"] = 0
+        summary["inner_context_cluster_pattern_recognition_state"] = {}
+        summary["inner_context_cluster_pattern_recognition_label"] = "unsettled_inner_pattern"
+        summary["inner_context_cluster_pattern_recognition_strength"] = 0.0
+        summary["inner_context_cluster_pattern_recognition_recurrent"] = False
+        summary["inner_context_cluster_pattern_recognition_changed"] = False
         summary["inner_context_cluster_self_state"] = "stable"
         summary["inner_context_cluster_attractor"] = "neutral"
 
@@ -1497,6 +3142,19 @@ def _refresh_experience_space(bot, timestamp=None, decision_tendency=None, event
     experience_space["last_in_trade_avg_recovery_balance"] = float(summary.get("in_trade_avg_recovery_balance", 0.0) or 0.0)
     experience_space["last_in_trade_avg_regulated_courage"] = float(summary.get("in_trade_avg_regulated_courage", 0.0) or 0.0)
     experience_space["last_in_trade_avg_courage_gap"] = float(summary.get("in_trade_avg_courage_gap", 0.0) or 0.0)
+    experience_space["last_experience_effect_score"] = float(summary.get("experience_effect_score", 0.0) or 0.0)
+    experience_space["last_profit_reward"] = float(summary.get("profit_reward", 0.0) or 0.0)
+    experience_space["last_relief_signal"] = float(summary.get("relief_signal", 0.0) or 0.0)
+    experience_space["last_stability_signal"] = float(summary.get("stability_signal", 0.0) or 0.0)
+    experience_space["last_discipline_signal"] = float(summary.get("discipline_signal", 0.0) or 0.0)
+    experience_space["last_confidence_signal"] = float(summary.get("confidence_signal", 0.0) or 0.0)
+    experience_space["last_overactivation_signal"] = float(summary.get("overactivation_signal", 0.0) or 0.0)
+    experience_space["last_chaos_penalty"] = float(summary.get("chaos_penalty", 0.0) or 0.0)
+    experience_space["last_variance_penalty"] = float(summary.get("variance_penalty", 0.0) or 0.0)
+    experience_space["last_overstrain_penalty"] = float(summary.get("overstrain_penalty", 0.0) or 0.0)
+    experience_space["last_carrying_capacity_delta"] = float(summary.get("carrying_capacity_delta", 0.0) or 0.0)
+    experience_space["last_self_confidence_delta"] = float(summary.get("self_confidence_delta", 0.0) or 0.0)
+    experience_space["last_process_quality"] = float(summary.get("process_quality", 0.0) or 0.0)
     experience_space["last_in_trade_pre_action_phase"] = str(summary.get("in_trade_last_pre_action_phase", "-") or "-")
     experience_space["last_in_trade_dominant_tension_cause"] = str(summary.get("in_trade_last_dominant_tension_cause", "-") or "-")
 
@@ -1606,6 +3264,19 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
         "non_action_type": summary_item.get("non_action_type", None),
         "review_label": str(summary_item.get("review_label", "-") or "-"),
         "review_score": float(summary_item.get("review_score", 0.0) or 0.0),
+        "experience_effect_score": float(summary_item.get("experience_effect_score", _experience_reward_delta(summary_item)) or 0.0),
+        "profit_reward": float(summary_item.get("profit_reward", 0.0) or 0.0),
+        "relief_signal": float(summary_item.get("relief_signal", 0.0) or 0.0),
+        "stability_signal": float(summary_item.get("stability_signal", 0.0) or 0.0),
+        "discipline_signal": float(summary_item.get("discipline_signal", 0.0) or 0.0),
+        "confidence_signal": float(summary_item.get("confidence_signal", 0.0) or 0.0),
+        "overactivation_signal": float(summary_item.get("overactivation_signal", 0.0) or 0.0),
+        "chaos_penalty": float(summary_item.get("chaos_penalty", 0.0) or 0.0),
+        "variance_penalty": float(summary_item.get("variance_penalty", 0.0) or 0.0),
+        "overstrain_penalty": float(summary_item.get("overstrain_penalty", 0.0) or 0.0),
+        "carrying_capacity_delta": float(summary_item.get("carrying_capacity_delta", 0.0) or 0.0),
+        "self_confidence_delta": float(summary_item.get("self_confidence_delta", 0.0) or 0.0),
+        "process_quality": float(summary_item.get("process_quality", 0.0) or 0.0),
         "decision_path_quality": float(summary_item.get("decision_path_quality", 0.0) or 0.0),
         "uncertainty_recognition_quality": float(summary_item.get("uncertainty_recognition_quality", 0.0) or 0.0),
         "observation_quality": float(summary_item.get("observation_quality", 0.0) or 0.0),
@@ -1658,6 +3329,10 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
         "inner_context_cluster_mean_velocity": float(summary_item.get("inner_context_cluster_mean_velocity", 0.0) or 0.0),
         "inner_context_cluster_regulation_pressure": float(summary_item.get("inner_context_cluster_regulation_pressure", 0.0) or 0.0),
         "inner_context_cluster_neuron_context_memory_impulse_norm_mean": float(summary_item.get("inner_context_cluster_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
+        "inner_context_cluster_topology_link_density": float(summary_item.get("inner_context_cluster_topology_link_density", 0.0) or 0.0),
+        "inner_context_cluster_topology_coherence": float(summary_item.get("inner_context_cluster_topology_coherence", 0.0) or 0.0),
+        "inner_context_cluster_topology_tension": float(summary_item.get("inner_context_cluster_topology_tension", 0.0) or 0.0),
+        "inner_context_cluster_topology_state_label": str(summary_item.get("inner_context_cluster_topology_state_label", "sparse_topology") or "sparse_topology"),
         "episode_felt_summary": dict(summary_item.get("episode_felt_summary", {}) or {}),
         "felt_label": str(summary_item.get("felt_label", "mixed") or "mixed"),
         "axis_shift": float(axis_shift),
@@ -1685,6 +3360,24 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     item["observation_quality"] = float((float(item.get("observation_quality", 0.0) or 0.0) * 0.72) + (float(summary_item.get("observation_quality", 0.0) or 0.0) * 0.28))
     item["correction_timing_quality"] = float((float(item.get("correction_timing_quality", 0.0) or 0.0) * 0.72) + (float(summary_item.get("correction_timing_quality", 0.0) or 0.0) * 0.28))
     item["structural_bearing_quality"] = float((float(item.get("structural_bearing_quality", 0.0) or 0.0) * 0.72) + (float(summary_item.get("structural_bearing_quality", 0.0) or 0.0) * 0.28))
+    for neuro_key in (
+        "experience_effect_score",
+        "profit_reward",
+        "relief_signal",
+        "stability_signal",
+        "discipline_signal",
+        "confidence_signal",
+        "overactivation_signal",
+        "chaos_penalty",
+        "variance_penalty",
+        "overstrain_penalty",
+        "carrying_capacity_delta",
+        "self_confidence_delta",
+        "process_quality",
+    ):
+        value = float(summary_item.get(neuro_key, 0.0) or 0.0)
+        item[f"avg_{neuro_key}"] = float((float(item.get(f"avg_{neuro_key}", 0.0) or 0.0) * 0.72) + (value * 0.28))
+        item[f"last_{neuro_key}"] = float(value)
     item["avg_regulatory_load"] = float((float(item.get("avg_regulatory_load", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_regulatory_load", 0.0) or 0.0) * 0.32))
     item["avg_action_capacity"] = float((float(item.get("avg_action_capacity", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_action_capacity", 0.0) or 0.0) * 0.32))
     item["avg_recovery_need"] = float((float(item.get("avg_recovery_need", 0.0) or 0.0) * 0.68) + (float(summary_item.get("in_trade_avg_recovery_need", 0.0) or 0.0) * 0.32))
@@ -1711,6 +3404,10 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     item["avg_field_mean_velocity"] = float((float(item.get("avg_field_mean_velocity", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_mean_velocity", 0.0) or 0.0) * 0.32))
     item["avg_field_regulation_pressure"] = float((float(item.get("avg_field_regulation_pressure", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_regulation_pressure", 0.0) or 0.0) * 0.32))
     item["avg_context_memory_impulse"] = float((float(item.get("avg_context_memory_impulse", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0) * 0.32))
+    item["avg_field_topology_link_density"] = float((float(item.get("avg_field_topology_link_density", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_topology_link_density", 0.0) or 0.0) * 0.32))
+    item["avg_field_topology_coherence"] = float((float(item.get("avg_field_topology_coherence", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_topology_coherence", 0.0) or 0.0) * 0.32))
+    item["avg_field_topology_tension"] = float((float(item.get("avg_field_topology_tension", 0.0) or 0.0) * 0.68) + (float(summary_item.get("inner_context_cluster_topology_tension", 0.0) or 0.0) * 0.32))
+    item["last_field_topology_state_label"] = str(summary_item.get("inner_context_cluster_topology_state_label", item.get("last_field_topology_state_label", "sparse_topology")) or "sparse_topology")
     item["avg_field_areal_count"] = float((float(item.get("avg_field_areal_count", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_count", 0.0) or 0.0) * 0.32))
     item["avg_field_areal_activation_mean"] = float((float(item.get("avg_field_areal_activation_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_activation_mean", 0.0) or 0.0) * 0.32))
     item["avg_field_areal_stability_mean"] = float((float(item.get("avg_field_areal_stability_mean", 0.0) or 0.0) * 0.68) + (float(summary_item.get("field_areal_stability_mean", 0.0) or 0.0) * 0.32))
@@ -1776,6 +3473,59 @@ def _update_experience_link_bucket(space, bucket_name, link_key, summary):
     return dict(experience_space)
 
 # --------------------------------------------------
+def _update_field_decision_outcome_protocol(space, summary):
+
+    experience_space = dict(space or {})
+    item = dict(summary or {})
+
+    phase = str(item.get("in_trade_last_pre_action_phase", item.get("pre_action_phase", "-")) or "-").strip().lower()
+    outcome_reason = str(item.get("outcome_reason", "-") or "-").strip().lower()
+    field_label = str(item.get("inner_context_cluster_field_perception_label", item.get("field_perception_label", "-")) or "-").strip().lower()
+
+    if not phase or phase == "-":
+        return dict(experience_space)
+
+    protocol = dict(experience_space.get("field_decision_outcome_protocol", {}) or {})
+    phase_stats = dict(protocol.get("phase_stats", {}) or {})
+    phase_item = dict(phase_stats.get(phase, {}) or {})
+
+    count = int(phase_item.get("count", 0) or 0) + 1
+
+    def _avg(existing, value):
+        return float(((float(existing or 0.0) * float(count - 1)) + float(value or 0.0)) / max(1, count))
+
+    phase_item.update({
+        "count": int(count),
+        "last_outcome_reason": str(outcome_reason or "-"),
+        "last_field_label": str(field_label or "-"),
+        "avg_experience_effect_score": _avg(phase_item.get("avg_experience_effect_score", 0.0), item.get("experience_effect_score", 0.0)),
+        "avg_process_quality": _avg(phase_item.get("avg_process_quality", 0.0), item.get("process_quality", 0.0)),
+        "avg_carrying_capacity_delta": _avg(phase_item.get("avg_carrying_capacity_delta", 0.0), item.get("carrying_capacity_delta", 0.0)),
+        "avg_self_confidence_delta": _avg(phase_item.get("avg_self_confidence_delta", 0.0), item.get("self_confidence_delta", 0.0)),
+        "avg_in_trade_state_stability": _avg(phase_item.get("avg_in_trade_state_stability", 0.0), item.get("in_trade_avg_state_stability", 0.0)),
+        "avg_in_trade_regulatory_load": _avg(phase_item.get("avg_in_trade_regulatory_load", 0.0), item.get("in_trade_avg_regulatory_load", 0.0)),
+        "avg_in_trade_action_capacity": _avg(phase_item.get("avg_in_trade_action_capacity", 0.0), item.get("in_trade_avg_action_capacity", 0.0)),
+    })
+
+    outcome_counts = dict(phase_item.get("outcome_counts", {}) or {})
+    outcome_counts[outcome_reason or "-"] = int(outcome_counts.get(outcome_reason or "-", 0) or 0) + 1
+    phase_item["outcome_counts"] = dict(outcome_counts)
+
+    field_label_counts = dict(phase_item.get("field_label_counts", {}) or {})
+    field_label_counts[field_label or "-"] = int(field_label_counts.get(field_label or "-", 0) or 0) + 1
+    phase_item["field_label_counts"] = dict(field_label_counts)
+
+    phase_stats[phase] = dict(phase_item)
+    protocol.update({
+        "last_phase": str(phase),
+        "last_outcome_reason": str(outcome_reason or "-"),
+        "last_field_label": str(field_label or "-"),
+        "phase_stats": dict(phase_stats),
+    })
+    experience_space["field_decision_outcome_protocol"] = dict(protocol)
+    return dict(experience_space)
+
+# --------------------------------------------------
 def _append_experience_episode(space, summary):
 
     experience_space = dict(space or {})
@@ -1806,6 +3556,19 @@ def _append_experience_episode(space, summary):
         "non_action_type": (summary or {}).get("non_action_type", None),
         "review_label": str((summary or {}).get("review_label", "-") or "-"),
         "review_score": float((summary or {}).get("review_score", 0.0) or 0.0),
+        "experience_effect_score": float((summary or {}).get("experience_effect_score", _experience_reward_delta(summary)) or 0.0),
+        "profit_reward": float((summary or {}).get("profit_reward", 0.0) or 0.0),
+        "relief_signal": float((summary or {}).get("relief_signal", 0.0) or 0.0),
+        "stability_signal": float((summary or {}).get("stability_signal", 0.0) or 0.0),
+        "discipline_signal": float((summary or {}).get("discipline_signal", 0.0) or 0.0),
+        "confidence_signal": float((summary or {}).get("confidence_signal", 0.0) or 0.0),
+        "overactivation_signal": float((summary or {}).get("overactivation_signal", 0.0) or 0.0),
+        "chaos_penalty": float((summary or {}).get("chaos_penalty", 0.0) or 0.0),
+        "variance_penalty": float((summary or {}).get("variance_penalty", 0.0) or 0.0),
+        "overstrain_penalty": float((summary or {}).get("overstrain_penalty", 0.0) or 0.0),
+        "carrying_capacity_delta": float((summary or {}).get("carrying_capacity_delta", 0.0) or 0.0),
+        "self_confidence_delta": float((summary or {}).get("self_confidence_delta", 0.0) or 0.0),
+        "process_quality": float((summary or {}).get("process_quality", 0.0) or 0.0),
         "decision_path_quality": float((summary or {}).get("decision_path_quality", 0.0) or 0.0),
         "uncertainty_recognition_quality": float((summary or {}).get("uncertainty_recognition_quality", 0.0) or 0.0),
         "observation_quality": float((summary or {}).get("observation_quality", 0.0) or 0.0),
@@ -1837,6 +3600,7 @@ def _append_experience_episode(space, summary):
         "similarity_axes": _build_experience_similarity_axes(summary),
     })
     experience_space["episode_links"] = list(history[-32:])
+    experience_space = _update_field_decision_outcome_protocol(experience_space, summary)
     return dict(experience_space)
 
 # --------------------------------------------------
@@ -1860,6 +3624,12 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
     state_before = dict(last_payload.get("state_before", {}) or {})
     state_after = dict(last_payload.get("state_after", {}) or {})
     state_delta = dict(last_payload.get("state_delta", {}) or {})
+    neural_felt_state = dict(inner_field.get("neural_felt_state", felt_state.get("neural_felt_state", {})) or {})
+    neural_felt_bearing = float(inner_field.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", felt_state.get("neural_felt_bearing", 0.0))) or 0.0)
+    neural_felt_pressure = float(inner_field.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", felt_state.get("neural_felt_pressure", 0.0))) or 0.0)
+    neural_felt_memory_resonance = float(neural_felt_state.get("neural_felt_memory_resonance", felt_state.get("neural_felt_memory_resonance", 0.0)) or 0.0)
+    neural_felt_context_reactivation = float(neural_felt_state.get("neural_felt_context_reactivation", felt_state.get("neural_felt_context_reactivation", 0.0)) or 0.0)
+    neural_felt_label = str(inner_field.get("neural_felt_label", neural_felt_state.get("neural_felt_label", felt_state.get("neural_felt_label", "quiet_neural_felt"))) or "quiet_neural_felt")
 
     summary_timestamp = timestamp
     if summary_timestamp is None:
@@ -1914,6 +3684,12 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
         "field_areal_fragmentation": float(inner_field.get("field_areal_fragmentation", 0.0) or 0.0),
         "field_areal_coherence_mean": float(inner_field.get("field_areal_coherence_mean", 0.0) or 0.0),
         "field_areal_conflict_mean": float(inner_field.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+        "neural_felt_label": str(neural_felt_label),
         "processing_areal_tension": float(processing_state.get("processing_areal_tension", 0.0) or 0.0),
         "processing_areal_support": float(processing_state.get("processing_areal_support", 0.0) or 0.0),
         "thought_decision_conflict": float(thought_state.get("decision_conflict", 0.0) or 0.0),
@@ -1976,6 +3752,8 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
     summary["felt_conflict"] = float(episode_felt_summary.get("conflict", 0.0) or 0.0)
     summary["felt_recovery_cost"] = float(episode_felt_summary.get("recovery_cost", 0.0) or 0.0)
     summary["felt_label"] = str(episode_felt_summary.get("felt_label", "mixed") or "mixed")
+    summary["neural_felt_memory_resonance"] = float(episode_felt_summary.get("neural_felt_memory_resonance", neural_felt_memory_resonance) or 0.0)
+    summary["neural_felt_context_reactivation"] = float(episode_felt_summary.get("neural_felt_context_reactivation", neural_felt_context_reactivation) or 0.0)
 
     field_delta = dict(state_delta.get("field", {}) or {})
     tension_delta = dict(state_delta.get("tension", {}) or {})
@@ -2051,6 +3829,22 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
             ),
         )
     )
+
+    neurochemical_effect = build_experience_neurochemical_effect(summary)
+    summary["experience_neurochemical_effect"] = dict(neurochemical_effect or {})
+    summary["experience_effect_score"] = float(neurochemical_effect.get("experience_effect_score", 0.0) or 0.0)
+    summary["profit_reward"] = float(neurochemical_effect.get("profit_reward", 0.0) or 0.0)
+    summary["relief_signal"] = float(neurochemical_effect.get("relief_signal", 0.0) or 0.0)
+    summary["stability_signal"] = float(neurochemical_effect.get("stability_signal", 0.0) or 0.0)
+    summary["discipline_signal"] = float(neurochemical_effect.get("discipline_signal", 0.0) or 0.0)
+    summary["confidence_signal"] = float(neurochemical_effect.get("confidence_signal", 0.0) or 0.0)
+    summary["overactivation_signal"] = float(neurochemical_effect.get("overactivation_signal", 0.0) or 0.0)
+    summary["chaos_penalty"] = float(neurochemical_effect.get("chaos_penalty", 0.0) or 0.0)
+    summary["variance_penalty"] = float(neurochemical_effect.get("variance_penalty", 0.0) or 0.0)
+    summary["overstrain_penalty"] = float(neurochemical_effect.get("overstrain_penalty", 0.0) or 0.0)
+    summary["carrying_capacity_delta"] = float(neurochemical_effect.get("carrying_capacity_delta", 0.0) or 0.0)
+    summary["self_confidence_delta"] = float(neurochemical_effect.get("self_confidence_delta", 0.0) or 0.0)
+    summary["process_quality"] = float(neurochemical_effect.get("process_quality", 0.0) or 0.0)
 
     return dict(summary)
 
@@ -2271,6 +4065,12 @@ def _build_episode_felt_summary(summary):
     delta_areal_pressure = float(field_delta.get("field_areal_pressure_mean", 0.0) or 0.0)
     delta_areal_fragmentation = float(field_delta.get("field_areal_fragmentation", 0.0) or 0.0)
     delta_areal_conflict = float(field_delta.get("field_areal_conflict_mean", 0.0) or 0.0)
+    neural_felt_state = dict(item.get("neural_felt_state", felt_state.get("neural_felt_state", {})) or {})
+    neural_felt_bearing = float(item.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", felt_state.get("neural_felt_bearing", 0.0))) or 0.0)
+    neural_felt_pressure = float(item.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", felt_state.get("neural_felt_pressure", 0.0))) or 0.0)
+    neural_felt_memory_resonance = float(item.get("neural_felt_memory_resonance", neural_felt_state.get("neural_felt_memory_resonance", felt_state.get("neural_felt_memory_resonance", 0.0))) or 0.0)
+    neural_felt_context_reactivation = float(item.get("neural_felt_context_reactivation", neural_felt_state.get("neural_felt_context_reactivation", felt_state.get("neural_felt_context_reactivation", 0.0))) or 0.0)
+    neural_felt_label = str(item.get("neural_felt_label", neural_felt_state.get("neural_felt_label", felt_state.get("neural_felt_label", "quiet_neural_felt"))) or "quiet_neural_felt")
 
     raw_valence = (
         (felt_quality * 0.20)
@@ -2432,6 +4232,12 @@ def _build_episode_felt_summary(summary):
         "recovery_cost": float(recovery_cost),
         "areal_support": float(areal_support),
         "areal_conflict_pressure": float(areal_conflict_pressure),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+        "neural_felt_label": str(neural_felt_label),
         "field_areal_fragmentation": float(field_areal_fragmentation),
         "field_areal_conflict_mean": float(field_areal_conflict_mean),
         "processing_areal_tension": float(processing_areal_tension),
@@ -3020,6 +4826,8 @@ def _resolve_affective_context_modulation(bot=None, fused_state=None):
 # --------------------------------------------------
 def build_runtime_pipeline_snapshot(bot=None):
 
+    profile_start = _mcm_profile_start()
+
     if bot is None:
         return {
             "outer_visual_perception_state": {},
@@ -3042,6 +4850,20 @@ def build_runtime_pipeline_snapshot(bot=None):
             "pattern_action_support": 0.0,
             "pattern_observe_pressure": 0.0,
             "pattern_replan_pressure": 0.0,
+            "neural_felt_state": {},
+            "neural_felt_bearing": 0.0,
+            "neural_felt_pressure": 0.0,
+            "neural_felt_memory_resonance": 0.0,
+            "neural_felt_context_reactivation": 0.0,
+            "neural_felt_label": "quiet_neural_felt",
+            "active_context_trace": {},
+            "inner_field_history_state": {},
+            "inner_field_history_length": 0,
+            "inner_field_pressure_trend": 0.0,
+            "inner_field_bearing_trend": 0.0,
+            "inner_field_topology_tension_trend": 0.0,
+            "inner_field_memory_resonance_trend": 0.0,
+            "inner_field_history_label": "empty_field_history",
             "expectation_state": {},
             "action_intent_state": {},
             "execution_state": {},
@@ -3065,14 +4887,18 @@ def build_runtime_pipeline_snapshot(bot=None):
     meta_regulation_state = dict(getattr(bot, "meta_regulation_state", {}) or {})
     review_feedback_state = dict(meta_regulation_state.get("review_feedback_state", {}) or {})
     runtime_state = dict(getattr(bot, "mcm_runtime_decision_state", {}) or {})
+    inner_field_state = dict(getattr(bot, "inner_field_perception_state", {}) or {})
+    felt_state = dict(getattr(bot, "felt_state", {}) or {})
+    neural_felt_state = dict(inner_field_state.get("neural_felt_state", felt_state.get("neural_felt_state", {})) or {})
+    inner_field_history_state = dict(inner_field_state.get("inner_field_history_state", getattr(bot, "inner_field_history_state", {})) or {})
 
-    return {
+    payload = {
         "outer_visual_perception_state": dict(getattr(bot, "outer_visual_perception_state", {}) or {}),
-        "inner_field_perception_state": dict(getattr(bot, "inner_field_perception_state", {}) or {}),
+        "inner_field_perception_state": dict(inner_field_state or {}),
         "temporal_perception_state": dict(getattr(bot, "temporal_perception_state", {}) or {}),
         "perception_state": dict(getattr(bot, "perception_state", {}) or {}),
         "processing_state": dict(getattr(bot, "processing_state", {}) or {}),
-        "felt_state": dict(getattr(bot, "felt_state", {}) or {}),
+        "felt_state": dict(felt_state or {}),
         "thought_state": dict(getattr(bot, "thought_state", {}) or {}),
         "meta_regulation_state": dict(meta_regulation_state or {}),
         "review_feedback_state": dict(review_feedback_state or {}),
@@ -3087,6 +4913,20 @@ def build_runtime_pipeline_snapshot(bot=None):
         "pattern_action_support": float(meta_regulation_state.get("pattern_action_support", review_feedback_state.get("pattern_action_support", 0.0)) or 0.0),
         "pattern_observe_pressure": float(meta_regulation_state.get("pattern_observe_pressure", review_feedback_state.get("pattern_observe_pressure", 0.0)) or 0.0),
         "pattern_replan_pressure": float(meta_regulation_state.get("pattern_replan_pressure", review_feedback_state.get("pattern_replan_pressure", 0.0)) or 0.0),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(inner_field_state.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", felt_state.get("neural_felt_bearing", 0.0))) or 0.0),
+        "neural_felt_pressure": float(inner_field_state.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", felt_state.get("neural_felt_pressure", 0.0))) or 0.0),
+        "neural_felt_memory_resonance": float(neural_felt_state.get("neural_felt_memory_resonance", felt_state.get("neural_felt_memory_resonance", 0.0)) or 0.0),
+        "neural_felt_context_reactivation": float(neural_felt_state.get("neural_felt_context_reactivation", felt_state.get("neural_felt_context_reactivation", 0.0)) or 0.0),
+        "neural_felt_label": str(inner_field_state.get("neural_felt_label", neural_felt_state.get("neural_felt_label", felt_state.get("neural_felt_label", "quiet_neural_felt"))) or "quiet_neural_felt"),
+        "active_context_trace": dict(getattr(bot, "active_context_trace", {}) or {}),
+        "inner_field_history_state": dict(inner_field_history_state or {}),
+        "inner_field_history_length": int(inner_field_history_state.get("inner_field_history_length", inner_field_state.get("inner_field_history_length", 0)) or 0),
+        "inner_field_pressure_trend": float(inner_field_history_state.get("inner_field_pressure_trend", inner_field_state.get("inner_field_pressure_trend", 0.0)) or 0.0),
+        "inner_field_bearing_trend": float(inner_field_history_state.get("inner_field_bearing_trend", inner_field_state.get("inner_field_bearing_trend", 0.0)) or 0.0),
+        "inner_field_topology_tension_trend": float(inner_field_history_state.get("inner_field_topology_tension_trend", inner_field_state.get("inner_field_topology_tension_trend", 0.0)) or 0.0),
+        "inner_field_memory_resonance_trend": float(inner_field_history_state.get("inner_field_memory_resonance_trend", inner_field_state.get("inner_field_memory_resonance_trend", 0.0)) or 0.0),
+        "inner_field_history_label": str(inner_field_history_state.get("inner_field_history_label", inner_field_state.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace"),
         "expectation_state": dict(getattr(bot, "expectation_state", {}) or {}),
         "action_intent_state": dict(getattr(bot, "action_intent_state", {}) or {}),
         "execution_state": dict(getattr(bot, "execution_state", {}) or {}),
@@ -3107,6 +4947,13 @@ def build_runtime_pipeline_snapshot(bot=None):
         },
     }
 
+    _mcm_profile_debug(
+        "build_runtime_pipeline_snapshot.total",
+        profile_start,
+        extra=f"keys={int(len(payload or {}))}",
+    )
+    return dict(payload or {})
+
 # --------------------------------------------------
 # DEBUG
 # --------------------------------------------------
@@ -3121,6 +4968,156 @@ def _mcm_decision_debug(msg):
 def _mcm_outcome_debug(msg):
     if bool(getattr(Config, "MCM_OUTCOME_DEBUG", False)):
         dbr_debug(msg, "mcm_outcome_debug.csv")
+
+def _mcm_profile_start():
+    if not bool(getattr(Config, "MCM_RUNTIME_PROFILE_DEBUG", False)):
+        return 0.0
+
+    try:
+        return float(time.perf_counter())
+    except Exception:
+        return 0.0
+
+def _mcm_profile_debug(section, start_time, extra=None):
+    try:
+        started = float(start_time or 0.0)
+    except Exception:
+        started = 0.0
+
+    if started <= 0.0:
+        return
+
+    try:
+        elapsed_ms = (float(time.perf_counter()) - started) * 1000.0
+        dbr_profile(section, elapsed_ms, extra=extra)
+    except Exception:
+        pass
+
+def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=None, processing_state=None, felt_state=None, thought_state=None):
+
+    if bot is None:
+        return None
+
+    if not bool(getattr(Config, "MCM_FIELD_DECISION_PROTOCOL_DEBUG", True)):
+        return None
+
+    result = dict(runtime_result or {})
+    meta = dict(meta_regulation_state or result.get("meta_regulation_state", {}) or {})
+    processing = dict(processing_state or result.get("processing_state", {}) or {})
+    felt = dict(felt_state or result.get("felt_state", {}) or {})
+    thought = dict(thought_state or result.get("thought_state", {}) or {})
+
+    phase = str(meta.get("pre_action_phase", "hold") or "hold").strip().lower()
+    reason = str(meta.get("rejection_reason", result.get("rejection_reason", "-")) or "-").strip()
+    proposed_decision = str(meta.get("decision", result.get("decision", "WAIT")) or "WAIT").strip().upper()
+    field_label = str(meta.get("field_perception_label", processing.get("field_perception_label", felt.get("field_perception_label", "quiet_field"))) or "quiet_field").strip()
+    runtime_tick = int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0)
+    timestamp = result.get("timestamp", getattr(bot, "current_timestamp", None))
+
+    protocol = dict(getattr(bot, "mcm_field_decision_protocol", {}) or {})
+    counts = dict(protocol.get("phase_counts", {}) or {})
+    reason_counts = dict(protocol.get("reason_counts", {}) or {})
+    field_label_counts = dict(protocol.get("field_label_counts", {}) or {})
+
+    counts[phase] = int(counts.get(phase, 0) or 0) + 1
+    reason_counts[reason] = int(reason_counts.get(reason, 0) or 0) + 1
+    field_label_counts[field_label] = int(field_label_counts.get(field_label, 0) or 0) + 1
+
+    prior_key = str(protocol.get("last_phase_key", "") or "")
+    phase_key = f"{phase}|{reason}|{field_label}"
+    first_event = not bool(prior_key)
+    phase_changed = bool(first_event or prior_key != phase_key)
+    every_n = max(1, int(getattr(Config, "MCM_FIELD_DECISION_PROTOCOL_EVERY_N", 5) or 5))
+    sequence = int(protocol.get("sequence", 0) or 0) + 1
+
+    protocol.update({
+        "sequence": int(sequence),
+        "last_phase": str(phase),
+        "last_reason": str(reason),
+        "last_field_label": str(field_label),
+        "last_phase_key": str(phase_key),
+        "last_timestamp": timestamp,
+        "last_runtime_tick": int(runtime_tick),
+        "phase_counts": dict(counts),
+        "reason_counts": dict(reason_counts),
+        "field_label_counts": dict(field_label_counts),
+    })
+    setattr(bot, "mcm_field_decision_protocol", dict(protocol))
+
+    if not phase_changed and (sequence % every_n) != 0:
+        return dict(protocol)
+
+    path = os.path.join("debug", "mcm_field_decision_protocol.csv")
+    if path not in _FIELD_DECISION_PROTOCOL_HEADER_DONE:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        header_text = (
+            "timestamp;runtime_tick;sequence;phase;reason;decision;field_label;"
+            "field_focus;field_clarity;field_stability;field_fragmentation;field_strain;"
+            "field_pressure;field_support;field_observation_need;field_replan_pressure;field_action_support;"
+            "action_clearance;action_inhibition;regulated_courage;decision_strength;state_maturity;decision_readiness;"
+            "processing_load;processing_tension;felt_pressure;felt_stability;thought_pressure;thought_support;"
+            "context_cluster_id;inner_context_cluster_id\n"
+        )
+        write_start = time.perf_counter()
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(header_text)
+        dbr_file_write_profile(
+            path,
+            (time.perf_counter() - write_start) * 1000.0,
+            bytes_written=len(header_text.encode("utf-8")),
+            operation="field_decision_protocol_header",
+        )
+        _FIELD_DECISION_PROTOCOL_HEADER_DONE.add(path)
+
+    def _clean(value):
+        return str(value).replace("\n", " ").replace(";", "|")
+
+    row = [
+        _clean(timestamp),
+        int(runtime_tick),
+        int(sequence),
+        _clean(phase),
+        _clean(reason),
+        _clean(proposed_decision),
+        _clean(field_label),
+        f"{float(meta.get('field_perception_focus', processing.get('field_perception_focus', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_clarity', processing.get('field_perception_clarity', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_stability', processing.get('field_perception_stability', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_fragmentation', processing.get('field_perception_fragmentation', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_strain', processing.get('field_perception_strain', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_pressure', processing.get('field_perception_pressure', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_support', processing.get('field_perception_support', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_observation_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('field_replan_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('field_action_support', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('action_clearance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('action_inhibition', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('regulated_courage', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('decision_strength', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('state_maturity', thought.get('state_maturity', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('decision_readiness', thought.get('decision_readiness', 0.0)) or 0.0):.4f}",
+        f"{float(processing.get('processing_load', 0.0) or 0.0):.4f}",
+        f"{float(processing.get('processing_tension', 0.0) or 0.0):.4f}",
+        f"{float(felt.get('felt_pressure', 0.0) or 0.0):.4f}",
+        f"{float(felt.get('felt_stability', 0.0) or 0.0):.4f}",
+        f"{float(thought.get('thought_areal_pressure', 0.0) or 0.0):.4f}",
+        f"{float(thought.get('thought_areal_support', 0.0) or 0.0):.4f}",
+        _clean(result.get("context_cluster_id", "-")),
+        _clean(getattr(bot, "last_inner_context_cluster_id", "-")),
+    ]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    line = ";".join(str(item) for item in row) + "\n"
+    write_start = time.perf_counter()
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(line)
+    dbr_file_write_profile(
+        path,
+        (time.perf_counter() - write_start) * 1000.0,
+        bytes_written=len(line.encode("utf-8")),
+        operation="field_decision_protocol_append",
+        extra=f"phase={phase}|reason={reason}|field={field_label}",
+    )
+    return dict(protocol)
 
 STRUCTURE_ENGINE = StructureEngine()
 
@@ -3221,6 +5218,90 @@ def _build_field_topology_state(snapshot):
         "topology_coherence": float(topology_coherence),
         "topology_tension": float(topology_tension),
         "topology_state_label": str(topology_state_label),
+    }
+
+# --------------------------------------------------
+# Build Neural Felt State
+# --------------------------------------------------
+def _build_neural_felt_state(inner_field_state):
+
+    field_state = dict(inner_field_state or {})
+    topology_state = dict(field_state.get("field_topology_state", {}) or {})
+
+    neural_felt_activation = _clip01(field_state.get("field_neuron_activation_mean", 0.0) or 0.0)
+    neural_felt_stability = _clip01(field_state.get("field_neuron_stability_mean", 0.0) or 0.0)
+    neural_regulation_pressure = _clip01(field_state.get("field_neuron_regulation_pressure_mean", 0.0) or 0.0)
+    neural_memory_resonance = _clip01(max(
+        float(field_state.get("field_neuron_memory_norm_mean", 0.0) or 0.0),
+        float(field_state.get("field_neuron_memory_resonance_mean", 0.0) or 0.0),
+    ))
+    neural_context_reactivation = _clip01(max(
+        float(field_state.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
+        float(field_state.get("field_neuron_context_reactivation_mean", 0.0) or 0.0),
+    ))
+    neural_overload = _clip01(field_state.get("field_neuron_overload_mean", 0.0) or 0.0)
+    neural_recovery_tendency = _clip01(field_state.get("field_neuron_recovery_tendency_mean", 0.0) or 0.0)
+    neural_coupling_resonance = _clip01(field_state.get("field_neuron_coupling_resonance_mean", 0.0) or 0.0)
+    neural_receptivity = _clip01(field_state.get("field_neuron_receptivity_mean", 0.0) or 0.0)
+    areal_pressure = _clip01(field_state.get("field_areal_pressure_mean", 0.0) or 0.0)
+    areal_coherence = _clip01(field_state.get("field_areal_coherence_mean", 0.0) or 0.0)
+    areal_conflict = _clip01(field_state.get("field_areal_conflict_mean", 0.0) or 0.0)
+    topology_coherence = _clip01(field_state.get("field_topology_coherence", topology_state.get("topology_coherence", 0.0)) or 0.0)
+    topology_tension = _clip01(field_state.get("field_topology_tension", topology_state.get("topology_tension", 0.0)) or 0.0)
+
+    neural_felt_pressure = _clip01(
+        (neural_regulation_pressure * 0.34)
+        + (areal_pressure * 0.24)
+        + (areal_conflict * 0.18)
+        + (topology_tension * 0.16)
+        + (neural_overload * 0.14)
+        + (max(0.0, 1.0 - neural_felt_stability) * 0.08)
+    )
+
+    neural_felt_bearing = _clip01(
+        (neural_felt_stability * 0.28)
+        + (areal_coherence * 0.18)
+        + (topology_coherence * 0.18)
+        + (neural_memory_resonance * 0.10)
+        + (neural_recovery_tendency * 0.10)
+        + (neural_coupling_resonance * 0.05)
+        + (neural_context_reactivation * 0.08)
+        + (max(0.0, 1.0 - neural_felt_pressure) * 0.13)
+    )
+
+    if neural_overload >= 0.62 and neural_felt_bearing < 0.48:
+        neural_felt_label = "overloaded_neural_felt"
+    elif neural_felt_pressure >= 0.62 and neural_felt_bearing < 0.42:
+        neural_felt_label = "strained_neural_felt"
+    elif neural_context_reactivation >= max(0.035, neural_memory_resonance * 0.35):
+        neural_felt_label = "memory_reactivated_neural_felt"
+    elif neural_recovery_tendency >= 0.52 and neural_felt_pressure <= 0.50:
+        neural_felt_label = "recovering_neural_felt"
+    elif neural_coupling_resonance >= 0.42 and areal_coherence >= 0.36:
+        neural_felt_label = "coupled_neural_felt"
+    elif neural_felt_bearing >= 0.58 and neural_felt_pressure <= 0.42:
+        neural_felt_label = "bearing_neural_felt"
+    elif topology_tension >= 0.58 or areal_conflict >= 0.58:
+        neural_felt_label = "tense_neural_felt"
+    elif neural_felt_activation >= 0.58:
+        neural_felt_label = "activated_neural_felt"
+    else:
+        neural_felt_label = "quiet_neural_felt"
+
+    return {
+        "neural_felt_activation": float(neural_felt_activation),
+        "neural_felt_stability": float(neural_felt_stability),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_context_reactivation),
+        "neural_felt_overload": float(neural_overload),
+        "neural_felt_recovery_tendency": float(neural_recovery_tendency),
+        "neural_felt_coupling_resonance": float(neural_coupling_resonance),
+        "neural_felt_receptivity": float(neural_receptivity),
+        "neural_felt_topology_coherence": float(topology_coherence),
+        "neural_felt_topology_tension": float(topology_tension),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_label": str(neural_felt_label),
     }
 
 # --------------------------------------------------
@@ -3596,7 +5677,7 @@ def _snapshot_float_vector(values, digits=4):
     return vector
 
 # --------------------------------------------------
-def _snapshot_agent_field_points(field, limit=48):
+def _snapshot_agent_field_points(field, limit=48, field_snapshot=None):
 
     points = []
 
@@ -3613,10 +5694,13 @@ def _snapshot_agent_field_points(field, limit=48):
     areal_membership = {}
     areal_label_map = {}
 
-    try:
-        field_snapshot = dict(field.read_snapshot() or {}) if hasattr(field, "read_snapshot") else {}
-    except Exception:
-        field_snapshot = {}
+    if field_snapshot is None:
+        try:
+            field_snapshot = dict(field.read_snapshot() or {}) if hasattr(field, "read_snapshot") else {}
+        except Exception:
+            field_snapshot = {}
+    else:
+        field_snapshot = dict(field_snapshot or {})
 
     for neuron_item in list(field_snapshot.get("neurons", []) or []):
         if not isinstance(neuron_item, dict):
@@ -3667,6 +5751,8 @@ def _snapshot_agent_field_points(field, limit=48):
 
         points.append({
             "agent_index": int(index),
+            "field_position": _snapshot_float_vector(neuron_item.get("field_position", [])),
+            "topology_neighbors": [int(item) for item in list(neuron_item.get("topology_neighbors", []) or [])],
             "position": _snapshot_float_vector(energy[index]),
             "velocity": _snapshot_float_vector(velocity_item),
             "activation": float(neuron_item.get("activation", 0.0) or 0.0),
@@ -3684,7 +5770,7 @@ def _snapshot_agent_field_points(field, limit=48):
     return points
 
 #  --------------------------------------------------
-def _snapshot_neuron_population(field, limit=24):
+def _snapshot_neuron_population(field, limit=24, field_snapshot=None):
 
     summary = {
         "neuron_count": 0,
@@ -3700,13 +5786,16 @@ def _snapshot_neuron_population(field, limit=24):
     }
     population = []
 
-    if field is None or not hasattr(field, "read_snapshot"):
-        return summary, population
+    if field_snapshot is None:
+        if field is None or not hasattr(field, "read_snapshot"):
+            return summary, population
 
-    try:
-        field_snapshot = dict(field.read_snapshot() or {})
-    except Exception:
-        return summary, population
+        try:
+            field_snapshot = dict(field.read_snapshot() or {})
+        except Exception:
+            return summary, population
+    else:
+        field_snapshot = dict(field_snapshot or {})
 
     neurons = [dict(item or {}) for item in list(field_snapshot.get("neurons", []) or []) if isinstance(item, dict)]
     if not neurons:
@@ -3720,6 +5809,12 @@ def _snapshot_neuron_population(field, limit=24):
     regulation_force_norm_values = []
     external_impulse_norm_values = []
     context_memory_impulse_norm_values = []
+    overload_values = []
+    recovery_tendency_values = []
+    memory_resonance_values = []
+    context_reactivation_values = []
+    coupling_resonance_values = []
+    receptivity_values = []
 
     for neuron_index, neuron_item in enumerate(list(neurons or [])):
         memory_trace = np.asarray(neuron_item.get("memory_trace", []), dtype=float)
@@ -3736,6 +5831,12 @@ def _snapshot_neuron_population(field, limit=24):
         regulation_force_norm_values.append(float(np.linalg.norm(regulation_force)) if regulation_force.size > 0 else 0.0)
         external_impulse_norm_values.append(float(np.linalg.norm(external_impulse)) if external_impulse.size > 0 else 0.0)
         context_memory_impulse_norm_values.append(float(np.linalg.norm(context_memory_impulse)) if context_memory_impulse.size > 0 else 0.0)
+        overload_values.append(float(neuron_item.get("overload", 0.0) or 0.0))
+        recovery_tendency_values.append(float(neuron_item.get("recovery_tendency", 0.0) or 0.0))
+        memory_resonance_values.append(float(neuron_item.get("memory_resonance", 0.0) or 0.0))
+        context_reactivation_values.append(float(neuron_item.get("context_reactivation", 0.0) or 0.0))
+        coupling_resonance_values.append(float(neuron_item.get("coupling_resonance", 0.0) or 0.0))
+        receptivity_values.append(float(neuron_item.get("receptivity", 1.0) or 1.0))
 
     summary = {
         "neuron_count": int(len(neurons)),
@@ -3748,6 +5849,12 @@ def _snapshot_neuron_population(field, limit=24):
         "neuron_regulation_force_norm_mean": float(np.mean(regulation_force_norm_values)) if regulation_force_norm_values else 0.0,
         "neuron_external_impulse_norm_mean": float(np.mean(external_impulse_norm_values)) if external_impulse_norm_values else 0.0,
         "neuron_context_memory_impulse_norm_mean": float(np.mean(context_memory_impulse_norm_values)) if context_memory_impulse_norm_values else 0.0,
+        "neuron_overload_mean": float(np.mean(overload_values)) if overload_values else 0.0,
+        "neuron_recovery_tendency_mean": float(np.mean(recovery_tendency_values)) if recovery_tendency_values else 0.0,
+        "neuron_memory_resonance_mean": float(np.mean(memory_resonance_values)) if memory_resonance_values else 0.0,
+        "neuron_context_reactivation_mean": float(np.mean(context_reactivation_values)) if context_reactivation_values else 0.0,
+        "neuron_coupling_resonance_mean": float(np.mean(coupling_resonance_values)) if coupling_resonance_values else 0.0,
+        "neuron_receptivity_mean": float(np.mean(receptivity_values)) if receptivity_values else 0.0,
     }
 
     sample_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_NEURON_LIMIT", limit) or limit))
@@ -3771,6 +5878,8 @@ def _snapshot_neuron_population(field, limit=24):
 
         population.append({
             "agent_index": int(neuron_item.get("agent_index", index) or index),
+            "field_position": _snapshot_float_vector(neuron_item.get("field_position", [])),
+            "topology_neighbors": [int(item) for item in list(neuron_item.get("topology_neighbors", []) or [])],
             "activation": float(neuron_item.get("activation", 0.0) or 0.0),
             "stability": float(neuron_item.get("stability", 0.0) or 0.0),
             "regulation_pressure": float(neuron_item.get("regulation_pressure", 0.0) or 0.0),
@@ -3779,6 +5888,14 @@ def _snapshot_neuron_population(field, limit=24):
             "regulation_force_norm": float(np.linalg.norm(regulation_force)) if regulation_force.size > 0 else 0.0,
             "external_impulse_norm": float(np.linalg.norm(external_impulse)) if external_impulse.size > 0 else 0.0,
             "context_memory_impulse_norm": float(np.linalg.norm(context_memory_impulse)) if context_memory_impulse.size > 0 else 0.0,
+            "overload": float(neuron_item.get("overload", 0.0) or 0.0),
+            "recovery_tendency": float(neuron_item.get("recovery_tendency", 0.0) or 0.0),
+            "memory_resonance": float(neuron_item.get("memory_resonance", 0.0) or 0.0),
+            "context_reactivation": float(neuron_item.get("context_reactivation", 0.0) or 0.0),
+            "coupling_resonance": float(neuron_item.get("coupling_resonance", 0.0) or 0.0),
+            "receptivity": float(neuron_item.get("receptivity", 1.0) or 1.0),
+            "activity_label": str(neuron_item.get("activity_label", "quiet") or "quiet"),
+            "activation_components": dict(neuron_item.get("activation_components", {}) or {}),
             "state": _snapshot_float_vector(neuron_item.get("state", [])),
             "velocity": _snapshot_float_vector(neuron_item.get("velocity", [])),
         })
@@ -3786,7 +5903,7 @@ def _snapshot_neuron_population(field, limit=24):
     return summary, population
 
 # --------------------------------------------------
-def _snapshot_areal_population(field, limit=16):
+def _snapshot_areal_population(field, limit=16, field_snapshot=None):
 
     summary = {
         "areal_count": 0,
@@ -3802,13 +5919,16 @@ def _snapshot_areal_population(field, limit=16):
     areal_states = []
     areal_links = []
 
-    if field is None or not hasattr(field, "read_snapshot"):
-        return summary, areal_states, areal_links
+    if field_snapshot is None:
+        if field is None or not hasattr(field, "read_snapshot"):
+            return summary, areal_states, areal_links
 
-    try:
-        field_snapshot = dict(field.read_snapshot() or {})
-    except Exception:
-        return summary, areal_states, areal_links
+        try:
+            field_snapshot = dict(field.read_snapshot() or {})
+        except Exception:
+            return summary, areal_states, areal_links
+    else:
+        field_snapshot = dict(field_snapshot or {})
 
     areal_state = dict(field_snapshot.get("areal_state", {}) or {})
     raw_areal_states = [dict(item or {}) for item in list(field_snapshot.get("areal_states", []) or []) if isinstance(item, dict)]
@@ -3824,6 +5944,9 @@ def _snapshot_areal_population(field, limit=16):
         "areal_fragmentation": float(areal_state.get("areal_fragmentation", 0.0) or 0.0),
         "areal_coherence_mean": float(areal_state.get("areal_coherence_mean", 0.0) or 0.0),
         "areal_conflict_mean": float(areal_state.get("areal_conflict_mean", 0.0) or 0.0),
+        "areal_topology_density_mean": float(areal_state.get("areal_topology_density_mean", 0.0) or 0.0),
+        "areal_topology_span_mean": float(areal_state.get("areal_topology_span_mean", 0.0) or 0.0),
+        "areal_topology_boundary_mean": float(areal_state.get("areal_topology_boundary_mean", 0.0) or 0.0),
     }
 
     sample_limit = max(1, int(getattr(Config, "MCM_SNAPSHOT_AREAL_LIMIT", limit) or limit))
@@ -3846,6 +5969,13 @@ def _snapshot_areal_population(field, limit=16):
             "mean_velocity_vector": _snapshot_float_vector(areal_item.get("mean_velocity_vector", [])),
             "bounds_min": _snapshot_float_vector(areal_item.get("bounds_min", [])),
             "bounds_max": _snapshot_float_vector(areal_item.get("bounds_max", [])),
+            "topology_center": _snapshot_float_vector(areal_item.get("topology_center", [])),
+            "topology_bounds_min": _snapshot_float_vector(areal_item.get("topology_bounds_min", [])),
+            "topology_bounds_max": _snapshot_float_vector(areal_item.get("topology_bounds_max", [])),
+            "topology_span": float(areal_item.get("topology_span", 0.0) or 0.0),
+            "topology_density": float(areal_item.get("topology_density", 0.0) or 0.0),
+            "topology_internal_link_count": int(areal_item.get("topology_internal_link_count", 0) or 0),
+            "topology_boundary_link_count": int(areal_item.get("topology_boundary_link_count", 0) or 0),
             "mass": int(areal_item.get("mass", 0) or 0),
             "density": float(areal_item.get("density", 0.0) or 0.0),
             "activation_mean": float(areal_item.get("activation_mean", 0.0) or 0.0),
@@ -3872,6 +6002,42 @@ def _snapshot_areal_population(field, limit=16):
     ]
 
     return summary, areal_states, areal_links
+
+# --------------------------------------------------
+def _snapshot_field_perception_state(field, field_snapshot=None):
+
+    if field_snapshot is None:
+        if field is None or not hasattr(field, "read_snapshot"):
+            return {}
+
+        try:
+            field_snapshot = dict(field.read_snapshot() or {})
+        except Exception:
+            return {}
+    else:
+        field_snapshot = dict(field_snapshot or {})
+
+    state = dict(field_snapshot.get("field_perception_state", {}) or {})
+    islands = [dict(item or {}) for item in list(field_snapshot.get("activity_islands", state.get("activity_islands", [])) or []) if isinstance(item, dict)]
+
+    return {
+        "activity_island_count": int(state.get("activity_island_count", len(islands)) or 0),
+        "activity_island_mass_mean": float(state.get("activity_island_mass_mean", 0.0) or 0.0),
+        "activity_island_mass_max": float(state.get("activity_island_mass_max", 0.0) or 0.0),
+        "activity_island_activation_mean": float(state.get("activity_island_activation_mean", 0.0) or 0.0),
+        "activity_island_pressure_mean": float(state.get("activity_island_pressure_mean", 0.0) or 0.0),
+        "activity_island_coherence_mean": float(state.get("activity_island_coherence_mean", 0.0) or 0.0),
+        "activity_island_context_reactivation_mean": float(state.get("activity_island_context_reactivation_mean", 0.0) or 0.0),
+        "activity_island_spread": float(state.get("activity_island_spread", 0.0) or 0.0),
+        "field_perception_focus": float(state.get("field_perception_focus", 0.0) or 0.0),
+        "field_perception_clarity": float(state.get("field_perception_clarity", state.get("activity_island_coherence_mean", 0.0)) or 0.0),
+        "field_perception_stability": float(state.get("field_perception_stability", state.get("activity_island_coherence_mean", 0.0)) or 0.0),
+        "field_perception_fragmentation": float(state.get("field_perception_fragmentation", 0.0) or 0.0),
+        "field_perception_strain": float(state.get("field_perception_strain", state.get("activity_island_pressure_mean", 0.0)) or 0.0),
+        "dominant_activity_island_id": str(state.get("dominant_activity_island_id", "-") or "-"),
+        "field_perception_label": str(state.get("field_perception_label", "quiet_field") or "quiet_field"),
+        "activity_islands": list(islands or []),
+    }
 
 # --------------------------------------------------
 def _snapshot_cluster_centers(clusters):
@@ -3939,6 +6105,7 @@ def _snapshot_cluster_links(center_vectors, limit=12):
 # --------------------------------------------------
 def step_mcm_brain(brain, stimulus, mode="market"):
 
+    profile_total_start = _mcm_profile_start()
     field = brain["field"]
     memory = brain["memory"]
     cluster = brain["cluster"]
@@ -3949,7 +6116,13 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     replay_scale = float(getattr(Config, "MCM_REPLAY_SCALE", 0.05) or 0.05)
     internal_cycles = int(getattr(Config, "MCM_INTERNAL_CYCLES", 3) or 3)
 
+    profile_section_start = _mcm_profile_start()
     memory_replay_impulse = float(memory.replay_impulse(replay_scale=replay_scale) or 0.0)
+    _mcm_profile_debug(
+        "step_mcm_brain.memory_replay",
+        profile_section_start,
+        extra=f"agents={int(getattr(field, 'N', 0) or 0)}",
+    )
 
     mode_value = str(mode or stimulus.get("mode", "market") or "market").strip().lower()
     is_outcome_mode = bool(mode_value == "outcome")
@@ -3979,8 +6152,14 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         risk_impulse = (risk_impulse * 0.85) - (max(0.0, abs(raw_impulse) - 1.0) * 0.10)
 
     replay_cycles = max(0, internal_cycles - 1)
+    profile_section_start = _mcm_profile_start()
     for _ in range(replay_cycles):
         field.step(replay_impulse * 0.35)
+    _mcm_profile_debug(
+        "step_mcm_brain.replay_field_step",
+        profile_section_start,
+        extra=f"cycles={int(replay_cycles)}|agents={int(getattr(field, 'N', 0) or 0)}",
+    )
 
     field.energy *= 0.94
     field.velocity *= 0.88
@@ -3994,16 +6173,29 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         field.energy[:, 2] += risk_impulse - (opportunity_bias * 0.08)
 
     field.energy = np.clip(field.energy, -2.2, 2.2)
+
+    profile_section_start = _mcm_profile_start()
     field.step(
         total_energy_impulse * 0.55,
         context_trace=active_context_trace,
+        return_snapshot=False,
     )
-    field.energy = np.clip(field.energy, -2.2, 2.2)
+    _mcm_profile_debug(
+        "step_mcm_brain.primary_field_step",
+        profile_section_start,
+        extra=f"agents={int(getattr(field, 'N', 0) or 0)}|dims={int(getattr(field, 'D', 0) or 0)}",
+    )
 
+    profile_section_start = _mcm_profile_start()
     clusters = cluster.detect(
         field.energy,
         force=is_outcome_mode,
         mean_velocity=float(np.mean(np.linalg.norm(field.velocity, axis=1))),
+    )
+    _mcm_profile_debug(
+        "step_mcm_brain.cluster_detect_pre_memory",
+        profile_section_start,
+        extra=f"clusters={int(len(clusters or []))}|agents={int(getattr(field, 'N', 0) or 0)}",
     )
 
     memory_store_clusters = []
@@ -4014,11 +6206,22 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         if strength >= 3:
             memory_store_clusters.append(item[:12])
 
+    profile_section_start = _mcm_profile_start()
     memory.store(memory_store_clusters)
+    _mcm_profile_debug(
+        "step_mcm_brain.memory_store",
+        profile_section_start,
+        extra=f"clusters={int(len(memory_store_clusters or []))}",
+    )
 
-    # ---------------
+    profile_section_start = _mcm_profile_start()
     self_state = self_model.evaluate(field.energy)
     regulation.regulate(field)
+    _mcm_profile_debug(
+        "step_mcm_brain.self_regulation",
+        profile_section_start,
+        extra=f"self_state={self_state}|agents={int(getattr(field, 'N', 0) or 0)}",
+    )
 
     mean_energy = float(np.mean(field.energy[:, 0]))
     mean_motivation = float(np.mean(field.energy[:, 1]))
@@ -4040,10 +6243,16 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     mean_risk = float(np.mean(field.energy[:, 2]))
     mean_velocity = float(np.mean(np.linalg.norm(field.velocity, axis=1)))
 
+    profile_section_start = _mcm_profile_start()
     clusters = cluster.detect(
         field.energy,
         force=is_outcome_mode,
         mean_velocity=mean_velocity,
+    )
+    _mcm_profile_debug(
+        "step_mcm_brain.cluster_detect_snapshot",
+        profile_section_start,
+        extra=f"clusters={int(len(clusters or []))}|agents={int(getattr(field, 'N', 0) or 0)}",
     )
 
     cluster_sizes = [int(len(cluster)) for cluster in list(clusters or []) if len(cluster) > 0]
@@ -4105,9 +6314,16 @@ def step_mcm_brain(brain, stimulus, mode="market"):
             "max": float(round(float(np.max(field_energy[:, 2])) if len(field_energy) > 2 else 0.0, 4)),
         },
     }
-    field_agent_points = _snapshot_agent_field_points(field)
-    neuron_population_summary, neuron_population = _snapshot_neuron_population(field)
-    areal_population_summary, areal_population, areal_links = _snapshot_areal_population(field)
+    profile_section_start = _mcm_profile_start()
+    try:
+        field_snapshot = dict(field.read_snapshot() or {}) if hasattr(field, "read_snapshot") else {}
+    except Exception:
+        field_snapshot = {}
+    field_topology_layout_state = _snapshot_field_topology_layout(field, field_snapshot=field_snapshot)
+    field_agent_points = _snapshot_agent_field_points(field, field_snapshot=field_snapshot)
+    neuron_population_summary, neuron_population = _snapshot_neuron_population(field, field_snapshot=field_snapshot)
+    areal_population_summary, areal_population, areal_links = _snapshot_areal_population(field, field_snapshot=field_snapshot)
+    field_perception_state = _snapshot_field_perception_state(field, field_snapshot=field_snapshot)
     field_topology_state = _build_field_topology_state({
         "cluster_count": int(len(clusters)),
         "field_cluster_links": list(cluster_links or []),
@@ -4117,6 +6333,11 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "field_areal_coherence_mean": float(areal_population_summary.get("areal_coherence_mean", 0.0) or 0.0),
         "field_areal_conflict_mean": float(areal_population_summary.get("areal_conflict_mean", 0.0) or 0.0),
     })
+    _mcm_profile_debug(
+        "step_mcm_brain.snapshot_field_read",
+        profile_section_start,
+        extra=f"neurons={int(neuron_population_summary.get('neuron_count', 0) or 0)}|areals={int(areal_population_summary.get('areal_count', 0) or 0)}",
+    )
 
     cluster_topology = dict(getattr(cluster, "last_topology", {}) or {})
     cluster_center_drift = float(cluster_topology.get("cluster_center_drift", 0.0) or 0.0)
@@ -4154,6 +6375,15 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "field_cluster_links": list(cluster_links or []),
         "field_projection_axes": ["energy", "motivation", "risk"],
         "field_projection_bounds": dict(field_bounds or {}),
+        "field_topology_layout_state": dict(field_topology_layout_state or {}),
+        "field_topology_rows": int(field_topology_layout_state.get("topology_rows", 0) or 0),
+        "field_topology_cols": int(field_topology_layout_state.get("topology_cols", 0) or 0),
+        "field_topology_position_count": int(field_topology_layout_state.get("topology_position_count", 0) or 0),
+        "field_topology_neighbor_link_count": int(field_topology_layout_state.get("topology_neighbor_link_count", 0) or 0),
+        "field_topology_neighbor_count_mean": float(field_topology_layout_state.get("topology_neighbor_count_mean", 0.0) or 0.0),
+        "field_topology_neighbor_count_max": int(field_topology_layout_state.get("topology_neighbor_count_max", 0) or 0),
+        "field_topology_positions": list(field_topology_layout_state.get("topology_positions", []) or []),
+        "field_topology_links": list(field_topology_layout_state.get("topology_links", []) or []),
         "field_neuron_count": int(neuron_population_summary.get("neuron_count", 0) or 0),
         "field_neuron_activation_mean": float(neuron_population_summary.get("neuron_activation_mean", 0.0) or 0.0),
         "field_neuron_activation_max": float(neuron_population_summary.get("neuron_activation_max", 0.0) or 0.0),
@@ -4164,6 +6394,12 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "field_neuron_regulation_force_norm_mean": float(neuron_population_summary.get("neuron_regulation_force_norm_mean", 0.0) or 0.0),
         "field_neuron_external_impulse_norm_mean": float(neuron_population_summary.get("neuron_external_impulse_norm_mean", 0.0) or 0.0),
         "field_neuron_context_memory_impulse_norm_mean": float(neuron_population_summary.get("neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
+        "field_neuron_overload_mean": float(neuron_population_summary.get("neuron_overload_mean", 0.0) or 0.0),
+        "field_neuron_recovery_tendency_mean": float(neuron_population_summary.get("neuron_recovery_tendency_mean", 0.0) or 0.0),
+        "field_neuron_memory_resonance_mean": float(neuron_population_summary.get("neuron_memory_resonance_mean", 0.0) or 0.0),
+        "field_neuron_context_reactivation_mean": float(neuron_population_summary.get("neuron_context_reactivation_mean", 0.0) or 0.0),
+        "field_neuron_coupling_resonance_mean": float(neuron_population_summary.get("neuron_coupling_resonance_mean", 0.0) or 0.0),
+        "field_neuron_receptivity_mean": float(neuron_population_summary.get("neuron_receptivity_mean", 0.0) or 0.0),
         "field_neuron_population": list(neuron_population or []),
         "field_areal_count": int(areal_population_summary.get("areal_count", 0) or 0),
         "field_areal_activation_mean": float(areal_population_summary.get("areal_activation_mean", 0.0) or 0.0),
@@ -4174,8 +6410,28 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         "field_areal_fragmentation": float(areal_population_summary.get("areal_fragmentation", 0.0) or 0.0),
         "field_areal_coherence_mean": float(areal_population_summary.get("areal_coherence_mean", 0.0) or 0.0),
         "field_areal_conflict_mean": float(areal_population_summary.get("areal_conflict_mean", 0.0) or 0.0),
+        "field_areal_topology_density_mean": float(areal_population_summary.get("areal_topology_density_mean", 0.0) or 0.0),
+        "field_areal_topology_span_mean": float(areal_population_summary.get("areal_topology_span_mean", 0.0) or 0.0),
+        "field_areal_topology_boundary_mean": float(areal_population_summary.get("areal_topology_boundary_mean", 0.0) or 0.0),
         "field_areal_states": list(areal_population or []),
         "field_areal_links": list(areal_links or []),
+        "field_perception_state": dict(field_perception_state or {}),
+        "field_activity_island_count": int(field_perception_state.get("activity_island_count", 0) or 0),
+        "field_activity_island_mass_mean": float(field_perception_state.get("activity_island_mass_mean", 0.0) or 0.0),
+        "field_activity_island_mass_max": float(field_perception_state.get("activity_island_mass_max", 0.0) or 0.0),
+        "field_activity_island_activation_mean": float(field_perception_state.get("activity_island_activation_mean", 0.0) or 0.0),
+        "field_activity_island_pressure_mean": float(field_perception_state.get("activity_island_pressure_mean", 0.0) or 0.0),
+        "field_activity_island_coherence_mean": float(field_perception_state.get("activity_island_coherence_mean", 0.0) or 0.0),
+        "field_activity_island_context_reactivation_mean": float(field_perception_state.get("activity_island_context_reactivation_mean", 0.0) or 0.0),
+        "field_activity_island_spread": float(field_perception_state.get("activity_island_spread", 0.0) or 0.0),
+        "field_perception_focus": float(field_perception_state.get("field_perception_focus", 0.0) or 0.0),
+        "field_perception_clarity": float(field_perception_state.get("field_perception_clarity", 0.0) or 0.0),
+        "field_perception_stability": float(field_perception_state.get("field_perception_stability", 0.0) or 0.0),
+        "field_perception_fragmentation": float(field_perception_state.get("field_perception_fragmentation", 0.0) or 0.0),
+        "field_perception_strain": float(field_perception_state.get("field_perception_strain", 0.0) or 0.0),
+        "dominant_activity_island_id": str(field_perception_state.get("dominant_activity_island_id", "-") or "-"),
+        "field_perception_label": str(field_perception_state.get("field_perception_label", "quiet_field") or "quiet_field"),
+        "field_activity_islands": list(field_perception_state.get("activity_islands", []) or []),
         "field_topology_state": dict(field_topology_state or {}),
     }
 
@@ -4195,6 +6451,12 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         f"clusters={len(clusters)} "
         f"memory_center={float(strongest_memory.get('center', 0.0)) if strongest_memory else 0.0:.4f} "
         f"memory_strength={int(strongest_memory.get('strength', 0)) if strongest_memory else 0}"
+    )
+
+    _mcm_profile_debug(
+        "step_mcm_brain.total",
+        profile_total_start,
+        extra=f"mode={mode_value}|clusters={int(len(clusters or []))}|agents={int(getattr(field, 'N', 0) or 0)}",
     )
 
     return snapshot
@@ -4382,7 +6644,7 @@ def build_inner_field_perception_state(snapshot, bot=None):
     snap = dict(snapshot or {})
     prior_regulation = float(getattr(bot, "experience_regulation", 0.0) or 0.0) if bot is not None else 0.0
     field_topology_state = _build_field_topology_state(snap)
-    return {
+    inner_field_state = {
         "field_mean_energy": float(snap.get("mean_energy", 0.0) or 0.0),
         "field_mean_motivation": float(snap.get("mean_motivation", 0.0) or 0.0),
         "field_mean_risk": float(snap.get("mean_risk", 0.0) or 0.0),
@@ -4403,6 +6665,15 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "field_cluster_links": [dict(item or {}) for item in list(snap.get("field_cluster_links", []) or []) if isinstance(item, dict)],
         "field_projection_axes": list(snap.get("field_projection_axes", []) or []),
         "field_projection_bounds": dict(snap.get("field_projection_bounds", {}) or {}),
+        "field_topology_layout_state": dict(snap.get("field_topology_layout_state", {}) or {}),
+        "field_topology_rows": int(snap.get("field_topology_rows", 0) or 0),
+        "field_topology_cols": int(snap.get("field_topology_cols", 0) or 0),
+        "field_topology_position_count": int(snap.get("field_topology_position_count", 0) or 0),
+        "field_topology_neighbor_link_count": int(snap.get("field_topology_neighbor_link_count", 0) or 0),
+        "field_topology_neighbor_count_mean": float(snap.get("field_topology_neighbor_count_mean", 0.0) or 0.0),
+        "field_topology_neighbor_count_max": int(snap.get("field_topology_neighbor_count_max", 0) or 0),
+        "field_topology_positions": [dict(item or {}) for item in list(snap.get("field_topology_positions", []) or []) if isinstance(item, dict)],
+        "field_topology_links": [dict(item or {}) for item in list(snap.get("field_topology_links", []) or []) if isinstance(item, dict)],
         "field_neuron_count": int(snap.get("field_neuron_count", 0) or 0),
         "field_neuron_activation_mean": float(snap.get("field_neuron_activation_mean", 0.0) or 0.0),
         "field_neuron_activation_max": float(snap.get("field_neuron_activation_max", 0.0) or 0.0),
@@ -4413,6 +6684,12 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "field_neuron_regulation_force_norm_mean": float(snap.get("field_neuron_regulation_force_norm_mean", 0.0) or 0.0),
         "field_neuron_external_impulse_norm_mean": float(snap.get("field_neuron_external_impulse_norm_mean", 0.0) or 0.0),
         "field_neuron_context_memory_impulse_norm_mean": float(snap.get("field_neuron_context_memory_impulse_norm_mean", 0.0) or 0.0),
+        "field_neuron_overload_mean": float(snap.get("field_neuron_overload_mean", 0.0) or 0.0),
+        "field_neuron_recovery_tendency_mean": float(snap.get("field_neuron_recovery_tendency_mean", 0.0) or 0.0),
+        "field_neuron_memory_resonance_mean": float(snap.get("field_neuron_memory_resonance_mean", 0.0) or 0.0),
+        "field_neuron_context_reactivation_mean": float(snap.get("field_neuron_context_reactivation_mean", 0.0) or 0.0),
+        "field_neuron_coupling_resonance_mean": float(snap.get("field_neuron_coupling_resonance_mean", 0.0) or 0.0),
+        "field_neuron_receptivity_mean": float(snap.get("field_neuron_receptivity_mean", 0.0) or 0.0),
         "field_neuron_population": [dict(item or {}) for item in list(snap.get("field_neuron_population", []) or []) if isinstance(item, dict)],
         "field_areal_count": int(snap.get("field_areal_count", 0) or 0),
         "field_areal_activation_mean": float(snap.get("field_areal_activation_mean", 0.0) or 0.0),
@@ -4423,8 +6700,22 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "field_areal_fragmentation": float(snap.get("field_areal_fragmentation", 0.0) or 0.0),
         "field_areal_coherence_mean": float(snap.get("field_areal_coherence_mean", 0.0) or 0.0),
         "field_areal_conflict_mean": float(snap.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "field_areal_topology_density_mean": float(snap.get("field_areal_topology_density_mean", 0.0) or 0.0),
+        "field_areal_topology_span_mean": float(snap.get("field_areal_topology_span_mean", 0.0) or 0.0),
+        "field_areal_topology_boundary_mean": float(snap.get("field_areal_topology_boundary_mean", 0.0) or 0.0),
         "field_areal_states": [dict(item or {}) for item in list(snap.get("field_areal_states", []) or []) if isinstance(item, dict)],
         "field_areal_links": [dict(item or {}) for item in list(snap.get("field_areal_links", []) or []) if isinstance(item, dict)],
+        "field_perception_state": dict(snap.get("field_perception_state", {}) or {}),
+        "field_activity_island_count": int(snap.get("field_activity_island_count", 0) or 0),
+        "field_activity_island_mass_mean": float(snap.get("field_activity_island_mass_mean", 0.0) or 0.0),
+        "field_activity_island_mass_max": float(snap.get("field_activity_island_mass_max", 0.0) or 0.0),
+        "field_activity_island_activation_mean": float(snap.get("field_activity_island_activation_mean", 0.0) or 0.0),
+        "field_activity_island_pressure_mean": float(snap.get("field_activity_island_pressure_mean", 0.0) or 0.0),
+        "field_activity_island_coherence_mean": float(snap.get("field_activity_island_coherence_mean", 0.0) or 0.0),
+        "field_activity_island_context_reactivation_mean": float(snap.get("field_activity_island_context_reactivation_mean", 0.0) or 0.0),
+        "field_activity_island_spread": float(snap.get("field_activity_island_spread", 0.0) or 0.0),
+        "field_perception_label": str(snap.get("field_perception_label", "quiet_field") or "quiet_field"),
+        "field_activity_islands": [dict(item or {}) for item in list(snap.get("field_activity_islands", []) or []) if isinstance(item, dict)],
         "field_topology_state": dict(field_topology_state or {}),
         "field_topology_cluster_link_count": int(field_topology_state.get("cluster_link_count", 0) or 0),
         "field_topology_areal_link_count": int(field_topology_state.get("areal_link_count", 0) or 0),
@@ -4437,6 +6728,28 @@ def build_inner_field_perception_state(snapshot, bot=None):
         "attractor": str(snap.get("attractor", "neutral") or "neutral"),
         "prior_experience_regulation": float(prior_regulation),
     }
+
+    neural_felt_state = _build_neural_felt_state(inner_field_state)
+    inner_field_state["neural_felt_state"] = dict(neural_felt_state or {})
+    inner_field_state["neural_felt_bearing"] = float(neural_felt_state.get("neural_felt_bearing", 0.0) or 0.0)
+    inner_field_state["neural_felt_pressure"] = float(neural_felt_state.get("neural_felt_pressure", 0.0) or 0.0)
+    inner_field_state["neural_felt_memory_resonance"] = float(neural_felt_state.get("neural_felt_memory_resonance", 0.0) or 0.0)
+    inner_field_state["neural_felt_context_reactivation"] = float(neural_felt_state.get("neural_felt_context_reactivation", 0.0) or 0.0)
+    inner_field_state["neural_felt_overload"] = float(neural_felt_state.get("neural_felt_overload", 0.0) or 0.0)
+    inner_field_state["neural_felt_recovery_tendency"] = float(neural_felt_state.get("neural_felt_recovery_tendency", 0.0) or 0.0)
+    inner_field_state["neural_felt_coupling_resonance"] = float(neural_felt_state.get("neural_felt_coupling_resonance", 0.0) or 0.0)
+    inner_field_state["neural_felt_receptivity"] = float(neural_felt_state.get("neural_felt_receptivity", 0.0) or 0.0)
+    inner_field_state["neural_felt_label"] = str(neural_felt_state.get("neural_felt_label", "quiet_neural_felt") or "quiet_neural_felt")
+
+    inner_field_history_state = _update_inner_field_history(inner_field_state, bot=bot)
+    inner_field_state["inner_field_history_state"] = dict(inner_field_history_state or {})
+    inner_field_state["inner_field_history_length"] = int(inner_field_history_state.get("inner_field_history_length", 0) or 0)
+    inner_field_state["inner_field_pressure_trend"] = float(inner_field_history_state.get("inner_field_pressure_trend", 0.0) or 0.0)
+    inner_field_state["inner_field_bearing_trend"] = float(inner_field_history_state.get("inner_field_bearing_trend", 0.0) or 0.0)
+    inner_field_state["inner_field_topology_tension_trend"] = float(inner_field_history_state.get("inner_field_topology_tension_trend", 0.0) or 0.0)
+    inner_field_state["inner_field_memory_resonance_trend"] = float(inner_field_history_state.get("inner_field_memory_resonance_trend", 0.0) or 0.0)
+    inner_field_state["inner_field_history_label"] = str(inner_field_history_state.get("inner_field_history_label", "stable_field_trace") or "stable_field_trace")
+    return dict(inner_field_state or {})
 
 def build_processing_state(outer_visual_perception_state, inner_field_perception_state, perception_state):
     outer = dict(outer_visual_perception_state or {})
@@ -4461,6 +6774,21 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
     field_areal_fragmentation = float(inner.get("field_areal_fragmentation", 0.0) or 0.0)
     field_areal_coherence_mean = float(inner.get("field_areal_coherence_mean", 0.0) or 0.0)
     field_areal_conflict_mean = float(inner.get("field_areal_conflict_mean", 0.0) or 0.0)
+    field_activity_island_count = int(inner.get("field_activity_island_count", 0) or 0)
+    field_activity_island_mass_mean = float(inner.get("field_activity_island_mass_mean", 0.0) or 0.0)
+    field_activity_island_mass_max = float(inner.get("field_activity_island_mass_max", 0.0) or 0.0)
+    field_activity_island_activation_mean = float(inner.get("field_activity_island_activation_mean", 0.0) or 0.0)
+    field_activity_island_pressure_mean = float(inner.get("field_activity_island_pressure_mean", 0.0) or 0.0)
+    field_activity_island_coherence_mean = float(inner.get("field_activity_island_coherence_mean", 0.0) or 0.0)
+    field_activity_island_context_reactivation_mean = float(inner.get("field_activity_island_context_reactivation_mean", 0.0) or 0.0)
+    field_activity_island_spread = float(inner.get("field_activity_island_spread", 0.0) or 0.0)
+    raw_field_perception_focus = float(inner.get("field_perception_focus", 0.0) or 0.0)
+    raw_field_perception_clarity = float(inner.get("field_perception_clarity", 0.0) or 0.0)
+    raw_field_perception_stability = float(inner.get("field_perception_stability", 0.0) or 0.0)
+    raw_field_perception_fragmentation = float(inner.get("field_perception_fragmentation", 0.0) or 0.0)
+    raw_field_perception_strain = float(inner.get("field_perception_strain", 0.0) or 0.0)
+    dominant_activity_island_id = str(inner.get("dominant_activity_island_id", "-") or "-")
+    field_perception_label = str(inner.get("field_perception_label", "quiet_field") or "quiet_field").strip().lower()
     uncertainty = float(perception.get("uncertainty_score", 0.0) or 0.0)
     novelty = float(perception.get("novelty_score", 0.0) or 0.0)
     structure_quality = float(perception.get("structure_quality", 0.0) or 0.0)
@@ -4468,6 +6796,62 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
 
     visual_alignment = max(0.0, min(1.0, 1.0 - abs(spatial_bias - directional_bias)))
     areal_presence = max(0.0, min(1.0, float(field_areal_count) / 4.0))
+    activity_island_presence = max(0.0, min(1.0, float(field_activity_island_count) / 4.0))
+    coherent_field_bonus = 0.10 if field_perception_label == "coherent_perception_field" else 0.0
+    active_field_bonus = 0.06 if field_perception_label == "active_perception_field" else 0.0
+    memory_field_bonus = 0.05 if field_perception_label == "memory_reactivated_field" else 0.0
+    strained_field_bonus = 0.10 if field_perception_label == "strained_field" else 0.0
+    fragmented_field_bonus = 0.14 if field_perception_label == "fragmented_perception_field" else 0.0
+
+    field_perception_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (field_activity_island_pressure_mean * 0.24)
+            + (raw_field_perception_strain * 0.22)
+            + (raw_field_perception_fragmentation * 0.14)
+            + (field_activity_island_activation_mean * 0.12)
+            + (field_activity_island_spread * 0.08)
+            + (activity_island_presence * 0.08)
+            + (field_activity_island_context_reactivation_mean * 0.08)
+            + strained_field_bonus
+            + fragmented_field_bonus
+            - (field_activity_island_coherence_mean * 0.08)
+            - (raw_field_perception_clarity * 0.08),
+        ),
+    )
+
+    field_perception_support = max(
+        0.0,
+        min(
+            1.0,
+            (field_activity_island_coherence_mean * 0.22)
+            + (raw_field_perception_stability * 0.22)
+            + (raw_field_perception_focus * 0.14)
+            + (field_activity_island_mass_max * 0.10)
+            + (field_activity_island_mass_mean * 0.08)
+            + (field_activity_island_activation_mean * 0.10)
+            + (field_activity_island_context_reactivation_mean * 0.08)
+            + coherent_field_bonus
+            + active_field_bonus
+            + memory_field_bonus
+            - (field_activity_island_pressure_mean * 0.12)
+            - (raw_field_perception_fragmentation * 0.12)
+            - (fragmented_field_bonus * 0.70),
+        ),
+    )
+
+    field_perception_clarity = max(
+        0.0,
+        min(
+            1.0,
+            (field_perception_support * 0.38)
+            + (raw_field_perception_clarity * 0.26)
+            + (raw_field_perception_focus * 0.14)
+            + (field_activity_island_coherence_mean * 0.12)
+            + (max(0.0, 1.0 - field_perception_pressure) * 0.10),
+        ),
+    )
 
     processing_areal_tension = max(
         0.0,
@@ -4476,6 +6860,7 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
             (field_areal_pressure_mean * 0.26)
             + (field_areal_conflict_mean * 0.24)
             + (field_areal_fragmentation * 0.22)
+            + (field_perception_pressure * 0.10)
             + (min(1.0, field_areal_drift) * 0.12)
             + (areal_presence * 0.08)
             - (field_areal_coherence_mean * 0.10)
@@ -4489,6 +6874,7 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
             1.0,
             (field_areal_stability_mean * 0.28)
             + (field_areal_coherence_mean * 0.24)
+            + (field_perception_support * 0.12)
             + (field_areal_dominance * 0.12)
             + (max(0.0, 1.0 - field_areal_fragmentation) * 0.16)
             + (max(0.0, 1.0 - min(1.0, field_areal_drift)) * 0.10)
@@ -4505,6 +6891,7 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
             + (uncertainty * 0.14)
             + (field_pressure * 0.12)
             + (processing_areal_tension * 0.14)
+            + (field_perception_pressure * 0.08)
             + (max(0.0, abs(spatial_bias) - market_balance) * 0.08)
             - (visual_coherence * 0.08)
             - (processing_areal_support * 0.06),
@@ -4522,6 +6909,7 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
             + (visual_contrast * 0.06)
             + (breakout_tension * 0.12)
             + (processing_areal_tension * 0.16)
+            + (field_perception_pressure * 0.10)
             + (max(0.0, 1.0 - visual_alignment) * 0.06)
             - (structure_stability * 0.04)
             - (market_balance * 0.06)
@@ -4541,6 +6929,7 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
             + (zone_proximity * 0.06)
             + (structure_quality * 0.08)
             + (processing_areal_support * 0.14)
+            + (field_perception_clarity * 0.08)
             - (processing_areal_tension * 0.10),
         ),
     )
@@ -4558,6 +6947,7 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
             + (visual_coherence * 0.10)
             + (processing_alignment * 0.10)
             + (processing_areal_support * 0.16)
+            + (field_perception_clarity * 0.08)
             - (processing_tension * 0.10)
             - (processing_areal_tension * 0.10),
         ),
@@ -4570,7 +6960,9 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
             (processing_stability * 0.44)
             + (max(0.0, 1.0 - processing_load) * 0.24)
             + (processing_alignment * 0.16)
-            + (processing_areal_support * 0.16),
+            + (processing_areal_support * 0.16)
+            + (field_perception_clarity * 0.08)
+            - (field_perception_pressure * 0.06),
         ),
     )
 
@@ -4582,6 +6974,23 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
         "processing_tension": float(processing_tension),
         "processing_areal_tension": float(processing_areal_tension),
         "processing_areal_support": float(processing_areal_support),
+        "field_perception_pressure": float(field_perception_pressure),
+        "field_perception_support": float(field_perception_support),
+        "field_perception_clarity": float(field_perception_clarity),
+        "field_perception_focus": float(raw_field_perception_focus),
+        "field_perception_stability": float(raw_field_perception_stability),
+        "field_perception_fragmentation": float(raw_field_perception_fragmentation),
+        "field_perception_strain": float(raw_field_perception_strain),
+        "dominant_activity_island_id": str(dominant_activity_island_id),
+        "field_perception_label": str(field_perception_label),
+        "field_activity_island_count": int(field_activity_island_count),
+        "field_activity_island_mass_mean": float(field_activity_island_mass_mean),
+        "field_activity_island_mass_max": float(field_activity_island_mass_max),
+        "field_activity_island_activation_mean": float(field_activity_island_activation_mean),
+        "field_activity_island_pressure_mean": float(field_activity_island_pressure_mean),
+        "field_activity_island_coherence_mean": float(field_activity_island_coherence_mean),
+        "field_activity_island_context_reactivation_mean": float(field_activity_island_context_reactivation_mean),
+        "field_activity_island_spread": float(field_activity_island_spread),
         "field_areal_count": int(field_areal_count),
         "field_areal_stability_mean": float(field_areal_stability_mean),
         "field_areal_pressure_mean": float(field_areal_pressure_mean),
@@ -6258,6 +8667,113 @@ def lookup_context_cluster(bot, state_signature):
     }
 
 # --------------------------------------------------
+# Update Inner Field History
+# --------------------------------------------------
+def _update_inner_field_history(inner_field_state, bot=None):
+
+    field_state = dict(inner_field_state or {})
+
+    if not field_state:
+        return {
+            "inner_field_history": [],
+            "inner_field_history_length": 0,
+            "inner_field_pressure_trend": 0.0,
+            "inner_field_bearing_trend": 0.0,
+            "inner_field_topology_tension_trend": 0.0,
+            "inner_field_memory_resonance_trend": 0.0,
+            "inner_field_history_label": "empty_field_history",
+        }
+
+    if bot is not None:
+        prior_history = [
+            dict(item or {})
+            for item in list(getattr(bot, "inner_field_history", []) or [])
+            if isinstance(item, dict)
+        ]
+    else:
+        prior_history = [
+            dict(item or {})
+            for item in list(field_state.get("inner_field_history", []) or [])
+            if isinstance(item, dict)
+        ]
+
+    limit = max(
+        4,
+        min(
+            256,
+            int(getattr(Config, "MCM_INNER_FIELD_HISTORY_LIMIT", 48) or 48),
+        ),
+    )
+    runtime_snapshot = dict(getattr(bot, "mcm_runtime_snapshot", {}) or {}) if bot is not None else {}
+    neural_felt_state = dict(field_state.get("neural_felt_state", {}) or {})
+
+    entry = {
+        "timestamp": field_state.get("timestamp", runtime_snapshot.get("timestamp", getattr(bot, "current_timestamp", None) if bot is not None else None)),
+        "runtime_tick_seq": int(runtime_snapshot.get("runtime_tick_seq", getattr(bot, "mcm_runtime_market_ticks", 0) if bot is not None else 0) or 0),
+        "field_mean_energy": float(field_state.get("field_mean_energy", 0.0) or 0.0),
+        "field_mean_velocity": float(field_state.get("field_mean_velocity", 0.0) or 0.0),
+        "field_pressure": float(field_state.get("field_regulation_pressure", 0.0) or 0.0),
+        "field_cluster_count": int(field_state.get("field_cluster_count", 0) or 0),
+        "field_areal_count": int(field_state.get("field_areal_count", 0) or 0),
+        "field_areal_pressure_mean": float(field_state.get("field_areal_pressure_mean", 0.0) or 0.0),
+        "field_areal_coherence_mean": float(field_state.get("field_areal_coherence_mean", 0.0) or 0.0),
+        "field_areal_conflict_mean": float(field_state.get("field_areal_conflict_mean", 0.0) or 0.0),
+        "field_topology_coherence": float(field_state.get("field_topology_coherence", 0.0) or 0.0),
+        "field_topology_tension": float(field_state.get("field_topology_tension", 0.0) or 0.0),
+        "neural_felt_bearing": float(field_state.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", 0.0)) or 0.0),
+        "neural_felt_pressure": float(field_state.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", 0.0)) or 0.0),
+        "neural_felt_memory_resonance": float(neural_felt_state.get("neural_felt_memory_resonance", 0.0) or 0.0),
+        "neural_felt_context_reactivation": float(neural_felt_state.get("neural_felt_context_reactivation", 0.0) or 0.0),
+        "neural_felt_label": str(field_state.get("neural_felt_label", neural_felt_state.get("neural_felt_label", "quiet_neural_felt")) or "quiet_neural_felt"),
+    }
+
+    prior_entry = dict(prior_history[-1] or {}) if prior_history else {}
+    entry["delta_field_pressure"] = float(entry.get("field_pressure", 0.0) - float(prior_entry.get("field_pressure", entry.get("field_pressure", 0.0)) or 0.0))
+    entry["delta_neural_felt_bearing"] = float(entry.get("neural_felt_bearing", 0.0) - float(prior_entry.get("neural_felt_bearing", entry.get("neural_felt_bearing", 0.0)) or 0.0))
+    entry["delta_topology_tension"] = float(entry.get("field_topology_tension", 0.0) - float(prior_entry.get("field_topology_tension", entry.get("field_topology_tension", 0.0)) or 0.0))
+    entry["delta_memory_resonance"] = float(entry.get("neural_felt_memory_resonance", 0.0) - float(prior_entry.get("neural_felt_memory_resonance", entry.get("neural_felt_memory_resonance", 0.0)) or 0.0))
+
+    history = list((prior_history + [dict(entry or {})])[-limit:])
+
+    def _history_trend(key):
+        if len(history) < 2:
+            return 0.0
+
+        start_value = float((history[0] or {}).get(key, 0.0) or 0.0)
+        end_value = float((history[-1] or {}).get(key, 0.0) or 0.0)
+        return float(max(-1.0, min(1.0, end_value - start_value)))
+
+    pressure_trend = _history_trend("field_pressure")
+    bearing_trend = _history_trend("neural_felt_bearing")
+    topology_tension_trend = _history_trend("field_topology_tension")
+    memory_resonance_trend = _history_trend("neural_felt_memory_resonance")
+
+    if pressure_trend >= 0.08 and topology_tension_trend >= 0.05:
+        history_label = "rising_field_tension"
+    elif bearing_trend >= 0.08 and pressure_trend <= 0.04:
+        history_label = "recovering_field_bearing"
+    elif abs(pressure_trend) <= 0.03 and abs(bearing_trend) <= 0.03 and abs(topology_tension_trend) <= 0.03:
+        history_label = "stable_field_trace"
+    else:
+        history_label = "moving_field_trace"
+
+    history_state = {
+        "inner_field_history": [dict(item or {}) for item in list(history or []) if isinstance(item, dict)],
+        "inner_field_history_length": int(len(history)),
+        "inner_field_pressure_trend": float(pressure_trend),
+        "inner_field_bearing_trend": float(bearing_trend),
+        "inner_field_topology_tension_trend": float(topology_tension_trend),
+        "inner_field_memory_resonance_trend": float(memory_resonance_trend),
+        "inner_field_history_label": str(history_label),
+    }
+
+    if bot is not None:
+        bot.inner_field_history = list(history_state.get("inner_field_history", []) or [])
+        bot.inner_field_history_state = dict(history_state or {})
+
+    return dict(history_state or {})
+
+# --------------------------------------------------
 # update signature memory
 # --------------------------------------------------
 def update_signature_memory(bot, state_signature, outcome=None):
@@ -6587,7 +9103,7 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
 # --------------------------------------------------
 # felt_state
 # --------------------------------------------------
-def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, decision="WAIT", processing_state=None, expectation_state=None):
+def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, decision="WAIT", processing_state=None, expectation_state=None, inner_field_perception_state=None):
 
     if expectation_state is None:
         expectation_state = update_expectation_pressure_state(
@@ -6602,6 +9118,15 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
     perception = dict(perception_state or {})
     processing = dict(processing_state or {})
     snap = dict(snapshot or {})
+    inner_field_state = dict(inner_field_perception_state or (getattr(bot, "inner_field_perception_state", {}) if bot is not None else {}) or {})
+    neural_felt_state = dict(inner_field_state.get("neural_felt_state", {}) or {})
+    if not neural_felt_state and inner_field_state:
+        neural_felt_state = _build_neural_felt_state(inner_field_state)
+    neural_felt_bearing = float(neural_felt_state.get("neural_felt_bearing", inner_field_state.get("neural_felt_bearing", 0.0)) or 0.0)
+    neural_felt_pressure = float(neural_felt_state.get("neural_felt_pressure", inner_field_state.get("neural_felt_pressure", 0.0)) or 0.0)
+    neural_felt_memory_resonance = float(neural_felt_state.get("neural_felt_memory_resonance", 0.0) or 0.0)
+    neural_felt_context_reactivation = float(neural_felt_state.get("neural_felt_context_reactivation", 0.0) or 0.0)
+    neural_felt_label = str(neural_felt_state.get("neural_felt_label", inner_field_state.get("neural_felt_label", "quiet_neural_felt")) or "quiet_neural_felt")
     competition_abs = abs(float(getattr(bot, "competition_bias", 0.0) or 0.0)) if bot is not None else 0.0
     habituation_level = float(getattr(bot, "habituation_level", 0.0) or 0.0) if bot is not None else 0.0
 
@@ -6621,6 +9146,15 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
     processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
     processing_areal_tension = float(processing.get("processing_areal_tension", 0.0) or 0.0)
     processing_areal_support = float(processing.get("processing_areal_support", 0.0) or 0.0)
+    field_perception_pressure = float(processing.get("field_perception_pressure", 0.0) or 0.0)
+    field_perception_support = float(processing.get("field_perception_support", 0.0) or 0.0)
+    field_perception_clarity = float(processing.get("field_perception_clarity", 0.0) or 0.0)
+    field_perception_focus = float(processing.get("field_perception_focus", snap.get("field_perception_focus", 0.0)) or 0.0)
+    field_perception_stability = float(processing.get("field_perception_stability", snap.get("field_perception_stability", 0.0)) or 0.0)
+    field_perception_fragmentation = float(processing.get("field_perception_fragmentation", snap.get("field_perception_fragmentation", 0.0)) or 0.0)
+    field_perception_strain = float(processing.get("field_perception_strain", snap.get("field_perception_strain", 0.0)) or 0.0)
+    dominant_activity_island_id = str(processing.get("dominant_activity_island_id", snap.get("dominant_activity_island_id", "-")) or "-")
+    field_perception_label = str(processing.get("field_perception_label", inner_field_state.get("field_perception_label", "quiet_field")) or "quiet_field").strip().lower()
     field_areal_count = int(snap.get("field_areal_count", processing.get("field_areal_count", 0)) or 0)
     field_areal_stability_mean = float(snap.get("field_areal_stability_mean", processing.get("field_areal_stability_mean", 0.0)) or 0.0)
     field_areal_pressure_mean = float(snap.get("field_areal_pressure_mean", processing.get("field_areal_pressure_mean", 0.0)) or 0.0)
@@ -6629,6 +9163,12 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
     field_areal_fragmentation = float(snap.get("field_areal_fragmentation", processing.get("field_areal_fragmentation", 0.0)) or 0.0)
     field_areal_coherence_mean = float(snap.get("field_areal_coherence_mean", processing.get("field_areal_coherence_mean", 0.0)) or 0.0)
     field_areal_conflict_mean = float(snap.get("field_areal_conflict_mean", processing.get("field_areal_conflict_mean", 0.0)) or 0.0)
+    field_activity_island_count = int(snap.get("field_activity_island_count", processing.get("field_activity_island_count", 0)) or 0)
+    field_activity_island_activation_mean = float(snap.get("field_activity_island_activation_mean", processing.get("field_activity_island_activation_mean", 0.0)) or 0.0)
+    field_activity_island_pressure_mean = float(snap.get("field_activity_island_pressure_mean", processing.get("field_activity_island_pressure_mean", 0.0)) or 0.0)
+    field_activity_island_coherence_mean = float(snap.get("field_activity_island_coherence_mean", processing.get("field_activity_island_coherence_mean", 0.0)) or 0.0)
+    field_activity_island_context_reactivation_mean = float(snap.get("field_activity_island_context_reactivation_mean", processing.get("field_activity_island_context_reactivation_mean", 0.0)) or 0.0)
+    field_activity_island_spread = float(snap.get("field_activity_island_spread", processing.get("field_activity_island_spread", 0.0)) or 0.0)
 
     entry_expectation = float((expectation_state or {}).get("entry_expectation", 0.0) or 0.0)
     target_expectation = float((expectation_state or {}).get("target_expectation", 0.0) or 0.0)
@@ -6649,8 +9189,12 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (field_areal_coherence_mean * 0.24)
             + (field_areal_dominance * 0.12)
             + (processing_areal_support * 0.18)
+            + (field_perception_support * 0.12)
+            + (field_perception_stability * 0.08)
+            + (field_perception_focus * 0.04)
             + (max(0.0, 1.0 - field_areal_fragmentation) * 0.10)
-            + (max(0.0, 1.0 - field_areal_conflict_mean) * 0.08),
+            + (max(0.0, 1.0 - field_areal_conflict_mean) * 0.08)
+            + (neural_felt_bearing * 0.08),
         ),
     )
 
@@ -6662,8 +9206,12 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (field_areal_fragmentation * 0.22)
             + (field_areal_pressure_mean * 0.18)
             + (processing_areal_tension * 0.14)
+            + (field_perception_pressure * 0.12)
+            + (field_perception_fragmentation * 0.10)
+            + (field_perception_strain * 0.08)
             + (min(1.0, field_areal_drift) * 0.08)
-            + (areal_presence * 0.06),
+            + (areal_presence * 0.06)
+            + (neural_felt_pressure * 0.08),
         ),
     )
 
@@ -6679,6 +9227,9 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (max(0.0, 1.0 - visual_coherence) * 0.06)
             + (processing_tension * 0.06)
             + (areal_conflict_pressure * 0.12)
+            + (field_perception_pressure * 0.08)
+            + (field_perception_strain * 0.06)
+            + (field_perception_fragmentation * 0.04)
             - (stress_relief_potential * 0.08)
             - (areal_support * 0.10),
         ),
@@ -6696,6 +9247,9 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (visual_coherence * 0.10)
             + (processing_alignment * 0.12)
             + (areal_support * 0.14)
+            + (field_perception_support * 0.08)
+            + (field_perception_clarity * 0.05)
+            + (field_perception_focus * 0.04)
             - (processing_tension * 0.04)
             - (areal_conflict_pressure * 0.08),
         ),
@@ -6710,7 +9264,9 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (competition_abs * 0.08)
             + (abs(spatial_bias - directional_bias) * 0.08)
             + (max(0.0, processing_tension - processing_alignment) * 0.10)
-            + (areal_conflict_pressure * 0.14),
+            + (areal_conflict_pressure * 0.14)
+            + (field_perception_pressure * 0.08)
+            + (field_perception_fragmentation * 0.06),
         ),
     )
 
@@ -6726,6 +9282,9 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (processing_load * 0.10)
             + (processing_tension * 0.08)
             + (areal_conflict_pressure * 0.12)
+            + (neural_felt_pressure * 0.06)
+            + (neural_felt_context_reactivation * 0.02)
+            + (field_perception_pressure * 0.08)
             - (stress_relief_potential * 0.06)
             - (market_balance * 0.04)
             - (areal_support * 0.06),
@@ -6747,7 +9306,10 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (market_balance * 0.10)
             + (visual_coherence * 0.10)
             + (processing_stability * 0.12)
-            + (areal_support * 0.14),
+            + (areal_support * 0.14)
+            + (field_perception_clarity * 0.08)
+            + (neural_felt_bearing * 0.06)
+            - (neural_felt_pressure * 0.04),
         ),
     )
 
@@ -6762,6 +9324,9 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (structure_quality * 0.08)
             + (max(0.0, 1.0 - felt_conflict) * 0.08)
             + (areal_support * 0.16)
+            + (field_perception_clarity * 0.08)
+            + (neural_felt_bearing * 0.05)
+            - (neural_felt_pressure * 0.03)
             - (areal_conflict_pressure * 0.10),
         ),
     )
@@ -6790,7 +9355,8 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (max(0.0, processing_tension - processing_alignment) * 0.14)
             + (max(0.0, 1.0 - felt_alignment) * 0.08)
             + (max(0.0, 1.0 - processing_stability) * 0.06)
-            + (areal_conflict_pressure * 0.12),
+            + (areal_conflict_pressure * 0.12)
+            + (field_perception_pressure * 0.08),
         ),
     )
 
@@ -6818,7 +9384,8 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (felt_pressure * 0.10)
             + (max(0.0, 1.0 - protective_width_regulation) * 0.06)
             + (max(0.0, 1.0 - load_bearing_capacity) * 0.08)
-            + (areal_conflict_pressure * 0.06),
+            + (areal_conflict_pressure * 0.06)
+            + (field_perception_pressure * 0.06),
         ),
     )
 
@@ -6832,7 +9399,8 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (max(0.0, 1.0 - context_confidence) * 0.10)
             + (max(0.0, 1.0 - signal_quality) * 0.08)
             + (max(0.0, 1.0 - visual_coherence) * 0.08)
-            + (processing_areal_tension * 0.08),
+            + (processing_areal_tension * 0.08)
+            + (field_perception_pressure * 0.08),
         ),
     )
 
@@ -6846,7 +9414,8 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
             + (max(0.0, 1.0 - load_bearing_capacity) * 0.12)
             + (felt_risk * 0.08)
             + (max(0.0, 1.0 - protective_courage) * 0.10)
-            + (max(0.0, 1.0 - areal_support) * 0.06),
+            + (max(0.0, 1.0 - areal_support) * 0.06)
+            + (max(0.0, 1.0 - field_perception_support) * 0.05),
         ),
     )
 
@@ -6858,6 +9427,7 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         "uncertainty_pressure": float(uncertainty_pressure),
         "aftereffect_pressure": float(aftereffect_pressure),
         "areal_conflict_pressure": float(areal_conflict_pressure),
+        "field_perception_pressure": float(field_perception_pressure),
     }
     dominant_tension_cause = max(tension_cause_map, key=tension_cause_map.get)
     dominant_tension_value = float(tension_cause_map.get(dominant_tension_cause, 0.0) or 0.0)
@@ -6885,6 +9455,10 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         market_feel_state = "drawn"
     elif areal_conflict_pressure >= 0.58:
         market_feel_state = "fragmented"
+    elif field_perception_label == "fragmented_perception_field" and field_perception_pressure >= 0.46:
+        market_feel_state = "field_fragmented"
+    elif field_perception_label == "coherent_perception_field" and field_perception_clarity >= 0.54:
+        market_feel_state = "field_coherent"
     elif felt_conflict >= 0.50:
         market_feel_state = "conflicted"
     elif felt_pressure >= 0.58 and breakout_tension >= 0.54:
@@ -6923,6 +9497,21 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         "field_areal_fragmentation": float(field_areal_fragmentation),
         "field_areal_coherence_mean": float(field_areal_coherence_mean),
         "field_areal_conflict_mean": float(field_areal_conflict_mean),
+        "field_perception_pressure": float(field_perception_pressure),
+        "field_perception_support": float(field_perception_support),
+        "field_perception_clarity": float(field_perception_clarity),
+        "field_perception_focus": float(field_perception_focus),
+        "field_perception_stability": float(field_perception_stability),
+        "field_perception_fragmentation": float(field_perception_fragmentation),
+        "field_perception_strain": float(field_perception_strain),
+        "dominant_activity_island_id": str(dominant_activity_island_id),
+        "field_perception_label": str(field_perception_label),
+        "field_activity_island_count": int(field_activity_island_count),
+        "field_activity_island_activation_mean": float(field_activity_island_activation_mean),
+        "field_activity_island_pressure_mean": float(field_activity_island_pressure_mean),
+        "field_activity_island_coherence_mean": float(field_activity_island_coherence_mean),
+        "field_activity_island_context_reactivation_mean": float(field_activity_island_context_reactivation_mean),
+        "field_activity_island_spread": float(field_activity_island_spread),
         "areal_support": float(areal_support),
         "areal_conflict_pressure": float(areal_conflict_pressure),
         "external_pressure": float(external_pressure),
@@ -6934,6 +9523,12 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         "dominant_tension_cause": str(dominant_tension_cause),
         "dominant_tension_value": float(dominant_tension_value),
         "pre_action_observation_need": float(pre_action_observation_need),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+        "neural_felt_label": str(neural_felt_label),
     }
 
 # --------------------------------------------------
@@ -6955,6 +9550,19 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
     processing_areal_tension = float(processing.get("processing_areal_tension", 0.0) or 0.0)
     processing_areal_support = float(processing.get("processing_areal_support", 0.0) or 0.0)
+    field_perception_pressure = float(felt.get("field_perception_pressure", thought.get("field_perception_pressure", processing.get("field_perception_pressure", 0.0))) or 0.0)
+    field_perception_support = float(felt.get("field_perception_support", thought.get("field_perception_support", processing.get("field_perception_support", 0.0))) or 0.0)
+    field_perception_clarity = float(felt.get("field_perception_clarity", thought.get("field_perception_clarity", processing.get("field_perception_clarity", 0.0))) or 0.0)
+    field_perception_focus = float(felt.get("field_perception_focus", thought.get("field_perception_focus", processing.get("field_perception_focus", 0.0))) or 0.0)
+    field_perception_stability = float(felt.get("field_perception_stability", thought.get("field_perception_stability", processing.get("field_perception_stability", 0.0))) or 0.0)
+    field_perception_fragmentation = float(felt.get("field_perception_fragmentation", thought.get("field_perception_fragmentation", processing.get("field_perception_fragmentation", 0.0))) or 0.0)
+    field_perception_strain = float(felt.get("field_perception_strain", thought.get("field_perception_strain", processing.get("field_perception_strain", 0.0))) or 0.0)
+    dominant_activity_island_id = str(felt.get("dominant_activity_island_id", thought.get("dominant_activity_island_id", processing.get("dominant_activity_island_id", "-"))) or "-")
+    field_perception_label = str(felt.get("field_perception_label", thought.get("field_perception_label", processing.get("field_perception_label", "quiet_field"))) or "quiet_field").strip().lower()
+    field_activity_island_count = int(felt.get("field_activity_island_count", thought.get("field_activity_island_count", processing.get("field_activity_island_count", 0))) or 0)
+    field_activity_island_pressure_mean = float(felt.get("field_activity_island_pressure_mean", thought.get("field_activity_island_pressure_mean", processing.get("field_activity_island_pressure_mean", 0.0))) or 0.0)
+    field_activity_island_coherence_mean = float(felt.get("field_activity_island_coherence_mean", thought.get("field_activity_island_coherence_mean", processing.get("field_activity_island_coherence_mean", 0.0))) or 0.0)
+    field_activity_island_context_reactivation_mean = float(felt.get("field_activity_island_context_reactivation_mean", thought.get("field_activity_island_context_reactivation_mean", processing.get("field_activity_island_context_reactivation_mean", 0.0))) or 0.0)
     felt_conflict = float(felt.get("felt_conflict", 0.0) or 0.0)
     felt_pressure = float(felt.get("felt_pressure", 0.0) or 0.0)
     felt_alignment = float(felt.get("felt_alignment", 0.0) or 0.0)
@@ -6994,6 +9602,75 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     readiness_min = float(getattr(Config, "MCM_META_READINESS_MIN", 0.38) or 0.38)
     signal_quality_min = float(getattr(Config, "MCM_META_SIGNAL_QUALITY_MIN", 0.24) or 0.24)
 
+    field_fragmentation_bias = 1.0 if field_perception_label == "fragmented_perception_field" else 0.0
+    field_strain_bias = 1.0 if field_perception_label == "strained_field" else 0.0
+    field_coherence_bias = 1.0 if field_perception_label == "coherent_perception_field" else 0.0
+    field_memory_bias = 1.0 if field_perception_label == "memory_reactivated_field" else 0.0
+    field_activity_presence = max(0.0, min(1.0, float(field_activity_island_count) / 4.0))
+    field_perception_instability = max(
+        0.0,
+        min(
+            1.0,
+            (field_perception_pressure * 0.42)
+            + (field_perception_strain * 0.20)
+            + (field_perception_fragmentation * 0.16)
+            + (field_activity_island_pressure_mean * 0.18)
+            + (field_activity_presence * 0.08)
+            + (field_fragmentation_bias * 0.16)
+            + (field_strain_bias * 0.12)
+            - (field_perception_clarity * 0.18)
+            - (field_perception_support * 0.10)
+            - (field_perception_stability * 0.10),
+        ),
+    )
+    field_observation_need = max(
+        0.0,
+        min(
+            1.0,
+            (field_perception_instability * 0.42)
+            + (field_perception_pressure * 0.24)
+            + (field_perception_fragmentation * 0.16)
+            + (field_perception_strain * 0.10)
+            + (max(0.0, 1.0 - field_perception_clarity) * 0.14)
+            + (field_activity_island_context_reactivation_mean * 0.08)
+            + (field_fragmentation_bias * 0.08)
+            + (field_strain_bias * 0.04)
+            - (field_perception_focus * 0.06),
+        ),
+    )
+    field_replan_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (field_perception_instability * 0.36)
+            + (field_perception_pressure * 0.22)
+            + (field_perception_fragmentation * 0.18)
+            + (field_perception_strain * 0.12)
+            + (max(0.0, 1.0 - field_perception_support) * 0.16)
+            + (field_activity_island_context_reactivation_mean * 0.08)
+            + (field_fragmentation_bias * 0.12)
+            + (field_strain_bias * 0.06)
+            - (field_perception_stability * 0.06),
+        ),
+    )
+    field_action_support = max(
+        0.0,
+        min(
+            1.0,
+            (field_perception_support * 0.34)
+            + (field_perception_clarity * 0.28)
+            + (field_perception_focus * 0.16)
+            + (field_perception_stability * 0.14)
+            + (field_activity_island_coherence_mean * 0.14)
+            + (field_coherence_bias * 0.10)
+            + (field_memory_bias * 0.04)
+            - (field_perception_pressure * 0.18)
+            - (field_perception_fragmentation * 0.14)
+            - (field_perception_strain * 0.10)
+            - (field_fragmentation_bias * 0.10),
+        ),
+    )
+
     regulated_courage = max(
         0.0,
         min(
@@ -7005,7 +9682,9 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (felt_alignment * 0.08)
             + (experience_regulation * 0.08)
             + (areal_support * 0.08)
-            + (processing_areal_support * 0.04),
+            + (processing_areal_support * 0.04)
+            + (field_action_support * 0.08)
+            - (field_perception_instability * 0.06),
         ),
     )
 
@@ -7028,6 +9707,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (aftereffect_pressure * 0.08)
             + (areal_conflict_pressure * 0.12)
             + (processing_areal_tension * 0.06)
+            + (field_observation_need * 0.10)
+            + (field_replan_pressure * 0.08)
             + (courage_gap * 0.18)
             + (max(0.0, 1.0 - protective_width_regulation) * 0.06)
             + (max(0.0, 1.0 - load_bearing_capacity) * 0.04),
@@ -7044,7 +9725,9 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (signal_quality * 0.10)
             + (processing_alignment * 0.10)
             + (areal_support * 0.10)
-            + (processing_areal_support * 0.10),
+            + (processing_areal_support * 0.10)
+            + (field_action_support * 0.10)
+            - (field_perception_instability * 0.08),
         ),
     )
 
@@ -7091,6 +9774,30 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         allow_observe = True
         rejection_reason = "areal_overload_observe"
         pre_action_phase = "observe"
+    elif field_perception_label == "fragmented_perception_field" and field_observation_need >= 0.52 and decision_strength < 1.14:
+        allow_observe = True
+        rejection_reason = "field_fragmentation_observe"
+        pre_action_phase = "observe"
+    elif field_perception_fragmentation >= 0.70 and field_perception_focus < 0.30 and decision_strength < 1.36:
+        allow_observe = True
+        rejection_reason = "field_island_fragmentation_guard"
+        pre_action_phase = "observe"
+    elif field_perception_fragmentation >= 0.64 and field_perception_focus < 0.34 and decision_strength < 1.16:
+        allow_observe = True
+        rejection_reason = "field_island_fragmentation_observe"
+        pre_action_phase = "observe"
+    elif field_perception_pressure >= 0.62 and field_perception_clarity < 0.46 and decision_strength < 1.14:
+        allow_observe = True
+        rejection_reason = "field_pressure_observe"
+        pre_action_phase = "observe"
+    elif field_perception_strain >= 0.72 and field_perception_stability < 0.36 and decision_strength < 1.36:
+        allow_ruminate = True
+        rejection_reason = "field_island_strain_guard"
+        pre_action_phase = "replan"
+    elif field_perception_strain >= 0.66 and field_perception_stability < 0.40 and decision_strength < 1.16:
+        allow_ruminate = True
+        rejection_reason = "field_island_strain_replan"
+        pre_action_phase = "replan"
     elif expectation_pressure >= 0.58 and courage_gap >= 0.12 and decision_strength < 1.16:
         allow_ruminate = True
         rejection_reason = "expectation_courage_replan"
@@ -7119,6 +9826,14 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         allow_ruminate = True
         rejection_reason = f"{dominant_tension_cause}_replan"
         pre_action_phase = "replan"
+    elif field_replan_pressure >= 0.62 and field_action_support < 0.40 and decision_strength < 1.16:
+        allow_ruminate = True
+        rejection_reason = "field_perception_replan"
+        pre_action_phase = "replan"
+    elif field_perception_clarity >= 0.58 and field_perception_stability >= 0.56 and field_action_support >= 0.48 and action_clearance >= 0.44:
+        allow_plan = True
+        rejection_reason = "field_perception_clear_act"
+        pre_action_phase = "act"
     elif areal_conflict_pressure >= 0.60 and areal_support < 0.42 and decision_strength < 1.16:
         allow_ruminate = True
         rejection_reason = "areal_conflict_replan"
@@ -7138,6 +9853,10 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     elif processing_areal_tension >= 0.72 and areal_support < 0.34 and decision_strength < 1.18:
         allow_block = True
         rejection_reason = "areal_processing_block"
+        pre_action_phase = "hold"
+    elif field_perception_instability >= 0.72 and field_action_support < 0.30 and decision_strength < 1.18:
+        allow_block = True
+        rejection_reason = "field_instability_block"
         pre_action_phase = "hold"
     elif felt_pressure > 0.94 and state_maturity < 0.50 and decision_strength < 1.18:
         allow_block = True
@@ -7175,6 +9894,20 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "processing_tension": float(processing_tension),
         "processing_areal_tension": float(processing_areal_tension),
         "processing_areal_support": float(processing_areal_support),
+        "field_perception_pressure": float(field_perception_pressure),
+        "field_perception_support": float(field_perception_support),
+        "field_perception_clarity": float(field_perception_clarity),
+        "field_perception_focus": float(field_perception_focus),
+        "field_perception_stability": float(field_perception_stability),
+        "field_perception_fragmentation": float(field_perception_fragmentation),
+        "field_perception_strain": float(field_perception_strain),
+        "dominant_activity_island_id": str(dominant_activity_island_id),
+        "field_perception_label": str(field_perception_label),
+        "field_activity_island_count": int(field_activity_island_count),
+        "field_perception_instability": float(field_perception_instability),
+        "field_observation_need": float(field_observation_need),
+        "field_replan_pressure": float(field_replan_pressure),
+        "field_action_support": float(field_action_support),
         "market_balance": float(market_balance),
         "breakout_tension": float(breakout_tension),
         "visual_coherence": float(visual_coherence),
@@ -7224,6 +9957,15 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
     processing_tension = float(processing.get("processing_tension", 0.0) or 0.0)
     processing_areal_tension = float(processing.get("processing_areal_tension", 0.0) or 0.0)
     processing_areal_support = float(processing.get("processing_areal_support", 0.0) or 0.0)
+    field_perception_pressure = float(felt.get("field_perception_pressure", processing.get("field_perception_pressure", 0.0)) or 0.0)
+    field_perception_support = float(felt.get("field_perception_support", processing.get("field_perception_support", 0.0)) or 0.0)
+    field_perception_clarity = float(felt.get("field_perception_clarity", processing.get("field_perception_clarity", 0.0)) or 0.0)
+    field_perception_focus = float(felt.get("field_perception_focus", processing.get("field_perception_focus", snap.get("field_perception_focus", 0.0))) or 0.0)
+    field_perception_stability = float(felt.get("field_perception_stability", processing.get("field_perception_stability", snap.get("field_perception_stability", 0.0))) or 0.0)
+    field_perception_fragmentation = float(felt.get("field_perception_fragmentation", processing.get("field_perception_fragmentation", snap.get("field_perception_fragmentation", 0.0))) or 0.0)
+    field_perception_strain = float(felt.get("field_perception_strain", processing.get("field_perception_strain", snap.get("field_perception_strain", 0.0))) or 0.0)
+    dominant_activity_island_id = str(felt.get("dominant_activity_island_id", processing.get("dominant_activity_island_id", snap.get("dominant_activity_island_id", "-"))) or "-")
+    field_perception_label = str(felt.get("field_perception_label", processing.get("field_perception_label", snap.get("field_perception_label", "quiet_field"))) or "quiet_field").strip().lower()
     areal_support = float(felt.get("areal_support", 0.0) or 0.0)
     areal_conflict_pressure = float(felt.get("areal_conflict_pressure", 0.0) or 0.0)
     field_areal_count = int(snap.get("field_areal_count", processing.get("field_areal_count", 0)) or 0)
@@ -7232,6 +9974,12 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
     field_areal_conflict_mean = float(snap.get("field_areal_conflict_mean", processing.get("field_areal_conflict_mean", 0.0)) or 0.0)
     field_areal_stability_mean = float(snap.get("field_areal_stability_mean", processing.get("field_areal_stability_mean", 0.0)) or 0.0)
     field_areal_coherence_mean = float(snap.get("field_areal_coherence_mean", processing.get("field_areal_coherence_mean", 0.0)) or 0.0)
+    field_activity_island_count = int(snap.get("field_activity_island_count", processing.get("field_activity_island_count", felt.get("field_activity_island_count", 0))) or 0)
+    field_activity_island_activation_mean = float(snap.get("field_activity_island_activation_mean", processing.get("field_activity_island_activation_mean", felt.get("field_activity_island_activation_mean", 0.0))) or 0.0)
+    field_activity_island_pressure_mean = float(snap.get("field_activity_island_pressure_mean", processing.get("field_activity_island_pressure_mean", felt.get("field_activity_island_pressure_mean", 0.0))) or 0.0)
+    field_activity_island_coherence_mean = float(snap.get("field_activity_island_coherence_mean", processing.get("field_activity_island_coherence_mean", felt.get("field_activity_island_coherence_mean", 0.0))) or 0.0)
+    field_activity_island_context_reactivation_mean = float(snap.get("field_activity_island_context_reactivation_mean", processing.get("field_activity_island_context_reactivation_mean", felt.get("field_activity_island_context_reactivation_mean", 0.0))) or 0.0)
+    field_activity_island_spread = float(snap.get("field_activity_island_spread", processing.get("field_activity_island_spread", felt.get("field_activity_island_spread", 0.0))) or 0.0)
     uncertainty_score = float(perception.get("uncertainty_score", 0.0) or 0.0)
 
     thought_areal_pressure = max(
@@ -7242,6 +9990,9 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (processing_areal_tension * 0.24)
             + (field_areal_conflict_mean * 0.18)
             + (field_areal_fragmentation * 0.14)
+            + (field_perception_pressure * 0.12)
+            + (field_perception_fragmentation * 0.10)
+            + (field_perception_strain * 0.08)
             + (min(1.0, float(field_areal_count) / 4.0) * 0.10),
         ),
     )
@@ -7254,6 +10005,10 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (processing_areal_support * 0.24)
             + (field_areal_stability_mean * 0.18)
             + (field_areal_coherence_mean * 0.14)
+            + (field_perception_support * 0.12)
+            + (field_perception_clarity * 0.08)
+            + (field_perception_stability * 0.08)
+            + (field_perception_focus * 0.04)
             + (field_areal_dominance * 0.10)
             - (field_areal_fragmentation * 0.12),
         ),
@@ -7269,6 +10024,8 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (processing_tension * 0.10)
             + (max(0.0, 1.0 - processing_alignment) * 0.08)
             + (thought_areal_pressure * 0.12)
+            + (field_perception_pressure * 0.06)
+            + (field_perception_fragmentation * 0.06)
             - (thought_areal_support * 0.08),
         ),
     )
@@ -7288,6 +10045,8 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (market_balance * 0.06)
             + (visual_coherence * 0.06)
             + (thought_areal_support * 0.16)
+            + (field_perception_clarity * 0.08)
+            + (field_perception_stability * 0.06)
             - (decision_conflict * 0.14)
             - (thought_areal_pressure * 0.10),
         ),
@@ -7304,6 +10063,8 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (processing_tension * 0.08)
             + (breakout_tension * 0.06)
             + (thought_areal_pressure * 0.14)
+            + (field_perception_pressure * 0.08)
+            + (field_perception_strain * 0.06)
             - (thought_areal_support * 0.08)
             + (0.10 if bool(fused_state.get("observation_mode", False)) else 0.0),
         ),
@@ -7321,6 +10082,8 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (visual_coherence * 0.08)
             + (market_balance * 0.06)
             + (thought_areal_support * 0.12)
+            + (field_perception_clarity * 0.08)
+            + (field_perception_focus * 0.05)
             - (processing_tension * 0.08)
             - (thought_areal_pressure * 0.08)
             + max(0.0, 1.0 - (abs(float((tension_state or {}).get("coherence", 0.0) or 0.0)) * 0.18)),
@@ -7336,6 +10099,8 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (processing_tension * 0.14)
             + (max(0.0, abs(long_score - short_score)) * 0.08)
             + (thought_areal_pressure * 0.16)
+            + (field_perception_pressure * 0.08)
+            + (field_perception_strain * 0.05)
             - (market_balance * 0.08)
             - (visual_coherence * 0.06)
             - (thought_areal_support * 0.08),
@@ -7353,6 +10118,8 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (processing_readiness * 0.20)
             + (felt_alignment * 0.08)
             + (thought_areal_support * 0.14)
+            + (field_perception_clarity * 0.08)
+            + (field_perception_stability * 0.06)
             - (rumination_depth * 0.08)
             - (decision_pressure * 0.06)
             - (thought_areal_pressure * 0.10),
@@ -7369,6 +10136,8 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
             + (visual_coherence * 0.10)
             + (max(0.0, 1.0 - decision_conflict) * 0.12)
             + (thought_areal_support * 0.18)
+            + (field_perception_clarity * 0.08)
+            + (field_perception_focus * 0.04)
             - (thought_areal_pressure * 0.10),
         ),
     )
@@ -7387,6 +10156,21 @@ def build_thought_state(candle_state, tension_state, fused, perception_state, fe
         "decision_pressure": float(decision_pressure),
         "thought_areal_pressure": float(thought_areal_pressure),
         "thought_areal_support": float(thought_areal_support),
+        "field_perception_pressure": float(field_perception_pressure),
+        "field_perception_support": float(field_perception_support),
+        "field_perception_clarity": float(field_perception_clarity),
+        "field_perception_focus": float(field_perception_focus),
+        "field_perception_stability": float(field_perception_stability),
+        "field_perception_fragmentation": float(field_perception_fragmentation),
+        "field_perception_strain": float(field_perception_strain),
+        "dominant_activity_island_id": str(dominant_activity_island_id),
+        "field_perception_label": str(field_perception_label),
+        "field_activity_island_count": int(field_activity_island_count),
+        "field_activity_island_activation_mean": float(field_activity_island_activation_mean),
+        "field_activity_island_pressure_mean": float(field_activity_island_pressure_mean),
+        "field_activity_island_coherence_mean": float(field_activity_island_coherence_mean),
+        "field_activity_island_context_reactivation_mean": float(field_activity_island_context_reactivation_mean),
+        "field_activity_island_spread": float(field_activity_island_spread),
         "field_areal_count": int(field_areal_count),
         "field_areal_dominance": float(field_areal_dominance),
         "field_areal_fragmentation": float(field_areal_fragmentation),
@@ -7673,6 +10457,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         decision=str(fused_preview.get("decision", "WAIT") or "WAIT"),
         processing_state=processing_state,
         expectation_state=expectation_state,
+        inner_field_perception_state=inner_field_perception_state,
     )
 
     state_signature = build_state_signature(candle_state, tension_state, snapshot, stimulus, bot=bot)
@@ -7765,7 +10550,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     survival_pressure = float(field_state.get("survival_pressure", 0.0) or 0.0)
 
     if not bool(meta_regulation_state.get("allow_plan", False)):
-        return {
+        result = {
             "decision": "WAIT",
             "energy": float(energy),
             "coherence": float(coherence),
@@ -7807,16 +10592,57 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "review_feedback_state": dict(review_feedback_state or {}),
             "rejection_reason": str(meta_regulation_state.get("rejection_reason", fused.get("reject_reason", "meta_block")) or "meta_block"),
         }
+        _record_field_decision_protocol(
+            bot,
+            result,
+            meta_regulation_state=meta_regulation_state,
+            processing_state=processing_state,
+            felt_state=felt_state,
+            thought_state=thought_state,
+        )
+        return result
 
     if decision not in ("LONG", "SHORT"):
+        _record_field_decision_protocol(
+            bot,
+            {
+                "decision": str(decision or "WAIT"),
+                "meta_regulation_state": dict(meta_regulation_state or {}),
+                "processing_state": dict(processing_state or {}),
+                "felt_state": dict(felt_state or {}),
+                "thought_state": dict(thought_state or {}),
+                "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
+                "rejection_reason": "decision_not_tradeable",
+            },
+            meta_regulation_state=meta_regulation_state,
+            processing_state=processing_state,
+            felt_state=felt_state,
+            thought_state=thought_state,
+        )
         return None
 
     prices = derive_trade_plan_from_brain(decision, candle_state, fused, stimulus, snapshot, bot=bot)
 
     if prices is None:
+        _record_field_decision_protocol(
+            bot,
+            {
+                "decision": str(decision),
+                "meta_regulation_state": dict(meta_regulation_state or {}),
+                "processing_state": dict(processing_state or {}),
+                "felt_state": dict(felt_state or {}),
+                "thought_state": dict(thought_state or {}),
+                "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
+                "rejection_reason": "trade_plan_missing",
+            },
+            meta_regulation_state=meta_regulation_state,
+            processing_state=processing_state,
+            felt_state=felt_state,
+            thought_state=thought_state,
+        )
         return None
 
-    return {
+    result = {
         "decision": decision,
         "entry_price": float(prices["entry_price"]),
         "sl_price": float(prices["sl_price"]),
@@ -7873,6 +10699,15 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         "recovery_need": float(recovery_need),
         "survival_pressure": float(survival_pressure),
     }
+    _record_field_decision_protocol(
+        bot,
+        result,
+        meta_regulation_state=meta_regulation_state,
+        processing_state=processing_state,
+        felt_state=felt_state,
+        thought_state=thought_state,
+    )
+    return result
 
 # --------------------------------------------------
 def decide_mcm_brain_entry(window, candle_state, bot=None):
@@ -8023,6 +10858,21 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
     result = dict(runtime_result or {})
     meta_regulation_state = dict(result.get("meta_regulation_state", {}) or {})
     review_feedback_state = dict(meta_regulation_state.get("review_feedback_state", result.get("review_feedback_state", {}) or {}) or {})
+    inner_field_state = dict(result.get("inner_field_perception_state", {}) or {})
+    felt_state = dict(result.get("felt_state", {}) or {})
+    neural_felt_state = dict(inner_field_state.get("neural_felt_state", felt_state.get("neural_felt_state", {})) or {})
+    neural_felt_bearing = float(inner_field_state.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", felt_state.get("neural_felt_bearing", 0.0))) or 0.0)
+    neural_felt_pressure = float(inner_field_state.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", felt_state.get("neural_felt_pressure", 0.0))) or 0.0)
+    neural_felt_memory_resonance = float(neural_felt_state.get("neural_felt_memory_resonance", felt_state.get("neural_felt_memory_resonance", 0.0)) or 0.0)
+    neural_felt_context_reactivation = float(neural_felt_state.get("neural_felt_context_reactivation", felt_state.get("neural_felt_context_reactivation", 0.0)) or 0.0)
+    neural_felt_label = str(inner_field_state.get("neural_felt_label", neural_felt_state.get("neural_felt_label", felt_state.get("neural_felt_label", "quiet_neural_felt"))) or "quiet_neural_felt")
+    inner_field_history_state = dict(inner_field_state.get("inner_field_history_state", {}) or {})
+    inner_field_history_length = int(inner_field_history_state.get("inner_field_history_length", inner_field_state.get("inner_field_history_length", 0)) or 0)
+    inner_field_pressure_trend = float(inner_field_history_state.get("inner_field_pressure_trend", inner_field_state.get("inner_field_pressure_trend", 0.0)) or 0.0)
+    inner_field_bearing_trend = float(inner_field_history_state.get("inner_field_bearing_trend", inner_field_state.get("inner_field_bearing_trend", 0.0)) or 0.0)
+    inner_field_topology_tension_trend = float(inner_field_history_state.get("inner_field_topology_tension_trend", inner_field_state.get("inner_field_topology_tension_trend", 0.0)) or 0.0)
+    inner_field_memory_resonance_trend = float(inner_field_history_state.get("inner_field_memory_resonance_trend", inner_field_state.get("inner_field_memory_resonance_trend", 0.0)) or 0.0)
+    inner_field_history_label = str(inner_field_history_state.get("inner_field_history_label", inner_field_state.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace")
 
     return {
         "timestamp": timestamp,
@@ -8034,15 +10884,28 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
         "world_state": dict(result.get("world_state", {}) or {}),
         "structure_perception_state": dict(result.get("structure_perception_state", {}) or {}),
         "outer_visual_perception_state": dict(result.get("outer_visual_perception_state", {}) or {}),
-        "inner_field_perception_state": dict(result.get("inner_field_perception_state", {}) or {}),
+        "inner_field_perception_state": dict(inner_field_state or {}),
         "processing_state": dict(result.get("processing_state", {}) or {}),
         "perception_state": dict(result.get("perception_state", {}) or {}),
-        "felt_state": dict(result.get("felt_state", {}) or {}),
+        "felt_state": dict(felt_state or {}),
         "thought_state": dict(result.get("thought_state", {}) or {}),
         "meta_regulation_state": dict(result.get("meta_regulation_state", {}) or {}),
         "expectation_state": dict(result.get("expectation_state", {}) or {}),
         "state_signature": dict(result.get("state_signature", {}) or {}),
         "focus": dict(result.get("focus", {}) or {}),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+        "neural_felt_label": str(neural_felt_label),
+        "inner_field_history_state": dict(inner_field_history_state or {}),
+        "inner_field_history_length": int(inner_field_history_length),
+        "inner_field_pressure_trend": float(inner_field_pressure_trend),
+        "inner_field_bearing_trend": float(inner_field_bearing_trend),
+        "inner_field_topology_tension_trend": float(inner_field_topology_tension_trend),
+        "inner_field_memory_resonance_trend": float(inner_field_memory_resonance_trend),
+        "inner_field_history_label": str(inner_field_history_label),
         "signal": {
             "signature_bias": float(result.get("signature_bias", 0.0) or 0.0),
             "signature_block": bool(result.get("signature_block", False)),
@@ -8073,6 +10936,17 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
             "pattern_action_support": float(meta_regulation_state.get("pattern_action_support", review_feedback_state.get("pattern_action_support", 0.0)) or 0.0),
             "pattern_observe_pressure": float(meta_regulation_state.get("pattern_observe_pressure", review_feedback_state.get("pattern_observe_pressure", 0.0)) or 0.0),
             "pattern_replan_pressure": float(meta_regulation_state.get("pattern_replan_pressure", review_feedback_state.get("pattern_replan_pressure", 0.0)) or 0.0),
+            "neural_felt_bearing": float(neural_felt_bearing),
+            "neural_felt_pressure": float(neural_felt_pressure),
+            "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+            "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+            "neural_felt_label": str(neural_felt_label),
+            "inner_field_history_length": int(inner_field_history_length),
+            "inner_field_pressure_trend": float(inner_field_pressure_trend),
+            "inner_field_bearing_trend": float(inner_field_bearing_trend),
+            "inner_field_topology_tension_trend": float(inner_field_topology_tension_trend),
+            "inner_field_memory_resonance_trend": float(inner_field_memory_resonance_trend),
+            "inner_field_history_label": str(inner_field_history_label),
         },
     }
 
@@ -8254,6 +11128,8 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
 # --------------------------------------------------
 def _compute_runtime_result(window, candle_state, bot=None, tension_state=None, visual_market_state=None, structure_perception_state=None, temporal_perception_state=None):
 
+    profile_start = _mcm_profile_start()
+
     if bot is None or not window:
         return None, None, None
 
@@ -8351,11 +11227,17 @@ def _compute_runtime_result(window, candle_state, bot=None, tension_state=None, 
             runtime_result["decision_tendency"] = str(decision_tendency)
             runtime_result["proposed_decision"] = str(proposed_decision or "WAIT")
 
+    _mcm_profile_debug(
+        "compute_runtime_result.total",
+        profile_start,
+        extra=f"decision_tendency={decision_tendency}|active_trade={bool(active_position or active_pending)}",
+    )
     return runtime_result, decision_tendency, timestamp
 
 # --------------------------------------------------
 def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, runtime_tick_seq=0, market_tick_advanced=True):
 
+    profile_start = _mcm_profile_start()
     runtime_payload = dict(runtime_result or {})
     temporal_state = _advance_temporal_perception_state(
         temporal_perception_state=dict(runtime_payload.get("temporal_perception_state", {}) or {}),
@@ -8400,6 +11282,21 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
         timestamp,
         runtime_tick_seq=runtime_tick_seq,
     )
+    inner_field_state = dict(runtime_payload.get("inner_field_perception_state", {}) or {})
+    felt_snapshot_state = dict(runtime_payload.get("felt_state", {}) or {})
+    neural_felt_state = dict(inner_field_state.get("neural_felt_state", felt_snapshot_state.get("neural_felt_state", {})) or {})
+    neural_felt_bearing = float(inner_field_state.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", felt_snapshot_state.get("neural_felt_bearing", 0.0))) or 0.0)
+    neural_felt_pressure = float(inner_field_state.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", felt_snapshot_state.get("neural_felt_pressure", 0.0))) or 0.0)
+    neural_felt_memory_resonance = float(neural_felt_state.get("neural_felt_memory_resonance", felt_snapshot_state.get("neural_felt_memory_resonance", 0.0)) or 0.0)
+    neural_felt_context_reactivation = float(neural_felt_state.get("neural_felt_context_reactivation", felt_snapshot_state.get("neural_felt_context_reactivation", 0.0)) or 0.0)
+    neural_felt_label = str(inner_field_state.get("neural_felt_label", neural_felt_state.get("neural_felt_label", felt_snapshot_state.get("neural_felt_label", "quiet_neural_felt"))) or "quiet_neural_felt")
+    inner_field_history_state = dict(inner_field_state.get("inner_field_history_state", {}) or {})
+    inner_field_history_length = int(inner_field_history_state.get("inner_field_history_length", inner_field_state.get("inner_field_history_length", 0)) or 0)
+    inner_field_pressure_trend = float(inner_field_history_state.get("inner_field_pressure_trend", inner_field_state.get("inner_field_pressure_trend", 0.0)) or 0.0)
+    inner_field_bearing_trend = float(inner_field_history_state.get("inner_field_bearing_trend", inner_field_state.get("inner_field_bearing_trend", 0.0)) or 0.0)
+    inner_field_topology_tension_trend = float(inner_field_history_state.get("inner_field_topology_tension_trend", inner_field_state.get("inner_field_topology_tension_trend", 0.0)) or 0.0)
+    inner_field_memory_resonance_trend = float(inner_field_history_state.get("inner_field_memory_resonance_trend", inner_field_state.get("inner_field_memory_resonance_trend", 0.0)) or 0.0)
+    inner_field_history_label = str(inner_field_history_state.get("inner_field_history_label", inner_field_state.get("inner_field_history_label", "stable_field_trace")) or "stable_field_trace")
 
     snapshot = {
         "timestamp": timestamp,
@@ -8419,6 +11316,19 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
         "action_capacity": float(runtime_result.get("action_capacity", 0.0) or 0.0),
         "recovery_need": float(runtime_result.get("recovery_need", 0.0) or 0.0),
         "survival_pressure": float(runtime_result.get("survival_pressure", 0.0) or 0.0),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+        "neural_felt_label": str(neural_felt_label),
+        "inner_field_history_state": dict(inner_field_history_state or {}),
+        "inner_field_history_length": int(inner_field_history_length),
+        "inner_field_pressure_trend": float(inner_field_pressure_trend),
+        "inner_field_bearing_trend": float(inner_field_bearing_trend),
+        "inner_field_topology_tension_trend": float(inner_field_topology_tension_trend),
+        "inner_field_memory_resonance_trend": float(inner_field_memory_resonance_trend),
+        "inner_field_history_label": str(inner_field_history_label),
         "brain_snapshot_ready": bool(brain_snapshot),
     }
 
@@ -8433,6 +11343,19 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
         "sl_price": float(runtime_result.get("sl_price", 0.0) or 0.0),
         "rr_value": float(runtime_result.get("rr_value", 0.0) or 0.0),
         "entry_validity_band": dict(runtime_result.get("entry_validity_band", {}) or {}),
+        "neural_felt_state": dict(neural_felt_state or {}),
+        "neural_felt_bearing": float(neural_felt_bearing),
+        "neural_felt_pressure": float(neural_felt_pressure),
+        "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
+        "neural_felt_context_reactivation": float(neural_felt_context_reactivation),
+        "neural_felt_label": str(neural_felt_label),
+        "inner_field_history_state": dict(inner_field_history_state or {}),
+        "inner_field_history_length": int(inner_field_history_length),
+        "inner_field_pressure_trend": float(inner_field_pressure_trend),
+        "inner_field_bearing_trend": float(inner_field_bearing_trend),
+        "inner_field_topology_tension_trend": float(inner_field_topology_tension_trend),
+        "inner_field_memory_resonance_trend": float(inner_field_memory_resonance_trend),
+        "inner_field_history_label": str(inner_field_history_label),
         "entry_result": dict(runtime_result or {}),
     }
 
@@ -8509,23 +11432,125 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
     bot.mcm_decision_episode = dict(episode)
     bot.mcm_decision_episode_internal = dict(episode_internal)
 
+    profile_section_start = _mcm_profile_start()
     _refresh_experience_space(
         bot,
         timestamp=timestamp,
         decision_tendency=decision_tendency,
     )
+    _mcm_profile_debug(
+        "apply_runtime_result.refresh_experience_space",
+        profile_section_start,
+        extra=f"decision_tendency={decision_tendency}",
+    )
 
+    profile_section_start = _mcm_profile_start()
     active_context_trace = _refresh_active_context_trace(
         getattr(bot, "active_context_trace", {}) or {},
         bot=bot,
         runtime_result=runtime_payload,
         market_tick_advanced=market_tick_advanced,
     )
+    _mcm_profile_debug(
+        "apply_runtime_result.refresh_active_context_trace",
+        profile_section_start,
+        extra=f"active={float(active_context_trace.get('activation', 0.0) or 0.0):.4f}",
+    )
+
     bot.active_context_trace = dict(active_context_trace or {})
     bot.mcm_runtime_snapshot["active_context_trace"] = dict(active_context_trace or {})
     bot.mcm_runtime_decision_state["active_context_trace"] = dict(active_context_trace or {})
     bot.mcm_runtime_decision_state["entry_result"]["active_context_trace"] = dict(active_context_trace or {})
+    bot.mcm_runtime_brain_snapshot["active_context_trace"] = dict(active_context_trace or {})
 
+    brain_signal_state = dict(bot.mcm_runtime_brain_snapshot.get("signal", {}) or {})
+    brain_signal_state["active_context_activation"] = float(active_context_trace.get("activation", 0.0) or 0.0)
+    brain_signal_state["active_context_support"] = float(active_context_trace.get("support", 0.0) or 0.0)
+    brain_signal_state["active_context_conflict"] = float(active_context_trace.get("conflict", 0.0) or 0.0)
+    brain_signal_state["active_context_bearing"] = float(active_context_trace.get("bearing", 0.0) or 0.0)
+    brain_signal_state["active_context_neural_felt_bearing"] = float(active_context_trace.get("neural_felt_bearing", 0.0) or 0.0)
+    brain_signal_state["active_context_neural_felt_pressure"] = float(active_context_trace.get("neural_felt_pressure", 0.0) or 0.0)
+    brain_signal_state["active_context_neural_felt_memory_resonance"] = float(active_context_trace.get("neural_felt_memory_resonance", 0.0) or 0.0)
+    brain_signal_state["active_context_neural_felt_context_reactivation"] = float(active_context_trace.get("neural_felt_context_reactivation", 0.0) or 0.0)
+    brain_signal_state["active_context_neural_felt_label"] = str(active_context_trace.get("neural_felt_label", "quiet_neural_felt") or "quiet_neural_felt")
+    brain_signal_state["active_context_history_length"] = int(active_context_trace.get("inner_field_history_length", 0) or 0)
+    brain_signal_state["active_context_pressure_trend"] = float(active_context_trace.get("inner_field_pressure_trend", 0.0) or 0.0)
+    brain_signal_state["active_context_bearing_trend"] = float(active_context_trace.get("inner_field_bearing_trend", 0.0) or 0.0)
+    brain_signal_state["active_context_topology_tension_trend"] = float(active_context_trace.get("inner_field_topology_tension_trend", 0.0) or 0.0)
+    brain_signal_state["active_context_memory_resonance_trend"] = float(active_context_trace.get("inner_field_memory_resonance_trend", 0.0) or 0.0)
+    brain_signal_state["active_context_history_label"] = str(active_context_trace.get("inner_field_history_label", "stable_field_trace") or "stable_field_trace")
+    brain_signal_state["active_context_topology_rows"] = int(active_context_trace.get("field_topology_rows", 0) or 0)
+    brain_signal_state["active_context_topology_cols"] = int(active_context_trace.get("field_topology_cols", 0) or 0)
+    brain_signal_state["active_context_topology_position_count"] = int(active_context_trace.get("field_topology_position_count", 0) or 0)
+    brain_signal_state["active_context_topology_neighbor_link_count"] = int(active_context_trace.get("field_topology_neighbor_link_count", 0) or 0)
+    brain_signal_state["active_context_topology_neighbor_count_mean"] = float(active_context_trace.get("field_topology_neighbor_count_mean", 0.0) or 0.0)
+    brain_signal_state["active_context_topology_neighbor_count_max"] = int(active_context_trace.get("field_topology_neighbor_count_max", 0) or 0)
+    brain_signal_state["active_context_areal_topology_density_mean"] = float(active_context_trace.get("field_areal_topology_density_mean", 0.0) or 0.0)
+    brain_signal_state["active_context_areal_topology_span_mean"] = float(active_context_trace.get("field_areal_topology_span_mean", 0.0) or 0.0)
+    brain_signal_state["active_context_areal_topology_boundary_mean"] = float(active_context_trace.get("field_areal_topology_boundary_mean", 0.0) or 0.0)
+    brain_signal_state["active_context_field_pattern_signature_key"] = str(active_context_trace.get("field_pattern_signature_key", "") or "")
+    brain_signal_state["active_context_inner_pattern_identity"] = str(active_context_trace.get("inner_pattern_identity", "") or "")
+    brain_signal_state["active_context_inner_pattern_identity_label"] = str(active_context_trace.get("inner_pattern_identity_label", "") or "")
+    brain_signal_state["active_context_inner_pattern_identity_confidence"] = float(active_context_trace.get("inner_pattern_identity_confidence", 0.0) or 0.0)
+    brain_signal_state["active_context_inner_pattern_identity_streak"] = int(active_context_trace.get("inner_pattern_identity_streak", 0) or 0)
+    brain_signal_state["active_context_inner_pattern_identity_stability"] = float(active_context_trace.get("inner_pattern_identity_stability", 0.0) or 0.0)
+    brain_signal_state["active_context_inner_pattern_identity_recurrent"] = bool(active_context_trace.get("inner_pattern_identity_recurrent", False))
+    brain_signal_state["active_context_inner_pattern_identity_changed"] = bool(active_context_trace.get("inner_pattern_identity_changed", False))
+    brain_signal_state["active_context_inner_pattern_identity_last_seen_tick"] = int(active_context_trace.get("inner_pattern_identity_last_seen_tick", 0) or 0)
+    brain_signal_state["active_context_inner_pattern_recognition_label"] = str(active_context_trace.get("inner_pattern_recognition_label", "unsettled_inner_pattern") or "unsettled_inner_pattern")
+    brain_signal_state["active_context_inner_pattern_recognition_strength"] = float(active_context_trace.get("inner_pattern_recognition_strength", 0.0) or 0.0)
+    brain_signal_state["active_context_inner_pattern_recognition_recurrent"] = bool(active_context_trace.get("inner_pattern_recognition_recurrent", False))
+    brain_signal_state["active_context_inner_pattern_recognition_changed"] = bool(active_context_trace.get("inner_pattern_recognition_changed", False))
+    bot.mcm_runtime_brain_snapshot["signal"] = dict(brain_signal_state or {})
+
+    episode_internal_state = dict(getattr(bot, "mcm_decision_episode_internal", {}) or {})
+    episode_signal_state = dict(episode_internal_state.get("signal", {}) or {})
+    episode_signal_state["active_context_activation"] = float(active_context_trace.get("activation", 0.0) or 0.0)
+    episode_signal_state["active_context_support"] = float(active_context_trace.get("support", 0.0) or 0.0)
+    episode_signal_state["active_context_conflict"] = float(active_context_trace.get("conflict", 0.0) or 0.0)
+    episode_signal_state["active_context_bearing"] = float(active_context_trace.get("bearing", 0.0) or 0.0)
+    episode_signal_state["active_context_neural_felt_bearing"] = float(active_context_trace.get("neural_felt_bearing", 0.0) or 0.0)
+    episode_signal_state["active_context_neural_felt_pressure"] = float(active_context_trace.get("neural_felt_pressure", 0.0) or 0.0)
+    episode_signal_state["active_context_neural_felt_memory_resonance"] = float(active_context_trace.get("neural_felt_memory_resonance", 0.0) or 0.0)
+    episode_signal_state["active_context_neural_felt_context_reactivation"] = float(active_context_trace.get("neural_felt_context_reactivation", 0.0) or 0.0)
+    episode_signal_state["active_context_neural_felt_label"] = str(active_context_trace.get("neural_felt_label", "quiet_neural_felt") or "quiet_neural_felt")
+    episode_signal_state["active_context_history_length"] = int(active_context_trace.get("inner_field_history_length", 0) or 0)
+    episode_signal_state["active_context_pressure_trend"] = float(active_context_trace.get("inner_field_pressure_trend", 0.0) or 0.0)
+    episode_signal_state["active_context_bearing_trend"] = float(active_context_trace.get("inner_field_bearing_trend", 0.0) or 0.0)
+    episode_signal_state["active_context_topology_tension_trend"] = float(active_context_trace.get("inner_field_topology_tension_trend", 0.0) or 0.0)
+    episode_signal_state["active_context_memory_resonance_trend"] = float(active_context_trace.get("inner_field_memory_resonance_trend", 0.0) or 0.0)
+    episode_signal_state["active_context_history_label"] = str(active_context_trace.get("inner_field_history_label", "stable_field_trace") or "stable_field_trace")
+    episode_signal_state["active_context_topology_rows"] = int(active_context_trace.get("field_topology_rows", 0) or 0)
+    episode_signal_state["active_context_topology_cols"] = int(active_context_trace.get("field_topology_cols", 0) or 0)
+    episode_signal_state["active_context_topology_position_count"] = int(active_context_trace.get("field_topology_position_count", 0) or 0)
+    episode_signal_state["active_context_topology_neighbor_link_count"] = int(active_context_trace.get("field_topology_neighbor_link_count", 0) or 0)
+    episode_signal_state["active_context_topology_neighbor_count_mean"] = float(active_context_trace.get("field_topology_neighbor_count_mean", 0.0) or 0.0)
+    episode_signal_state["active_context_topology_neighbor_count_max"] = int(active_context_trace.get("field_topology_neighbor_count_max", 0) or 0)
+    episode_signal_state["active_context_areal_topology_density_mean"] = float(active_context_trace.get("field_areal_topology_density_mean", 0.0) or 0.0)
+    episode_signal_state["active_context_areal_topology_span_mean"] = float(active_context_trace.get("field_areal_topology_span_mean", 0.0) or 0.0)
+    episode_signal_state["active_context_areal_topology_boundary_mean"] = float(active_context_trace.get("field_areal_topology_boundary_mean", 0.0) or 0.0)
+    episode_signal_state["active_context_field_pattern_signature_key"] = str(active_context_trace.get("field_pattern_signature_key", "") or "")
+    episode_signal_state["active_context_inner_pattern_identity"] = str(active_context_trace.get("inner_pattern_identity", "") or "")
+    episode_signal_state["active_context_inner_pattern_identity_label"] = str(active_context_trace.get("inner_pattern_identity_label", "") or "")
+    episode_signal_state["active_context_inner_pattern_identity_confidence"] = float(active_context_trace.get("inner_pattern_identity_confidence", 0.0) or 0.0)
+    episode_signal_state["active_context_inner_pattern_identity_streak"] = int(active_context_trace.get("inner_pattern_identity_streak", 0) or 0)
+    episode_signal_state["active_context_inner_pattern_identity_stability"] = float(active_context_trace.get("inner_pattern_identity_stability", 0.0) or 0.0)
+    episode_signal_state["active_context_inner_pattern_identity_recurrent"] = bool(active_context_trace.get("inner_pattern_identity_recurrent", False))
+    episode_signal_state["active_context_inner_pattern_identity_changed"] = bool(active_context_trace.get("inner_pattern_identity_changed", False))
+    episode_signal_state["active_context_inner_pattern_identity_last_seen_tick"] = int(active_context_trace.get("inner_pattern_identity_last_seen_tick", 0) or 0)
+    episode_signal_state["active_context_inner_pattern_recognition_label"] = str(active_context_trace.get("inner_pattern_recognition_label", "unsettled_inner_pattern") or "unsettled_inner_pattern")
+    episode_signal_state["active_context_inner_pattern_recognition_strength"] = float(active_context_trace.get("inner_pattern_recognition_strength", 0.0) or 0.0)
+    episode_signal_state["active_context_inner_pattern_recognition_recurrent"] = bool(active_context_trace.get("inner_pattern_recognition_recurrent", False))
+    episode_signal_state["active_context_inner_pattern_recognition_changed"] = bool(active_context_trace.get("inner_pattern_recognition_changed", False))
+    episode_internal_state["active_context_trace"] = dict(active_context_trace or {})
+    episode_internal_state["signal"] = dict(episode_signal_state or {})
+    bot.mcm_decision_episode_internal = dict(episode_internal_state or {})
+
+    _mcm_profile_debug(
+        "apply_runtime_result.total",
+        profile_start,
+        extra=f"decision_tendency={decision_tendency}|runtime_tick_seq={int(runtime_tick_seq or 0)}",
+    )
     return dict(runtime_result or {})
 
 # --------------------------------------------------
@@ -9163,19 +12188,39 @@ def _snapshot_write_path(snapshot_kind):
 def _write_runtime_snapshot_payload(snapshot_kind, payload):
 
     path = _snapshot_write_path(snapshot_kind)
+    profile_start = _mcm_profile_start()
 
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
+        write_start = time.perf_counter()
         with open(path, "w", encoding="utf-8") as f:
             json.dump(dict(payload or {}), f, indent=2)
+        elapsed_ms = (time.perf_counter() - write_start) * 1000.0
+        try:
+            bytes_written = int(os.path.getsize(path))
+        except Exception:
+            bytes_written = 0
+        dbr_file_write_profile(
+            path,
+            elapsed_ms,
+            bytes_written=bytes_written,
+            operation="runtime_snapshot_json_dump",
+            extra=f"kind={snapshot_kind}|keys={int(len(dict(payload or {})))}",
+        )
     except Exception:
         return None
 
+    _mcm_profile_debug(
+        "write_runtime_snapshot_payload.total",
+        profile_start,
+        extra=f"kind={snapshot_kind}|keys={int(len(dict(payload or {})))}|path={path}",
+    )
     return path
 
 # --------------------------------------------------
 def write_visualization_snapshot_bundle(snapshot_bundle):
 
+    profile_start = _mcm_profile_start()
     bundle = dict(snapshot_bundle or {})
     if not bundle:
         return None
@@ -9185,6 +12230,11 @@ def write_visualization_snapshot_bundle(snapshot_bundle):
 
     _write_runtime_snapshot_payload("visual", visual_payload)
     _write_runtime_snapshot_payload("inner", inner_payload)
+    _mcm_profile_debug(
+        "write_visualization_snapshot_bundle.total",
+        profile_start,
+        extra=f"visual_keys={int(len(visual_payload or {}))}|inner_keys={int(len(inner_payload or {}))}",
+    )
     return dict(bundle or {})
 
 # --------------------------------------------------

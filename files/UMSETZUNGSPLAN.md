@@ -193,6 +193,15 @@ Die Agenten in diesem Projekt sind keine Chat-Agents und keine voneinander losge
 
 Die Agenten sind **dynamische Teilträger im MCM-Feld**.
 
+Im Zielsystem werden diese Teilträger als **feste Feldknoten eines neuronalen Gewebes** verstanden.
+
+Das bedeutet:
+
+- der Knotenplatz bleibt stabil
+- der Zustand des Knotens verändert sich
+- weitergegeben werden Zustand, Aktivierung, Nachhall und Informationswirkung
+- nicht das Neuron bewegt sich, sondern der MCM-Zustand breitet sich im Feld aus
+
 Sie bilden zusammen den Innenraum des Systems.
 
 Jeder Agent trägt nur einen kleinen Teil des Gesamtsystems,
@@ -205,6 +214,44 @@ aber aus ihrer Wechselwirkung entsteht:
 - Konflikt
 - Regulierung
 - Handlungstendenz
+
+---
+
+## Feste Feldknoten und bewegliche Zustände
+
+Die Zielarchitektur trennt klar zwischen:
+
+- **Trägerstruktur**
+- **MCM-Zustandsraum**
+- **Informationsweitergabe**
+
+Die Trägerstruktur kann als Gitter oder neuronales Gewebe verstanden werden.
+Ein Feld kann zum Beispiel als `rows x cols` organisiert sein.
+
+Dabei gilt:
+
+- jeder Knoten hat eine feste Feldposition
+- jeder Knoten trägt einen mehrdimensionalen MCM-Zustand
+- `state` beschreibt die aktuelle innere Lage des Knotens
+- `velocity` beschreibt Zustandsnachlauf, Trägheit und Richtung der Zustandsveränderung
+- `activation` beschreibt lokale Lebendigkeit / Erregung
+- `inhibition` beschreibt lokale Hemmung / Dämpfung
+- `memory_trace` beschreibt Erfahrungsnachhall
+- Kopplung wirkt lokal über feste Nachbarschaften
+
+Dadurch wird aus dem Feld kein frei beweglicher Punktwolkenraum,
+sondern ein festes Gewebe, in dem Zustände wandern, koppeln, nachhallen und sich reorganisieren.
+
+Mehr Neuronen bedeuten in dieser Architektur nicht automatisch mehr Intelligenz.
+Sie bedeuten zuerst höhere Auflösung der inneren Zustandswahrnehmung.
+
+Eine höhere Feldauflösung ermöglicht:
+
+- feinere lokale Musterbildung
+- differenziertere Aktivitätszonen
+- weniger abgeflachte Durchschnittszustände
+- stabilere Unterscheidung von Unterstützung, Konflikt, Druck und Tragfähigkeit
+- bessere Übereinstimmung zwischen Innenfeld, Clusterlesung und GUI-Darstellung
 
 ---
 
@@ -531,13 +578,45 @@ sondern Tragfähigkeit des gesamten Verlaufs bewerten.
 Lernen bedeutet daher nicht:
 
 - die eine richtige Entscheidung zu finden
-- Profit maximal zu steigern
+- Profit roh und undifferenziert zu maximieren
 
 Sondern:
 
 - mit Situationen effizient umgehen zu können
 - bei möglichst geringer regulatorischer Last handlungsfähig zu bleiben
 - tragfähige Handlung von hektischer Handlung zu unterscheiden
+- Profitabilität als innere Zielspannung zu behalten,
+  aber durch Regelqualität, Tragfähigkeit, Stabilität und Varianz zu dämpfen
+
+---
+
+## Profitabilität als gedämpfte Zielspannung
+
+Profitabilität darf in diesem System nicht verschwinden.
+
+Ein Trading-System ohne inneren Anreiz, profitabel sein zu wollen,
+wäre fachlich falsch.
+
+Gleichzeitig darf Profit nicht als simples Belohnungslabel wirken.
+
+Die Analogie zum Menschen ist:
+
+- Gewinn kann Entlastung, Wohlbefinden, Bestätigung oder Überaktivierung erzeugen
+- Verlust kann Belastung, Vorsicht, Schmerz oder Reorientierung erzeugen
+- ein professioneller Trader dämpft diese rohe Wirkung
+- nicht das Ergebnisetikett entscheidet allein,
+  sondern die Qualität des Prozesses und die Tragfähigkeit des Zustands
+
+Das Ziel ist daher ein neurochemisch gedämpftes Erfahrungsmodell:
+
+- Profit erzeugt positive Zielspannung, aber keine blinde Euphorie
+- Verlust erzeugt Belastung, aber keine automatische Selbstschwächung
+- sauberer Verlust kann Tragfähigkeit und Regelvertrauen stärken
+- chaotischer Gewinn kann Misstrauen, Varianzstrafe oder Dämpfung erzeugen
+- wiederholte stabile Profitabilität stärkt Selbstvertrauen und Musterbindung
+
+Profit ist damit nicht Primärlehrer,
+aber ein unverzichtbares Überlebens- und Richtungssignal.
 
 ---
 
@@ -738,9 +817,11 @@ Ein Informationscluster entsteht, wenn mehrere lokale Neuronen über Nachbarscha
 
 Wichtig:
 
-- der Feldzustand bleibt mehrdimensional als `N x D` erhalten
-- Nachbarschaft wird pro Neuron lokal gebildet
-- weitergegeben werden nur lokale Nachbarn, nicht das gesamte Feld als globaler Deltablock
+- der Feldzustand bleibt mehrdimensional erhalten
+- im Zielsystem liegt er fachlich als feste Feldtopologie vor, zum Beispiel `rows x cols x D`
+- für Kompatibilität können `energy` und `velocity` weiterhin als flache `N x D`-Sicht bereitgestellt werden
+- Nachbarschaft entsteht bevorzugt aus festen Gitterbeziehungen statt aus permanenter globaler Abstandssuche
+- weitergegeben werden lokale Zustandsanteile, nicht das gesamte Feld als globaler Deltablock
 - alle Neuronen können grundsätzlich dieselbe Umwelt wahrnehmen
 - informationsbildend ist aber ihre lokale Eigenreaktion, Kopplung, Kohärenz und Resonanz
 
@@ -885,6 +966,67 @@ Replay ist damit nicht bloß Rückblick,
 sondern ein regulatorischer Vorausvergleich des eigenen Innenraums.
 
 ---
+
+### Denkkomplexitaet und energieeffiziente Meta-Regulation
+
+Reflexion ist im Zielsystem keine harte Zusatzregel,
+sondern eine innere Pruefung der eigenen Verarbeitung.
+
+Das System soll deshalb nicht nur beantworten:
+
+- Was nehme ich draussen wahr?
+- Welche Handlung waere technisch moeglich?
+
+Sondern auch:
+
+- Wie tragfaehig ist das, was ich gerade wahrnehme?
+- Wie klar oder fragmentiert ist mein inneres Feld?
+- Wie viel Erfahrungsvergleich ist noetig?
+- Unterstuetzt Memory die aktuelle Lage oder erzeugt es Konflikt?
+- Wird das Denken selbst zu teuer, unklar oder hemmend?
+
+Damit werden aeussere Wahrnehmung, innere Wahrnehmung,
+Denken / Organisation, Handeln und Lernen als gekoppelte Akteure verstanden.
+
+Memory ist dabei nicht nur Archiv.
+Es ist Resonanzflaeche, Konfliktflaeche und Teilmuster-Ergaenzung.
+
+Denken erzeugt selbst kognitive Last.
+Diese Last soll spaeter als eigene Groesse sichtbar werden,
+zum Beispiel ueber:
+
+- `thinking_complexity`
+- `memory_compare_load`
+- `memory_match_count`
+- `memory_support`
+- `memory_inhibition`
+- `memory_conflict`
+- `cognitive_load`
+- `decision_energy_cost`
+- `meta_regulation_need`
+
+Das Ziel ist nicht maximale Denktiefe.
+Das Ziel ist ausreichend reflektierte, energieeffiziente Verdichtung,
+bis ein tragfaehiges Handlungsmuster entsteht.
+
+Moegliche Meta-Reaktionen sind:
+
+- weiterdenken
+- verdichten
+- beobachten
+- halten
+- reorganisieren
+- kontrolliert handeln
+
+Wenn die Aussenwahrnehmung stark ist,
+aber das innere Feld instabil oder das Denken ueberlastet ist,
+soll das System eher beobachten, halten oder reorganisieren.
+
+Wenn Aussenwahrnehmung, innere Tragfaehigkeit und verdichtete Erfahrung zusammenpassen,
+soll kontrolliertes Handeln leichter werden.
+
+---
+
 ### Aktive Kontextspur / Nachhall
 
 Ein gespeicherter Kontext soll im Zielsystem nicht nur als Archivwert existieren.
@@ -1029,6 +1171,89 @@ Beispiel:
 
 ---
 
+## Neurochemisch gedämpfte Wirkungsachsen
+
+Experience soll intern nicht als einzelner Reward-Wert verstanden werden,
+sondern als gedämpfte Wirkung mehrerer innerer Achsen.
+
+Mögliche Achsen:
+
+- `profit_reward`
+- `relief_signal`
+- `stability_signal`
+- `discipline_signal`
+- `confidence_signal`
+- `overactivation_signal`
+- `chaos_penalty`
+- `variance_penalty`
+- `overstrain_penalty`
+- `carrying_capacity_delta`
+- `self_confidence_delta`
+
+Diese Achsen sind keine externen Emotionen.
+
+Sie beschreiben die innere Zustandswirkung eines Verlaufs:
+
+- wurde das System tragfähiger?
+- wurde ein stabiles Muster bestätigt?
+- wurde Regelqualität eingehalten?
+- entstand Entlastung oder Überaktivierung?
+- sank oder stieg die Varianz des Verhaltens?
+- wuchs ruhiges Selbstvertrauen oder nur kurzfristige Erregung?
+
+Wichtig:
+
+`_experience_reward_delta()` darf langfristig nicht der eigentliche Lehrer bleiben.
+
+Es soll nur noch eine verdichtete Zusammenfassung einer tieferen
+neurochemisch gedämpften Erfahrungswirkung sein.
+
+Der fachlich bessere Zielzustand ist eine eigene Schicht wie:
+
+`build_experience_neurochemical_effect()`
+
+Diese Schicht bewertet Profit, Entlastung, Stabilität, Disziplin,
+Tragfähigkeit, Varianz und Überlast gemeinsam.
+
+---
+
+## Tragfähigkeit, Selbstvertrauen und Varianz
+
+Selbstvertrauen ist in diesem System kein Ego-Wert.
+
+Es bedeutet:
+
+- wiederholte tragfähige Erfahrung
+- stabile Regelbefolgung
+- geringe chaotische Varianz
+- robuste Handlungsfähigkeit unter Spannung
+- ruhige Bestätigung eines gelernten Musters
+
+Je tragfähiger ein Erfahrungscluster ist,
+desto weniger sollte das System experimentell reagieren.
+
+Hohe Tragfähigkeit bedeutet:
+
+- weniger Varianz
+- stärkere Musterbindung
+- mehr Regelruhe
+- weniger impulsive Exploration
+- höhere `action_clearance` nur bei passender Struktur
+
+Niedrige Tragfähigkeit bedeutet:
+
+- mehr Beobachtung
+- mehr Replan
+- vorsichtigere Musterbindung
+- schwächere Selbstbestätigung
+- höhere Sensibilität für Chaos und Überlast
+
+Damit wird verhindert,
+dass ein einzelner profitabler Zufallstrade das System in riskante
+Selbstüberschätzung führt.
+
+---
+
 ## Positive Zustände müssen ebenfalls reguliert werden
 
 Euphorie ist keine stabile Verbesserung,
@@ -1099,8 +1324,18 @@ Das System optimiert langfristig:
 - Zeit in tragfähigen Zuständen
 - Energieeffizienz der Interaktion
 
-Profit ist dabei kein Primärziel,
-sondern ein mögliches Nebenprodukt stabiler Kohärenz.
+Profitabilität ist dabei eine notwendige Zielspannung,
+aber kein roher Primärlehrer.
+
+Sie wirkt wie ein gedämpftes Überlebens- und Wohlbefindenssignal:
+
+- profitable, regelkonforme, stabile Verläufe stärken das System
+- profitable, chaotische Verläufe werden nicht blind verstärkt
+- unprofitable, aber regelkonforme und tragfähige Verläufe werden nicht blind bestraft
+- dauerhaft unprofitable Muster erhöhen Schutz, Beobachtung und Replan-Druck
+
+Profit bleibt also wichtig,
+wird aber durch Tragfähigkeit, Stabilität, Regelqualität und Varianz gefiltert.
 
 ---
 
@@ -1437,6 +1672,9 @@ Die offene Ausbaurichtung liegt vor allem in:
 
 - weiterer Härtung der Ebenen-Trennung
 - permanenter Runtime als echter Innenprozess
+- Umbau des MCM-Feldes auf feste Feldknoten / neuronales Gewebe
+- Zustandskopplung über feste lokale Nachbarschaften
+- höhere Feldauflösung für feinere innere Musterbildung
 - Ausbau der MCM-Zustandsachsen
 - weiterer Vertiefung von Episode / Review / Experience
 - Ausbau von Nicht-Handlung und regulatorischer Erholung

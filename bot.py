@@ -364,6 +364,9 @@ class Bot:
         self._memory_state_last_save_ts = 0.0
         self._snapshot_bundle = {}
         self._snapshot_dirty = False
+        self._snapshot_write_seq = 0
+        self._snapshot_last_write_ts = 0.0
+        self._snapshot_last_state_key = None
         return True
     # -------------------------------------------------
     def _runtime_loop(self):
@@ -2481,6 +2484,52 @@ class Bot:
     # ==================================================
     # SNAPSHOT / VISUALISIERUNG
     # ==================================================
+    def _resolve_visualization_snapshot_write_due(self, window=None, candle_state=None):
+
+        self._snapshot_write_seq = int(getattr(self, "_snapshot_write_seq", 0) or 0) + 1
+
+        every_n = max(
+            1,
+            int(getattr(Config, "MCM_VISUAL_SNAPSHOT_WRITE_EVERY_N", 1) or 1),
+        )
+        min_interval = max(
+            0.0,
+            float(getattr(Config, "MCM_VISUAL_SNAPSHOT_MIN_INTERVAL_SECONDS", 0.0) or 0.0),
+        )
+        force_on_state_change = bool(getattr(Config, "MCM_VISUAL_SNAPSHOT_FORCE_ON_STATE_CHANGE", True))
+
+        pending_state = dict(getattr(self, "pending_entry", {}) or {})
+        position_state = dict(getattr(self, "position", {}) or {})
+
+        state_key = (
+            bool(position_state),
+            str(position_state.get("side", "-") or "-"),
+            str(position_state.get("entry_ts", position_state.get("entry", "-")) or "-"),
+            bool(pending_state),
+            str(pending_state.get("order_id", pending_state.get("id", "-")) or "-"),
+        )
+
+        if force_on_state_change and state_key != getattr(self, "_snapshot_last_state_key", None):
+            self._snapshot_last_state_key = tuple(state_key)
+            self._snapshot_last_write_ts = float(time.time())
+            return True
+
+        if every_n <= 1:
+            self._snapshot_last_write_ts = float(time.time())
+            return True
+
+        if (int(self._snapshot_write_seq) % every_n) == 0:
+            self._snapshot_last_write_ts = float(time.time())
+            return True
+
+        if min_interval > 0.0:
+            now_ts = float(time.time())
+            last_ts = float(getattr(self, "_snapshot_last_write_ts", 0.0) or 0.0)
+            if (now_ts - last_ts) >= min_interval:
+                self._snapshot_last_write_ts = float(now_ts)
+                return True
+
+        return False
     # --------------------------------------------------
     def _apply_restart_recovery_snapshot(bot, snapshot):
 
@@ -2627,6 +2676,12 @@ class Bot:
         )
     # --------------------------------------------------
     def _write_visualization_snapshots(self, window, candle_state):
+
+        if not self._resolve_visualization_snapshot_write_due(
+            window=window,
+            candle_state=candle_state,
+        ):
+            return None
 
         snapshot_state = prepare_visualization_snapshot_state(
             bot=self,
