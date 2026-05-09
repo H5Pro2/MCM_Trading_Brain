@@ -1,6 +1,6 @@
 # MCM Trading Brain
 
-![alt text](files/bilder/MCM_Trading_Brain.png)
+![alt text](files/bilder/systemüberblick.png)
 
 MCM Trading Brain ist ein experimentelles Trading-System mit [MCM-Architektur](https://github.com/H5Pro2/Mental-Core-Matrix-MCM).
 
@@ -331,6 +331,7 @@ aber sie ist **nicht** die eigentliche Denklogik des Systems.
 
 ### Ebene 1 – äußeres Wahrnehmen
 
+![Ebene 1 – äußeres Wahrnehmen](files/bilder/ebene_1.png)
 Diese Ebene nimmt die Außenwelt auf,
 ohne sie bereits in Handlung umzuwandeln.
 
@@ -348,6 +349,7 @@ Spannung, Struktur und zeitlicher Veränderung.
 
 ### Ebene 2 – inneres Wahrnehmen / Denken / Handeln
 
+![Ebene 2 – inneres Wahrnehmen / Denken / Handeln](files/bilder/ebene_2.png)
 Diese Ebene verarbeitet die Außenreize als inneren Zustandsraum.
 
 Reale Zustandsketten im Projekt:
@@ -377,6 +379,7 @@ Damit ist Entscheidung bereits von technischer Ausführung getrennt.
 
 ### Ebene 3 – Entwicklung aus Erfahrung
 
+![Ebene 3 – Entwicklung aus Erfahrung](files/bilder/ebene_3.png)
 Diese Ebene bewertet Verläufe,
 führt Episoden,
 hält Memory-Strukturen
@@ -398,6 +401,7 @@ Reale Bausteine:
 
 ## Runtime-Flow
 
+![Runtime-Flow](files/bilder/ebene_4.png)
 Der reale Ablauf ist im Kern:
 
 ```text
@@ -438,6 +442,7 @@ Wichtig:
 
 ## MCM-Zustandsraum
 
+![MCM-Zustandsraum](files/bilder/ebene_5.png)
 Das System arbeitet bereits mit einem explizit lesbaren Zustandsraum.
 
 Wichtige Zustandsachsen sind:
@@ -476,6 +481,7 @@ sondern ein valider Teil regulatorischer Stabilität und Reifung.
 
 ## Experience-System
 
+![Experience-System](files/bilder/ebene_6.png)
 Das System lernt nicht nur aus Exit-Ergebnissen.
 
 Es lernt aus:
