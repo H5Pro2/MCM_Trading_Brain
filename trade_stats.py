@@ -471,6 +471,13 @@ class TradeStats:
             "state_before": _compact_snapshot(normalized_context.get("state_before", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("state_before", {})),
             "state_after": _compact_snapshot(normalized_context.get("state_after", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("state_after", {})),
             "state_delta": _compact_snapshot(normalized_context.get("state_delta", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("state_delta", {})),
+            "world_state": self._pick_fields(normalized_context.get("world_state", {}), [
+                "current_price",
+                "close",
+                "last_price",
+                "price",
+                "candle_state",
+            ]),
             "felt_state": self._pick_fields(normalized_context.get("felt_state", {}), [
                 "confidence",
                 "urgency",
@@ -634,7 +641,59 @@ class TradeStats:
                     return float(price)
             except Exception:
                 pass
+        for source in (ctx.get("world_state", {}), nested.get("world_state", {})):
+            world = dict(source or {}) if isinstance(source, dict) else {}
+            candle = dict(world.get("candle_state", {}) or {}) if isinstance(world.get("candle_state", {}), dict) else {}
+            for key in ("current_price", "close", "last_price", "price"):
+                try:
+                    price = float(world.get(key, 0.0) or candle.get(key, 0.0) or 0.0)
+                    if price > 0.0:
+                        return float(price)
+                except Exception:
+                    pass
         return 0.0
+
+    def _infer_observation_trade_plan(self, context: dict, current_price: float) -> dict:
+        ctx = dict(context or {})
+        price = float(current_price or 0.0)
+        if price <= 0.0:
+            return {}
+
+        meta = dict(ctx.get("meta_regulation_state", {}) or {})
+        signal = dict(ctx.get("signal", {}) or {})
+
+        side = str(meta.get("decision", "") or "").strip().upper()
+        if side not in ("LONG", "SHORT"):
+            try:
+                long_score = float(signal.get("long_score", 0.0) or 0.0)
+                short_score = float(signal.get("short_score", 0.0) or 0.0)
+            except Exception:
+                long_score = 0.0
+                short_score = 0.0
+            if max(abs(long_score), abs(short_score)) < 0.08 and abs(long_score - short_score) < 0.04:
+                return {}
+            side = "LONG" if long_score >= short_score else "SHORT"
+
+        risk_pct = max(0.0015, min(0.012, float(getattr(Config, "BASE_RISK_PCT", 0.0045) or 0.0045)))
+        rr_value = max(1.0, min(2.4, float(getattr(Config, "RR", 1.6) or 1.6)))
+        risk_distance = max(price * risk_pct, price * 0.0015)
+        reward_distance = risk_distance * rr_value
+
+        if side == "LONG":
+            sl_price = price - risk_distance
+            tp_price = price + reward_distance
+        else:
+            sl_price = price + risk_distance
+            tp_price = price - reward_distance
+
+        return {
+            "decision": str(side),
+            "entry_price": float(price),
+            "sl_price": float(sl_price),
+            "tp_price": float(tp_price),
+            "rr_value": float(rr_value),
+            "inferred_observation_plan": True,
+        }
 
     def _refresh_observation_learning_summary(self):
         learning = dict(self.data.get("observation_learning", {}) or {})
@@ -733,7 +792,7 @@ class TradeStats:
         self._resolve_pending_observations(current_price)
 
         status = str(status_key or "").strip().lower()
-        if status not in ("observed_only", "replanned", "withheld"):
+        if status not in ("observed_only", "replanned", "withheld", "skipped"):
             return
 
         learning = dict(self.data.get("observation_learning", {}) or {})
@@ -749,7 +808,13 @@ class TradeStats:
         tp_price = float(trade_plan.get("tp_price", 0.0) or 0.0)
         sl_price = float(trade_plan.get("sl_price", 0.0) or 0.0)
         if side not in ("LONG", "SHORT") or entry_price <= 0.0 or tp_price <= 0.0 or sl_price <= 0.0:
-            return
+            trade_plan = self._infer_observation_trade_plan(compact_context, current_price)
+            side = str(trade_plan.get("decision", "") or "").strip().upper()
+            entry_price = float(trade_plan.get("entry_price", 0.0) or 0.0)
+            tp_price = float(trade_plan.get("tp_price", 0.0) or 0.0)
+            sl_price = float(trade_plan.get("sl_price", 0.0) or 0.0)
+            if side not in ("LONG", "SHORT") or entry_price <= 0.0 or tp_price <= 0.0 or sl_price <= 0.0:
+                return
 
         form_state = dict(compact_context.get("form_symbol_state", {}) or {})
         pending = list(self.data.get("pending_observations", []) or [])

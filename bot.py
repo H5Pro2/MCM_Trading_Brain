@@ -1965,6 +1965,14 @@ class Bot:
                 state_delta=skip_state_delta,
             )
 
+        entry_world_state = dict(entry_result.get("world_state", {}) or {})
+        entry_world_state["candle_state"] = dict(candle_state or {})
+        try:
+            entry_world_state["current_price"] = float(candle_state.get("close", last.get("close", 0.0)) or 0.0)
+        except Exception:
+            entry_world_state["current_price"] = 0.0
+        entry_result["world_state"] = dict(entry_world_state)
+
         self.action_intent_state = dict(entry_result.get("action_intent_state", {}) or {})
         self.execution_state = dict(entry_result.get("execution_state", {}) or {})
 
