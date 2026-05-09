@@ -11,7 +11,7 @@ import json
 import os
 import time
 from config import Config
-from debug_reader import dbr_file_write_profile
+from debug_reader import dbr_file_write_profile, dbr_resolve_path
 
 class TradeStats:
 
@@ -23,10 +23,10 @@ class TradeStats:
         outcome_path="debug/outcome_records.jsonl",
         reset=True,
     ):
-        self.path = path
-        self.csv_path = csv_path
-        self.attempt_path = attempt_path
-        self.outcome_path = outcome_path
+        self.path = dbr_resolve_path(path)
+        self.csv_path = dbr_resolve_path(csv_path)
+        self.attempt_path = dbr_resolve_path(attempt_path)
+        self.outcome_path = dbr_resolve_path(outcome_path)
 
         if str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE":
             try:
@@ -64,6 +64,20 @@ class TradeStats:
             "current_timestamp": None,
             "last_outcome_decomposition": {},
             "recent_attempts": [],
+            "pending_observations": [],
+            "observation_learning": {
+                "open": 0,
+                "resolved": 0,
+                "saved_loss": 0,
+                "missed_gain": 0,
+                "neutral": 0,
+                "low_observations": 0,
+                "zone_observations": 0,
+                "maturity_trust": 0.0,
+                "action_pressure": 0.0,
+                "last_result": "-",
+            },
+            "recent_observation_learning": [],
             "exploration_trades": 0,
             "exploration_tp": 0,
             "exploration_sl": 0,
@@ -262,6 +276,14 @@ class TradeStats:
             "action_inhibition": float(attempt_feedback.get("action_inhibition", 0.0) or 0.0),
             "action_clearance": float(attempt_feedback.get("action_clearance", 0.0) or 0.0),
             "regulation_before_action": float(attempt_feedback.get("regulation_before_action", 0.0) or 0.0),
+            "observation_learning_open": int(attempt_feedback.get("observation_learning_open", 0) or 0),
+            "observation_learning_resolved": int(attempt_feedback.get("observation_learning_resolved", 0) or 0),
+            "observation_saved_loss": int(attempt_feedback.get("observation_saved_loss", 0) or 0),
+            "observation_missed_gain": int(attempt_feedback.get("observation_missed_gain", 0) or 0),
+            "observation_neutral": int(attempt_feedback.get("observation_neutral", 0) or 0),
+            "observation_low_count": int(attempt_feedback.get("observation_low_count", 0) or 0),
+            "observation_maturity_trust": float(attempt_feedback.get("observation_maturity_trust", 0.0) or 0.0),
+            "observation_action_pressure": float(attempt_feedback.get("observation_action_pressure", 0.0) or 0.0),
             "attempt_fill_rate": float(self.data.get("attempts_filled", 0) or 0) / max(1, attempts),
             "attempt_zone_share": float(self.data.get("attempt_structure_zone", 0) or 0) / max(1, attempts),
             "attempts_per_trade": float(attempts / max(1, trades)),
@@ -305,6 +327,16 @@ class TradeStats:
                 "observe_share": float(proof.get("observe_share", 0.0) or 0.0),
                 "replan_share": float(proof.get("replan_share", 0.0) or 0.0),
                 "withheld_share": float(proof.get("withheld_share", 0.0) or 0.0),
+            },
+            "observation_learning": {
+                "open": int(proof.get("observation_learning_open", 0) or 0),
+                "resolved": int(proof.get("observation_learning_resolved", 0) or 0),
+                "saved_loss": int(proof.get("observation_saved_loss", 0) or 0),
+                "missed_gain": int(proof.get("observation_missed_gain", 0) or 0),
+                "neutral": int(proof.get("observation_neutral", 0) or 0),
+                "low_observations": int(proof.get("observation_low_count", 0) or 0),
+                "maturity_trust": float(proof.get("observation_maturity_trust", 0.0) or 0.0),
+                "action_pressure": float(proof.get("observation_action_pressure", 0.0) or 0.0),
             },
             "economics": {
                 "winrate": float(proof.get("winrate", 0.0) or 0.0),
@@ -470,6 +502,27 @@ class TradeStats:
                 "reflection_maturity",
                 "load_bearing_capacity",
             ]),
+            "form_symbol_state": self._pick_fields(normalized_context.get("form_symbol_state", {}), [
+                "form_symbol_id",
+                "form_symbol_scope",
+                "form_symbol_development_quality",
+                "form_symbol_action_affinity",
+                "form_symbol_action_binding",
+                "form_symbol_observation_affinity",
+                "form_symbol_observation_binding",
+                "form_symbol_reframe_binding",
+                "form_symbol_learning_trust",
+                "form_symbol_action_trust",
+                "form_symbol_caution_trust",
+                "form_symbol_compound_id",
+                "form_symbol_compound_development_quality",
+                "form_symbol_compound_action_affinity",
+                "form_symbol_compound_observation_affinity",
+                "form_symbol_compound_reframe_potential",
+                "form_symbol_compound_learning_trust",
+                "form_symbol_compound_action_trust",
+                "form_symbol_compound_caution_trust",
+            ]),
             "trade_plan": self._pick_fields(normalized_context.get("trade_plan", {}), [
                 "decision",
                 "entry_price",
@@ -568,6 +621,155 @@ class TradeStats:
             return 0.0
 
     # ─────────────────────────────────────────────
+    def _extract_observation_price(self, context: dict) -> float:
+        ctx = dict(context or {})
+        trade_plan = dict(ctx.get("trade_plan", {}) or {})
+        nested = dict(ctx.get("context", {}) or {}) if isinstance(ctx.get("context", {}), dict) else {}
+        compact_trade_plan = dict(nested.get("trade_plan", {}) or {})
+
+        for source in (trade_plan, compact_trade_plan):
+            try:
+                price = float(source.get("entry_price", 0.0) or 0.0)
+                if price > 0.0:
+                    return float(price)
+            except Exception:
+                pass
+        return 0.0
+
+    def _refresh_observation_learning_summary(self):
+        learning = dict(self.data.get("observation_learning", {}) or {})
+        resolved = int(learning.get("resolved", 0) or 0)
+        saved = int(learning.get("saved_loss", 0) or 0)
+        missed = int(learning.get("missed_gain", 0) or 0)
+        neutral = int(learning.get("neutral", 0) or 0)
+
+        if resolved > 0:
+            learning["maturity_trust"] = float(max(0.0, min(1.0, (saved + neutral * 0.35) / float(resolved))))
+            learning["action_pressure"] = float(max(0.0, min(1.0, missed / float(resolved))))
+        else:
+            learning["maturity_trust"] = 0.0
+            learning["action_pressure"] = 0.0
+
+        learning["open"] = int(len(self.data.get("pending_observations", []) or []))
+        self.data["observation_learning"] = dict(learning)
+        return dict(learning)
+
+    def _resolve_pending_observations(self, current_price: float):
+        price = float(current_price or 0.0)
+        if price <= 0.0:
+            return
+
+        pending = list(self.data.get("pending_observations", []) or [])
+        if not pending:
+            self._refresh_observation_learning_summary()
+            return
+
+        horizon = max(3, int(getattr(Config, "OBSERVATION_LEARNING_HORIZON_ATTEMPTS", 24) or 24))
+        now_attempt = int(self.data.get("attempts", 0) or 0)
+        learning = dict(self.data.get("observation_learning", {}) or {})
+        recent = list(self.data.get("recent_observation_learning", []) or [])
+        still_open = []
+
+        for item in pending:
+            obs = dict(item or {})
+            side = str(obs.get("side", "") or "").strip().upper()
+            entry_price = float(obs.get("entry_price", 0.0) or 0.0)
+            tp_price = float(obs.get("tp_price", 0.0) or 0.0)
+            sl_price = float(obs.get("sl_price", 0.0) or 0.0)
+            age = int(now_attempt - int(obs.get("attempt_index", now_attempt) or now_attempt))
+            result = None
+
+            if side == "LONG":
+                if tp_price > 0.0 and price >= tp_price:
+                    result = "missed_gain"
+                elif sl_price > 0.0 and price <= sl_price:
+                    result = "saved_loss"
+            elif side == "SHORT":
+                if tp_price > 0.0 and price <= tp_price:
+                    result = "missed_gain"
+                elif sl_price > 0.0 and price >= sl_price:
+                    result = "saved_loss"
+
+            if result is None and age >= horizon:
+                virtual_move = 0.0
+                if entry_price > 0.0:
+                    if side == "LONG":
+                        virtual_move = price - entry_price
+                    elif side == "SHORT":
+                        virtual_move = entry_price - price
+                if virtual_move > 0.0:
+                    result = "missed_gain"
+                elif virtual_move < 0.0:
+                    result = "saved_loss"
+                else:
+                    result = "neutral"
+
+            if result is None:
+                still_open.append(obs)
+                continue
+
+            learning["resolved"] = int(learning.get("resolved", 0) or 0) + 1
+            learning[result] = int(learning.get(result, 0) or 0) + 1
+            learning["last_result"] = str(result)
+            recent.append({
+                "result": str(result),
+                "age": int(age),
+                "side": str(side or "-"),
+                "structure_quality": float(obs.get("structure_quality", 0.0) or 0.0),
+                "structure_bucket": str(obs.get("structure_bucket", "") or ""),
+                "entry_price": float(entry_price),
+                "current_price": float(price),
+                "form_symbol_id": str(obs.get("form_symbol_id", "") or ""),
+            })
+
+        self.data["pending_observations"] = still_open[-120:]
+        self.data["recent_observation_learning"] = recent[-80:]
+        self.data["observation_learning"] = dict(learning)
+        self._refresh_observation_learning_summary()
+
+    def _register_observation_learning(self, status_key: str, context: dict, structure_quality: float, structure_bucket: str):
+        compact_context = self._compact_context(context or {})
+        current_price = self._extract_observation_price(compact_context)
+        self._resolve_pending_observations(current_price)
+
+        status = str(status_key or "").strip().lower()
+        if status not in ("observed_only", "replanned", "withheld"):
+            return
+
+        learning = dict(self.data.get("observation_learning", {}) or {})
+        if str(structure_bucket or "").strip().lower() != "non_zone":
+            learning["zone_observations"] = int(learning.get("zone_observations", 0) or 0) + 1
+            self.data["observation_learning"] = dict(learning)
+            self._refresh_observation_learning_summary()
+            return
+
+        trade_plan = dict(compact_context.get("trade_plan", {}) or {})
+        side = str(trade_plan.get("decision", "") or "").strip().upper()
+        entry_price = float(trade_plan.get("entry_price", 0.0) or 0.0)
+        tp_price = float(trade_plan.get("tp_price", 0.0) or 0.0)
+        sl_price = float(trade_plan.get("sl_price", 0.0) or 0.0)
+        if side not in ("LONG", "SHORT") or entry_price <= 0.0 or tp_price <= 0.0 or sl_price <= 0.0:
+            return
+
+        form_state = dict(compact_context.get("form_symbol_state", {}) or {})
+        pending = list(self.data.get("pending_observations", []) or [])
+        pending.append({
+            "attempt_index": int(self.data.get("attempts", 0) or 0),
+            "timestamp": self.data.get("current_timestamp"),
+            "status": str(status),
+            "side": str(side),
+            "entry_price": float(entry_price),
+            "tp_price": float(tp_price),
+            "sl_price": float(sl_price),
+            "structure_quality": float(structure_quality),
+            "structure_bucket": str(structure_bucket),
+            "form_symbol_id": str(form_state.get("form_symbol_id", "") or ""),
+        })
+        self.data["pending_observations"] = pending[-120:]
+        learning["low_observations"] = int(learning.get("low_observations", 0) or 0) + 1
+        self.data["observation_learning"] = dict(learning)
+        self._refresh_observation_learning_summary()
+
     def _build_attempt_record(self, status_key: str, context: dict, structure_quality: float, structure_bucket: str) -> dict:
         compact_context = self._compact_context(context or {})
 
@@ -630,6 +832,14 @@ class TradeStats:
                 "action_inhibition": 0.0,
                 "action_clearance": 0.0,
                 "regulation_before_action": 0.0,
+                "observation_learning_open": 0,
+                "observation_learning_resolved": 0,
+                "observation_saved_loss": 0,
+                "observation_missed_gain": 0,
+                "observation_neutral": 0,
+                "observation_low_count": 0,
+                "observation_maturity_trust": 0.0,
+                "observation_action_pressure": 0.0,
             }
 
         total = float(len(items))
@@ -740,6 +950,15 @@ class TradeStats:
         avg_action_inhibition = action_inhibition_sum / total
         avg_action_clearance = action_clearance_sum / total
         regulation_before_action = regulation_before_action_sum / total
+        observation_learning = self._refresh_observation_learning_summary()
+        observation_open = int(observation_learning.get("open", 0) or 0)
+        observation_resolved = int(observation_learning.get("resolved", 0) or 0)
+        observation_saved_loss = int(observation_learning.get("saved_loss", 0) or 0)
+        observation_missed_gain = int(observation_learning.get("missed_gain", 0) or 0)
+        observation_neutral = int(observation_learning.get("neutral", 0) or 0)
+        observation_low_count = int(observation_learning.get("low_observations", 0) or 0)
+        observation_maturity_trust = float(observation_learning.get("maturity_trust", 0.0) or 0.0)
+        observation_action_pressure = float(observation_learning.get("action_pressure", 0.0) or 0.0)
 
         context_quality = max(
             0.0,
@@ -815,6 +1034,14 @@ class TradeStats:
             "action_inhibition": float(avg_action_inhibition),
             "action_clearance": float(avg_action_clearance),
             "regulation_before_action": float(regulation_before_action),
+            "observation_learning_open": int(observation_open),
+            "observation_learning_resolved": int(observation_resolved),
+            "observation_saved_loss": int(observation_saved_loss),
+            "observation_missed_gain": int(observation_missed_gain),
+            "observation_neutral": int(observation_neutral),
+            "observation_low_count": int(observation_low_count),
+            "observation_maturity_trust": float(observation_maturity_trust),
+            "observation_action_pressure": float(observation_action_pressure),
         }
 
     # ─────────────────────────────────────────────
@@ -850,6 +1077,13 @@ class TradeStats:
         else:
             self.data["attempt_non_structure_zone"] = int(self.data.get("attempt_non_structure_zone", 0) or 0) + 1
             structure_bucket = "non_zone"
+
+        self._register_observation_learning(
+            status_key,
+            normalized_context,
+            structure_quality,
+            structure_bucket,
+        )
 
         attempt_record = self._build_attempt_record(
             status_key,
@@ -973,6 +1207,7 @@ class TradeStats:
 
         structure_quality = self._extract_structure_quality(normalized_context)
         structure_bucket = "zone" if structure_quality >= 0.55 else "non_zone"
+        form_symbol_state = dict(normalized_context.get("form_symbol_state", {}) or {})
 
         outcome_record = {
             "event": "trade_exit",
@@ -986,6 +1221,16 @@ class TradeStats:
             "pnl": float(pnl),
             "structure_quality": float(structure_quality),
             "structure_bucket": structure_bucket,
+            "form_symbol_id": str(form_symbol_state.get("form_symbol_id", "") or ""),
+            "form_symbol_development_quality": float(form_symbol_state.get("form_symbol_development_quality", 0.0) or 0.0),
+            "form_symbol_action_binding": float(form_symbol_state.get("form_symbol_action_binding", 0.0) or 0.0),
+            "form_symbol_observation_binding": float(form_symbol_state.get("form_symbol_observation_binding", 0.0) or 0.0),
+            "form_symbol_reframe_binding": float(form_symbol_state.get("form_symbol_reframe_binding", 0.0) or 0.0),
+            "form_symbol_learning_trust": float(form_symbol_state.get("form_symbol_learning_trust", 0.0) or 0.0),
+            "form_symbol_action_trust": float(form_symbol_state.get("form_symbol_action_trust", 0.0) or 0.0),
+            "form_symbol_caution_trust": float(form_symbol_state.get("form_symbol_caution_trust", 0.0) or 0.0),
+            "form_symbol_compound_id": str(form_symbol_state.get("form_symbol_compound_id", "") or ""),
+            "form_symbol_compound_development_quality": float(form_symbol_state.get("form_symbol_compound_development_quality", 0.0) or 0.0),
             "outcome_decomposition": normalized_decomposition,
             "context": compact_context,
         }

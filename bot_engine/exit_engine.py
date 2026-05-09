@@ -79,6 +79,8 @@ class ExitEngine:
 
             long_score = float(signal_meta.get("long_score", 0.0) or 0.0)
             short_score = float(signal_meta.get("short_score", 0.0) or 0.0)
+            felt_bearing_score = float(meta.get("felt_bearing_score", 0.0) or 0.0)
+            felt_profile_label = str(meta.get("felt_profile_label", "mixed_unclear") or "mixed_unclear")
 
             dbr_debug(
                 f"EXIT {reason} | "
@@ -114,6 +116,8 @@ class ExitEngine:
                 f"observation_mode={observation_mode} "
                 f"long_score={long_score:.4f} "
                 f"short_score={short_score:.4f} "
+                f"felt_bearing_score={felt_bearing_score:.4f} "
+                f"felt_profile_label={felt_profile_label} "
                 f"pnl={pnl:.4f}",
                 txt
             )

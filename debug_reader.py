@@ -27,6 +27,56 @@ _RESET_DONE = set()
 _DEBUG_COUNTERS = {}
 _PROFILE_HEADER_DONE = set()
 _FILE_PROFILE_HEADER_DONE = set()
+_DEBUG_RUN_DIR = None
+
+def dbr_get_debug_dir():
+    global _DEBUG_RUN_DIR
+
+    if not bool(getattr(Config, "DEBUG_AUTO_RUN_DIR", True)):
+        return "debug"
+
+    if _DEBUG_RUN_DIR:
+        return str(_DEBUG_RUN_DIR)
+
+    root = "debug"
+    prefix = str(getattr(Config, "DEBUG_RUN_PREFIX", "debug_lauf_") or "debug_lauf_")
+    os.makedirs(root, exist_ok=True)
+
+    max_idx = 0
+    try:
+        for name in os.listdir(root):
+            path = os.path.join(root, name)
+            if not os.path.isdir(path) or not str(name).startswith(prefix):
+                continue
+            suffix = str(name)[len(prefix):]
+            if suffix.isdigit():
+                max_idx = max(max_idx, int(suffix))
+    except Exception:
+        max_idx = 0
+
+    _DEBUG_RUN_DIR = os.path.join(root, f"{prefix}{max_idx + 1}")
+    os.makedirs(_DEBUG_RUN_DIR, exist_ok=True)
+    return str(_DEBUG_RUN_DIR)
+
+def dbr_path(*parts):
+    cleaned = [str(part).strip("/\\") for part in parts if str(part or "").strip("/\\")]
+    return os.path.join(dbr_get_debug_dir(), *cleaned)
+
+def dbr_resolve_path(path):
+    raw = str(path or "").strip()
+    if not raw:
+        return dbr_get_debug_dir()
+
+    normalized = raw.replace("\\", "/")
+    if normalized == "debug":
+        return dbr_get_debug_dir()
+    if normalized.startswith("debug/"):
+        prefix = str(getattr(Config, "DEBUG_RUN_PREFIX", "debug_lauf_") or "debug_lauf_")
+        parts = normalized.split("/")
+        if len(parts) > 1 and parts[1].startswith(prefix):
+            return raw
+        return os.path.join(dbr_get_debug_dir(), *normalized.split("/")[1:])
+    return raw
 # ─────────────────────────────────────────────
 def _ensure_dir(path: str):
     d = os.path.dirname(path)
@@ -43,9 +93,9 @@ def dbr_file_write_profile(path, elapsed_ms, bytes_written=0, operation="write",
         if elapsed < min_ms:
             return
 
-        profile_path = os.path.join("debug", "mcm_file_write_profile.csv")
+        profile_path = dbr_path("mcm_file_write_profile.csv")
         normalized_path = str(path or "-").replace("\\", "/")
-        if normalized_path.endswith("debug/mcm_file_write_profile.csv"):
+        if normalized_path.endswith("mcm_file_write_profile.csv"):
             return
 
         every_n = max(1, int(getattr(Config, "MCM_FILE_WRITE_PROFILE_EVERY_N", 1) or 1))
@@ -84,6 +134,7 @@ def dbr_write(
     write_once: bool = False,
 ):
     try:
+        path = dbr_resolve_path(path)
         if msg is None:
             return
 
@@ -126,7 +177,7 @@ def dbr_write(
 # WRAPPER (API-KOMPATIBEL)
 # ─────────────────────────────────────────────
 def dbr_debug(msg,txt="debug.csv"):
-    dbr_write(msg, os.path.join("debug", txt), "a", True, False)
+    dbr_write(msg, dbr_path(txt), "a", True, False)
 # ─────────────────────────────────────────────
 def dbr_profile(section, elapsed_ms, extra=None, txt="mcm_profile.csv"):
     try:
@@ -139,7 +190,7 @@ def dbr_profile(section, elapsed_ms, extra=None, txt="mcm_profile.csv"):
         if elapsed < min_ms:
             return
 
-        path = os.path.join("debug", str(txt or "mcm_profile.csv"))
+        path = dbr_path(str(txt or "mcm_profile.csv"))
         _ensure_dir(path)
 
         every_n = max(1, int(getattr(Config, "MCM_RUNTIME_PROFILE_EVERY_N", 1) or 1))

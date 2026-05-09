@@ -3,17 +3,20 @@
 # Brain + MCM Bridge
 # ==================================================
 import json
+import hashlib
 import os
 import time
 
 from config import Config
-from debug_reader import dbr_debug, dbr_file_write_profile, dbr_profile
+from debug_reader import dbr_debug, dbr_file_write_profile, dbr_path, dbr_profile, dbr_resolve_path
 from bot_engine.mcm_core_engine import build_tension_state_from_window, build_visual_market_state
 from MCM_KI_Modell import MCMField, ClusterDetector, Memory, SelfModel, AttractorSystem, RegulationLayer
 from bot_engine.strukture_engine import StructureEngine
 import numpy as np
 
 _FIELD_DECISION_PROTOCOL_HEADER_DONE = set()
+_MEMORY_THINKING_PROTOCOL_HEADER_DONE = set()
+_FORM_SYMBOL_PROTOCOL_HEADER_DONE = set()
 
 # --------------------------------------------------
 class MCMBrainRuntime:
@@ -1162,6 +1165,7 @@ def _build_runtime_hold_decision(bot, candle_state=None, tension_state=None, dec
     felt_state = dict(getattr(bot, "felt_state", {}) or {}) if bot is not None else {}
     thought_state = dict(getattr(bot, "thought_state", {}) or {}) if bot is not None else {}
     meta_regulation_state = dict(getattr(bot, "meta_regulation_state", {}) or {}) if bot is not None else {}
+    form_symbol_state = dict(getattr(bot, "form_symbol_state", {}) or {}) if bot is not None else {}
     state_signature = dict(getattr(bot, "last_signature_context", {}) or {}) if bot is not None else {}
 
     strongest_memory = dict(snapshot.get("strongest_memory", {}) or {})
@@ -1217,6 +1221,7 @@ def _build_runtime_hold_decision(bot, candle_state=None, tension_state=None, dec
         "thought_state": dict(thought_state or {}),
         "meta_regulation_state": dict(meta_regulation_state or {}),
         "expectation_state": dict(expectation_state or {}),
+        "form_symbol_state": dict(form_symbol_state or {}),
         "state_signature": dict(state_signature or {}),
         "signature_bias": 0.0,
         "signature_block": False,
@@ -4850,6 +4855,7 @@ def build_runtime_pipeline_snapshot(bot=None):
             "pattern_action_support": 0.0,
             "pattern_observe_pressure": 0.0,
             "pattern_replan_pressure": 0.0,
+            "form_symbol_state": {},
             "neural_felt_state": {},
             "neural_felt_bearing": 0.0,
             "neural_felt_pressure": 0.0,
@@ -4913,6 +4919,7 @@ def build_runtime_pipeline_snapshot(bot=None):
         "pattern_action_support": float(meta_regulation_state.get("pattern_action_support", review_feedback_state.get("pattern_action_support", 0.0)) or 0.0),
         "pattern_observe_pressure": float(meta_regulation_state.get("pattern_observe_pressure", review_feedback_state.get("pattern_observe_pressure", 0.0)) or 0.0),
         "pattern_replan_pressure": float(meta_regulation_state.get("pattern_replan_pressure", review_feedback_state.get("pattern_replan_pressure", 0.0)) or 0.0),
+        "form_symbol_state": dict(getattr(bot, "form_symbol_state", {}) or {}),
         "neural_felt_state": dict(neural_felt_state or {}),
         "neural_felt_bearing": float(inner_field_state.get("neural_felt_bearing", neural_felt_state.get("neural_felt_bearing", felt_state.get("neural_felt_bearing", 0.0))) or 0.0),
         "neural_felt_pressure": float(inner_field_state.get("neural_felt_pressure", neural_felt_state.get("neural_felt_pressure", felt_state.get("neural_felt_pressure", 0.0))) or 0.0),
@@ -4993,10 +5000,375 @@ def _mcm_profile_debug(section, start_time, extra=None):
     except Exception:
         pass
 
+def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=None, processing_state=None, felt_state=None, thought_state=None):
+
+    if bot is None:
+        return None
+
+    if not bool(getattr(Config, "MCM_MEMORY_THINKING_PROTOCOL_DEBUG", True)):
+        return None
+
+    result = dict(runtime_result or {})
+    meta = dict(meta_regulation_state or result.get("meta_regulation_state", {}) or {})
+    processing = dict(processing_state or result.get("processing_state", {}) or {})
+    felt = dict(felt_state or result.get("felt_state", {}) or {})
+    thought = dict(thought_state or result.get("thought_state", {}) or {})
+    memory_state = dict(result.get("memory_complexity_state", getattr(bot, "last_memory_complexity_state", {}) or {}) or {})
+    active_context_trace = _normalize_active_context_trace(
+        result.get("active_context_trace", getattr(bot, "active_context_trace", {}) or {}) or {}
+    )
+
+    phase = str(meta.get("pre_action_phase", "hold") or "hold").strip().lower()
+    reason = str(meta.get("rejection_reason", result.get("rejection_reason", "-")) or "-").strip()
+    proposed_decision = str(meta.get("decision", result.get("decision", "WAIT")) or "WAIT").strip().upper()
+    runtime_tick = int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0)
+    timestamp = result.get("timestamp", getattr(bot, "current_timestamp", None))
+
+    protocol = dict(getattr(bot, "mcm_memory_thinking_protocol", {}) or {})
+    prior_key = str(protocol.get("last_key", "") or "")
+    key = f"{phase}|{reason}|{memory_state.get('context_cluster_negative_source', '-')}"
+    first_event = not bool(prior_key)
+    changed = bool(first_event or prior_key != key)
+    every_n = max(1, int(getattr(Config, "MCM_MEMORY_THINKING_PROTOCOL_EVERY_N", 5) or 5))
+    sequence = int(protocol.get("sequence", 0) or 0) + 1
+
+    protocol.update({
+        "sequence": int(sequence),
+        "last_key": str(key),
+        "last_phase": str(phase),
+        "last_reason": str(reason),
+        "last_timestamp": timestamp,
+        "last_runtime_tick": int(runtime_tick),
+    })
+    setattr(bot, "mcm_memory_thinking_protocol", dict(protocol))
+
+    if not changed and (sequence % every_n) != 0:
+        return dict(protocol)
+
+    path = dbr_path("mcm_memory_thinking_protocol.csv")
+    if path not in _MEMORY_THINKING_PROTOCOL_HEADER_DONE:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        header_text = (
+            "timestamp;runtime_tick;sequence;phase;reason;decision;"
+            "thinking_complexity;memory_compare_load;memory_match_count;memory_support;memory_inhibition;"
+            "memory_conflict;cognitive_load;decision_energy_cost;memory_effect_on_phase;"
+            "memory_orientation;orientation_gap;blind_thinking_load;zero_point_regulation;"
+            "symbolic_object_distance;symbolic_containment;symbolic_field_decoupling;symbolic_regulation;"
+            "symbolic_inner_regulation;symbolic_action_regulation;"
+            "form_symbol_development_quality;form_symbol_action_binding;form_symbol_observation_binding;"
+            "form_symbol_reframe_binding;form_symbol_learning_trust;form_symbol_action_trust;"
+            "form_symbol_caution_trust;learned_development_uncertainty;"
+            "observation_maturity_trust;observation_action_pressure;observation_low_count;"
+            "structure_quality;context_confidence;structure_orientation;structure_orientation_gap;"
+            "structure_action_bearing;structure_action_gap;structure_action_uncertainty;"
+            "context_cluster_negative_source;context_cluster_id;context_cluster_seen;context_cluster_score;"
+            "context_cluster_hit_ratio;context_cluster_loss_ratio;context_cluster_cancel_timeout_ratio;"
+            "context_cluster_negative_evidence;context_cluster_quality;context_cluster_distance;context_cluster_trust;context_cluster_variance;"
+            "signature_key;signature_seen;signature_score;signature_hit_ratio;signature_quality;signature_distance;"
+            "active_context_activation;active_context_support;active_context_conflict;active_context_bearing;"
+            "action_clearance;action_inhibition;decision_readiness;processing_load;thought_pressure;field_clarity\n"
+        )
+        write_start = time.perf_counter()
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(header_text)
+        dbr_file_write_profile(
+            path,
+            (time.perf_counter() - write_start) * 1000.0,
+            bytes_written=len(header_text.encode("utf-8")),
+            operation="memory_thinking_protocol_header",
+        )
+        _MEMORY_THINKING_PROTOCOL_HEADER_DONE.add(path)
+
+    def _clean(value):
+        return str(value).replace("\n", " ").replace(";", "|")
+
+    def _num(key, default=0.0):
+        try:
+            return float(memory_state.get(key, default) or default)
+        except Exception:
+            return float(default)
+
+    row = [
+        _clean(timestamp),
+        int(runtime_tick),
+        int(sequence),
+        _clean(phase),
+        _clean(reason),
+        _clean(proposed_decision),
+        f"{_num('thinking_complexity'):.4f}",
+        f"{_num('memory_compare_load'):.4f}",
+        int(_num("memory_match_count")),
+        f"{_num('memory_support'):.4f}",
+        f"{_num('memory_inhibition'):.4f}",
+        f"{_num('memory_conflict'):.4f}",
+        f"{_num('cognitive_load'):.4f}",
+        f"{_num('decision_energy_cost'):.4f}",
+        _clean(memory_state.get("memory_effect_on_phase", "neutral")),
+        f"{float(meta.get('memory_orientation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('orientation_gap', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('blind_thinking_load', 0.0) or 0.0):.4f}",
+        int(bool(meta.get("zero_point_regulation", False))),
+        f"{float(meta.get('symbolic_object_distance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('symbolic_containment', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('symbolic_field_decoupling', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('symbolic_regulation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('symbolic_inner_regulation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('symbolic_action_regulation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('form_symbol_development_quality', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('form_symbol_action_binding', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('form_symbol_observation_binding', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('form_symbol_reframe_binding', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('form_symbol_learning_trust', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('form_symbol_action_trust', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('form_symbol_caution_trust', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('learned_development_uncertainty', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('observation_maturity_trust', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('observation_action_pressure', 0.0) or 0.0):.4f}",
+        int(float(meta.get("observation_low_count", 0) or 0)),
+        f"{float(meta.get('structure_quality', felt.get('structure_quality', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('context_confidence', felt.get('context_confidence', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('structure_orientation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('structure_orientation_gap', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('structure_action_bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('structure_action_gap', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('structure_action_uncertainty', 0.0) or 0.0):.4f}",
+        _clean(memory_state.get("context_cluster_negative_source", "-")),
+        _clean(memory_state.get("context_cluster_id", result.get("context_cluster_id", "-"))),
+        int(_num("context_cluster_seen")),
+        f"{_num('context_cluster_score'):.4f}",
+        f"{_num('context_cluster_hit_ratio'):.4f}",
+        f"{_num('context_cluster_loss_ratio'):.4f}",
+        f"{_num('context_cluster_cancel_timeout_ratio'):.4f}",
+        _clean(memory_state.get("context_cluster_negative_evidence", "-")),
+        f"{_num('context_cluster_quality', default=float(result.get('context_cluster_quality', 0.0) or 0.0)):.4f}",
+        f"{_num('context_cluster_distance', default=float(result.get('context_cluster_distance', 0.0) or 0.0)):.4f}",
+        f"{_num('context_cluster_trust'):.4f}",
+        f"{_num('context_cluster_variance'):.4f}",
+        _clean(memory_state.get("signature_key", result.get("signature_key", "-"))),
+        int(_num("signature_seen")),
+        f"{_num('signature_score'):.4f}",
+        f"{_num('signature_hit_ratio'):.4f}",
+        f"{_num('signature_quality', default=float(result.get('signature_quality', 0.0) or 0.0)):.4f}",
+        f"{_num('signature_distance', default=float(result.get('signature_distance', 0.0) or 0.0)):.4f}",
+        f"{float(active_context_trace.get('activation', 0.0) or 0.0):.4f}",
+        f"{float(active_context_trace.get('support', 0.0) or 0.0):.4f}",
+        f"{float(active_context_trace.get('conflict', 0.0) or 0.0):.4f}",
+        f"{float(active_context_trace.get('bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('action_clearance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('action_inhibition', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('decision_readiness', thought.get('decision_readiness', 0.0)) or 0.0):.4f}",
+        f"{float(processing.get('processing_load', 0.0) or 0.0):.4f}",
+        f"{float(thought.get('thought_areal_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_clarity', processing.get('field_perception_clarity', 0.0)) or 0.0):.4f}",
+    ]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    line = ";".join(str(item) for item in row) + "\n"
+    write_start = time.perf_counter()
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(line)
+    dbr_file_write_profile(
+        path,
+        (time.perf_counter() - write_start) * 1000.0,
+        bytes_written=len(line.encode("utf-8")),
+        operation="memory_thinking_protocol_append",
+        extra=f"phase={phase}|reason={reason}|effect={memory_state.get('memory_effect_on_phase', 'neutral')}",
+    )
+    return dict(protocol)
+
+def _record_form_symbol_protocol(bot, runtime_result, meta_regulation_state=None, processing_state=None, felt_state=None):
+
+    if bot is None:
+        return None
+
+    if not bool(getattr(Config, "MCM_FORM_SYMBOL_PROTOCOL_DEBUG", True)):
+        return None
+
+    result = dict(runtime_result or {})
+    meta = dict(meta_regulation_state or result.get("meta_regulation_state", {}) or {})
+    processing = dict(processing_state or result.get("processing_state", {}) or {})
+    felt = dict(felt_state or result.get("felt_state", {}) or {})
+    form_state = dict(result.get("form_symbol_state", getattr(bot, "form_symbol_state", {}) or {}) or {})
+
+    symbol_id = str(form_state.get("form_symbol_id", "-") or "-").strip()
+    if not symbol_id or symbol_id == "-":
+        return None
+
+    phase = str(meta.get("pre_action_phase", "hold") or "hold").strip().lower()
+    reason = str(meta.get("rejection_reason", result.get("rejection_reason", "-")) or "-").strip()
+    proposed_decision = str(meta.get("decision", result.get("decision", "WAIT")) or "WAIT").strip().upper()
+    runtime_tick = int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0)
+    timestamp = result.get("timestamp", getattr(bot, "current_timestamp", None))
+
+    zoom_need = float(form_state.get("form_symbol_zoom_need", 0.0) or 0.0)
+    zoom_bucket = int(max(0, min(10, round(zoom_need * 10.0))))
+    protocol = dict(getattr(bot, "mcm_form_symbol_protocol", {}) or {})
+    prior_key = str(protocol.get("last_key", "") or "")
+    key = f"{symbol_id}|{phase}|{reason}|z{zoom_bucket}"
+    first_event = not bool(prior_key)
+    changed = bool(first_event or prior_key != key)
+    every_n = max(1, int(getattr(Config, "MCM_FORM_SYMBOL_PROTOCOL_EVERY_N", 5) or 5))
+    sequence = int(protocol.get("sequence", 0) or 0) + 1
+
+    protocol.update({
+        "sequence": int(sequence),
+        "last_key": str(key),
+        "last_symbol_id": str(symbol_id),
+        "last_phase": str(phase),
+        "last_reason": str(reason),
+        "last_zoom_bucket": int(zoom_bucket),
+        "last_timestamp": timestamp,
+        "last_runtime_tick": int(runtime_tick),
+    })
+    setattr(bot, "mcm_form_symbol_protocol", dict(protocol))
+
+    if not changed and (sequence % every_n) != 0:
+        return dict(protocol)
+
+    path = dbr_path("mcm_form_symbol_protocol.csv")
+    if path not in _FORM_SYMBOL_PROTOCOL_HEADER_DONE:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        header_text = (
+            "timestamp;runtime_tick;sequence;phase;reason;decision;"
+            "form_symbol_id;form_symbol_family_key;form_symbol_variant_key;"
+            "form_symbol_scope;form_symbol_abstraction_level;form_symbol_resolution_quality;form_symbol_detail_pressure;"
+            "form_symbol_object_distance;form_symbol_containment;form_symbol_field_decoupling;"
+            "form_symbol_development_quality;form_symbol_action_affinity;form_symbol_observation_affinity;"
+            "form_symbol_reframe_potential;form_symbol_action_binding;form_symbol_observation_binding;form_symbol_reframe_binding;"
+            "form_symbol_learning_trust;form_symbol_action_trust;form_symbol_caution_trust;"
+            "form_symbol_memory_loaded;form_symbol_memory_symbol_count;"
+            "form_symbol_seen;form_symbol_maturity;form_symbol_stability;"
+            "form_symbol_resonance;form_symbol_load_reduction;form_symbol_zoom_need;"
+            "form_symbol_split_pressure;form_symbol_merge_pressure;form_symbol_bearing;"
+            "form_symbol_fragility;form_symbol_relevance;form_symbol_novelty;form_symbol_distance;"
+            "form_symbol_compound_id;form_symbol_compound_scope;form_symbol_compound_seen;"
+            "form_symbol_compound_maturity;form_symbol_compound_stability;form_symbol_compound_resonance;"
+            "form_symbol_compound_bearing;form_symbol_compound_load_reduction;form_symbol_compound_novelty;"
+            "form_symbol_compound_development_quality;form_symbol_compound_action_affinity;"
+            "form_symbol_compound_observation_affinity;form_symbol_compound_reframe_potential;"
+            "form_symbol_compound_learning_trust;form_symbol_compound_action_trust;form_symbol_compound_caution_trust;"
+            "form_symbol_memory_compound_count;"
+            "structure_quality;context_confidence;field_clarity;field_pressure;field_fragmentation\n"
+        )
+        write_start = time.perf_counter()
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(header_text)
+        dbr_file_write_profile(
+            path,
+            (time.perf_counter() - write_start) * 1000.0,
+            bytes_written=len(header_text.encode("utf-8")),
+            operation="form_symbol_protocol_header",
+        )
+        _FORM_SYMBOL_PROTOCOL_HEADER_DONE.add(path)
+
+    def _clean(value):
+        return str(value).replace("\n", " ").replace(";", "|")
+
+    def _num(key, default=0.0):
+        try:
+            return float(form_state.get(key, default) or default)
+        except Exception:
+            return float(default)
+
+    row = [
+        _clean(timestamp),
+        int(runtime_tick),
+        int(sequence),
+        _clean(phase),
+        _clean(reason),
+        _clean(proposed_decision),
+        _clean(symbol_id),
+        _clean(form_state.get("form_symbol_family_key", form_state.get("form_symbol_key", ""))),
+        _clean(form_state.get("form_symbol_variant_key", "")),
+        _clean(form_state.get("form_symbol_scope", "")),
+        int(_num("form_symbol_abstraction_level")),
+        f"{_num('form_symbol_resolution_quality'):.4f}",
+        f"{_num('form_symbol_detail_pressure'):.4f}",
+        f"{_num('form_symbol_object_distance'):.4f}",
+        f"{_num('form_symbol_containment'):.4f}",
+        f"{_num('form_symbol_field_decoupling'):.4f}",
+        f"{_num('form_symbol_development_quality'):.4f}",
+        f"{_num('form_symbol_action_affinity', 0.50):.4f}",
+        f"{_num('form_symbol_observation_affinity'):.4f}",
+        f"{_num('form_symbol_reframe_potential'):.4f}",
+        f"{_num('form_symbol_action_binding', 0.50):.4f}",
+        f"{_num('form_symbol_observation_binding'):.4f}",
+        f"{_num('form_symbol_reframe_binding'):.4f}",
+        f"{_num('form_symbol_learning_trust'):.4f}",
+        f"{_num('form_symbol_action_trust'):.4f}",
+        f"{_num('form_symbol_caution_trust'):.4f}",
+        int(bool(form_state.get("form_symbol_memory_loaded", False))),
+        int(_num("form_symbol_memory_symbol_count")),
+        int(_num("form_symbol_seen")),
+        f"{_num('form_symbol_maturity'):.4f}",
+        f"{_num('form_symbol_stability'):.4f}",
+        f"{_num('form_symbol_resonance'):.4f}",
+        f"{_num('form_symbol_load_reduction'):.4f}",
+        f"{_num('form_symbol_zoom_need'):.4f}",
+        f"{_num('form_symbol_split_pressure'):.4f}",
+        f"{_num('form_symbol_merge_pressure'):.4f}",
+        f"{_num('form_symbol_bearing'):.4f}",
+        f"{_num('form_symbol_fragility'):.4f}",
+        f"{_num('form_symbol_relevance'):.4f}",
+        f"{_num('form_symbol_novelty'):.4f}",
+        f"{_num('form_symbol_distance'):.4f}",
+        _clean(form_state.get("form_symbol_compound_id", "-")),
+        _clean(form_state.get("form_symbol_compound_scope", "single")),
+        int(_num("form_symbol_compound_seen")),
+        f"{_num('form_symbol_compound_maturity'):.4f}",
+        f"{_num('form_symbol_compound_stability'):.4f}",
+        f"{_num('form_symbol_compound_resonance'):.4f}",
+        f"{_num('form_symbol_compound_bearing'):.4f}",
+        f"{_num('form_symbol_compound_load_reduction'):.4f}",
+        f"{_num('form_symbol_compound_novelty'):.4f}",
+        f"{_num('form_symbol_compound_development_quality'):.4f}",
+        f"{_num('form_symbol_compound_action_affinity', 0.50):.4f}",
+        f"{_num('form_symbol_compound_observation_affinity'):.4f}",
+        f"{_num('form_symbol_compound_reframe_potential'):.4f}",
+        f"{_num('form_symbol_compound_learning_trust'):.4f}",
+        f"{_num('form_symbol_compound_action_trust'):.4f}",
+        f"{_num('form_symbol_compound_caution_trust'):.4f}",
+        int(_num("form_symbol_memory_compound_count")),
+        f"{float(meta.get('structure_quality', felt.get('structure_quality', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('context_confidence', felt.get('context_confidence', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_clarity', processing.get('field_perception_clarity', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_pressure', processing.get('field_perception_pressure', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('field_perception_fragmentation', processing.get('field_perception_fragmentation', 0.0)) or 0.0):.4f}",
+    ]
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    line = ";".join(str(item) for item in row) + "\n"
+    write_start = time.perf_counter()
+    with open(path, "a", encoding="utf-8") as handle:
+        handle.write(line)
+    dbr_file_write_profile(
+        path,
+        (time.perf_counter() - write_start) * 1000.0,
+        bytes_written=len(line.encode("utf-8")),
+        operation="form_symbol_protocol_append",
+        extra=f"symbol={symbol_id}|phase={phase}|zoom={zoom_bucket}",
+    )
+    return dict(protocol)
+
 def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=None, processing_state=None, felt_state=None, thought_state=None):
 
     if bot is None:
         return None
+
+    _record_form_symbol_protocol(
+        bot,
+        runtime_result,
+        meta_regulation_state=meta_regulation_state,
+        processing_state=processing_state,
+        felt_state=felt_state,
+    )
+
+    _record_memory_thinking_protocol(
+        bot,
+        runtime_result,
+        meta_regulation_state=meta_regulation_state,
+        processing_state=processing_state,
+        felt_state=felt_state,
+        thought_state=thought_state,
+    )
 
     if not bool(getattr(Config, "MCM_FIELD_DECISION_PROTOCOL_DEBUG", True)):
         return None
@@ -5047,7 +5419,7 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
     if not phase_changed and (sequence % every_n) != 0:
         return dict(protocol)
 
-    path = os.path.join("debug", "mcm_field_decision_protocol.csv")
+    path = dbr_path("mcm_field_decision_protocol.csv")
     if path not in _FIELD_DECISION_PROTOCOL_HEADER_DONE:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         header_text = (
@@ -6510,6 +6882,13 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
     experience_state = update_experience_state(bot, reason)
     outcome_decomposition = build_outcome_decomposition(bot, reason, position, experience_state)
     bot.last_outcome_decomposition = dict(outcome_decomposition or {})
+    form_development_state = _update_form_symbol_development_from_outcome(
+        bot,
+        reason,
+        position=position,
+        outcome_decomposition=outcome_decomposition,
+    )
+    bot.last_form_symbol_development_state = dict(form_development_state or {})
 
     commit_pending_learning_context(
         bot,
@@ -6549,7 +6928,8 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
         f"reflection_maturity={float((experience_state or {}).get('reflection_maturity', 0.0) or 0.0):.4f} "
         f"signature_key={signature_key or '-'} "
         f"signature_score={signature_score:.4f} "
-        f"outcome_decomposition={dict(outcome_decomposition or {})}"
+        f"outcome_decomposition={dict(outcome_decomposition or {})} "
+        f"form_development={dict(form_development_state or {})}"
     )
 
     return snapshot
@@ -7049,9 +7429,17 @@ def build_outcome_decomposition(bot, outcome_reason, position=None, experience_s
         plan_quality -= 0.10
 
     if isinstance(position, dict):
+        entry_price = abs(float(position.get("entry", 0.0) or 0.0))
         risk = abs(float(position.get("entry", 0.0) or 0.0) - float(position.get("sl", 0.0) or 0.0))
         if risk > 0.0:
             risk_fit_quality = float(max(0.0, min(1.0, risk_fit_quality - min(0.18, risk * 2.5))))
+        risk_width_pressure = float(max(0.0, min(1.0, (risk / max(entry_price, 1e-9)) * 82.0))) if entry_price > 0.0 else 0.0
+        if reason == "sl_hit" and risk_width_pressure > 0.0:
+            plan_quality = float(max(0.0, min(1.0, plan_quality - (risk_width_pressure * 0.09))))
+            execution_quality = float(max(0.0, min(1.0, execution_quality - (risk_width_pressure * 0.05))))
+            risk_fit_quality = float(max(0.0, min(1.0, risk_fit_quality - (risk_width_pressure * 0.10))))
+    else:
+        risk_width_pressure = 0.0
 
     attempt_density = float(state.get("attempt_density", 0.0) or 0.0)
     overtrade_pressure = float(state.get("overtrade_pressure", 0.0) or 0.0)
@@ -7072,6 +7460,7 @@ def build_outcome_decomposition(bot, outcome_reason, position=None, experience_s
         "attempt_density": float(attempt_density),
         "overtrade_pressure": float(overtrade_pressure),
         "context_quality": float(context_quality),
+        "risk_width_pressure": float(risk_width_pressure),
         "reason": str(reason or "-"),
     }
 
@@ -8236,6 +8625,1043 @@ def build_state_signature(candle_state, tension_state, snapshot, stimulus, bot=N
     }
 
 # --------------------------------------------------
+# internal form symbols
+# --------------------------------------------------
+def _quantize_form_axis(value, step=0.20, min_value=-2.0, max_value=2.0):
+
+    try:
+        raw = float(value or 0.0)
+    except Exception:
+        raw = 0.0
+
+    step_value = max(0.01, float(step or 0.20))
+    bounded = max(float(min_value), min(float(max_value), raw))
+    return round(round(bounded / step_value) * step_value, 4)
+
+def _form_symbol_memory_path(path=None):
+
+    if path is not None:
+        return str(path)
+
+    configured = getattr(Config, "MCM_FORM_SYMBOL_MEMORY_PATH", "bot_memory/form_symbol_memory.json")
+    return str(configured or "bot_memory/form_symbol_memory.json")
+
+def _normalize_form_symbol_memory_symbols(symbols):
+
+    if not isinstance(symbols, dict):
+        return {}
+
+    normalized = {}
+    max_symbols = max(32, int(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_MAX_SYMBOLS", 1024) or 1024))
+    max_variants = max(1, int(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_MAX_VARIANTS", 12) or 12))
+
+    def _num(item, key, default=0.0):
+        try:
+            return float((item or {}).get(key, default) or default)
+        except Exception:
+            return float(default)
+
+    candidates = []
+    for symbol_id, raw_item in dict(symbols or {}).items():
+        if not isinstance(raw_item, dict):
+            continue
+
+        symbol_key = str(symbol_id or raw_item.get("symbol_id", "") or "").strip()
+        if not symbol_key:
+            continue
+
+        item = dict(raw_item or {})
+        seen = max(0, int(_num(item, "seen", 0)))
+        variants = dict(item.get("variants", {}) or {})
+        cleaned_variants = {}
+        for variant_key, variant_item in sorted(
+            variants.items(),
+            key=lambda kv: int((kv[1] or {}).get("seen", 0) or 0) if isinstance(kv[1], dict) else 0,
+            reverse=True,
+        )[:max_variants]:
+            if not isinstance(variant_item, dict):
+                continue
+            cleaned_variants[str(variant_key)] = {
+                "seen": max(0, int(_num(variant_item, "seen", 0))),
+                "last_seen_ts": variant_item.get("last_seen_ts", None),
+            }
+
+        avg_vector = []
+        for value in list(item.get("avg_vector", []) or [])[:32]:
+            try:
+                avg_vector.append(float(value))
+            except Exception:
+                continue
+
+        cleaned = {
+            "symbol_id": str(symbol_key),
+            "form_key": str(item.get("form_key", item.get("family_key", "")) or ""),
+            "family_key": str(item.get("family_key", item.get("form_key", "")) or ""),
+            "scope": str(item.get("scope", "") or ""),
+            "abstraction_level": max(0, int(_num(item, "abstraction_level", 0))),
+            "seen": int(seen),
+            "avg_vector": list(avg_vector or []),
+            "variance": max(0.0, min(1.0, _num(item, "variance", 0.0))),
+            "maturity": max(0.0, min(1.0, _num(item, "maturity", 0.0))),
+            "stability": max(0.0, min(1.0, _num(item, "stability", 0.0))),
+            "resonance": max(0.0, min(1.0, _num(item, "resonance", 0.0))),
+            "bearing": max(0.0, min(1.0, _num(item, "bearing", 0.0))),
+            "fragility": max(0.0, min(1.0, _num(item, "fragility", 0.0))),
+            "resolution_quality": max(0.0, min(1.0, _num(item, "resolution_quality", 0.0))),
+            "detail_pressure": max(0.0, min(1.0, _num(item, "detail_pressure", 0.0))),
+            "symbolic_object_distance": max(0.0, min(1.0, _num(item, "symbolic_object_distance", 0.0))),
+            "symbolic_containment": max(0.0, min(1.0, _num(item, "symbolic_containment", 0.0))),
+            "symbolic_field_decoupling": max(0.0, min(1.0, _num(item, "symbolic_field_decoupling", 0.0))),
+            "development_quality": max(-1.0, min(1.0, _num(item, "development_quality", 0.0))),
+            "action_affinity": max(0.0, min(1.0, _num(item, "action_affinity", 0.50))),
+            "observation_affinity": max(0.0, min(1.0, _num(item, "observation_affinity", 0.0))),
+            "context_reframe_potential": max(0.0, min(1.0, _num(item, "context_reframe_potential", 0.0))),
+            "learning_trust": max(0.0, min(1.0, _num(item, "learning_trust", 0.0))),
+            "action_trust": max(0.0, min(1.0, _num(item, "action_trust", 0.0))),
+            "caution_trust": max(0.0, min(1.0, _num(item, "caution_trust", 0.0))),
+            "constructive_seen": max(0, int(_num(item, "constructive_seen", 0))),
+            "unconstructive_seen": max(0, int(_num(item, "unconstructive_seen", 0))),
+            "last_zoom_need": max(0.0, min(1.0, _num(item, "last_zoom_need", 0.0))),
+            "last_load_reduction": max(0.0, min(1.0, _num(item, "last_load_reduction", 0.0))),
+            "first_seen_ts": item.get("first_seen_ts", None),
+            "last_seen_ts": item.get("last_seen_ts", None),
+            "variants": dict(cleaned_variants or {}),
+        }
+        score = (float(cleaned.get("seen", 0) or 0) * 1.0) + (float(cleaned.get("resonance", 0.0) or 0.0) * 32.0)
+        candidates.append((score, symbol_key, cleaned))
+
+    for _, symbol_key, cleaned in sorted(candidates, reverse=True)[:max_symbols]:
+        normalized[str(symbol_key)] = dict(cleaned or {})
+
+    return normalized
+
+def _normalize_form_symbol_memory_compounds(compounds):
+
+    if not isinstance(compounds, dict):
+        return {}
+
+    normalized = {}
+    max_compounds = max(16, int(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_MAX_COMPOUNDS", 768) or 768))
+
+    def _num(item, key, default=0.0):
+        try:
+            return float((item or {}).get(key, default) or default)
+        except Exception:
+            return float(default)
+
+    candidates = []
+    for compound_id, raw_item in dict(compounds or {}).items():
+        if not isinstance(raw_item, dict):
+            continue
+
+        compound_key = str(compound_id or raw_item.get("compound_id", "") or "").strip()
+        if not compound_key:
+            continue
+
+        item = dict(raw_item or {})
+        seen = max(0, int(_num(item, "seen", 0)))
+        cleaned = {
+            "compound_id": str(compound_key),
+            "compound_key": str(item.get("compound_key", "") or ""),
+            "left_symbol_id": str(item.get("left_symbol_id", "") or ""),
+            "right_symbol_id": str(item.get("right_symbol_id", "") or ""),
+            "scope": str(item.get("scope", "") or ""),
+            "seen": int(seen),
+            "maturity": max(0.0, min(1.0, _num(item, "maturity", 0.0))),
+            "stability": max(0.0, min(1.0, _num(item, "stability", 0.0))),
+            "resonance": max(0.0, min(1.0, _num(item, "resonance", 0.0))),
+            "bearing": max(0.0, min(1.0, _num(item, "bearing", 0.0))),
+            "load_reduction": max(0.0, min(1.0, _num(item, "load_reduction", 0.0))),
+            "novelty": max(0.0, min(1.0, _num(item, "novelty", 0.0))),
+            "development_quality": max(-1.0, min(1.0, _num(item, "development_quality", 0.0))),
+            "action_affinity": max(0.0, min(1.0, _num(item, "action_affinity", 0.50))),
+            "observation_affinity": max(0.0, min(1.0, _num(item, "observation_affinity", 0.0))),
+            "context_reframe_potential": max(0.0, min(1.0, _num(item, "context_reframe_potential", 0.0))),
+            "learning_trust": max(0.0, min(1.0, _num(item, "learning_trust", 0.0))),
+            "action_trust": max(0.0, min(1.0, _num(item, "action_trust", 0.0))),
+            "caution_trust": max(0.0, min(1.0, _num(item, "caution_trust", 0.0))),
+            "constructive_seen": max(0, int(_num(item, "constructive_seen", 0))),
+            "unconstructive_seen": max(0, int(_num(item, "unconstructive_seen", 0))),
+            "first_seen_ts": item.get("first_seen_ts", None),
+            "last_seen_ts": item.get("last_seen_ts", None),
+        }
+        score = (float(seen) * 1.0) + (float(cleaned.get("resonance", 0.0) or 0.0) * 28.0)
+        candidates.append((score, compound_key, cleaned))
+
+    for _, compound_key, cleaned in sorted(candidates, reverse=True)[:max_compounds]:
+        normalized[str(compound_key)] = dict(cleaned or {})
+
+    return normalized
+
+def _read_form_symbol_memory(path=None):
+
+    filepath = _form_symbol_memory_path(path)
+    default_payload = {
+        "version": 1,
+        "symbols": {},
+        "compounds": {},
+        "summary": {
+            "symbol_count": 0,
+            "compound_count": 0,
+            "total_seen": 0,
+            "compound_total_seen": 0,
+        },
+    }
+
+    if not bool(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_ENABLED", True)):
+        return dict(default_payload)
+
+    if not os.path.exists(filepath):
+        return dict(default_payload)
+
+    try:
+        with open(filepath, "r", encoding="utf-8") as handle:
+            raw = json.load(handle)
+    except Exception:
+        return dict(default_payload)
+
+    symbols = _normalize_form_symbol_memory_symbols((raw or {}).get("symbols", {}))
+    compounds = _normalize_form_symbol_memory_compounds((raw or {}).get("compounds", {}))
+    total_seen = sum(int((item or {}).get("seen", 0) or 0) for item in symbols.values())
+    compound_total_seen = sum(int((item or {}).get("seen", 0) or 0) for item in compounds.values())
+    return {
+        "version": 1,
+        "symbols": dict(symbols or {}),
+        "compounds": dict(compounds or {}),
+        "summary": {
+            "symbol_count": int(len(symbols or {})),
+            "compound_count": int(len(compounds or {})),
+            "total_seen": int(total_seen),
+            "compound_total_seen": int(compound_total_seen),
+            "loaded_from": str(filepath),
+            "last_saved_ts": (raw or {}).get("summary", {}).get("last_saved_ts", None) if isinstance((raw or {}).get("summary", {}), dict) else None,
+        },
+    }
+
+def _ensure_form_symbol_memory_loaded(bot):
+
+    if bot is None:
+        return {}
+
+    if bool(getattr(bot, "_form_symbol_memory_loaded", False)):
+        return dict(getattr(bot, "form_symbol_space", {}) or {})
+
+    payload = _read_form_symbol_memory()
+    symbols = dict(payload.get("symbols", {}) or {})
+    compounds = dict(payload.get("compounds", {}) or {})
+    current = dict(getattr(bot, "form_symbol_space", {}) or {})
+    current.update(symbols)
+    bot.form_symbol_space = dict(current or {})
+    compound_current = dict(getattr(bot, "form_symbol_compound_space", {}) or {})
+    compound_current.update(compounds)
+    bot.form_symbol_compound_space = dict(compound_current or {})
+    bot._form_symbol_memory_loaded = True
+    bot._form_symbol_memory_dirty = False
+    bot._form_symbol_memory_updates = 0
+    bot._form_symbol_memory_last_save_ts = float(time.time())
+    bot.form_symbol_memory_summary = dict(payload.get("summary", {}) or {})
+    return dict(bot.form_symbol_space or {})
+
+def _write_form_symbol_memory(bot, force=False):
+
+    if bot is None or not bool(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_ENABLED", True)):
+        return None
+
+    if not bool(force) and not bool(getattr(bot, "_form_symbol_memory_dirty", False)):
+        return None
+
+    symbols = _normalize_form_symbol_memory_symbols(getattr(bot, "form_symbol_space", {}) or {})
+    compounds = _normalize_form_symbol_memory_compounds(getattr(bot, "form_symbol_compound_space", {}) or {})
+    total_seen = sum(int((item or {}).get("seen", 0) or 0) for item in symbols.values())
+    compound_total_seen = sum(int((item or {}).get("seen", 0) or 0) for item in compounds.values())
+    filepath = _form_symbol_memory_path()
+    payload = {
+        "version": 1,
+        "summary": {
+            "symbol_count": int(len(symbols or {})),
+            "compound_count": int(len(compounds or {})),
+            "total_seen": int(total_seen),
+            "compound_total_seen": int(compound_total_seen),
+            "last_saved_ts": float(time.time()),
+        },
+        "symbols": dict(symbols or {}),
+        "compounds": dict(compounds or {}),
+    }
+
+    directory = os.path.dirname(filepath)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+
+    text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+    write_start = time.perf_counter()
+    with open(filepath, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    dbr_file_write_profile(
+        filepath,
+        (time.perf_counter() - write_start) * 1000.0,
+        bytes_written=len(text.encode("utf-8")),
+        operation="form_symbol_memory_write",
+        extra=f"symbols={int(len(symbols or {}))}|total_seen={int(total_seen)}",
+    )
+
+    bot.form_symbol_space = dict(symbols or {})
+    bot.form_symbol_compound_space = dict(compounds or {})
+    bot.form_symbol_memory_summary = dict(payload.get("summary", {}) or {})
+    bot._form_symbol_memory_dirty = False
+    bot._form_symbol_memory_last_save_ts = float(time.time())
+    return dict(payload or {})
+
+def _flush_form_symbol_memory_if_due(bot, force=False):
+
+    if bot is None or not bool(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_ENABLED", True)):
+        return None
+
+    if not bool(force) and not bool(getattr(bot, "_form_symbol_memory_dirty", False)):
+        return None
+
+    updates = int(getattr(bot, "_form_symbol_memory_updates", 0) or 0)
+    every_n = max(1, int(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_SAVE_EVERY_N", 64) or 64))
+    if not bool(force) and updates % every_n != 0:
+        return None
+
+    return _write_form_symbol_memory(bot, force=True)
+
+def _extract_outcome_form_symbol_state(bot, position=None):
+
+    position_state = dict(position or {}) if isinstance(position, dict) else {}
+    meta = dict(position_state.get("meta", {}) or {}) if isinstance(position_state.get("meta", {}), dict) else {}
+
+    for candidate in (
+        meta.get("form_symbol_state", {}),
+        (meta.get("runtime_result", {}) or {}).get("form_symbol_state", {}) if isinstance(meta.get("runtime_result", {}), dict) else {},
+        (meta.get("brain_snapshot", {}) or {}).get("form_symbol_state", {}) if isinstance(meta.get("brain_snapshot", {}), dict) else {},
+        getattr(bot, "form_symbol_state", {}) if bot is not None else {},
+    ):
+        if not isinstance(candidate, dict):
+            continue
+        symbol_id = str(candidate.get("form_symbol_id", "") or "").strip()
+        if symbol_id and symbol_id != "-":
+            return dict(candidate or {})
+
+    return {}
+
+def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=None, outcome_decomposition=None):
+
+    if bot is None or not bool(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_ENABLED", True)):
+        return {}
+
+    _ensure_form_symbol_memory_loaded(bot)
+
+    form_state = _extract_outcome_form_symbol_state(bot, position=position)
+    symbol_id = str(form_state.get("form_symbol_id", "") or "").strip()
+    if not symbol_id or symbol_id == "-":
+        return {}
+
+    outcome = dict(outcome_decomposition or {})
+    reason = str(outcome_reason or outcome.get("reason", "") or "").strip().lower()
+
+    def _b01(value, default=0.0):
+        try:
+            return max(0.0, min(1.0, float(value)))
+        except Exception:
+            return float(default)
+
+    def _bs(value, default=0.0):
+        try:
+            return max(-1.0, min(1.0, float(value)))
+        except Exception:
+            return float(default)
+
+    structure_quality = _b01(form_state.get("form_symbol_bearing", 0.0))
+    meta = dict((position or {}).get("meta", {}) or {}) if isinstance(position, dict) else {}
+    bearing_context = dict(meta.get("bearing_context", {}) or {}) if isinstance(meta.get("bearing_context", {}), dict) else {}
+    if bearing_context:
+        structure_quality = _b01(bearing_context.get("structure_quality", structure_quality))
+
+    process_quality = _b01(
+        (
+            _b01(outcome.get("perception_quality", 0.50)) * 0.18
+            + _b01(outcome.get("felt_quality", 0.50)) * 0.16
+            + _b01(outcome.get("thought_quality", 0.50)) * 0.18
+            + _b01(outcome.get("plan_quality", 0.50)) * 0.22
+            + _b01(outcome.get("execution_quality", 0.50)) * 0.14
+            + _b01(outcome.get("risk_fit_quality", 0.50)) * 0.12
+        ),
+        default=0.50,
+    )
+    context_quality = _b01(outcome.get("context_quality", 0.0))
+    risk_width_pressure = _b01(outcome.get("risk_width_pressure", 0.0))
+    structural_support = _b01((structure_quality * 0.64) + (context_quality * 0.36))
+    constructive_signal = _b01((process_quality * 0.62) + (structural_support * 0.38))
+    result_bias = 0.0
+    if reason == "tp_hit":
+        result_bias = 0.18
+    elif reason == "sl_hit":
+        result_bias = -0.22 - (max(0.0, 0.56 - structure_quality) * 0.22) - (risk_width_pressure * 0.12)
+    elif reason in ("cancel", "timeout"):
+        result_bias = -0.08
+    elif reason in ("reward_too_small", "rr_too_low", "sl_distance_too_high"):
+        result_bias = -0.12
+
+    development_sample = _bs(((constructive_signal - 0.50) * 1.40) + result_bias)
+    observation_sample = _b01(
+        max(0.0, -development_sample) * 0.54
+        + max(0.0, 0.52 - structural_support) * 0.34
+        + max(0.0, 0.46 - process_quality) * 0.20
+        + (risk_width_pressure * 0.12 if reason == "sl_hit" else 0.0)
+    )
+    reframe_sample = _b01(
+        observation_sample * 0.46
+        + _b01(form_state.get("form_symbol_novelty", 0.0)) * 0.14
+        + _b01(form_state.get("form_symbol_compound_novelty", 0.0)) * 0.12
+        + max(0.0, 0.50 - structure_quality) * 0.28
+    )
+
+    def _learn_item(item, weight=1.0):
+        learned = dict(item or {})
+        prior_quality = _bs(learned.get("development_quality", 0.0))
+        prior_action = _b01(learned.get("action_affinity", 0.50), default=0.50)
+        prior_observe = _b01(learned.get("observation_affinity", 0.0))
+        prior_reframe = _b01(learned.get("context_reframe_potential", 0.0))
+        sample = _bs(development_sample * float(weight))
+        quality_alpha = 0.12 if abs(sample) < 0.18 else 0.17
+        next_quality = _bs((prior_quality * (1.0 - quality_alpha)) + (sample * quality_alpha))
+        action_target = _b01(
+            0.47
+            + (next_quality * 0.50)
+            + ((structural_support - 0.50) * 0.26)
+            - (observation_sample * 0.10)
+            - (risk_width_pressure * 0.12 if reason == "sl_hit" else 0.0),
+            default=0.50,
+        )
+        observe_target = _b01(
+            (observation_sample * 0.64)
+            + (max(0.0, -next_quality) * 0.28)
+            + (risk_width_pressure * 0.12 if reason == "sl_hit" else 0.0)
+        )
+        reframe_target = _b01((reframe_sample * 0.72) + (prior_reframe * 0.28))
+        constructive_seen = int(learned.get("constructive_seen", 0) or 0)
+        unconstructive_seen = int(learned.get("unconstructive_seen", 0) or 0)
+        evidence_count = constructive_seen + unconstructive_seen + 1
+        evidence_trust = _b01(evidence_count / float(evidence_count + 10))
+        consistency_trust = _b01(abs(next_quality) * 1.45)
+        caution_evidence_bias = _b01((unconstructive_seen + (1 if development_sample < 0.0 else 0)) / float(evidence_count + 2))
+        action_evidence_bias = _b01((constructive_seen + (1 if development_sample >= 0.0 else 0)) / float(evidence_count + 2))
+        learning_target = _b01((evidence_trust * 0.58) + (consistency_trust * 0.42))
+        learned["development_quality"] = float(next_quality)
+        plasticity = 0.18 if development_sample < -0.08 else 0.13
+        learned["action_affinity"] = float(_b01((prior_action * (1.0 - plasticity)) + (action_target * plasticity), default=0.50))
+        learned["observation_affinity"] = float(_b01((prior_observe * 0.80) + (observe_target * 0.20)))
+        learned["context_reframe_potential"] = float(_b01((prior_reframe * 0.84) + (reframe_target * 0.16)))
+        if development_sample >= 0.0:
+            learned["constructive_seen"] = int(learned.get("constructive_seen", 0) or 0) + 1
+        else:
+            learned["unconstructive_seen"] = int(learned.get("unconstructive_seen", 0) or 0) + 1
+        prior_learning_trust = _b01(learned.get("learning_trust", 0.0))
+        prior_action_trust = _b01(learned.get("action_trust", 0.0))
+        prior_caution_trust = _b01(learned.get("caution_trust", 0.0))
+        action_trust_target = _b01(
+            (
+                (max(0.0, next_quality) * 0.72)
+                + (action_evidence_bias * max(0.0, structural_support - 0.45) * 0.28)
+            )
+            * learning_target
+            * (0.55 + structural_support * 0.45)
+        )
+        caution_trust_target = _b01(
+            (
+                (max(0.0, -next_quality) * 0.56)
+                + (caution_evidence_bias * 0.30)
+                + (risk_width_pressure * 0.14 if reason == "sl_hit" else 0.0)
+            )
+            * learning_target
+            * (0.62 + observation_sample * 0.38)
+        )
+        learned["learning_trust"] = float(_b01((prior_learning_trust * 0.82) + (learning_target * 0.18)))
+        learned["action_trust"] = float(_b01((prior_action_trust * 0.84) + (action_trust_target * 0.16)))
+        caution_alpha = 0.30 if development_sample < -0.08 else 0.22
+        learned["caution_trust"] = float(_b01((prior_caution_trust * (1.0 - caution_alpha)) + (caution_trust_target * caution_alpha)))
+        learned["last_development_reason"] = str(reason or "-")
+        learned["last_development_sample"] = float(development_sample)
+        learned["last_development_ts"] = getattr(bot, "current_timestamp", None)
+        return learned
+
+    symbol_space = dict(getattr(bot, "form_symbol_space", {}) or {})
+    symbol_item = _learn_item(dict(symbol_space.get(symbol_id, {}) or {}), weight=1.0)
+    symbol_space[str(symbol_id)] = dict(symbol_item)
+    bot.form_symbol_space = dict(symbol_space)
+
+    compound_id = str(form_state.get("form_symbol_compound_id", "") or "").strip()
+    compound_item = {}
+    if compound_id and compound_id != "-":
+        compound_space = dict(getattr(bot, "form_symbol_compound_space", {}) or {})
+        compound_item = _learn_item(dict(compound_space.get(compound_id, {}) or {}), weight=0.86)
+        compound_space[str(compound_id)] = dict(compound_item)
+        bot.form_symbol_compound_space = dict(compound_space)
+
+    bot._form_symbol_memory_dirty = True
+    bot._form_symbol_memory_updates = int(getattr(bot, "_form_symbol_memory_updates", 0) or 0) + 1
+    _flush_form_symbol_memory_if_due(bot, force=True)
+
+    return {
+        "symbol_id": str(symbol_id),
+        "compound_id": str(compound_id or "-"),
+        "development_sample": float(development_sample),
+        "process_quality": float(process_quality),
+        "structural_support": float(structural_support),
+        "risk_width_pressure": float(risk_width_pressure),
+        "symbol_development_quality": float(symbol_item.get("development_quality", 0.0) or 0.0),
+        "symbol_action_affinity": float(symbol_item.get("action_affinity", 0.50) or 0.50),
+        "symbol_observation_affinity": float(symbol_item.get("observation_affinity", 0.0) or 0.0),
+        "symbol_reframe_potential": float(symbol_item.get("context_reframe_potential", 0.0) or 0.0),
+        "compound_development_quality": float(compound_item.get("development_quality", 0.0) or 0.0) if compound_item else 0.0,
+    }
+
+def build_form_symbol_state(bot, visual_market_state=None, structure_perception_state=None, perception_state=None, felt_state=None, snapshot=None):
+
+    visual = dict(visual_market_state or {})
+    structure = dict(structure_perception_state or {})
+    perception = dict(perception_state or {})
+    felt = dict(felt_state or {})
+    snap = dict(snapshot or {})
+
+    if not isinstance(getattr(bot, "form_symbol_space", None), dict):
+        if bot is not None:
+            bot.form_symbol_space = {}
+    if not isinstance(getattr(bot, "form_symbol_compound_space", None), dict):
+        if bot is not None:
+            bot.form_symbol_compound_space = {}
+
+    if bot is not None:
+        _ensure_form_symbol_memory_loaded(bot)
+
+    spatial_bias = float(visual.get("spatial_bias", perception.get("spatial_bias", 0.0)) or 0.0)
+    directional_bias = float(visual.get("directional_bias", perception.get("directional_bias", 0.0)) or 0.0)
+    range_position = float(visual.get("range_position", perception.get("range_position", 0.0)) or 0.0)
+    short_impulse = float(visual.get("short_impulse", 0.0) or 0.0)
+    mid_impulse = float(visual.get("mid_impulse", 0.0) or 0.0)
+    compression = float(visual.get("compression", 0.0) or 0.0)
+    expansion = float(visual.get("expansion", 0.0) or 0.0)
+    body_pressure = float(visual.get("body_pressure", 0.0) or 0.0)
+    wick_pressure = float(visual.get("wick_pressure", 0.0) or 0.0)
+    market_balance = float(visual.get("market_balance", perception.get("market_balance", 0.0)) or 0.0)
+    breakout_tension = float(visual.get("breakout_tension", perception.get("breakout_tension", 0.0)) or 0.0)
+    visual_coherence = float(visual.get("visual_coherence", perception.get("visual_coherence", 0.0)) or 0.0)
+    structure_quality = float(structure.get("structure_quality", perception.get("structure_quality", felt.get("structure_quality", 0.0))) or 0.0)
+    zone_proximity = float(structure.get("zone_proximity", perception.get("zone_proximity", 0.0)) or 0.0)
+    context_confidence = float(structure.get("context_confidence", perception.get("context_confidence", felt.get("context_confidence", 0.0))) or 0.0)
+    stress_relief_potential = float(structure.get("stress_relief_potential", perception.get("stress_relief_potential", felt.get("stress_relief_potential", 0.0))) or 0.0)
+    field_clarity = float(felt.get("field_perception_clarity", snap.get("field_perception_clarity", 0.0)) or 0.0)
+    field_pressure = float(felt.get("field_perception_pressure", snap.get("field_perception_pressure", 0.0)) or 0.0)
+    field_fragmentation = float(felt.get("field_perception_fragmentation", snap.get("field_perception_fragmentation", 0.0)) or 0.0)
+
+    form_vector = [
+        _quantize_form_axis(spatial_bias),
+        _quantize_form_axis(directional_bias),
+        _quantize_form_axis(range_position),
+        _quantize_form_axis(short_impulse),
+        _quantize_form_axis(mid_impulse),
+        _quantize_form_axis(compression),
+        _quantize_form_axis(expansion),
+        _quantize_form_axis(body_pressure),
+        _quantize_form_axis(wick_pressure),
+        _quantize_form_axis(market_balance),
+        _quantize_form_axis(breakout_tension),
+        _quantize_form_axis(visual_coherence),
+        _quantize_form_axis(structure_quality),
+        _quantize_form_axis(zone_proximity),
+        _quantize_form_axis(context_confidence),
+        _quantize_form_axis(stress_relief_potential),
+        _quantize_form_axis(field_clarity),
+        _quantize_form_axis(field_pressure),
+        _quantize_form_axis(field_fragmentation),
+    ]
+    form_key = "|".join(f"{float(item):.2f}" for item in form_vector)
+
+    form_resolution_quality = max(
+        0.0,
+        min(
+            1.0,
+            (visual_coherence * 0.20)
+            + (structure_quality * 0.24)
+            + (context_confidence * 0.22)
+            + (field_clarity * 0.16)
+            + (market_balance * 0.10)
+            + (stress_relief_potential * 0.08)
+            - (field_fragmentation * 0.18)
+            - (field_pressure * 0.06),
+        ),
+    )
+    form_detail_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (abs(directional_bias) * 0.18)
+            + (abs(range_position) * 0.12)
+            + (abs(short_impulse - mid_impulse) * 0.12)
+            + (breakout_tension * 0.18)
+            + (((body_pressure + wick_pressure) * 0.50) * 0.16)
+            + (field_pressure * 0.14)
+            + (field_fragmentation * 0.10),
+        ),
+    )
+
+    if form_resolution_quality < 0.34:
+        form_symbol_scope = "wide_trace"
+        form_symbol_abstraction_level = 0
+        family_vector = [
+            _quantize_form_axis((directional_bias + spatial_bias) * 0.50, step=0.75),
+            _quantize_form_axis((short_impulse + mid_impulse) * 0.50, step=0.75),
+            _quantize_form_axis((structure_quality + context_confidence) * 0.50, step=0.50, min_value=0.0, max_value=1.0),
+            _quantize_form_axis((field_pressure + breakout_tension) * 0.50, step=0.50, min_value=0.0, max_value=1.0),
+        ]
+    elif form_resolution_quality < 0.58:
+        form_symbol_scope = "wide_form"
+        form_symbol_abstraction_level = 1
+        family_vector = [
+            _quantize_form_axis(directional_bias, step=0.55),
+            _quantize_form_axis(range_position, step=0.55),
+            _quantize_form_axis((short_impulse + mid_impulse) * 0.50, step=0.55),
+            _quantize_form_axis(compression - expansion, step=0.55),
+            _quantize_form_axis((body_pressure + wick_pressure) * 0.50, step=0.50),
+            _quantize_form_axis((structure_quality + context_confidence + zone_proximity) / 3.0, step=0.50, min_value=0.0, max_value=1.0),
+            _quantize_form_axis(field_clarity - ((field_pressure + field_fragmentation) * 0.50), step=0.50, min_value=-1.0, max_value=1.0),
+        ]
+    else:
+        form_symbol_scope = "structured_form"
+        form_symbol_abstraction_level = 2
+        family_vector = [
+            _quantize_form_axis(directional_bias, step=0.40),
+            _quantize_form_axis(range_position, step=0.40),
+            _quantize_form_axis((short_impulse + mid_impulse) * 0.50, step=0.40),
+            _quantize_form_axis(compression - expansion, step=0.40),
+            _quantize_form_axis((body_pressure + wick_pressure) * 0.50, step=0.40),
+            _quantize_form_axis((structure_quality + context_confidence + zone_proximity) / 3.0, step=0.35, min_value=0.0, max_value=1.0),
+            _quantize_form_axis((market_balance + visual_coherence - breakout_tension) / 2.0, step=0.35, min_value=-1.0, max_value=1.0),
+            _quantize_form_axis(field_clarity - ((field_pressure + field_fragmentation) * 0.50), step=0.35, min_value=-1.0, max_value=1.0),
+        ]
+
+    family_key = str(form_symbol_abstraction_level) + "|" + "|".join(f"{float(item):.2f}" for item in family_vector)
+    digest = hashlib.sha1(str(family_key).encode("utf-8")).hexdigest()[:10]
+    symbol_id = f"fs_{digest}"
+
+    symbol_space = dict(getattr(bot, "form_symbol_space", {}) or {}) if bot is not None else {}
+    item = dict(symbol_space.get(symbol_id, {}) or {})
+    seen_before = int(item.get("seen", 0) or 0)
+    avg_vector = list(item.get("avg_vector", form_vector) or form_vector)
+    if len(avg_vector) != len(form_vector):
+        avg_vector = list(form_vector)
+
+    current_vector = np.asarray(form_vector, dtype=float)
+    prior_vector = np.asarray(avg_vector, dtype=float)
+    distance = float(np.linalg.norm(current_vector - prior_vector) / max(1.0, len(form_vector) ** 0.5))
+    seen = seen_before + 1
+    alpha = min(0.35, 1.0 / max(1, seen))
+    new_avg = ((prior_vector * (1.0 - alpha)) + (current_vector * alpha)).tolist()
+    prior_variance = float(item.get("variance", 0.0) or 0.0)
+    variance = max(0.0, min(1.0, (prior_variance * 0.92) + (distance * 0.08)))
+
+    maturity = max(0.0, min(1.0, seen / float(seen + 8)))
+    stability = max(0.0, min(1.0, 1.0 - (variance * 2.4)))
+    novelty = max(0.0, min(1.0, 1.0 - maturity + min(1.0, distance)))
+    relevance = max(
+        0.0,
+        min(
+            1.0,
+            (abs(directional_bias) * 0.16)
+            + (breakout_tension * 0.16)
+            + (abs(range_position) * 0.10)
+            + (body_pressure * 0.12)
+            + (wick_pressure * 0.12)
+            + (field_pressure * 0.12)
+            + (field_fragmentation * 0.10)
+            + (max(0.0, 1.0 - market_balance) * 0.06)
+            + (max(0.0, 1.0 - visual_coherence) * 0.06),
+        ),
+    )
+    bearing = max(
+        0.0,
+        min(
+            1.0,
+            (structure_quality * 0.24)
+            + (context_confidence * 0.18)
+            + (visual_coherence * 0.16)
+            + (market_balance * 0.12)
+            + (stress_relief_potential * 0.10)
+            + (field_clarity * 0.10)
+            + (stability * 0.10),
+        ),
+    )
+    fragility = max(
+        0.0,
+        min(
+            1.0,
+            (wick_pressure * 0.22)
+            + (field_fragmentation * 0.20)
+            + (field_pressure * 0.16)
+            + (max(0.0, 1.0 - context_confidence) * 0.14)
+            + (max(0.0, 1.0 - visual_coherence) * 0.12)
+            + (max(0.0, 1.0 - stability) * 0.16),
+        ),
+    )
+    resonance = max(0.0, min(1.0, maturity * stability * (1.0 - min(1.0, distance))))
+    zoom_need = max(
+        0.0,
+        min(
+            1.0,
+            (relevance * 0.30)
+            + (novelty * 0.22)
+            + (fragility * 0.20)
+            + (max(0.0, 0.42 - bearing) * 0.18)
+            + (max(0.0, distance) * 0.10)
+            + ((1.0 - form_resolution_quality) * form_detail_pressure * 0.08),
+        ),
+    )
+    load_reduction = max(0.0, min(1.0, resonance * (1.0 - zoom_need) * (0.60 + stability * 0.40)))
+    learned_development_quality = max(-1.0, min(1.0, float(item.get("development_quality", 0.0) or 0.0)))
+    learned_action_affinity = max(0.0, min(1.0, float(item.get("action_affinity", 0.50) or 0.50)))
+    learned_observation_affinity = max(0.0, min(1.0, float(item.get("observation_affinity", 0.0) or 0.0)))
+    learned_reframe_potential = max(0.0, min(1.0, float(item.get("context_reframe_potential", 0.0) or 0.0)))
+    learned_learning_trust = max(0.0, min(1.0, float(item.get("learning_trust", 0.0) or 0.0)))
+    learned_action_trust = max(0.0, min(1.0, float(item.get("action_trust", 0.0) or 0.0)))
+    learned_caution_trust = max(0.0, min(1.0, float(item.get("caution_trust", 0.0) or 0.0)))
+    symbolic_object_distance = max(
+        0.0,
+        min(
+            1.0,
+            maturity
+            * stability
+            * (0.45 + resonance * 0.55)
+            * (0.45 + bearing * 0.55)
+            * (1.0 - min(0.90, fragility * 0.72))
+            * (0.65 + form_resolution_quality * 0.35),
+        ),
+    )
+    symbolic_containment = max(
+        0.0,
+        min(
+            1.0,
+            (symbolic_object_distance * 0.58)
+            + (load_reduction * 0.24)
+            + (max(0.0, 1.0 - zoom_need) * 0.10)
+            + (max(0.0, 1.0 - form_detail_pressure) * 0.08),
+        ),
+    )
+    symbolic_field_decoupling = max(
+        0.0,
+        min(
+            1.0,
+            symbolic_containment
+            * (0.40 + maturity * 0.28 + resonance * 0.20 + stability * 0.12)
+            * (1.0 - min(0.78, fragility * 0.42)),
+        ),
+    )
+    split_pressure = max(0.0, min(1.0, (variance * 0.52) + (novelty * 0.24) + (fragility * 0.18) - (stability * 0.10)))
+    merge_pressure = max(0.0, min(1.0, (stability * 0.36) + (maturity * 0.30) + (resonance * 0.24) - (novelty * 0.18)))
+
+    previous_state = dict(getattr(bot, "_last_form_symbol_state", {}) or {}) if bot is not None else {}
+    previous_symbol_id = str(previous_state.get("form_symbol_id", "") or "").strip()
+    compound_id = "-"
+    compound_key = "-"
+    compound_scope = "single"
+    compound_seen = 0
+    compound_maturity = 0.0
+    compound_stability = 0.0
+    compound_resonance = 0.0
+    compound_bearing = 0.0
+    compound_load_reduction = 0.0
+    compound_novelty = 1.0
+    compound_development_quality = 0.0
+    compound_action_affinity = 0.50
+    compound_observation_affinity = 0.0
+    compound_reframe_potential = 0.0
+    compound_learning_trust = 0.0
+    compound_action_trust = 0.0
+    compound_caution_trust = 0.0
+    if previous_symbol_id and previous_symbol_id != "-" and previous_symbol_id != symbol_id and bot is not None:
+        compound_scope = "compound_form"
+        compound_key = f"{previous_symbol_id}>{symbol_id}"
+        compound_digest = hashlib.sha1(str(compound_key).encode("utf-8")).hexdigest()[:10]
+        compound_id = f"fc_{compound_digest}"
+        compound_space = dict(getattr(bot, "form_symbol_compound_space", {}) or {})
+        compound_item = dict(compound_space.get(compound_id, {}) or {})
+        compound_seen = int(compound_item.get("seen", 0) or 0) + 1
+        compound_maturity = max(0.0, min(1.0, compound_seen / float(compound_seen + 13)))
+        previous_stability = float(previous_state.get("form_symbol_stability", 0.0) or 0.0)
+        previous_resonance = float(previous_state.get("form_symbol_resonance", 0.0) or 0.0)
+        previous_bearing = float(previous_state.get("form_symbol_bearing", 0.0) or 0.0)
+        previous_resolution = float(previous_state.get("form_symbol_resolution_quality", 0.0) or 0.0)
+        pair_balance = 1.0 - min(1.0, abs(previous_bearing - bearing))
+        prior_compound_stability = float(compound_item.get("stability", 0.0) or 0.0)
+        compound_stability = max(
+            0.0,
+            min(
+                1.0,
+                (prior_compound_stability * 0.70)
+                + (((previous_stability + stability) * 0.50) * 0.20)
+                + (pair_balance * 0.10),
+            ),
+        )
+        compound_resonance = max(
+            0.0,
+            min(
+                1.0,
+                compound_maturity
+                * compound_stability
+                * (0.45 + ((previous_resonance + resonance) * 0.50) * 0.55),
+            ),
+        )
+        compound_bearing = max(
+            0.0,
+            min(
+                1.0,
+                ((previous_bearing + bearing) * 0.50 * 0.54)
+                + (compound_stability * 0.24)
+                + (compound_resonance * 0.14)
+                + (min(form_resolution_quality, previous_resolution) * 0.08),
+            ),
+        )
+        compound_novelty = max(0.0, min(1.0, 1.0 - compound_maturity + (1.0 - pair_balance) * 0.20))
+        compound_load_reduction = max(
+            0.0,
+            min(
+                1.0,
+                compound_resonance
+                * (0.54 + compound_stability * 0.30 + compound_bearing * 0.16)
+                * (1.0 - min(0.80, compound_novelty * 0.35)),
+            ),
+        )
+        compound_development_quality = max(-1.0, min(1.0, float(compound_item.get("development_quality", 0.0) or 0.0)))
+        compound_action_affinity = max(0.0, min(1.0, float(compound_item.get("action_affinity", 0.50) or 0.50)))
+        compound_observation_affinity = max(0.0, min(1.0, float(compound_item.get("observation_affinity", 0.0) or 0.0)))
+        compound_reframe_potential = max(0.0, min(1.0, float(compound_item.get("context_reframe_potential", 0.0) or 0.0)))
+        compound_learning_trust = max(0.0, min(1.0, float(compound_item.get("learning_trust", 0.0) or 0.0)))
+        compound_action_trust = max(0.0, min(1.0, float(compound_item.get("action_trust", 0.0) or 0.0)))
+        compound_caution_trust = max(0.0, min(1.0, float(compound_item.get("caution_trust", 0.0) or 0.0)))
+        compound_item.update({
+            "compound_id": str(compound_id),
+            "compound_key": str(compound_key),
+            "left_symbol_id": str(previous_symbol_id),
+            "right_symbol_id": str(symbol_id),
+            "scope": str(compound_scope),
+            "seen": int(compound_seen),
+            "maturity": float(compound_maturity),
+            "stability": float(compound_stability),
+            "resonance": float(compound_resonance),
+            "bearing": float(compound_bearing),
+            "load_reduction": float(compound_load_reduction),
+            "novelty": float(compound_novelty),
+            "development_quality": float(compound_development_quality),
+            "action_affinity": float(compound_action_affinity),
+            "observation_affinity": float(compound_observation_affinity),
+            "context_reframe_potential": float(compound_reframe_potential),
+            "learning_trust": float(compound_learning_trust),
+            "action_trust": float(compound_action_trust),
+            "caution_trust": float(compound_caution_trust),
+            "first_seen_ts": compound_item.get("first_seen_ts", getattr(bot, "current_timestamp", None) if bot is not None else None),
+            "last_seen_ts": getattr(bot, "current_timestamp", None) if bot is not None else None,
+        })
+        compound_space[compound_id] = dict(compound_item)
+        bot.form_symbol_compound_space = dict(compound_space)
+
+    learned_action_binding = max(
+        0.0,
+        min(
+            1.0,
+            (learned_action_affinity * 0.58)
+            + (compound_action_affinity * 0.24 * max(0.0, min(1.0, compound_maturity)))
+            + (bearing * 0.18)
+            + (learned_action_trust * 0.08)
+            - (learned_observation_affinity * 0.08)
+            - (learned_reframe_potential * 0.05)
+            - (learned_caution_trust * 0.18),
+        ),
+    )
+    learned_observation_binding = max(
+        0.0,
+        min(
+            1.0,
+            (learned_observation_affinity * 0.62)
+            + (compound_observation_affinity * 0.24 * max(0.0, min(1.0, compound_maturity)))
+            + (fragility * 0.14),
+        ),
+    )
+    learned_reframe_binding = max(
+        0.0,
+        min(
+            1.0,
+            (learned_reframe_potential * 0.60)
+            + (compound_reframe_potential * 0.26 * max(0.0, min(1.0, compound_maturity)))
+            + (max(0.0, 0.48 - bearing) * 0.14),
+        ),
+    )
+
+    item.update({
+        "symbol_id": str(symbol_id),
+        "form_key": str(family_key),
+        "family_key": str(family_key),
+        "variant_key": str(form_key),
+        "scope": str(form_symbol_scope),
+        "abstraction_level": int(form_symbol_abstraction_level),
+        "resolution_quality": float(form_resolution_quality),
+        "detail_pressure": float(form_detail_pressure),
+        "symbolic_object_distance": float(symbolic_object_distance),
+        "symbolic_containment": float(symbolic_containment),
+        "symbolic_field_decoupling": float(symbolic_field_decoupling),
+        "development_quality": float(learned_development_quality),
+        "action_affinity": float(learned_action_affinity),
+        "observation_affinity": float(learned_observation_affinity),
+        "context_reframe_potential": float(learned_reframe_potential),
+        "learning_trust": float(learned_learning_trust),
+        "action_trust": float(learned_action_trust),
+        "caution_trust": float(learned_caution_trust),
+        "seen": int(seen),
+        "avg_vector": [float(v) for v in new_avg],
+        "variance": float(variance),
+        "maturity": float(maturity),
+        "stability": float(stability),
+        "resonance": float(resonance),
+        "bearing": float(bearing),
+        "fragility": float(fragility),
+        "last_zoom_need": float(zoom_need),
+        "last_load_reduction": float(load_reduction),
+        "first_seen_ts": item.get("first_seen_ts", getattr(bot, "current_timestamp", None) if bot is not None else None),
+        "last_seen_ts": getattr(bot, "current_timestamp", None) if bot is not None else None,
+    })
+    variants = dict(item.get("variants", {}) or {})
+    variant_item = dict(variants.get(form_key, {}) or {})
+    variant_item["seen"] = int(variant_item.get("seen", 0) or 0) + 1
+    variant_item["last_seen_ts"] = getattr(bot, "current_timestamp", None) if bot is not None else None
+    variants[str(form_key)] = dict(variant_item)
+    max_variants = max(1, int(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_MAX_VARIANTS", 12) or 12))
+    item["variants"] = dict(
+        sorted(
+            variants.items(),
+            key=lambda kv: int((kv[1] or {}).get("seen", 0) or 0) if isinstance(kv[1], dict) else 0,
+            reverse=True,
+        )[:max_variants]
+    )
+
+    if bot is not None:
+        symbol_space[symbol_id] = dict(item)
+        bot.form_symbol_space = dict(symbol_space)
+        bot._form_symbol_memory_dirty = True
+        bot._form_symbol_memory_updates = int(getattr(bot, "_form_symbol_memory_updates", 0) or 0) + 1
+        bot.form_symbol_state = {
+            "form_symbol_id": str(symbol_id),
+            "form_symbol_key": str(family_key),
+            "form_symbol_family_key": str(family_key),
+            "form_symbol_variant_key": str(form_key),
+            "form_symbol_scope": str(form_symbol_scope),
+            "form_symbol_abstraction_level": int(form_symbol_abstraction_level),
+            "form_symbol_resolution_quality": float(form_resolution_quality),
+            "form_symbol_detail_pressure": float(form_detail_pressure),
+            "form_symbol_object_distance": float(symbolic_object_distance),
+            "form_symbol_containment": float(symbolic_containment),
+            "form_symbol_field_decoupling": float(symbolic_field_decoupling),
+            "form_symbol_development_quality": float(learned_development_quality),
+            "form_symbol_action_affinity": float(learned_action_affinity),
+            "form_symbol_observation_affinity": float(learned_observation_affinity),
+            "form_symbol_reframe_potential": float(learned_reframe_potential),
+            "form_symbol_learning_trust": float(learned_learning_trust),
+            "form_symbol_action_trust": float(learned_action_trust),
+            "form_symbol_caution_trust": float(learned_caution_trust),
+            "form_symbol_action_binding": float(learned_action_binding),
+            "form_symbol_observation_binding": float(learned_observation_binding),
+            "form_symbol_reframe_binding": float(learned_reframe_binding),
+            "form_symbol_seen": int(seen),
+            "form_symbol_maturity": float(maturity),
+            "form_symbol_stability": float(stability),
+            "form_symbol_resonance": float(resonance),
+            "form_symbol_load_reduction": float(load_reduction),
+            "form_symbol_zoom_need": float(zoom_need),
+            "form_symbol_split_pressure": float(split_pressure),
+            "form_symbol_merge_pressure": float(merge_pressure),
+            "form_symbol_bearing": float(bearing),
+            "form_symbol_fragility": float(fragility),
+            "form_symbol_relevance": float(relevance),
+            "form_symbol_novelty": float(novelty),
+            "form_symbol_distance": float(distance),
+            "form_symbol_compound_id": str(compound_id),
+            "form_symbol_compound_key": str(compound_key),
+            "form_symbol_compound_scope": str(compound_scope),
+            "form_symbol_compound_seen": int(compound_seen),
+            "form_symbol_compound_maturity": float(compound_maturity),
+            "form_symbol_compound_stability": float(compound_stability),
+            "form_symbol_compound_resonance": float(compound_resonance),
+            "form_symbol_compound_bearing": float(compound_bearing),
+            "form_symbol_compound_load_reduction": float(compound_load_reduction),
+            "form_symbol_compound_novelty": float(compound_novelty),
+            "form_symbol_compound_development_quality": float(compound_development_quality),
+            "form_symbol_compound_action_affinity": float(compound_action_affinity),
+            "form_symbol_compound_observation_affinity": float(compound_observation_affinity),
+            "form_symbol_compound_reframe_potential": float(compound_reframe_potential),
+            "form_symbol_compound_learning_trust": float(compound_learning_trust),
+            "form_symbol_compound_action_trust": float(compound_action_trust),
+            "form_symbol_compound_caution_trust": float(compound_caution_trust),
+            "form_symbol_memory_loaded": bool(getattr(bot, "_form_symbol_memory_loaded", False)),
+            "form_symbol_memory_symbol_count": int(len(getattr(bot, "form_symbol_space", {}) or {})),
+            "form_symbol_memory_compound_count": int(len(getattr(bot, "form_symbol_compound_space", {}) or {})),
+        }
+        bot._last_form_symbol_state = dict(bot.form_symbol_state)
+        _flush_form_symbol_memory_if_due(bot, force=False)
+        return dict(bot.form_symbol_state)
+
+    return {
+        "form_symbol_id": str(symbol_id),
+        "form_symbol_key": str(family_key),
+        "form_symbol_family_key": str(family_key),
+        "form_symbol_variant_key": str(form_key),
+        "form_symbol_scope": str(form_symbol_scope),
+        "form_symbol_abstraction_level": int(form_symbol_abstraction_level),
+        "form_symbol_resolution_quality": float(form_resolution_quality),
+        "form_symbol_detail_pressure": float(form_detail_pressure),
+        "form_symbol_object_distance": float(symbolic_object_distance),
+        "form_symbol_containment": float(symbolic_containment),
+        "form_symbol_field_decoupling": float(symbolic_field_decoupling),
+        "form_symbol_development_quality": float(learned_development_quality),
+        "form_symbol_action_affinity": float(learned_action_affinity),
+        "form_symbol_observation_affinity": float(learned_observation_affinity),
+        "form_symbol_reframe_potential": float(learned_reframe_potential),
+        "form_symbol_learning_trust": float(learned_learning_trust),
+        "form_symbol_action_trust": float(learned_action_trust),
+        "form_symbol_caution_trust": float(learned_caution_trust),
+        "form_symbol_action_binding": float(learned_action_binding),
+        "form_symbol_observation_binding": float(learned_observation_binding),
+        "form_symbol_reframe_binding": float(learned_reframe_binding),
+        "form_symbol_seen": int(seen),
+        "form_symbol_maturity": float(maturity),
+        "form_symbol_stability": float(stability),
+        "form_symbol_resonance": float(resonance),
+        "form_symbol_load_reduction": float(load_reduction),
+        "form_symbol_zoom_need": float(zoom_need),
+        "form_symbol_split_pressure": float(split_pressure),
+        "form_symbol_merge_pressure": float(merge_pressure),
+        "form_symbol_bearing": float(bearing),
+        "form_symbol_fragility": float(fragility),
+        "form_symbol_relevance": float(relevance),
+        "form_symbol_novelty": float(novelty),
+        "form_symbol_distance": float(distance),
+        "form_symbol_compound_id": str(compound_id),
+        "form_symbol_compound_key": str(compound_key),
+        "form_symbol_compound_scope": str(compound_scope),
+        "form_symbol_compound_seen": int(compound_seen),
+        "form_symbol_compound_maturity": float(compound_maturity),
+        "form_symbol_compound_stability": float(compound_stability),
+        "form_symbol_compound_resonance": float(compound_resonance),
+        "form_symbol_compound_bearing": float(compound_bearing),
+        "form_symbol_compound_load_reduction": float(compound_load_reduction),
+        "form_symbol_compound_novelty": float(compound_novelty),
+        "form_symbol_compound_development_quality": float(compound_development_quality),
+        "form_symbol_compound_action_affinity": float(compound_action_affinity),
+        "form_symbol_compound_observation_affinity": float(compound_observation_affinity),
+        "form_symbol_compound_reframe_potential": float(compound_reframe_potential),
+        "form_symbol_compound_learning_trust": float(compound_learning_trust),
+        "form_symbol_compound_action_trust": float(compound_action_trust),
+        "form_symbol_compound_caution_trust": float(compound_caution_trust),
+    }
+
+# --------------------------------------------------
 # context cluster
 # --------------------------------------------------
 def decay_weak_cluster(bot):
@@ -8991,11 +10417,41 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
     result["experience_attention_bias"] = 0.0
     result["experience_caution_bias"] = 0.0
     result["experience_conviction_bias"] = 0.0
+    memory_complexity_state = {
+        "memory_compare_load": 0.0,
+        "memory_match_count": 0,
+        "memory_support": 0.0,
+        "memory_inhibition": 0.0,
+        "memory_conflict": 0.0,
+        "thinking_complexity": 0.0,
+        "cognitive_load": 0.0,
+        "decision_energy_cost": 0.0,
+        "memory_effect_on_phase": "neutral",
+        "context_cluster_negative_source": "-",
+        "context_cluster_id": "-",
+        "context_cluster_seen": 0,
+        "context_cluster_score": 0.0,
+        "context_cluster_hit_ratio": 0.0,
+        "context_cluster_loss_ratio": 0.0,
+        "context_cluster_cancel_timeout_ratio": 0.0,
+        "context_cluster_negative_evidence": "-",
+        "context_cluster_quality": 0.0,
+        "context_cluster_distance": 0.0,
+        "context_cluster_trust": 0.0,
+        "context_cluster_variance": 0.0,
+        "signature_key": "-",
+        "signature_seen": 0,
+        "signature_score": 0.0,
+        "signature_hit_ratio": 0.0,
+        "signature_quality": 0.0,
+        "signature_distance": 0.0,
+    }
 
     long_score = float(result.get("long_score", 0.0) or 0.0)
     short_score = float(result.get("short_score", 0.0) or 0.0)
 
     if isinstance(signature_context, dict):
+        memory_complexity_state["memory_match_count"] = int(memory_complexity_state.get("memory_match_count", 0) or 0) + 1
         score = float(signature_context.get("score", 0.0) or 0.0)
         seen = int(signature_context.get("seen", 0) or 0)
         tp_hits = int(signature_context.get("tp", 0) or 0)
@@ -9005,6 +10461,13 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
         distance = float(signature_context.get("distance", 0.0) or 0.0)
         resolved = max(1, tp_hits + sl_hits + cancel_hits + timeout_hits)
         hit_ratio = tp_hits / float(resolved)
+        memory_complexity_state.update({
+            "signature_key": str(signature_context.get("signature_key", "-") or "-"),
+            "signature_seen": int(seen),
+            "signature_score": float(score),
+            "signature_hit_ratio": float(hit_ratio),
+            "signature_distance": float(distance),
+        })
 
         if seen >= 3:
             quality = (
@@ -9017,6 +10480,9 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
             result["experience_attention_bias"] += float(max(0.0, quality) * 0.36)
             result["experience_caution_bias"] += float(max(0.0, -quality) * 0.42)
             result["experience_conviction_bias"] += float(bias * 0.55)
+            memory_complexity_state["signature_quality"] = float(quality)
+            memory_complexity_state["memory_support"] = float(memory_complexity_state.get("memory_support", 0.0) or 0.0) + max(0.0, quality) * 0.36
+            memory_complexity_state["memory_inhibition"] = float(memory_complexity_state.get("memory_inhibition", 0.0) or 0.0) + max(0.0, -quality) * 0.42
 
             if float(getattr(bot, "focus_point", 0.0) or 0.0) >= 0.0:
                 long_score += bias
@@ -9044,6 +10510,7 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
         result["signature_distance"] = float(distance)
 
     if isinstance(cluster_context, dict):
+        memory_complexity_state["memory_match_count"] = int(memory_complexity_state.get("memory_match_count", 0) or 0) + 1
         cluster_score = float(cluster_context.get("score", 0.0) or 0.0)
         cluster_seen = int(cluster_context.get("seen", 0) or 0)
         cluster_tp = int(cluster_context.get("tp", 0) or 0)
@@ -9053,6 +10520,22 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
         cluster_distance = float(cluster_context.get("distance", 0.0) or 0.0)
         cluster_trust = float(cluster_context.get("trust", 0.0) or 0.0)
         cluster_variance = float(cluster_context.get("variance", 0.0) or 0.0)
+        cluster_resolved = max(1, cluster_tp + cluster_sl + cluster_cancel + cluster_timeout)
+        cluster_hit_ratio = cluster_tp / float(cluster_resolved)
+        cluster_trade_resolved = max(1, cluster_tp + cluster_sl)
+        cluster_loss_ratio = cluster_sl / float(cluster_trade_resolved)
+        cluster_cancel_timeout_ratio = (cluster_cancel + cluster_timeout) / float(cluster_resolved)
+        memory_complexity_state.update({
+            "context_cluster_id": str(cluster_context.get("cluster_id", "-") or "-"),
+            "context_cluster_seen": int(cluster_seen),
+            "context_cluster_score": float(cluster_score),
+            "context_cluster_hit_ratio": float(cluster_hit_ratio),
+            "context_cluster_loss_ratio": float(cluster_loss_ratio),
+            "context_cluster_cancel_timeout_ratio": float(cluster_cancel_timeout_ratio),
+            "context_cluster_distance": float(cluster_distance),
+            "context_cluster_trust": float(cluster_trust),
+            "context_cluster_variance": float(cluster_variance),
+        })
 
         cluster_quality = (
             (cluster_score * 0.08)
@@ -9064,9 +10547,8 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
         result["experience_attention_bias"] += float(max(0.0, cluster_quality) * 0.28)
         result["experience_caution_bias"] += float(max(0.0, -cluster_quality) * 0.30)
         result["experience_conviction_bias"] += float(max(-0.22, min(0.22, cluster_quality * 0.45)))
-
-        cluster_resolved = max(1, cluster_tp + cluster_sl + cluster_cancel + cluster_timeout)
-        cluster_hit_ratio = cluster_tp / float(cluster_resolved)
+        memory_complexity_state["memory_support"] = float(memory_complexity_state.get("memory_support", 0.0) or 0.0) + max(0.0, cluster_quality) * 0.28
+        memory_complexity_state["memory_inhibition"] = float(memory_complexity_state.get("memory_inhibition", 0.0) or 0.0) + max(0.0, -cluster_quality) * 0.30
 
         if cluster_seen >= 3:
             cluster_quality = (
@@ -9087,14 +10569,69 @@ def reinterpret_focus_by_signature(bot, fused, state_signature):
 
             result["context_cluster_bias"] = float(cluster_bias)
             result["context_cluster_quality"] = float(cluster_quality)
+            memory_complexity_state["context_cluster_quality"] = float(cluster_quality)
 
-            if cluster_score <= -2.60 or (cluster_seen >= 6 and cluster_hit_ratio <= 0.16):
+            score_confirms_negative = cluster_score <= -2.60
+            loss_confirms_negative = (
+                cluster_seen >= 6
+                and cluster_hit_ratio <= 0.16
+                and cluster_sl >= 3
+                and cluster_loss_ratio >= 0.68
+                and cluster_score <= -1.20
+            )
+            if score_confirms_negative:
+                memory_complexity_state["context_cluster_negative_evidence"] = "score_confirms"
+            elif loss_confirms_negative:
+                memory_complexity_state["context_cluster_negative_evidence"] = "loss_confirms"
+            elif cluster_seen >= 6 and cluster_hit_ratio <= 0.16:
+                memory_complexity_state["context_cluster_negative_evidence"] = "low_hit_caution"
+
+            if score_confirms_negative or loss_confirms_negative:
                 result["decision"] = "WAIT"
                 result["reject_reason"] = "context_cluster_negative"
                 result["context_cluster_block"] = True
+                if score_confirms_negative and loss_confirms_negative:
+                    memory_complexity_state["context_cluster_negative_source"] = "mixed"
+                elif score_confirms_negative:
+                    memory_complexity_state["context_cluster_negative_source"] = "cluster_score"
+                elif loss_confirms_negative:
+                    memory_complexity_state["context_cluster_negative_source"] = "low_hit_ratio"
 
         result["context_cluster_id"] = str(cluster_context.get("cluster_id", "-") or "-")
         result["context_cluster_distance"] = float(cluster_distance)
+
+    memory_support = max(0.0, min(1.0, float(memory_complexity_state.get("memory_support", 0.0) or 0.0)))
+    memory_inhibition = max(0.0, min(1.0, float(memory_complexity_state.get("memory_inhibition", 0.0) or 0.0)))
+    memory_conflict = max(0.0, min(1.0, min(memory_support, memory_inhibition) * 1.6))
+    match_count = int(memory_complexity_state.get("memory_match_count", 0) or 0)
+    compare_load = max(0.0, min(1.0, match_count / 2.0))
+    thinking_complexity = max(0.0, min(1.0, (compare_load * 0.34) + (memory_conflict * 0.28) + (memory_inhibition * 0.22) + (abs(float(result.get("experience_conviction_bias", 0.0) or 0.0)) * 0.16)))
+    cognitive_load = max(0.0, min(1.0, (thinking_complexity * 0.55) + (memory_inhibition * 0.28) + (memory_conflict * 0.17)))
+    decision_energy_cost = max(0.0, min(1.0, (cognitive_load * 0.50) + (compare_load * 0.22) + (float(getattr(bot, "experience_regulation", 0.0) or 0.0) * 0.14) + (float(getattr(bot, "reflection_maturity", 0.0) or 0.0) * 0.14)))
+    if bool(result.get("context_cluster_block", False)) or bool(result.get("signature_block", False)):
+        memory_effect = "hard_inhibit"
+    elif memory_conflict >= 0.18:
+        memory_effect = "conflict"
+    elif memory_inhibition > memory_support + 0.04:
+        memory_effect = "inhibit"
+    elif memory_support > memory_inhibition + 0.04:
+        memory_effect = "support"
+    elif match_count > 0:
+        memory_effect = "neutral_match"
+    else:
+        memory_effect = "no_match"
+    memory_complexity_state.update({
+        "memory_support": float(memory_support),
+        "memory_inhibition": float(memory_inhibition),
+        "memory_conflict": float(memory_conflict),
+        "memory_compare_load": float(compare_load),
+        "thinking_complexity": float(thinking_complexity),
+        "cognitive_load": float(cognitive_load),
+        "decision_energy_cost": float(decision_energy_cost),
+        "memory_effect_on_phase": str(memory_effect),
+    })
+    result["memory_complexity_state"] = dict(memory_complexity_state or {})
+    setattr(bot, "last_memory_complexity_state", dict(memory_complexity_state or {}))
 
     result["long_score"] = float(long_score)
     result["short_score"] = float(short_score)
@@ -9566,6 +11103,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     felt_conflict = float(felt.get("felt_conflict", 0.0) or 0.0)
     felt_pressure = float(felt.get("felt_pressure", 0.0) or 0.0)
     felt_alignment = float(felt.get("felt_alignment", 0.0) or 0.0)
+    structure_quality = float(felt.get("structure_quality", perception.get("structure_quality", 0.0)) or 0.0)
+    context_confidence = float(felt.get("context_confidence", perception.get("context_confidence", 0.0)) or 0.0)
     market_balance = float(felt.get("market_balance", perception.get("market_balance", 0.0)) or 0.0)
     breakout_tension = float(felt.get("breakout_tension", perception.get("breakout_tension", 0.0)) or 0.0)
     visual_coherence = float(felt.get("visual_coherence", perception.get("visual_coherence", 0.0)) or 0.0)
@@ -9593,6 +11132,55 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     load_bearing_capacity = float(felt.get("load_bearing_capacity", 0.0) or 0.0)
     protective_width_regulation = float(felt.get("protective_width_regulation", 0.0) or 0.0)
     protective_courage = float(felt.get("protective_courage", 0.0) or 0.0)
+    memory_complexity_state = dict(fused_state.get("memory_complexity_state", {}) or {})
+    memory_support = float(memory_complexity_state.get("memory_support", 0.0) or 0.0)
+    memory_inhibition = float(memory_complexity_state.get("memory_inhibition", 0.0) or 0.0)
+    memory_compare_load = float(memory_complexity_state.get("memory_compare_load", 0.0) or 0.0)
+    memory_conflict = float(memory_complexity_state.get("memory_conflict", 0.0) or 0.0)
+    thinking_complexity = float(memory_complexity_state.get("thinking_complexity", 0.0) or 0.0)
+    cognitive_load = float(memory_complexity_state.get("cognitive_load", 0.0) or 0.0)
+    decision_energy_cost = float(memory_complexity_state.get("decision_energy_cost", 0.0) or 0.0)
+    memory_effect_on_phase = str(memory_complexity_state.get("memory_effect_on_phase", "neutral") or "neutral")
+    context_cluster_negative_evidence = str(memory_complexity_state.get("context_cluster_negative_evidence", "-") or "-")
+    form_symbol_state = dict(fused_state.get("form_symbol_state", {}) or {})
+    form_symbol_object_distance = float(form_symbol_state.get("form_symbol_object_distance", 0.0) or 0.0)
+    form_symbol_containment = float(form_symbol_state.get("form_symbol_containment", 0.0) or 0.0)
+    form_symbol_field_decoupling = float(form_symbol_state.get("form_symbol_field_decoupling", 0.0) or 0.0)
+    form_symbol_zoom_need = float(form_symbol_state.get("form_symbol_zoom_need", 0.0) or 0.0)
+    form_symbol_detail_pressure = float(form_symbol_state.get("form_symbol_detail_pressure", 0.0) or 0.0)
+    form_symbol_compound_load_reduction = float(form_symbol_state.get("form_symbol_compound_load_reduction", 0.0) or 0.0)
+    form_symbol_compound_bearing = float(form_symbol_state.get("form_symbol_compound_bearing", 0.0) or 0.0)
+    form_symbol_compound_novelty = float(form_symbol_state.get("form_symbol_compound_novelty", 1.0) or 1.0)
+    form_symbol_development_quality = float(form_symbol_state.get("form_symbol_development_quality", 0.0) or 0.0)
+    form_symbol_action_binding = float(form_symbol_state.get("form_symbol_action_binding", form_symbol_state.get("form_symbol_action_affinity", 0.50)) or 0.50)
+    form_symbol_observation_binding = float(form_symbol_state.get("form_symbol_observation_binding", form_symbol_state.get("form_symbol_observation_affinity", 0.0)) or 0.0)
+    form_symbol_reframe_binding = float(form_symbol_state.get("form_symbol_reframe_binding", form_symbol_state.get("form_symbol_reframe_potential", 0.0)) or 0.0)
+    form_symbol_learning_trust = float(form_symbol_state.get("form_symbol_learning_trust", 0.0) or 0.0)
+    form_symbol_action_trust = float(form_symbol_state.get("form_symbol_action_trust", 0.0) or 0.0)
+    form_symbol_caution_trust = float(form_symbol_state.get("form_symbol_caution_trust", 0.0) or 0.0)
+    symbolic_regulation = max(
+        0.0,
+        min(
+            1.0,
+            (form_symbol_object_distance * 0.36)
+            + (form_symbol_containment * 0.34)
+            + (form_symbol_field_decoupling * 0.30)
+            + (form_symbol_compound_load_reduction * 0.055)
+            + (form_symbol_compound_bearing * 0.025)
+            - (form_symbol_zoom_need * 0.16)
+            - (form_symbol_detail_pressure * 0.06),
+        ),
+    )
+    symbolic_inner_regulation = float(symbolic_regulation)
+    symbolic_action_regulation = max(
+        0.0,
+        min(
+            0.035,
+            symbolic_regulation
+            * max(0.0, min(1.0, form_symbol_object_distance))
+            * max(0.0, min(1.0, form_symbol_field_decoupling)),
+        ),
+    )
 
     observe_priority_threshold = float(getattr(Config, "MCM_META_OBSERVE_PRIORITY_ALLOW", 0.66) or 0.66)
     uncertainty_threshold = float(getattr(Config, "MCM_META_UNCERTAINTY_ALLOW", 0.72) or 0.72)
@@ -9670,6 +11258,140 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             - (field_fragmentation_bias * 0.10),
         ),
     )
+    if symbolic_regulation > 0.0:
+        field_observation_need = max(0.0, min(1.0, field_observation_need * (1.0 - symbolic_regulation * 0.10)))
+        field_replan_pressure = max(0.0, min(1.0, field_replan_pressure * (1.0 - symbolic_regulation * 0.08)))
+        field_action_support = max(0.0, min(1.0, field_action_support + symbolic_action_regulation))
+    learned_development_uncertainty = max(
+        0.0,
+        min(
+            1.0,
+            (max(0.0, 0.46 - form_symbol_action_binding) * 0.74)
+            + (form_symbol_observation_binding * 0.22)
+            + (form_symbol_reframe_binding * 0.18)
+            + (max(0.0, -form_symbol_development_quality) * 0.26)
+            + (form_symbol_caution_trust * 0.44)
+            - (form_symbol_action_trust * 0.10),
+        ),
+    )
+    if learned_development_uncertainty > 0.0:
+        field_observation_need = max(0.0, min(1.0, field_observation_need + (learned_development_uncertainty * 0.08)))
+        field_replan_pressure = max(0.0, min(1.0, field_replan_pressure + (form_symbol_reframe_binding * 0.06) + (learned_development_uncertainty * 0.035)))
+        field_action_support = max(0.0, min(1.0, field_action_support - (learned_development_uncertainty * 0.060)))
+    memory_orientation = max(
+        0.0,
+        min(
+            1.0,
+            (memory_support * 0.30)
+            + (field_perception_clarity * 0.20)
+            + (field_perception_support * 0.16)
+            + (field_action_support * 0.14)
+            + (processing_alignment * 0.10)
+            + (signal_quality * 0.10)
+            - (memory_inhibition * 0.16)
+            - (memory_conflict * 0.10),
+        ),
+    )
+    orientation_gap = max(
+        0.0,
+        min(
+            1.0,
+            (thinking_complexity * 0.30)
+            + (memory_compare_load * 0.20)
+            + (decision_energy_cost * 0.20)
+            + (processing_load * 0.14)
+            + (field_observation_need * 0.10)
+            - (memory_orientation * 0.34)
+            - (field_perception_clarity * 0.10),
+        ),
+    )
+    blind_thinking_load = max(
+        0.0,
+        min(
+            1.0,
+            (thinking_complexity * 0.32)
+            + (memory_compare_load * 0.18)
+            + (memory_inhibition * 0.16)
+            + (decision_energy_cost * 0.16)
+            + (cognitive_load * 0.12)
+            + (max(0.0, 0.12 - memory_support) * 0.28)
+            + (max(0.0, 0.30 - field_perception_clarity) * 0.12),
+        ),
+    )
+    structure_orientation = max(
+        0.0,
+        min(
+            1.0,
+            (structure_quality * 0.34)
+            + (context_confidence * 0.22)
+            + (field_action_support * 0.14)
+            + (field_perception_clarity * 0.10)
+            + (processing_alignment * 0.08)
+            + (memory_orientation * 0.08)
+            + (memory_support * 0.10)
+            - (memory_inhibition * 0.08),
+        ),
+    )
+    structure_orientation_gap = max(
+        0.0,
+        min(
+            1.0,
+            (max(0.0, 0.56 - structure_quality) * 0.46)
+            + (max(0.0, 0.54 - context_confidence) * 0.26)
+            + (max(0.0, 0.22 - memory_orientation) * 0.16)
+            + (max(0.0, 0.10 - memory_support) * 0.12),
+        ),
+    )
+    action_structure_min = float(getattr(Config, "MCM_STRUCTURE_ACTION_MIN_QUALITY", 0.70) or 0.70)
+    mid_support_min = float(getattr(Config, "MCM_STRUCTURE_ACTION_MID_SUPPORT_MIN", 0.045) or 0.045)
+    mid_strength_min = float(getattr(Config, "MCM_STRUCTURE_ACTION_MID_STRENGTH_MIN", 1.36) or 1.36)
+    low_strength_min = float(getattr(Config, "MCM_STRUCTURE_ACTION_LOW_STRENGTH_MIN", 1.52) or 1.52)
+    structure_action_bearing = max(
+        0.0,
+        min(
+            1.0,
+            (structure_quality * 0.42)
+            + (context_confidence * 0.22)
+            + (field_action_support * 0.12)
+            + (memory_support * 0.12)
+            + (memory_orientation * 0.08)
+            + (symbolic_action_regulation * 0.04)
+            + (form_symbol_action_binding * 0.08)
+            - (memory_inhibition * 0.08),
+        ),
+    )
+    structure_action_gap = max(
+        0.0,
+        min(
+            1.0,
+            max(0.0, action_structure_min - structure_quality)
+            + max(0.0, mid_support_min - max(memory_support, field_action_support * 0.18))
+            + max(0.0, 0.40 - context_confidence) * 0.40,
+        ),
+    )
+    structure_action_uncertainty = max(
+        0.0,
+        min(
+            1.0,
+            (structure_action_gap * 0.58)
+            + (max(0.0, 0.55 - structure_quality) * 0.42)
+            + (learned_development_uncertainty * 0.35)
+            + (max(0.0, mid_support_min - memory_support) * 1.25),
+        ),
+    )
+    if structure_action_uncertainty > 0.0:
+        field_observation_need = max(
+            0.0,
+            min(1.0, field_observation_need + (structure_action_uncertainty * 0.10)),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(1.0, field_replan_pressure + (structure_action_uncertainty * 0.055)),
+        )
+        field_action_support = max(
+            0.0,
+            min(1.0, field_action_support - (structure_action_uncertainty * 0.055)),
+        )
 
     regulated_courage = max(
         0.0,
@@ -9714,6 +11436,18 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (max(0.0, 1.0 - load_bearing_capacity) * 0.04),
         ),
     )
+    if symbolic_regulation > 0.0:
+        action_inhibition = max(0.0, min(1.0, action_inhibition - symbolic_action_regulation))
+    if structure_action_uncertainty > 0.0:
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (structure_action_uncertainty * 0.16)),
+        )
+    if learned_development_uncertainty > 0.0:
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (learned_development_uncertainty * 0.14)),
+        )
 
     action_clearance = max(
         0.0,
@@ -9730,6 +11464,66 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             - (field_perception_instability * 0.08),
         ),
     )
+    if structure_action_uncertainty > 0.0:
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance - (structure_action_uncertainty * 0.10)),
+        )
+    if learned_development_uncertainty > 0.0:
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance - (learned_development_uncertainty * 0.095)),
+        )
+    orientation_gap = max(
+        0.0,
+        min(
+            1.0,
+            orientation_gap
+            + (action_inhibition * 0.12)
+            + (max(0.0, 0.44 - action_clearance) * 0.10)
+            - (max(0.0, action_clearance - action_inhibition) * 0.06),
+        ),
+    )
+    if symbolic_regulation > 0.0:
+        orientation_gap = max(0.0, min(1.0, orientation_gap - (symbolic_inner_regulation * 0.055)))
+    blind_thinking_load = max(
+        0.0,
+        min(
+            1.0,
+            blind_thinking_load
+            + (action_inhibition * 0.10)
+            + (max(0.0, processing_load - 0.48) * 0.12)
+            - (memory_orientation * 0.08),
+        ),
+    )
+    if symbolic_regulation > 0.0:
+        blind_thinking_load = max(0.0, min(1.0, blind_thinking_load - (symbolic_inner_regulation * 0.075)))
+    zero_point_regulation = bool(
+        blind_thinking_load >= 0.48
+        and orientation_gap >= 0.44
+        and memory_support < 0.045
+        and memory_orientation < 0.22
+        and decision_strength < 1.22
+    )
+    structure_orientation_guard = bool(
+        structure_orientation_gap >= 0.20
+        and structure_quality < 0.56
+        and context_confidence < 0.58
+        and memory_support < 0.035
+        and memory_orientation < 0.22
+        and decision_strength < 1.34
+        and memory_effect_on_phase in ("inhibit", "neutral_match", "no_match")
+    )
+    if context_cluster_negative_evidence == "low_hit_caution":
+        structure_orientation_guard = bool(
+            structure_orientation_guard
+            or (
+                structure_orientation_gap >= 0.16
+                and structure_quality < 0.58
+                and memory_support < 0.04
+                and decision_strength < 1.42
+            )
+        )
 
     allow_observe = False
     allow_ruminate = False
@@ -9871,6 +11665,42 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         rejection_reason = "plan_allowed"
         pre_action_phase = "act"
 
+    if bool(zero_point_regulation) and not bool(allow_plan):
+        allow_observe = True
+        allow_ruminate = False
+        allow_block = False
+        rejection_reason = "zero_point_regulation"
+        pre_action_phase = "observe"
+    elif bool(allow_plan) and learned_development_uncertainty >= max(0.040, 0.088 - (form_symbol_reframe_binding * 0.20)) and decision_strength < (1.06 + form_symbol_reframe_binding * 0.30 + learned_development_uncertainty * 0.42):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(form_symbol_reframe_binding >= 0.34)
+        allow_block = False
+        rejection_reason = "development_reframe_observe" if not allow_ruminate else "development_reframe_replan"
+        pre_action_phase = "observe" if not allow_ruminate else "replan"
+    elif bool(structure_orientation_guard) and bool(allow_plan):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = False
+        allow_block = False
+        rejection_reason = "structure_orientation_observe"
+        pre_action_phase = "observe"
+    elif bool(allow_plan) and structure_quality < action_structure_min and memory_support < mid_support_min:
+        if structure_quality < 0.55 and decision_strength < low_strength_min:
+            allow_plan = False
+            allow_observe = True
+            allow_ruminate = False
+            allow_block = False
+            rejection_reason = "structure_development_observe"
+            pre_action_phase = "observe"
+        elif decision_strength < mid_strength_min and structure_action_bearing < 0.46:
+            allow_plan = False
+            allow_observe = True
+            allow_ruminate = False
+            allow_block = False
+            rejection_reason = "structure_bearing_observe"
+            pre_action_phase = "observe"
+
     return {
         "allow_observe": bool(allow_observe),
         "allow_ruminate": bool(allow_ruminate),
@@ -9926,6 +11756,36 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "courage_gap": float(courage_gap),
         "action_inhibition": float(action_inhibition),
         "action_clearance": float(action_clearance),
+        "memory_orientation": float(memory_orientation),
+        "orientation_gap": float(orientation_gap),
+        "blind_thinking_load": float(blind_thinking_load),
+        "symbolic_object_distance": float(form_symbol_object_distance),
+        "symbolic_containment": float(form_symbol_containment),
+        "symbolic_field_decoupling": float(form_symbol_field_decoupling),
+        "symbolic_regulation": float(symbolic_regulation),
+        "symbolic_inner_regulation": float(symbolic_inner_regulation),
+        "symbolic_action_regulation": float(symbolic_action_regulation),
+        "symbolic_compound_load_reduction": float(form_symbol_compound_load_reduction),
+        "symbolic_compound_bearing": float(form_symbol_compound_bearing),
+        "symbolic_compound_novelty": float(form_symbol_compound_novelty),
+        "form_symbol_development_quality": float(form_symbol_development_quality),
+        "form_symbol_action_binding": float(form_symbol_action_binding),
+        "form_symbol_observation_binding": float(form_symbol_observation_binding),
+        "form_symbol_reframe_binding": float(form_symbol_reframe_binding),
+        "form_symbol_learning_trust": float(form_symbol_learning_trust),
+        "form_symbol_action_trust": float(form_symbol_action_trust),
+        "form_symbol_caution_trust": float(form_symbol_caution_trust),
+        "learned_development_uncertainty": float(learned_development_uncertainty),
+        "zero_point_regulation": bool(zero_point_regulation),
+        "zero_point_hint": "finde_wieder_zu_dir_selbst" if bool(zero_point_regulation) else "-",
+        "structure_quality": float(structure_quality),
+        "context_confidence": float(context_confidence),
+        "structure_orientation": float(structure_orientation),
+        "structure_orientation_gap": float(structure_orientation_gap),
+        "structure_action_bearing": float(structure_action_bearing),
+        "structure_action_gap": float(structure_action_gap),
+        "structure_action_uncertainty": float(structure_action_uncertainty),
+        "structure_orientation_guard": bool(structure_orientation_guard),
         "readiness": float(decision_readiness),
         "maturity": float(state_maturity),
         "uncertainty": float(uncertainty_score),
@@ -10459,6 +12319,14 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         expectation_state=expectation_state,
         inner_field_perception_state=inner_field_perception_state,
     )
+    form_symbol_state = build_form_symbol_state(
+        bot,
+        visual_market_state=visual_market_state,
+        structure_perception_state=structure_perception_state,
+        perception_state=perception_state,
+        felt_state=felt_state,
+        snapshot=snapshot,
+    )
 
     state_signature = build_state_signature(candle_state, tension_state, snapshot, stimulus, bot=bot)
 
@@ -10469,6 +12337,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
 
     fused = dict(fused_preview or {})
     fused = reinterpret_focus_by_signature(bot, fused, state_signature)
+    fused["form_symbol_state"] = dict(form_symbol_state or {})
 
     thought_state = build_thought_state(
         candle_state,
@@ -10527,6 +12396,9 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     meta_regulation_state["pattern_action_support"] = float(pattern_action_support)
     meta_regulation_state["pattern_observe_pressure"] = float(pattern_observe_pressure)
     meta_regulation_state["pattern_replan_pressure"] = float(pattern_replan_pressure)
+    meta_regulation_state["observation_maturity_trust"] = float(review_feedback_state.get("observation_maturity_trust", 0.0) or 0.0)
+    meta_regulation_state["observation_action_pressure"] = float(review_feedback_state.get("observation_action_pressure", 0.0) or 0.0)
+    meta_regulation_state["observation_low_count"] = int(review_feedback_state.get("observation_low_count", 0) or 0)
 
     bot.visual_market_state = dict(visual_market_state)
     bot.temporal_perception_state = dict(temporal_perception_state)
@@ -10536,6 +12408,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     bot.structure_perception_state = dict(structure_perception_state)
     bot.processing_state = dict(processing_state)
     bot.expectation_state = dict(expectation_state or {})
+    bot.form_symbol_state = dict(form_symbol_state or {})
     bot.felt_state = dict(felt_state)
     bot.thought_state = dict(thought_state)
     bot.meta_regulation_state = dict(meta_regulation_state)
@@ -10548,10 +12421,36 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     action_capacity = float(field_state.get("action_capacity", 0.0) or 0.0)
     recovery_need = float(field_state.get("recovery_need", 0.0) or 0.0)
     survival_pressure = float(field_state.get("survival_pressure", 0.0) or 0.0)
+    virtual_observation_plan = {}
+    if decision in ("LONG", "SHORT"):
+        try:
+            virtual_prices = derive_trade_plan_from_brain(decision, candle_state, fused, stimulus, snapshot, bot=bot)
+        except Exception:
+            virtual_prices = None
+        if isinstance(virtual_prices, dict):
+            virtual_observation_plan = {
+                "entry_price": float(virtual_prices.get("entry_price", 0.0) or 0.0),
+                "sl_price": float(virtual_prices.get("sl_price", 0.0) or 0.0),
+                "tp_price": float(virtual_prices.get("tp_price", 0.0) or 0.0),
+                "rr_value": float(virtual_prices.get("rr_value", 0.0) or 0.0),
+                "entry_validity_band": dict(virtual_prices.get("entry_validity_band", {}) or {}),
+                "target_conviction": float(virtual_prices.get("target_conviction", 0.0) or 0.0),
+                "risk_model_score": float(virtual_prices.get("risk_model_score", 0.0) or 0.0),
+                "reward_model_score": float(virtual_prices.get("reward_model_score", 0.0) or 0.0),
+            }
 
     if not bool(meta_regulation_state.get("allow_plan", False)):
         result = {
             "decision": "WAIT",
+            "proposed_decision": str(decision or "WAIT"),
+            "entry_price": float(virtual_observation_plan.get("entry_price", 0.0) or 0.0),
+            "sl_price": float(virtual_observation_plan.get("sl_price", 0.0) or 0.0),
+            "tp_price": float(virtual_observation_plan.get("tp_price", 0.0) or 0.0),
+            "rr_value": float(virtual_observation_plan.get("rr_value", 0.0) or 0.0),
+            "entry_validity_band": dict(virtual_observation_plan.get("entry_validity_band", {}) or {}),
+            "target_conviction": float(virtual_observation_plan.get("target_conviction", 0.0) or 0.0),
+            "risk_model_score": float(virtual_observation_plan.get("risk_model_score", 0.0) or 0.0),
+            "reward_model_score": float(virtual_observation_plan.get("reward_model_score", 0.0) or 0.0),
             "energy": float(energy),
             "coherence": float(coherence),
             "asymmetry": int(asymmetry),
@@ -10573,7 +12472,9 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "thought_state": dict(thought_state or {}),
             "meta_regulation_state": dict(meta_regulation_state or {}),
             "expectation_state": dict(expectation_state or {}),
+            "form_symbol_state": dict(form_symbol_state or {}),
             "state_signature": dict(state_signature or {}),
+            "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
             "signature_bias": float(fused.get("signature_bias", 0.0) or 0.0),
             "signature_block": bool(fused.get("signature_block", False)),
             "signature_quality": float(fused.get("signature_quality", 0.0) or 0.0),
@@ -10611,6 +12512,8 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
                 "processing_state": dict(processing_state or {}),
                 "felt_state": dict(felt_state or {}),
                 "thought_state": dict(thought_state or {}),
+                "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
+                "form_symbol_state": dict(form_symbol_state or {}),
                 "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
                 "rejection_reason": "decision_not_tradeable",
             },
@@ -10632,6 +12535,8 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
                 "processing_state": dict(processing_state or {}),
                 "felt_state": dict(felt_state or {}),
                 "thought_state": dict(thought_state or {}),
+                "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
+                "form_symbol_state": dict(form_symbol_state or {}),
                 "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
                 "rejection_reason": "trade_plan_missing",
             },
@@ -10674,7 +12579,9 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         "thought_state": dict(thought_state or {}),
         "meta_regulation_state": dict(meta_regulation_state or {}),
         "expectation_state": dict(expectation_state or {}),
+        "form_symbol_state": dict(form_symbol_state or {}),
         "state_signature": dict(state_signature or {}),
+        "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
         "signature_bias": float(fused.get("signature_bias", 0.0) or 0.0),
         "signature_block": bool(fused.get("signature_block", False)),
         "signature_quality": float(fused.get("signature_quality", 0.0) or 0.0),
@@ -10773,6 +12680,7 @@ def build_runtime_decision_tendency(window, candle_state, bot=None):
             "thought_state": dict(hold_result.get("thought_state", {}) or {}),
             "meta_regulation_state": dict(hold_result.get("meta_regulation_state", {}) or {}),
             "expectation_state": dict(hold_result.get("expectation_state", {}) or {}),
+            "form_symbol_state": dict(hold_result.get("form_symbol_state", {}) or {}),
             "state_signature": dict(hold_result.get("state_signature", {}) or {}),
             "signature_bias": float(hold_result.get("signature_bias", 0.0) or 0.0),
             "signature_block": bool(hold_result.get("signature_block", False)),
@@ -10826,6 +12734,7 @@ def build_runtime_decision_tendency(window, candle_state, bot=None):
         "thought_state": dict(brain_snapshot.get("thought_state", entry_result.get("thought_state", {})) or {}),
         "meta_regulation_state": dict(brain_snapshot.get("meta_regulation_state", entry_result.get("meta_regulation_state", {})) or {}),
         "expectation_state": dict(brain_snapshot.get("expectation_state", entry_result.get("expectation_state", {})) or {}),
+        "form_symbol_state": dict(brain_snapshot.get("form_symbol_state", entry_result.get("form_symbol_state", {})) or {}),
         "state_signature": dict(brain_snapshot.get("state_signature", entry_result.get("state_signature", {})) or {}),
         "signature_bias": float(signal_state.get("signature_bias", entry_result.get("signature_bias", 0.0)) or 0.0),
         "signature_block": bool(signal_state.get("signature_block", entry_result.get("signature_block", False))),
@@ -10858,6 +12767,7 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
     result = dict(runtime_result or {})
     meta_regulation_state = dict(result.get("meta_regulation_state", {}) or {})
     review_feedback_state = dict(meta_regulation_state.get("review_feedback_state", result.get("review_feedback_state", {}) or {}) or {})
+    form_symbol_state = dict(result.get("form_symbol_state", getattr(bot, "form_symbol_state", {}) if bot is not None else {}) or {})
     inner_field_state = dict(result.get("inner_field_perception_state", {}) or {})
     felt_state = dict(result.get("felt_state", {}) or {})
     neural_felt_state = dict(inner_field_state.get("neural_felt_state", felt_state.get("neural_felt_state", {})) or {})
@@ -10891,6 +12801,7 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
         "thought_state": dict(result.get("thought_state", {}) or {}),
         "meta_regulation_state": dict(result.get("meta_regulation_state", {}) or {}),
         "expectation_state": dict(result.get("expectation_state", {}) or {}),
+        "form_symbol_state": dict(form_symbol_state or {}),
         "state_signature": dict(result.get("state_signature", {}) or {}),
         "focus": dict(result.get("focus", {}) or {}),
         "neural_felt_state": dict(neural_felt_state or {}),
@@ -10936,6 +12847,15 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
             "pattern_action_support": float(meta_regulation_state.get("pattern_action_support", review_feedback_state.get("pattern_action_support", 0.0)) or 0.0),
             "pattern_observe_pressure": float(meta_regulation_state.get("pattern_observe_pressure", review_feedback_state.get("pattern_observe_pressure", 0.0)) or 0.0),
             "pattern_replan_pressure": float(meta_regulation_state.get("pattern_replan_pressure", review_feedback_state.get("pattern_replan_pressure", 0.0)) or 0.0),
+            "form_symbol_id": str(form_symbol_state.get("form_symbol_id", "") or ""),
+            "form_symbol_seen": int(form_symbol_state.get("form_symbol_seen", 0) or 0),
+            "form_symbol_maturity": float(form_symbol_state.get("form_symbol_maturity", 0.0) or 0.0),
+            "form_symbol_stability": float(form_symbol_state.get("form_symbol_stability", 0.0) or 0.0),
+            "form_symbol_resonance": float(form_symbol_state.get("form_symbol_resonance", 0.0) or 0.0),
+            "form_symbol_load_reduction": float(form_symbol_state.get("form_symbol_load_reduction", 0.0) or 0.0),
+            "form_symbol_zoom_need": float(form_symbol_state.get("form_symbol_zoom_need", 0.0) or 0.0),
+            "form_symbol_bearing": float(form_symbol_state.get("form_symbol_bearing", 0.0) or 0.0),
+            "form_symbol_fragility": float(form_symbol_state.get("form_symbol_fragility", 0.0) or 0.0),
             "neural_felt_bearing": float(neural_felt_bearing),
             "neural_felt_pressure": float(neural_felt_pressure),
             "neural_felt_memory_resonance": float(neural_felt_memory_resonance),
@@ -10981,11 +12901,20 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
             "replan_pull": 0.0,
             "hold_pull": 0.0,
             "tendency_hint": "hold",
+            "observation_maturity_trust": 0.0,
+            "observation_action_pressure": 0.0,
         }
 
     result = dict(runtime_result or {})
     review_notes = dict((getattr(bot, "mcm_decision_episode_internal", {}) or {}).get("review_notes", {}) or {})
     experience_space = dict(getattr(bot, "mcm_experience_space", {}) or {})
+    attempt_feedback = {}
+    stats_obj = getattr(bot, "stats", None)
+    if stats_obj is not None and hasattr(stats_obj, "get_attempt_feedback"):
+        try:
+            attempt_feedback = dict(stats_obj.get_attempt_feedback() or {})
+        except Exception:
+            attempt_feedback = {}
     context_links = dict(experience_space.get("context_links", {}) or {})
     inner_context_links = dict(experience_space.get("inner_context_links", {}) or {})
 
@@ -11019,6 +12948,9 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
     pattern_action_support = float(affective.get("pattern_action_support", 0.0) or 0.0)
     pattern_observe_pressure = float(affective.get("pattern_observe_pressure", 0.0) or 0.0)
     pattern_replan_pressure = float(affective.get("pattern_replan_pressure", 0.0) or 0.0)
+    observation_maturity_trust = float(attempt_feedback.get("observation_maturity_trust", 0.0) or 0.0)
+    observation_action_pressure = float(attempt_feedback.get("observation_action_pressure", 0.0) or 0.0)
+    observation_low_count = int(attempt_feedback.get("observation_low_count", 0) or 0)
     reinforcement = float(context_item.get("reinforcement", 0.0) or 0.0)
     attenuation = float(context_item.get("attenuation", 0.0) or 0.0)
     bearing_effect = float(context_item.get("bearing_effect", 0.0) or 0.0)
@@ -11053,7 +12985,17 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
         ),
     )
 
-    act_push = max(0.0, min(1.0, carry_capacity - (caution_load * 0.68) + (pattern_action_support * 0.18)))
+    act_push = max(
+        0.0,
+        min(
+            1.0,
+            carry_capacity
+            - (caution_load * 0.68)
+            + (pattern_action_support * 0.18)
+            + (observation_action_pressure * 0.035)
+            - (observation_maturity_trust * 0.060),
+        ),
+    )
     observe_pull = max(
         0.0,
         min(
@@ -11062,7 +13004,8 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
             + (uncertainty_recognition_quality * 0.20)
             + (pattern_observe_pressure * 0.22)
             + (inner_pattern_fragility * 0.08)
-            + (0.10 if review_label == "observe_was_correct" else 0.0),
+            + (0.10 if review_label == "observe_was_correct" else 0.0)
+            + (observation_maturity_trust * 0.085),
         ),
     )
     replan_pull = max(
@@ -11123,6 +13066,9 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
         "replan_pull": float(replan_pull),
         "hold_pull": float(hold_pull),
         "tendency_hint": str(tendency_hint),
+        "observation_maturity_trust": float(observation_maturity_trust),
+        "observation_action_pressure": float(observation_action_pressure),
+        "observation_low_count": int(observation_low_count),
     }
 
 # --------------------------------------------------
@@ -11180,7 +13126,7 @@ def _compute_runtime_result(window, candle_state, bot=None, tension_state=None, 
                 reason="runtime_no_plan",
             )
         else:
-            proposed_decision = str(runtime_result.get("decision", "WAIT") or "WAIT").upper().strip()
+            proposed_decision = str(runtime_result.get("proposed_decision", runtime_result.get("decision", "WAIT")) or "WAIT").upper().strip()
             meta_regulation_state = dict(runtime_result.get("meta_regulation_state", {}) or {})
             pre_action_phase = str(meta_regulation_state.get("pre_action_phase", "hold") or "hold").strip().lower()
             review_feedback_state = dict(runtime_result.get("review_feedback_state", {}) or {})
@@ -11275,6 +13221,8 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
         runtime_payload["thought_state"] = dict(thought_state)
         bot.thought_state = dict(thought_state)
 
+    _flush_form_symbol_memory_if_due(bot, force=False)
+
     brain_snapshot = _build_runtime_brain_snapshot(
         bot,
         runtime_payload,
@@ -11356,6 +13304,7 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
         "inner_field_topology_tension_trend": float(inner_field_topology_tension_trend),
         "inner_field_memory_resonance_trend": float(inner_field_memory_resonance_trend),
         "inner_field_history_label": str(inner_field_history_label),
+        "form_symbol_state": dict(runtime_result.get("form_symbol_state", getattr(bot, "form_symbol_state", {}) or {}) or {}),
         "entry_result": dict(runtime_result or {}),
     }
 
@@ -11391,6 +13340,7 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
             "thought_state": dict((runtime_result.get("thought_state", {}) or {})),
             "meta_regulation_state": dict((runtime_result.get("meta_regulation_state", {}) or {})),
             "expectation_state": dict((runtime_result.get("expectation_state", {}) or {})),
+            "form_symbol_state": dict((runtime_result.get("form_symbol_state", {}) or {})),
             "state_signature": dict((runtime_result.get("state_signature", {}) or {})),
             "events": [],
         }
@@ -11415,6 +13365,7 @@ def _apply_runtime_result(bot, runtime_result, decision_tendency, timestamp, run
             episode["thought_state"] = dict((runtime_result.get("thought_state", {}) or {}))
             episode["meta_regulation_state"] = dict((runtime_result.get("meta_regulation_state", {}) or {}))
             episode["expectation_state"] = dict((runtime_result.get("expectation_state", {}) or {}))
+            episode["form_symbol_state"] = dict((runtime_result.get("form_symbol_state", {}) or {}))
             episode["state_signature"] = dict((runtime_result.get("state_signature", {}) or {}))
 
     episode_internal = _build_internal_episode_state(
@@ -12182,7 +14133,7 @@ def _snapshot_write_path(snapshot_kind):
     else:
         configured = str(getattr(Config, "MCM_VISUAL_SNAPSHOT_PATH", "debug/bot_visual_snapshot.json") or "debug/bot_visual_snapshot.json")
 
-    return configured
+    return dbr_resolve_path(configured)
 
 # --------------------------------------------------
 def _write_runtime_snapshot_payload(snapshot_kind, payload):

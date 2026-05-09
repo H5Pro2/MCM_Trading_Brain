@@ -25,7 +25,7 @@ from place_orders import place_order, cancel_order_by_id, consume_cancelled_caus
 from debug_reader import dbr_debug
 from ph_ohlcv import _build_candle_state
 from bot_gate_funktions import evaluate_entry_decision
-from MCM_Brain_Modell import apply_outcome_stimulus, build_runtime_pipeline_snapshot, build_visualization_snapshot_bundle, capture_runtime_regulation_transition, commit_runtime_regulation_snapshot, create_mcm_brain, create_mcm_runtime, mark_runtime_episode_event, prepare_visualization_snapshot_state, step_mcm_runtime, step_mcm_runtime_idle, write_visualization_snapshot_bundle
+from MCM_Brain_Modell import _flush_form_symbol_memory_if_due, apply_outcome_stimulus, build_runtime_pipeline_snapshot, build_visualization_snapshot_bundle, capture_runtime_regulation_transition, commit_runtime_regulation_snapshot, create_mcm_brain, create_mcm_runtime, mark_runtime_episode_event, prepare_visualization_snapshot_state, step_mcm_runtime, step_mcm_runtime_idle, write_visualization_snapshot_bundle
 from memory_state import capture_memory_state, ensure_memory_state_loaded, finalize_memory_state_save, flush_memory_state_if_due, initialize_memory_state_bootstrap, mark_memory_state_dirty, write_memory_state_payload
 
 
@@ -2264,9 +2264,10 @@ class Bot:
             "thought_state": dict(result.get("thought_state", {}) or {}),
             "meta_regulation_state": dict(result.get("meta_regulation_state", {}) or {}),
             "expectation_state": dict(result.get("expectation_state", {}) or {}),
+            "form_symbol_state": dict(result.get("form_symbol_state", getattr(self, "form_symbol_state", {}) if self is not None else {}) or {}),
             "state_signature": dict(result.get("state_signature", {}) or {}),
             "trade_plan": {
-                "decision": str(result.get("decision", "WAIT") or "WAIT"),
+                "decision": str(result.get("proposed_decision", "WAIT") if str(result.get("decision", "WAIT") or "WAIT").upper().strip() == "WAIT" else result.get("decision", "WAIT")),
                 "entry_price": float(result.get("entry_price", 0.0) or 0.0),
                 "sl_price": float(result.get("sl_price", 0.0) or 0.0),
                 "tp_price": float(result.get("tp_price", 0.0) or 0.0),
@@ -2737,6 +2738,8 @@ class Bot:
 
         if not bool(force) and not bool(getattr(self, "_memory_state_dirty", False)):
             return None
+
+        _flush_form_symbol_memory_if_due(self, force=bool(force))
 
         payload = capture_memory_state(
             self,

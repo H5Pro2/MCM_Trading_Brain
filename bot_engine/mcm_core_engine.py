@@ -187,3 +187,140 @@ def build_tension_state_from_window(window: list[dict]) -> dict:
         "perceived_pressure": float(perceived_pressure),
         "volume_pressure": float(volume_pressure),
     }
+
+def build_visual_market_state(window: list[dict]) -> dict:
+
+    if not window:
+        return {
+            "spatial_bias": 0.0,
+            "directional_bias": 0.0,
+            "range_position": 0.0,
+            "range_width": 0.0,
+            "short_impulse": 0.0,
+            "mid_impulse": 0.0,
+            "compression": 0.0,
+            "expansion": 0.0,
+            "body_pressure": 0.0,
+            "wick_pressure": 0.0,
+            "volume_bias": 0.0,
+            "market_balance": 0.0,
+            "breakout_tension": 0.0,
+            "visual_coherence": 0.0,
+        }
+
+    candles = [dict(c or {}) for c in list(window or []) if isinstance(c, dict)]
+    if not candles:
+        return {
+            "spatial_bias": 0.0,
+            "directional_bias": 0.0,
+            "range_position": 0.0,
+            "range_width": 0.0,
+            "short_impulse": 0.0,
+            "mid_impulse": 0.0,
+            "compression": 0.0,
+            "expansion": 0.0,
+            "body_pressure": 0.0,
+            "wick_pressure": 0.0,
+            "volume_bias": 0.0,
+            "market_balance": 0.0,
+            "breakout_tension": 0.0,
+            "visual_coherence": 0.0,
+        }
+
+    tail_short = candles[-8:]
+    tail_mid = candles[-21:]
+    last = tail_short[-1]
+    prev = tail_short[-2] if len(tail_short) > 1 else tail_short[-1]
+
+    last_open = float(last.get("open", 0.0) or 0.0)
+    last_high = float(last.get("high", last_open) or last_open)
+    last_low = float(last.get("low", last_open) or last_open)
+    last_close = float(last.get("close", last_open) or last_open)
+    last_volume = max(0.0, float(last.get("volume", 0.0) or 0.0))
+    prev_close = float(prev.get("close", last_close) or last_close)
+
+    short_spans = [_candle_span(candle) for candle in tail_short]
+    mid_spans = [_candle_span(candle) for candle in tail_mid]
+    short_span_mean = sum(short_spans) / max(1, len(short_spans))
+    mid_span_mean = sum(mid_spans) / max(1, len(mid_spans))
+    last_span = short_spans[-1]
+
+    short_first_close = float((tail_short[0] or {}).get("close", last_close) or last_close)
+    mid_first_close = float((tail_mid[0] or {}).get("close", last_close) or last_close)
+
+    short_impulse = _clip(
+        (last_close - short_first_close) / max(short_span_mean * 3.0, last_close * 0.0012, 1e-9),
+        -1.0,
+        1.0,
+    )
+    mid_impulse = _clip(
+        (last_close - mid_first_close) / max(mid_span_mean * 8.0, last_close * 0.0020, 1e-9),
+        -1.0,
+        1.0,
+    )
+
+    mid_high = max(float((candle or {}).get("high", last_close) or last_close) for candle in tail_mid)
+    mid_low = min(float((candle or {}).get("low", last_close) or last_close) for candle in tail_mid)
+    mid_range = max(mid_high - mid_low, 1e-9)
+
+    range_position = _clip((((last_close - mid_low) / mid_range) * 2.0) - 1.0, -1.0, 1.0)
+    range_width = _clip(mid_range / max(last_close * 0.06, 1e-9), 0.0, 1.0)
+
+    compression = _clip(1.0 - (last_span / max(short_span_mean, 1e-9)), 0.0, 1.0)
+    expansion = _clip((last_span / max(short_span_mean, 1e-9)) - 1.0, 0.0, 1.0)
+
+    body_pressure = _clip(abs(last_close - last_open) / max(last_span, 1e-9), 0.0, 1.0)
+    upper_wick = max(0.0, last_high - max(last_open, last_close))
+    lower_wick = max(0.0, min(last_open, last_close) - last_low)
+    wick_pressure = _clip((upper_wick + lower_wick) / max(last_span, 1e-9), 0.0, 1.0)
+
+    short_volumes = [max(0.0, float((candle or {}).get("volume", 0.0) or 0.0)) for candle in tail_short]
+    short_volume_mean = sum(short_volumes) / max(1, len(short_volumes))
+    volume_bias = _clip((last_volume / max(short_volume_mean, 1e-9)) - 1.0, -1.0, 1.0)
+
+    directional_bias = _clip((short_impulse * 0.58) + (mid_impulse * 0.42), -1.0, 1.0)
+    spatial_bias = _clip((range_position * 0.62) + (directional_bias * 0.38), -1.0, 1.0)
+    breakout_tension = _clip(
+        (expansion * 0.34)
+        + (body_pressure * 0.22)
+        + (abs(volume_bias) * 0.16)
+        + (max(0.0, abs(range_position) - 0.55) * 0.22)
+        + (abs(last_close - prev_close) / max(short_span_mean * 1.35, 1e-9) * 0.16),
+        0.0,
+        1.0,
+    )
+    market_balance = _clip(
+        1.0
+        - (abs(short_impulse - mid_impulse) * 0.46)
+        - (expansion * 0.18)
+        - (max(0.0, abs(range_position) - 0.35) * 0.24),
+        0.0,
+        1.0,
+    )
+    visual_coherence = _clip(
+        (market_balance * 0.42)
+        + ((1.0 - wick_pressure) * 0.18)
+        + ((1.0 - min(1.0, abs(volume_bias))) * 0.12)
+        + (max(0.0, 1.0 - abs(short_impulse - mid_impulse)) * 0.28),
+        0.0,
+        1.0,
+    )
+
+    return {
+        "spatial_bias": float(spatial_bias),
+        "directional_bias": float(directional_bias),
+        "range_position": float(range_position),
+        "range_width": float(range_width),
+        "short_impulse": float(short_impulse),
+        "mid_impulse": float(mid_impulse),
+        "compression": float(compression),
+        "expansion": float(expansion),
+        "body_pressure": float(body_pressure),
+        "wick_pressure": float(wick_pressure),
+        "volume_bias": float(volume_bias),
+        "market_balance": float(market_balance),
+        "breakout_tension": float(breakout_tension),
+        "visual_coherence": float(visual_coherence),
+    }
+
+

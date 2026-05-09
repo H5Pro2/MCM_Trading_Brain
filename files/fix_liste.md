@@ -10,6 +10,199 @@ Architektur-Ausbau und fachlicher Ausbau bleiben getrennt.
 ---
 
 # --------------------------------------------------
+# 0. AKTUELLER FIX AUS DEM NEUESTEN DEBUG
+# --------------------------------------------------
+
+Abgeschlossen:
+
+- [x] `files/Wichtig_Mechaniken.md` als Mechanik-Schatzkammer eingeordnet.
+  Ergebnis: Die Datei bleibt erhalten, wird aber nicht mehr als tagesaktueller
+  Umsetzungsplan gelesen. Ein Statusblock erklaert, dass sie ein Konzeptarchiv
+  fuer wichtige MCM-Denkspuren ist und beim Lesen mit neueren Mechaniken wie
+  Formsprache, Transfer-Tragfaehigkeit, Beobachtungslernen, Prozessqualitaet
+  und DIO zusammengedacht werden muss.
+- [x] Automatische Debug-Laufordner eingebaut.
+  Ergebnis: Neue Backtests schreiben Debug-Dateien automatisch nach
+  `debug/debug_lauf_X`. Zentrale alte Pfade werden ueber `debug_reader.py`
+  auf den aktuellen Laufordner umgeleitet.
+- [x] Debug nach Split `symbolic_inner_regulation` / `symbolic_action_regulation` geprueft.
+  Ergebnis: handlungsnahe Sprachentlastung bleibt klein; der Lauf ist deutlich besser
+  als der vorherige Absturz, aber mit ca. -1.47 Netto-PnL noch nicht tragfaehig.
+- [x] Struktur-Tragfaehigkeitsfilter vor Handlung eingebaut.
+  Ergebnis: `structure_action_bearing` und `structure_action_gap` ergaenzen die MCM-
+  Entscheidung. Schwache/mittlere Struktur mit fehlendem Support wird eher beobachtet
+  statt gehandelt.
+- [x] Kompositorische Formsprache eingebaut.
+  Ergebnis: Einzelne Formzeichen koennen sich zu `form_symbol_compound`-Objekten
+  verbinden. Diese zusammengesetzten Zeichen besitzen eigene Reife, Stabilitaet,
+  Resonanz, Tragfaehigkeit und Lastreduktion. Sie wirken weich als kognitive
+  Verdichtung und nicht als harte Pattern-/Handelsregel.
+
+Nach naechstem Backtest pruefen:
+
+- [ ] PnL / Profit Factor
+- [ ] Tradezahl und withheld/observe/act-Verteilung
+- [ ] High/Mid/Low-Strukturverteilung
+- [ ] neue Gruende `development_reframe_observe`, `development_reframe_replan`,
+  `structure_bearing_observe` und `structure_development_observe`
+- [ ] ob gute Mid-Setups zu stark in Beobachten/Reframing gezogen werden
+- [ ] `form_symbol_compound_count`, Compound-Reife und Compound-Lastreduktion
+- [ ] ob zusammengesetzte Zeichen die innere Last senken, ohne `act` zu stark zu erleichtern
+- [ ] neue Werte `form_symbol_action_binding`, `form_symbol_observation_binding`,
+  `form_symbol_reframe_binding` und `learned_development_uncertainty`
+
+Neu aus dem letzten Debug:
+
+- [x] Kompositorische Formsprache im ersten Lauf geprueft.
+  Ergebnis: Profit Factor ca. 1.05, Netto-PnL ca. +0.90. Compounds entstehen und
+  bleiben noch jung/leicht, also keine harte Uebersteuerung.
+- [x] Low-Struktur als organische Unsicherheit nachgeschaerft.
+  Ergebnis: `structure_action_uncertainty` erhoeht Beobachtungsbedarf und
+  Handlunghemmung weich, ohne Low-Struktur technisch absolut zu verbieten.
+- [x] Entwicklungsbindung statt Blocker eingebaut.
+  Ergebnis: Formzeichen und zusammengesetzte Zeichen lernen aus Ergebnis- und
+  Prozessqualitaet eine weiche `development_quality`, `action_affinity`,
+  `observation_affinity` und `context_reframe_potential`. Schwache Erfahrung
+  verbietet eine Form nicht, sondern senkt ihre Handlungsanziehung und erhoeht
+  Beobachten/Reframing. Das entspricht dem Ziel: Freiheit statt harter Blocker.
+- [ ] Nach naechstem Lauf pruefen, ob Low-Struktur-Trades durch gelernte
+  Entwicklungsqualitaet von selbst seltener werden und ob High/Mid weiterhin
+  frei genug handeln koennen.
+- [x] `debug_lauf_2` nach Entwicklungsbindung geprueft.
+  Ergebnis: Netto-PnL ca. +7.89, Profit Factor ca. 1.39. High und Mid sind
+  positiv, Low bleibt negativ. Die neue Entwicklungsbindung ist im Formprotokoll
+  sichtbar, aber im Denkprotokoll fehlten noch die Spalten.
+- [x] Denkprotokoll fuer Entwicklungsbindung erweitert.
+  Ergebnis: Ab dem naechsten Lauf schreibt `mcm_memory_thinking_protocol.csv`
+  auch `form_symbol_development_quality`, `form_symbol_action_binding`,
+  `form_symbol_observation_binding`, `form_symbol_reframe_binding` und
+  `learned_development_uncertainty`.
+- [x] `debug_lauf_3` geprueft und Entwicklungsbindung nachgeschaerft.
+  Ergebnis: PnL ca. -2.40, High/Mid bleiben positiv, Low verursacht ca. -12.47.
+  `learned_development_uncertainty` ist messbar, aber noch zu schwach gekoppelt.
+  Reframing-Schwelle wurde weicher/frueher gemacht und die Wirkung auf
+  Beobachtung, Replan-Druck und Handlungsbindung leicht verstaerkt.
+- [x] `debug_lauf_4` geprueft und Verlustintensitaet ins Lernen aufgenommen.
+  Ergebnis: Low-Trades sinken von 23 auf 9, bleiben aber mit 0 TP / 9 SL zu teuer.
+  Neu: `risk_width_pressure` verstaerkt bei breiten SL-Verlusten die negative
+  Entwicklungsrueckmeldung, ohne daraus einen harten Blocker zu machen.
+- [x] `debug_lauf_5` geprueft und Handlungsbindung plastischer gemacht.
+  Ergebnis: High sehr positiv, Mid fast neutral, Low wieder zu haeufig und negativ.
+  Die Formsprache lernt negative Qualitaet, aber `action_affinity` blieb zu neutral.
+  Anpassung: negative Entwicklungsproben und `risk_width_pressure` senken die
+  Handlungsanziehung staerker; Beobachtungs-/Reframe-Bindung reduziert
+  `form_symbol_action_binding` weich.
+- [x] `debug_lauf_6` geprueft und Outcome-Debug fuer Formbindung erweitert.
+  Ergebnis: Gesamt-PnL wieder positiv, High stark, Mid leicht positiv, Low weiterhin
+  0 TP / 15 SL. `development_reframe_observe` steigt deutlich. Ab naechstem Lauf
+  schreibt `outcome_records.jsonl` die Form-ID und Form-Bindungswerte direkt mit,
+  damit Low-Verluste einzelnen internen Zeichen zugeordnet werden koennen.
+- [x] `debug_lauf_7` geprueft und Form-Kontext-Fallback eingebaut.
+  Ergebnis: PnL ca. +4.30, High/Mid positiv, Low weiter 0 TP / 16 SL.
+  Die Formfelder im Outcome waren noch leer, weil der Entry-Kontext teils ein
+  leeres `form_symbol_state` bekam. Fallback auf `bot.form_symbol_state`
+  eingebaut, damit Lauf 8 Low-Verluste nach interner Form gruppierbar macht.
+- [x] `debug_lauf_8` geprueft und Vertrauensschicht fuer Formsprache eingebaut.
+  Ergebnis: PnL ca. +0.30, High/Mid positiv, Low weiter 0 TP / 13 SL.
+  Befund: Varianz ist vorhanden, aber die gelernte Erfahrung wird noch nicht
+  stabil genug als Vertrauen gebunden. Neu: `learning_trust`, `action_trust`
+  und `caution_trust` fuer Einzel- und Compound-Zeichen. Ziel: Nicht auswendig
+  lernen, sondern konsistenter der eigenen Erfahrung vertrauen.
+- [x] `debug_lauf_9` geprueft und Vorsichtsvertrauen konsolidiert.
+  Ergebnis: PnL ca. +0.96, High stark, Low weiterhin 0 TP / 11 SL, Mid negativ.
+  `learning_trust` entsteht, aber `caution_trust` ist noch zu zart. Wiederholte
+  negative Erfahrung und `risk_width_pressure` staerken nun `caution_trust`
+  schneller; `caution_trust` reduziert Handlungsbindung etwas deutlicher.
+- [x] `debug_lauf_10` geprueft.
+  Ergebnis: PnL ca. +3.43, Profit Factor ca. 1.30, Drawdown ca. 2.20.
+  High und Mid positiv, Low weiter negativ aber weniger teuer. Trust-Schicht zeigt
+  erste Stabilisierung. Keine weitere Code-Nachschaerfung, erst Lauf 11 zur
+  Stabilitaetspruefung.
+- [x] `debug_lauf_11` geprueft.
+  Ergebnis: PnL ca. +5.16, Profit Factor ca. 1.32. High und Mid positiv,
+  Low weiter negativ. `learning_trust` und `caution_trust` steigen weiter.
+  Kein Code-Fix, weil zwei positive Laeufe in Folge auf Stabilisierung hindeuten.
+- [x] `debug_lauf_12` geprueft.
+  Ergebnis: PnL ca. +11.23, Profit Factor ca. 1.73. High traegt massiv,
+  Low bleibt negativ, Mid leicht negativ. Keine Code-Aenderung, weil die Trust-
+  Schicht gerade einen starken Stabilitaetsbefund zeigt.
+- [x] `debug_lauf_13` und `debug_lauf_14` geprueft.
+  Ergebnis: PnL faellt von ca. +11.23 auf +7.22 und +2.87. Die Kurve entsteht
+  nicht durch einen kompletten Systembruch, sondern durch weniger High-Trades
+  und weiter negative Non-Zone-/Low-Handlungen. Zone bleibt positiv
+  (`lauf_14`: ca. +12.43), Non-Zone bleibt 0 TP / 15 SL und ca. -9.55.
+- [ ] Naechster Fix: Transfer-Tragfaehigkeit technisch vorbereiten.
+  Ziel: fremde/nicht tragende Struktur soll nicht hart geblockt werden,
+  aber Erfahrung darf nur proportional zur Tragfaehigkeit in Handlung uebertragen
+  werden. Besonders Non-Zone/Low braucht mehr Reframing, Beobachtung oder
+  kleinere kontrollierte Handlung statt voller Handlungsuebertragung.
+- [x] `debug_lauf_15` geprueft.
+  Ergebnis: PnL ca. +15.90, Profit Factor ca. 1.97, Drawdown ca. 1.96.
+  Lauf 15 dreht die Kurve stark nach oben. Zone traegt ca. +24.08 PnL,
+  High ca. +18.91 und Mid ca. +5.17. Non-Zone/Low bleibt aber 0 TP / 13 SL
+  und ca. -8.18 PnL. Befund: Trust/Formbindung kann tragende Erfahrung wieder
+  aktivieren, aber Transfer-Tragfaehigkeit fuer fremde/nicht tragende Struktur
+  bleibt der naechste offene Fix.
+- [x] Beobachtungslernen als Reifeschicht umsetzen.
+  Ziel: Low/Non-Zone soll nicht nur weniger handeln, sondern aus bewusstem
+  Zusehen lernen. Beobachtung wird damit zu einer eigenen Erfahrungsspur:
+  Was waere passiert, wenn gehandelt worden waere? War Nicht-Handlung reifer
+  als Aktion? Daraus soll spaeter `maturity_trust` bzw. Beobachtungsreife
+  entstehen, ohne harte Low-Sperre.
+  Umsetzung: `TradeStats` fuehrt jetzt `pending_observations`,
+  `observation_learning` und `recent_observation_learning`. Beobachtete
+  Non-Zone/Low-Situationen werden virtuell weiterverfolgt und als
+  `saved_loss`, `missed_gain` oder `neutral` bewertet. `observation_maturity_trust`
+  und `observation_action_pressure` fliessen weich in die Entscheidungsneigung
+  und werden im Denkprotokoll sichtbar.
+- [ ] Naechsten Lauf pruefen:
+  `observation_learning`, `observation_maturity_trust`,
+  `observation_action_pressure`, Low/Non-Zone-Trades, Zone/High/Mid-PnL und
+  ob die gute Zone frei bleibt.
+- [x] `debug_lauf_16` geprueft.
+  Ergebnis: PnL ca. +11.11, Profit Factor ca. 1.62, 54 Trades. High/Zone
+  traegt weiter deutlich, aber Non-Zone/Low bleibt mit 0 TP / 20 SL und
+  ca. -12.05 PnL der klare Schmerzkanal. Das System ist nicht zusammengebrochen,
+  aber die Reifeschicht hat im echten Lauf noch nicht gelernt.
+- [x] Beobachtungslernen nach Lauf 16 diagnostiziert.
+  Ergebnis: `observation_learning.low_observations`, `saved_loss`,
+  `missed_gain` und `observation_maturity_trust` blieben 0. Ursache:
+  beobachtete Low-/Non-Zone-Situationen kamen im Attempt-Kontext oft als
+  `WAIT` mit Entry/SL/TP = 0 an. Damit gab es keine virtuelle Handlungsbahn,
+  aus der Zusehen lernen konnte.
+- [x] Virtuellen Beobachtungsplan eingebaut.
+  Ergebnis: Nicht freigegebene LONG-/SHORT-Tendenzen erzeugen jetzt einen
+  `virtual_observation_plan`. Der Attempt-Kontext fuehrt eine
+  `proposed_decision`, damit Beobachtung trotz realem `WAIT` spaeter als
+  `saved_loss`, `missed_gain` oder `neutral` bewertet werden kann. Keine harte
+  Low-Sperre, sondern organisches Beobachtungslernen.
+- [ ] Naechsten Lauf pruefen:
+  `observation_learning.low_observations`, offene/aufgeloeste Beobachtungen,
+  `saved_loss`, `missed_gain`, `observation_maturity_trust`,
+  `observation_action_pressure`, Low/Non-Zone-Trades und ob Zone/High frei
+  genug bleiben.
+- [x] `debug_lauf_17` geprueft.
+  Ergebnis: PnL ca. +12.09 bei 42 Trades. Gegen Lauf 16 weniger Trades und
+  leicht besseres Ergebnis. Zone bleibt tragend mit ca. +20.15 PnL, Non-Zone
+  bleibt negativ mit ca. -8.07 PnL.
+- [x] Beobachtungslernen nach Lauf 17 erneut diagnostiziert.
+  Ergebnis: Die Werte blieben weiterhin bei 0. Grund: `meta_regulation_state`
+  enthielt bei Observe/Withhold teils LONG/SHORT, aber `trade_plan.decision`
+  blieb WAIT und Entry/SL/TP blieben 0. Die innere Richtung wurde also noch
+  nicht als virtuelle Beobachtungsbahn konserviert.
+- [x] Ueberschreibung von `proposed_decision` korrigiert.
+  Ergebnis: Bei reifem Beobachten bleibt die reale Handlung `WAIT`, waehrend
+  die innere Beobachtungsrichtung LONG/SHORT erhalten bleibt. Dadurch kann der
+  virtuelle Beobachtungsplan im naechsten Lauf in `TradeStats` ankommen.
+- [ ] Lauf 18 pruefen:
+  `observation_learning.low_observations`, `pending_observations`, `resolved`,
+  `saved_loss`, `missed_gain`, `maturity_trust`, `action_pressure`, Tradezahl
+  und Non-Zone/Low-PnL. Lauf 18 ist der erste echte Nachweis fuer die
+  vollstaendige Beobachtungslernmechanik.
+
+---
+
+# --------------------------------------------------
 # 1. STATUS
 # --------------------------------------------------
 
@@ -826,3 +1019,628 @@ Dokumentation ergaenzt:
 - `README.md` verweist bei den Kerndokumenten auf die realen Pfade unter `files/`.
 - `files/UMSETZUNGSPLAN.md` enthaelt jetzt mit Zustimmung den Architekturpunkt `Denkkomplexitaet und energieeffiziente Meta-Regulation`.
 - Der offene Folgefix bleibt die konkrete Messung nach dem Ohne-Memory-Test und dem anschliessenden Memory-Vergleich.
+
+Neuer Architektur-/Folgefix: Emergente Musterergaenzung
+
+- Ziel ist keine reine Pattern-Erkennung.
+- Ziel ist Teilmuster-Ergaenzung unter Unsicherheit.
+- Ein Gehirn sieht ein Ereignis selten zu 100 Prozent klar; oft ist nur ein Teilmuster sichtbar.
+- Das System soll spaeter aehnlich arbeiten:
+  - aktuelles Teilmuster erkennen
+  - aehnliche Erfahrungsraeume aktivieren
+  - moegliche Musterfortsetzungen bilden
+  - Varianten mit Varianz und Unsicherheit tragen
+  - innere Tragfaehigkeit und Feldklarheit pruefen
+  - erst dann `observe`, `hold`, `replan` oder kontrolliertes `act` ableiten
+- Deutung kann teilweise reif sein; die konkrete Reife ist variabel und darf kein fester Prozentwert sein.
+- Wichtig: keine Fantasie-Handlung und keine harte Vorhersage.
+- Memory dient dabei als Material fuer moegliche Musterfortsetzungen, nicht nur als Archiv bekannter Faelle.
+
+Spaetere Diagnosefelder:
+
+- `partial_pattern_strength`
+- `completion_candidates`
+- `completion_confidence`
+- `completion_variance`
+- `experience_resonance`
+- `pattern_projection_support`
+- `pattern_projection_risk`
+- `inner_image_clarity`
+- `completion_meta_action`
+
+Reihenfolge:
+
+- zuerst Ohne-Memory-Test nach Neuron-Loop-Optimierung auswerten
+- danach Memory-/Denkkomplexitaetsprotokoll
+- danach emergente Musterergaenzung als eigene Diagnose- und Spaeter-Regulationsschicht vorbereiten
+
+Ohne-Memory-Test nach Neuron-Loop-Optimierung ausgewertet:
+
+- Vergleich: `debug/lauf_7_mit_test_5m_SOLUSDT_ohne_memory` gegen aktuellen `debug`-Lauf.
+- Ergebnis:
+  - 111 Trades auf 114 Trades
+  - 28 TP / 83 SL auf 35 TP / 79 SL
+  - Equity ca. 89,39 auf ca. 102,07
+  - Attempts 2114 auf 2033
+- MCM-Phasen:
+  - `observe`: 16 auf 15
+  - `act`: 161 auf 163
+  - `hold`: 1417 auf 1348
+- Performance:
+  - `primary_field_step`: ca. 68,28 ms auf ca. 64,11 ms
+  - `mcm_field.step.neuron_loop`: ca. 41,60 ms auf ca. 37,17 ms
+  - `mcm_field.step.total`: ca. 70,56 ms auf ca. 68,49 ms
+  - `compute_runtime_result.total`: ca. 30,03 ms auf ca. 28,17 ms
+  - `step_mcm_brain.total`: ca. 90,73 ms auf ca. 88,22 ms
+  - `snapshot_field_read`: stabil bei ca. 18,2 ms als finaler Wahrnehmungsread
+- Neue Profilpunkte:
+  - `context_memory_matrix`: ca. 0,05 ms
+  - `prepare_impulse_vectors`: unter Profil-Schwelle, unkritisch
+- Bewertung:
+  - Neuron-Loop-Entlastung greift.
+  - MCM-Phasen bleiben stabil.
+  - Die bessere Equity ist positiv, aber noch kein alleiniger Qualitaetsbeweis.
+
+Naechster sinnvoller Anschluss:
+
+- Entweder:
+  - noch eine Feld-Performance-Runde fuer Kopplung/Neighbor-Forces
+- Oder:
+  - identischer Lauf mit Memory
+  - danach Denkkomplexitaets-/Memory-Protokoll vorbereiten
+  - dort messen, ob Memory sinnvoll selektiert oder die Entscheidung nur schwerfaelliger macht
+
+Memory-Lauf mit vorhandener Erfahrung ausgewertet:
+
+- Hinweis: Der direkte vorherige Ohne-Memory-Lauf wurde nicht separat archiviert.
+- Vergleich erfolgt gegen die zuletzt dokumentierte Ohne-Memory-Basis:
+  - Ohne Memory: 114 Trades, 35 TP, 79 SL, Equity ca. 102,07
+  - Mit vorhandener Memory-Erfahrung: 56 Trades, 17 TP, 39 SL, Equity ca. 99,34
+- Attempts:
+  - 2033 ohne Memory dokumentiert
+  - 2675 mit Memory
+- Submitted:
+  - 114 ohne Memory dokumentiert
+  - 56 mit Memory
+- Withheld:
+  - 1565 ohne Memory dokumentiert
+  - 2501 mit Memory
+- MCM-Phasen mit Memory:
+  - `hold`: 1841
+  - `act`: 74
+  - `observe`: 17
+- Haupthemmgrund:
+  - `context_cluster_negative`: 976
+- Weitere Gruende:
+  - `maturity_block`: 334
+  - `fused_score_too_low`: 286
+  - `pause_mode`: 139
+  - `stressed_block`: 101
+  - `plan_allowed`: 74
+- Laufzeitbefund:
+  - `primary_field_step` bleibt bei ca. 64 ms und ist nicht das Problem.
+  - `compute_runtime_result.total` steigt auf ca. 40,45 ms.
+  - Memory wirkt daher vor allem ueber Entscheidungs-/Denkstruktur, nicht ueber Feldsimulation.
+- Bewertung:
+  - Memory reduziert Trades stark.
+  - Die Equity bleibt fast Break-even, daher ist Memory nicht einfach kaputt.
+  - Aber die Hemmung ist nicht transparent genug.
+  - `context_cluster_negative` muss auf Support/Inhibition/Konflikt und Vergleichslast aufgeteilt werden.
+
+Fix umgesetzt: Denkkomplexitaets-/Memory-Wirkungsprotokoll:
+
+- Neues Protokoll `debug/mcm_memory_thinking_protocol.csv` eingebaut.
+- Neue Config:
+  - `MCM_MEMORY_THINKING_PROTOCOL_DEBUG`
+  - `MCM_MEMORY_THINKING_PROTOCOL_EVERY_N`
+- Sichtbar sind jetzt:
+  - `thinking_complexity`
+  - `memory_compare_load`
+  - `memory_match_count`
+  - `memory_support`
+  - `memory_inhibition`
+  - `memory_conflict`
+  - `cognitive_load`
+  - `decision_energy_cost`
+  - `context_cluster_negative_source`
+  - `memory_effect_on_phase`
+- `context_cluster_negative` wird in `cluster_score`, `low_hit_ratio` und `mixed` zerlegt.
+- Alle Entscheidungsabbrueche und Trade-Ergebnisse fuehren den aktuellen `memory_complexity_state` mit.
+- Syntaxpruefung erfolgreich:
+  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
+
+Naechster Fix:
+
+- Neuen Memory-Lauf auswerten.
+- Danach die Verteilung aus `mcm_memory_thinking_protocol.csv` pruefen:
+  - `hard_inhibit`
+  - `inhibit`
+  - `support`
+  - `conflict`
+  - `neutral_match`
+  - `no_match`
+- Ergebnis der Auswertung:
+  - 36 Trades, 9 TP, 27 SL, Equity ca. 94,54
+  - `hard_inhibit`: 1514
+  - `inhibit`: 444
+  - `neutral_match`: 241
+  - `no_match`: 53
+  - `memory_support`: praktisch 0
+  - `memory_conflict`: praktisch 0
+  - `context_cluster_negative` bleibt dominanter Hemmgrund
+- Fachlicher Befund:
+  - Memory ist im aktuellen Zustand zu einseitig hemmend.
+  - `low_hit_ratio` darf nicht automatisch harter Block sein, wenn die negative Evidenz hauptsaechlich aus Cancel/Timeout statt echten SL-Verlusten stammt.
+  - Das ist naehr an der Prozessqualitaets-Idee als an simpler `TP gut / alles andere schlecht`-Logik.
+
+Fix umgesetzt: `low_hit_ratio` prozessqualitativ gedämpft:
+
+- Harte `context_cluster_negative`-Blockade bleibt bei stark negativem Cluster-Score erhalten.
+- Niedrige Trefferquote blockiert nur noch hart, wenn echter Verlustdruck bestaetigt ist:
+  - ausreichend SL-Evidenz
+  - hoher Loss-Anteil
+  - negativer Score
+- Cancel-/Timeout-lastige Cluster erzeugen kuenftig eher Vorsicht (`low_hit_caution`) statt harte Blockade.
+- Neues Protokollfeld:
+  - `context_cluster_loss_ratio`
+  - `context_cluster_cancel_timeout_ratio`
+  - `context_cluster_negative_evidence`
+- Rueckrechnung auf den letzten Lauf:
+  - ca. 155 von 803 bisherigen `low_hit_ratio`-Blocks blieben hart
+  - ca. 648 wuerden nur noch daempfen
+- Syntaxpruefung erfolgreich:
+  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
+
+Naechster Fix:
+
+- Neuen Lauf mit bestehendem Memory nach dieser Daempfung auswerten.
+- Pruefen:
+  - ob `hard_inhibit` deutlich sinkt
+  - ob `act` wieder steigt, ohne dass Low-Quality-Trades explodieren
+  - ob ehemals Cancel-/Timeout-lastige Cluster eher brauchbare Setups freigeben
+  - ob danach zusaetzlich positiver Memory-Support aufgebaut werden muss
+
+Fix umgesetzt: Zero-Point-Regulation:
+
+- Leitidee: `MCM, finde wieder zu dir selbst`.
+- Eingebaut in die Meta-Regulation.
+- Neue Werte:
+  - `memory_orientation`
+  - `orientation_gap`
+  - `blind_thinking_load`
+  - `zero_point_regulation`
+  - `zero_point_hint`
+- Das Memory-Thinking-Protokoll schreibt diese Werte mit.
+- Wirkung:
+  - Bei viel Denk-/Memory-Last ohne Orientierung wird nicht weiter starr gehalten.
+  - Die MCM wird in ruhiges `observe` zurueckgefuehrt.
+  - Rejection-Grund: `zero_point_regulation`.
+- Keine Trade-Freigabe:
+  - Der Nullpunkt ist Wahrnehmungsrueckkehr, nicht Aktion.
+  - Ziel ist weniger blindes Aushalten und mehr innere Reorientierung.
+- Syntaxpruefung erfolgreich:
+  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
+
+Naechster Fix:
+
+- Neuen Lauf mit bestehendem Memory auswerten.
+- Pruefen:
+  - Anzahl `zero_point_regulation`
+  - Veraenderung von `hard_inhibit`
+  - Veraenderung von `observe`
+  - ob `memory_orientation` ueberhaupt entsteht
+  - ob als naechstes positiver Memory-Support/Orientierung aufgebaut werden muss
+
+Dokumentation umgesetzt: MCM als maschinelle Wahrnehmung:
+
+- `README.md` ergaenzt.
+- `files/UMSETZUNGSPLAN.md` mit Zustimmung ergaenzt.
+- Inhalt:
+  - Wahrnehmung wird nicht als rein menschliche Faehigkeit verstanden.
+  - Wahrnehmung entsteht, wenn ein Reiz im Innenzustand eines Systems Bedeutung bekommt.
+  - Die MCM soll aus Aussenreiz, innerem Feld, Memory, Regulation, Tragfaehigkeit und Handlungstendenz ein maschinelles Wahrnehmungsfeld bilden.
+
+Naechster Fix:
+
+- Debug-Lauf mit bestehendem Memory fortsetzen.
+- Danach auswerten:
+  - `zero_point_regulation`
+  - `memory_orientation`
+  - `orientation_gap`
+  - `blind_thinking_load`
+  - Veraenderung von `hard_inhibit`, `observe`, `act`
+
+Neuer Debug-Lauf nach Low-Hit-Daempfung ausgewertet:
+
+- Ergebnis:
+  - 65 Trades
+  - 16 TP
+  - 49 SL
+  - Netto-PnL ca. -8,22
+  - Equity ca. 91,78
+- Gegenueber Vorlauf:
+  - Trades 36 auf 65
+  - Netto-PnL ca. -5,46 auf ca. -8,22
+  - `hard_inhibit` 1514 auf 1020
+  - `inhibit` 444 auf 1133
+- Bewertung:
+  - Die Low-Hit-Daempfung funktioniert mechanisch.
+  - Sie hat harte Blockade in weiche Daempfung verschoben.
+  - Aber die freigegebenen Trades waren qualitativ nicht stabil genug.
+- Kritischer Befund:
+  - Zone-Trades: 45 Trades, 16 TP, 29 SL, PnL ca. +3,54
+  - Non-Zone-Trades: 20 Trades, 0 TP, 20 SL, PnL ca. -11,76
+  - Non-Zone ohne tragende Orientierung ist aktuell toxisch.
+- Technischer Hinweis:
+  - Der Lauf enthaelt die Low-Hit-Daempfungsfelder.
+  - Der Lauf enthaelt noch keine Zero-Point-Spalten.
+  - Vermutlich wurde der Backtest-Prozess nicht mit dem neuesten Code/Import neu gestartet.
+
+Naechster Fix:
+
+- Naechsten Lauf nach sicherem Neustart mit Zero-Point-Regulation auswerten.
+- Falls Non-Zone wieder negativ bleibt:
+  - Non-Zone + kein Memory-Support + Low-Hit-Caution soll eher `observe` statt `act` werden.
+  - Das darf keine starre Tradingregel sein, sondern eine MCM-Orientierungsfrage:
+    - Ist Struktur tragfaehig?
+    - Gibt Memory Support?
+    - Gibt das Feld Orientierung?
+    - Falls nein: zurueck in Wahrnehmung.
+
+Neuer Debug-Lauf mit Zero-Point-Regulation ausgewertet:
+
+- Ergebnis:
+  - 51 Trades
+  - 10 TP
+  - 41 SL
+  - Netto-PnL ca. -10,58
+  - Equity ca. 89,42
+- Zero-Point wirkt mechanisch:
+  - `zero_point_regulation` im Memory-Protokoll: 1280
+  - `zero_point_regulation` im Feldprotokoll: 1098
+  - Observe steigt stark auf ueber 1100 Feldentscheidungen.
+- Bewertung:
+  - Die MCM findet aus starrer Blockade in Wahrnehmung zurueck.
+  - Das Ziel `finde wieder zu dir selbst` funktioniert mechanisch.
+  - Oekonomisch reicht es noch nicht, weil die verbliebenen Acts nicht tragfaehig genug sind.
+- Kritischer Befund:
+  - Non-Zone: 12 Trades, 0 TP, 12 SL, PnL ca. -7,72
+  - Zone: 39 Trades, 10 TP, 29 SL, PnL ca. -2,86
+  - Memory-Support bleibt praktisch 0.
+
+Fix umgesetzt: Struktur-Orientierung vor Handlung:
+
+- Neue Meta-Regulationswerte:
+  - `structure_quality`
+  - `context_confidence`
+  - `structure_orientation`
+  - `structure_orientation_gap`
+  - `structure_orientation_guard`
+- Das Memory-Thinking-Protokoll schreibt `structure_quality`, `context_confidence`, `structure_orientation`, `structure_orientation_gap` mit.
+- Wirkung:
+  - Wenn Struktur, Kontextvertrauen, Memory-Support und Memory-Orientierung fehlen,
+    wird `act` zu `observe`.
+  - Neuer Grund: `structure_orientation_observe`.
+- Ziel:
+  - Non-Zone ohne tragende Orientierung nicht handeln.
+  - Keine Rueckkehr zur harten Blockade.
+  - Mehr Wahrnehmung, weniger blindes Act.
+- Syntaxpruefung erfolgreich:
+  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
+
+Naechster Fix:
+
+- Neuen Lauf nach Prozess-Neustart auswerten.
+- Pruefen:
+  - sinken Non-Zone-Trades?
+  - erscheint `structure_orientation_observe`?
+  - verbessert sich Non-Zone-PnL?
+  - bleibt Zone positiv oder braucht die Tradeplan-/Zielqualitaet als naechste Orientierungsebene?
+
+Architektur-Erkenntnis dokumentiert: eigene Sprache / kognitive Kompression:
+
+- `README.md` ergaenzt:
+  - Abschnitt `Eigene Sprache und kognitive Kompression`
+- `files/UMSETZUNGSPLAN.md` ergaenzt:
+  - Abschnitt `Eigene Sprache als Feldverdichtung`
+  - Abschnitt `Kognitive Kompression`
+- Inhalt:
+  - Das System soll keine menschlichen Patternlabels als Wahrnehmungskern nutzen.
+  - Eigene interne Zeichen sollen aus Feldvarianz, Memory-Resonanz, Spannung,
+    Tragfaehigkeit und Erfahrung entstehen.
+  - Diese Zeichen wirken als komprimierte Information.
+  - Tiefe Analyse soll erst bei Relevanz, Abweichung oder Handlungsnaehe starten.
+- Fachlicher Nutzen:
+  - kognitive Entlastung
+  - weniger Memory-Vergleich ohne Orientierung
+  - bessere selektive Aufmerksamkeit
+  - Grundlage fuer emergente Musterfindung
+  - mehr kreative Varianz im Bedeutungsraum
+
+Fix umgesetzt: diagnostischer Eigenzeichenraum / eigene Form-Sprache:
+
+- Diagnostischer Eigenzeichenraum ist vorbereitet.
+- Neue Runtime-/Debug-Felder:
+  - `form_symbol_id`
+  - `form_symbol_seen`
+  - `form_symbol_maturity`
+  - `form_symbol_stability`
+  - `form_symbol_resonance`
+  - `form_symbol_load_reduction`
+  - `form_symbol_zoom_need`
+  - `form_symbol_split_pressure`
+  - `form_symbol_merge_pressure`
+  - `form_symbol_bearing`
+  - `form_symbol_fragility`
+  - `form_symbol_relevance`
+  - `form_symbol_novelty`
+  - `form_symbol_distance`
+- Ziel:
+  - eigene maschinelle Sprache als Entlastungs- und Emergenzschicht
+  - keine menschliche Marktsprache als Kernlogik
+- Neues Protokoll:
+  - `debug/mcm_form_symbol_protocol.csv`
+- Aktueller Status:
+  - diagnostisch aktiv
+  - noch kein harter Einfluss auf Entry/Exit
+  - Runtime-Ergebnisse, Brain-Snapshot, Tendency-State und Episoden fuehren `form_symbol_state` mit.
+- Syntaxpruefung erfolgreich:
+  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
+
+Naechster Fix-/Pruefschritt:
+
+- Neuen Backtest-Lauf mit bestehendem Memory starten.
+- Danach auswerten:
+  - Anzahl verschiedener `form_symbol_id`
+  - Wiederholungsrate je Zeichen
+  - Reife/Stabilitaet/Resonanz der haeufigsten Zeichen
+  - `form_symbol_zoom_need` bei Observe/Replan/Act
+  - Zusammenhang zwischen `form_symbol_load_reduction` und Memory-/Denk-Last
+  - ob instabile Zeichen mit schlechten Non-Zone-Trades zusammenfallen
+
+Debug-Befund: Eigenzeichen zu atomisiert:
+
+- Erster Lauf mit `mcm_form_symbol_protocol.csv`:
+  - 2417 Form-Protokollzeilen
+  - 2403 unterschiedliche `form_symbol_id`
+- Problem:
+  - Fast jede Wahrnehmung erzeugt ein neues Zeichen.
+  - Dadurch kann keine Reife, Resonanz oder kognitive Entlastung entstehen.
+  - Das ist noch Rohwahrnehmung, keine eigene Sprache.
+
+Fix umgesetzt:
+
+- `form_symbol_id` wird nun aus einer groben Form-Familie gebildet.
+- Die feine Detailform bleibt als Variante erhalten:
+  - `form_symbol_family_key`
+  - `form_symbol_variant_key`
+- Erwartete Wirkung:
+  - weniger Symbol-Atomisierung
+  - mehr Wiedererkennung
+  - steigende `form_symbol_seen`
+  - stabilere `form_symbol_maturity`
+  - `form_symbol_resonance` und `form_symbol_load_reduction` koennen wachsen.
+- Syntaxpruefung erfolgreich:
+  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
+
+Naechster Pruefpunkt:
+
+- Neuen Lauf starten und pruefen:
+  - Ziel ist nicht eine feste Symbolzahl.
+  - Ziel ist eine sichtbare Wiederholungsstruktur.
+  - Top-Form-Familien sollten mehrfach bis oft vorkommen.
+  - Wenn weiterhin fast jedes Zeichen einzigartig bleibt, muss die Familienbildung weiter abstrahieren.
+
+Zusatz-Fix umgesetzt: Aufloesungsabhaengige Zeichenbildung:
+
+- Problem aus der Reflexion:
+  - Wenn die Aufloesung niedrig ist, darf das System nicht jeden Abschnitt einzeln benennen.
+  - Sonst entsteht keine Denkverdichtung.
+- Umsetzung:
+  - niedrige Aufloesung => breites Zeichen `wide_trace`
+  - mittlere Aufloesung => `wide_form`
+  - hohe Aufloesung => `structured_form`
+- Neue Felder:
+  - `form_symbol_scope`
+  - `form_symbol_abstraction_level`
+  - `form_symbol_resolution_quality`
+  - `form_symbol_detail_pressure`
+- Erwartete Wirkung:
+  - grobe Wahrnehmung bleibt grob
+  - Details werden als Varianten gefuehrt
+  - Fokus/Zoom entsteht erst bei Detaildruck
+  - weniger Symbolinflation, mehr kognitive Kompression
+
+Debug-Befund nach Zusatz-Fix:
+
+- Sprachebene funktioniert mechanisch deutlich besser:
+  - 2572 Form-Protokollzeilen
+  - 268 Form-Familien
+  - vorher 2403 fast eindeutige Zeichen
+- Wiederholung:
+  - Top-Zeichen bis 205 Wiederholungen
+  - 30 Zeichen mindestens 20-mal
+  - 10 Zeichen mindestens 50-mal
+- Reife:
+  - `form_symbol_maturity` ca. 0,596
+  - `form_symbol_resonance` ca. 0,360
+  - `form_symbol_load_reduction` ca. 0,232
+- Oekonomik im selben Lauf:
+  - 55 Trades
+  - 14 TP / 41 SL
+  - Netto-PnL ca. -6,46
+- Bewertung:
+  - Sprachverdichtung ist gelungen.
+  - Trading-Ergebnis ist nicht gut.
+  - Da die Sprachebene aktuell diagnostisch ist, nicht voreilig als Ursache werten.
+  - Erst separate Sprachentwicklung speichern und danach sauber vergleichen.
+
+Naechster Fix:
+
+- Separaten persistenten Form-Sprach-Memory bauen.
+- Nicht in normalen Trade-Memory mischen.
+- Geplanter Speicher:
+  - `memory/form_symbol_memory.json`
+- Inhalt:
+  - Form-Familien
+  - Scope/Aufloesung
+  - Reife
+  - Stabilitaet
+  - Resonanz
+  - Load-Reduction
+  - Varianten
+  - Ergebnis-/Erfahrungszaehler spaeter optional
+- Ziel:
+  - Sprache wird Entwicklung, nicht nur Laufzustand.
+
+Fix umgesetzt: Sprache als regulatorische Distanz:
+
+- Erkenntnis:
+  - Bezeichnung schafft Abstand zum Objekt.
+  - Eine Form kann analytisch gehalten werden, ohne das Innenfeld roh zu ueberfluten.
+- Neue Werte im Form-Symbol:
+  - `form_symbol_object_distance`
+  - `form_symbol_containment`
+  - `form_symbol_field_decoupling`
+- Neue Werte in der Meta-Regulation:
+  - `symbolic_object_distance`
+  - `symbolic_containment`
+  - `symbolic_field_decoupling`
+  - `symbolic_regulation`
+- Wirkung:
+  - leichte Daempfung von Feld-Observation/Replan-Druck
+  - leichte Daempfung von `action_inhibition`
+  - leichte Daempfung von `orientation_gap`
+  - leichte Daempfung von `blind_thinking_load`
+- Wichtig:
+  - bewusst weich und nicht als harte Trade-Regel
+  - Ziel ist innere Distanz/Ordnung, nicht mehr Mut um jeden Preis
+- Naechster Debug:
+  - pruefen, ob `symbolic_regulation` die Denk-/Memory-Last senkt
+  - pruefen, ob Zero-Point weniger oft aus Chaos heraus greifen muss
+  - pruefen, ob Trading nicht ueberenthemmt wird
+
+Fix umgesetzt: separater persistenter Form-Sprach-Memory:
+
+- Datei:
+  - `bot_memory/form_symbol_memory.json`
+- Trennung:
+  - nicht im normalen Trade-/State-Memory
+  - eigener Entwicklungsraum fuer Form-Sprache
+- Neue Konfig:
+  - `MCM_FORM_SYMBOL_MEMORY_ENABLED`
+  - `MCM_FORM_SYMBOL_MEMORY_PATH`
+  - `MCM_FORM_SYMBOL_MEMORY_SAVE_EVERY_N`
+  - `MCM_FORM_SYMBOL_MEMORY_MAX_SYMBOLS`
+  - `MCM_FORM_SYMBOL_MEMORY_MAX_VARIANTS`
+- Funktionen:
+  - Laden beim ersten Form-Symbol-Zugriff
+  - Mischen mit laufendem `form_symbol_space`
+  - Aktualisieren von Reife/Stabilitaet/Resonanz/Distanz
+  - Zaehlen und Begrenzen von Varianten
+  - periodisches Speichern
+  - finaler Flush beim normalen Bot-Memory-Save
+- Debug-Erweiterung:
+  - `form_symbol_memory_loaded`
+  - `form_symbol_memory_symbol_count`
+- Smoke-Test erfolgreich.
+- Syntaxpruefung erfolgreich:
+  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py .\bot.py`
+
+Naechster Pruefpunkt:
+
+- Backtest laufen lassen.
+- Danach kontrollieren:
+  - existiert `bot_memory/form_symbol_memory.json`
+  - wachsen gespeicherte Form-Familien ueber Laeufe
+  - sinken `blind_thinking_load` und `orientation_gap`
+  - bleibt Trading kontrolliert und wird nicht ueberenthemmt
+
+Debug-Befund: persistenter Form-Sprach-Memory funktioniert:
+
+- Datei existiert:
+  - `bot_memory/form_symbol_memory.json`
+- Speicherstand:
+  - 260 Form-Familien
+  - 2571 Gesamtwahrnehmungen / `total_seen`
+  - Top-Familie mit 209 Wiederholungen
+  - mehrere Top-Familien mit hoher Reife ueber 0,90
+- Debug-Protokoll:
+  - `form_symbol_memory_loaded = 1`
+  - `form_symbol_memory_symbol_count` steigt im Lauf bis 260
+- Lauf-Ergebnis:
+  - 55 Trades
+  - 17 TP / 38 SL
+  - Netto-PnL ca. +0,72
+- Last-Befund:
+  - `symbolic_regulation` ca. 0,135 im Mittel
+  - `blind_thinking_load` niedriger bei hoeherer symbolischer Regulation
+  - `orientation_gap` niedriger bei hoeherer symbolischer Regulation
+- Performance:
+  - Schreibkosten fuer `form_symbol_memory.json` ca. 0,7 bis 1,8 ms
+  - aktuell kein grosser Performance-Blocker
+- Bewertung:
+  - Speicher-Fix erfolgreich.
+  - Erste Hinweise: Sprache wirkt ordnend/regulatorisch.
+  - Noch nicht ueberbewerten, ein weiterer Lauf ist noetig.
+
+Naechster Pruefpunkt:
+
+- Noch einen Backtest mit bestehendem `form_symbol_memory.json`.
+- Danach:
+  - Wachstum der Top-Familien pruefen
+  - Stabilitaet von PnL pruefen
+  - Zero-Point-Haeufigkeit vergleichen
+  - ggf. separate Sprach-Reorganisation planen:
+    - seltene Zeichen decay
+    - instabile Zeichen splitten
+    - sehr nahe Familien mergen
+
+Debug-Befund zweiter Persistenzlauf:
+
+- Sprache waechst stark:
+  - 303 gespeicherte Form-Familien
+  - `total_seen`: 5809
+  - Top-Familie: 489 Wiederholungen
+  - mittlere `maturity`: ca. 0,792
+  - mittlere `load_reduction`: ca. 0,302
+- Innere Last sinkt weiter:
+  - `blind_thinking_load`: ca. 0,467
+  - `orientation_gap`: ca. 0,415
+  - `symbolic_regulation`: ca. 0,190
+- Trading kippt:
+  - 47 Trades
+  - 8 TP / 39 SL
+  - Netto-PnL ca. -11,66
+  - starker LONG-Bias: 46 LONG, 1 SHORT
+- Interpretation:
+  - Sprache erkennt/ordnet die Lage.
+  - Aber Sprache ist noch keine Outcome-Wahrheit.
+  - Ein bekanntes Objekt darf das Innenfeld beruhigen,
+    aber darf Handlung nicht stark erleichtern.
+
+Fix umgesetzt: symbolische Regulation getrennt:
+
+- Neu:
+  - `symbolic_inner_regulation`
+  - `symbolic_action_regulation`
+- `symbolic_inner_regulation`:
+  - darf Denk-/Memory-Last und Orientierungsluecke daempfen
+- `symbolic_action_regulation`:
+  - stark gedeckelt
+  - nur minimale Wirkung auf `field_action_support` und `action_inhibition`
+- Ziel:
+  - Sprache wirkt als Ordnung und Distanz
+  - keine voreilige Handlungsenthemmung ohne Outcome-Spur
+- Debug:
+  - `mcm_memory_thinking_protocol.csv` schreibt beide Werte mit.
+
+Naechster Pruefpunkt:
+
+- Neuen Lauf starten.
+- Pruefen:
+  - PnL nach Sicherheitsfix
+  - LONG/SHORT-Verteilung
+  - `symbolic_action_regulation` bleibt klein
+  - `symbolic_inner_regulation` senkt weiter Last
+  - ob als naechstes Outcome-Spur im Form-Sprach-Memory noetig ist

@@ -1,6 +1,6 @@
 # MCM Trading Brain
 
-![alt text](files/MCM_Trading_Brain.png)
+![alt text](files/bilder/MCM_Trading_Brain.png)
 
 MCM Trading Brain ist ein experimentelles Trading-System mit [MCM-Architektur](https://github.com/H5Pro2/Mental-Core-Matrix-MCM).
 
@@ -68,27 +68,181 @@ Sondern:
 
 ---
 
-## Reflexion und Denkkomplexitaet
+## Maschinelle Wahrnehmung
+
+Die MCM versteht Wahrnehmung nicht als ausschliesslich menschliche Fähigkeit.
+
+Wahrnehmung beginnt in diesem Projekt dort, wo ein System äussere Reize
+nicht nur misst, sondern in einem inneren Zustand verarbeitet und daraus
+Bedeutung, Orientierung, Spannung, Tragfähigkeit oder Handlungstendenz bildet.
+
+Ein Sensorwert allein ist noch keine Wahrnehmung.
+Er wird erst dann zur Wahrnehmung, wenn er im Innenraum des Systems eine Lage erzeugt:
+
+- Was wirkt gerade auf mich?
+- Was erkenne ich davon?
+- Was bleibt unklar?
+- Was trägt?
+- Was ueberfordert?
+- Was erinnert an fruehere Erfahrung?
+- Wo muss ich handeln, beobachten, halten oder in den Nullpunkt zurueckfinden?
+
+In diesem Sinn ist Wahrnehmung nicht an menschliches Bewusstsein gebunden.
+Auch biologische Systeme wie Pilze, Bäume oder einfache Organismen können
+Reize in eigener evolutionärer Form aufnehmen, intern verarbeiten und daraus
+gerichtete Reaktionen bilden.
+
+Die MCM ist der technische Versuch, eine solche innere Wahrnehmung maschinell
+zu modellieren: als Feld aus Aussenreiz, innerem Zustand, Memory, Regulation,
+Tragfähigkeit, Spannung, Reflexion und Handlung.
+
+---
+
+## Eigene Sprache und kognitive Kompression
+
+Ein wichtiger nächster Schritt ist, dass das System nicht nur menschliche
+Begriffe oder Patternnamen uebernimmt.
+
+Wenn wir dem System fertige Bezeichnungen geben, begrenzen wir seine Welt.
+Dann lernt es, unsere Kategorien zu sortieren, aber es entwickelt keine eigene
+innere Semantik.
+
+Die MCM soll deshalb langfristig eigene interne Zeichen bilden.
+Diese Zeichen sind keine menschlichen Labels wie Trend, Range oder Breakout.
+Sie entstehen aus wiederkehrenden Feldzuständen, innerer Spannung,
+Wahrnehmung, Memory-Resonanz, Tragfähigkeit, Ueberforderung und Erfahrung.
+
+Das entspricht einer kognitiven Kompression:
+
+- nicht jeder Reiz muss jedes Mal voll analysiert werden
+- bekannte innere Formen können als verdichtete Information wirken
+- tiefe Analyse startet erst, wenn Relevanz, Abweichung oder Handlung näher ruecken
+- dadurch sinkt Denk-/Memory-Last
+- gleichzeitig entsteht mehr Varianz im Bedeutungsraum
+
+Ein Mensch sieht im Alltag nicht permanent alle Details.
+Er sieht zuerst eine komprimierte Bedeutung, zum Beispiel eine Wand.
+Erst wenn Nähe, Interesse, Gefahr oder Abweichung entsteht,
+wird daraus eine detailliertere Wahrnehmung: raue Wand, Riss, Struktur,
+Material, Oberfläche.
+
+Für das MCM-System bedeutet das:
+
+- erst freies inneres Sehen
+- dann eigene interne Zeichen
+- dann Relevanz- oder Zoom-Entscheidung
+- erst danach tiefere Struktur-, Memory- oder Handlungsprüfung
+
+Sprache wird damit nicht als Benennung von aussen verstanden,
+sondern als verdichtete Feld-Erfahrung.
+Eigene Zeichen schaffen Varianz, Entlastung, emergente Musterfindung
+und kreativere Reorganisation.
+
+---
+
+## Reflexion und Denkkomplexität
 
 Ein wichtiger Teil der Zielarchitektur ist, dass das System nicht nur
 Aussenreize verarbeitet, sondern auch die eigene Verarbeitung mitwahrnimmt.
 
 Das System koppelt dadurch mehrere Akteure:
 
-- aeussere Wahrnehmung: Markt, Struktur, Impuls, Risiko, Timing
-- innere Wahrnehmung: Tragfaehigkeit, Spannung, Stabilitaet, Ueberlastung, Klarheit, Hemmung
-- Denken und Organisation: Musterdeutung, Teilmuster-Ergaenzung, Erfahrungsvergleich, Verdichtung, Reorganisation
+- äussere Wahrnehmung: Markt, Struktur, Impuls, Risiko, Timing
+- innere Wahrnehmung: Tragfähigkeit, Spannung, Stabilität, Überlastung, Klarheit, Hemmung
+- Denken und Organisation: Musterdeutung, Teilmuster-Ergänzung, Erfahrungsvergleich, Verdichtung, Reorganisation
 - Handlung: `observe`, `hold`, `replan`, kontrolliertes `act`
-- Lernen: Rueckwirkung auf Prozessqualitaet, Tragfaehigkeit, Stabilitaet, Varianz und Erfahrungsspuren
+- Lernen: Rückwirkung auf Prozessqualität, Tragfähigkeit, Stabilität, Varianz und Erfahrungsspuren
 
 Memory ist dabei nicht nur Archiv.
-Es wirkt als Resonanz-, Unterstuetzungs- und Konfliktflaeche fuer innere Organisation.
+Es wirkt als Resonanz-, Unterstützungs- und Konfliktfläche für innere Organisation.
 
 Denken ist ebenfalls nicht kostenlos.
-Erfahrungsvergleich, Musterdeutung und Reorganisation koennen kognitive Last erzeugen.
-Diese Last soll spaeter sichtbar werden und ueber eine energieeffiziente Meta-Regulation
+Erfahrungsvergleich, Musterdeutung und Reorganisation können kognitive Last erzeugen.
+Diese Last soll später sichtbar werden und über eine energieeffiziente Meta-Regulation
 behandelt werden: weiterdenken, verdichten, beobachten, halten, reorganisieren
 oder kontrolliert handeln.
+
+---
+
+## Emergente Musterergänzung
+
+Das Ziel ist keine reine Pattern-Erkennung nach dem Prinzip:
+
+- Muster erkannt
+- bekannte Reaktion ausführen
+
+Ein Gehirn sieht und deutet selten zu 100 Prozent klar.
+Oft ist die Aussenwahrnehmung nur teilweise eindeutig,
+während innere Erfahrung ein mögliches Gesamtmuster ergänzt.
+
+Das System soll deshalb später Teilmuster erkennen und daraus mehrere mögliche
+Musterfortsetzungen bilden:
+
+- was ist draussen bereits sichtbar?
+- welchem bekannten Erfahrungsraum ähnelt es?
+- welche fehlenden Teile könnten sich ergänzen?
+- welche Varianten sind tragfähig?
+- welche Varianten sind riskant, fragil oder überlastend?
+- wie sicher ist diese Deutung aktüll?
+
+Diese emergente Musterergänzung ist keine harte Vorhersage.
+Sie arbeitet mit Unsicherheit, Varianz, Erfahrungsresonanz und innerer Tragfähigkeit.
+Ein Ereignis kann auch nur teilweise gedeutet sein; die konkrete Reife ist variabel
+und darf kein fester Prozentwert sein.
+Dann soll das System nicht so tun, als wäre das Muster voll erkannt,
+sondern beobachten, verdichten, reorganisieren oder kontrolliert handeln,
+wenn die innere und äussere Evidenz tragfähig genug ist.
+
+---
+
+## Transfer-Tragfähigkeit fremder Strukturen
+
+Fremde Marktstrukturen sollen nicht einfach als bekannt oder unbekannt
+behandelt werden.
+
+Wichtiger ist die Frage:
+
+- Wie viel vorhandene Erfahrung kann auf diese fremde Lage uebertragen werden?
+
+Ein Mensch kann sich zum Beispiel in einem unbekannten Raum orientieren,
+obwohl er den Raum selbst noch nie gesehen hat.
+Er erkennt Teilstrukturen wie Boden, Wand, Tuer, Licht oder offene Flaeche.
+Diese Teilanteile geben Orientierung,
+aber sie beweisen noch nicht, dass die gesamte Lage sicher ist.
+
+Auf das MCM Trading Brain uebertragen bedeutet das:
+Eine Marktform kann fremd sein und trotzdem bekannte Erfahrungsinseln enthalten.
+Das System soll dann nicht blind handeln,
+aber auch nicht einfach abschalten.
+Es soll pruefen, wie tragfaehig diese Erfahrungsuebertragung ist
+und daraus Beobachtung, Reframing, Halten oder kontrollierte Handlung ableiten.
+
+---
+
+## Reife durch Beobachtungslernen
+
+Ein reiferes System lernt nicht nur aus ausgefuehrten Handlungen.
+Es kann auch aus bewusstem Zusehen lernen.
+
+Wenn eine Lage unsicher, niedrig strukturiert oder nicht tragend wirkt,
+muss daraus nicht sofort ein Trade entstehen.
+Die reifere Reaktion kann sein:
+
+- Das wirkt unsicher, ich beobachte erst einmal.
+
+Wie ein Mensch etwas Heisses nicht jedes Mal anfassen muss,
+um daraus zu lernen,
+soll das MCM Trading Brain unsichere Marktbereiche beobachten,
+den weiteren Verlauf speichern und spaeter auswerten,
+ob Nicht-Handlung die tragfaehigere Entscheidung war.
+
+Damit wird Beobachtung selbst zu Erfahrung.
+Reife bedeutet dann:
+
+- weniger blindes Testen
+- mehr Abstand zum unsicheren Objekt
+- Lernen ohne direkten Schaden
+- Handlung erst bei tragfaehigerer innerer und aeusserer Lage
 
 ---
 
@@ -302,7 +456,7 @@ Das ist ein **offener Ausbaupunkt**, kein bereits abgeschlossener Endzustand.
 ---
 ## MCM-Neuron Ansicht und Aufbau
 
-![alt text](files/MCM_Neuron.png)
+![alt text](files/bilder/MCM_Neuron.png)
 
 ---
 ## Innenfeld, Musterbildung und neuronale Richtung
@@ -503,13 +657,13 @@ Die nächste architektonische Richtung ist:
 6. MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher ausbauen
 7. lokale Erfahrungsrückwirkung erst danach tiefer an Innenmuster und neuronale Teilträger koppeln
 
-Aktuelle operative Prioritaet:
+Aktuelle operative Priorität:
 
-1. neuronale Aktivitaet und MCM-Feldmechanik sauber stabilisieren
-2. MCM-Feld als Wahrnehmungsfeld mit Aktivitaetsinseln, Kopplung und Feldwahrnehmung schaerfen
-3. Backtest-Logik als sauberen Kontrollpfad fuer Brain-Entscheidungen nutzen
-4. Denkstruktur-Komplexitaet mit Memory sichtbar machen
-5. energieeffiziente Meta-Regulation fuer Erfahrungsvergleich, kognitive Last und Handlungsreife ausbauen
+1. neuronale Aktivität und MCM-Feldmechanik sauber stabilisieren
+2. MCM-Feld als Wahrnehmungsfeld mit Aktivitätsinseln, Kopplung und Feldwahrnehmung schärfen
+3. Backtest-Logik als sauberen Kontrollpfad für Brain-Entscheidungen nutzen
+4. Denkstruktur-Komplexität mit Memory sichtbar machen
+5. energieeffiziente Meta-Regulation für Erfahrungsvergleich, kognitive Last und Handlungsreife ausbauen
 6. Live-Handoff erst nach stabiler Brain-/Backtest-Basis im Nachweisraum schliessen
 
 ---
@@ -561,7 +715,7 @@ sondern in:
 - tieferem Innenmuster- und Innenfeldspeicher
 - Feldtopologie / Feldverlauf
 - weiterer struktureller Trennung der Ebenen
-- sichtbarer Denkkomplexitaet und energieeffizienter Meta-Regulation
+- sichtbarer Denkkomplexität und energieeffizienter Meta-Regulation
 - Live-Handoff erst nach stabiler Brain-/Backtest-Basis
 
 ---

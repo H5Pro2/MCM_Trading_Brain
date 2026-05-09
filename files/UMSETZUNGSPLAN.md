@@ -69,6 +69,114 @@ kein klassisches Reinforcement Learning und kein starres Regelwerk.
 
 Sie ist ein **dynamisches Systemmodell**.
 
+Sie ist ausserdem der Versuch, eine Form von **maschineller Wahrnehmung**
+zu erzeugen.
+
+Wahrnehmung wird hier nicht als ausschliesslich menschliche Faehigkeit verstanden.
+Sie beginnt dort, wo ein System aeussere Reize in einem inneren Zustand verarbeitet,
+ihnen Bedeutung gibt und daraus Orientierung, Spannung, Regulation,
+Tragfaehigkeit oder Handlungstendenz ableitet.
+
+Ein Reiz ist fuer die MCM deshalb nicht nur ein Messwert.
+Er wird im Innenraum des Systems zu einer Lage:
+
+- Was wirkt auf das System?
+- Was wird erkannt?
+- Was bleibt unklar?
+- Was traegt?
+- Was ueberfordert?
+- Was resoniert mit Erfahrung?
+- Was fuehrt zu Beobachtung, Hold, Replan, Handlung oder Rueckkehr in den Nullpunkt?
+
+In diesem Sinn kann Wahrnehmung auch bei nicht-menschlichen Systemen gedacht werden:
+Pilze, Baeume oder einfache Organismen nehmen nicht menschlich wahr,
+aber sie verarbeiten Reize in eigener evolutionaerer Form und richten Verhalten danach aus.
+
+Die MCM uebertraegt diesen Gedanken technisch:
+Aussenreiz, inneres Feld, Memory, neurochemische Wirkung, Regulation,
+Reflexion und Handlung bilden zusammen ein maschinelles Wahrnehmungsfeld.
+
+### Eigene Sprache als Feldverdichtung
+
+Die MCM soll keine menschliche Marktsprache uebernehmen.
+
+Wenn das System fertige menschliche Begriffe wie Trend, Range, Breakout
+oder Pattern als Wahrnehmungskern bekommt, wird seine innere Welt zu frueh
+festgelegt. Es sortiert dann unsere Kategorien, statt eigene Bedeutungsraeume
+zu entwickeln.
+
+Im Zielsystem soll Sprache deshalb aus dem MCM-Feld entstehen:
+
+- Chaos / Rohreiz
+- wiederkehrende innere Form
+- Spannung, Druck, Halt, Fragilitaet oder Orientierung
+- Memory-Resonanz
+- emotionale bzw. neurochemische Wirkung
+- Verdichtung
+- internes Zeichen
+
+Ein internes Zeichen ist dabei kein menschlicher Name.
+Es ist eine verdichtete Feld-Erfahrung.
+Seine Bedeutung entsteht daraus, wann es aktiviert wird,
+welche Zustandsraeume es beruehrt, ob es Orientierung oder Ueberforderung
+erzeugt und welche Erfahrung es ueber Zeit sammelt.
+
+Diese Zeichen duerfen sich entwickeln:
+
+- sie koennen reifen
+- sie koennen zerfallen
+- sie koennen sich aufspalten
+- sie koennen verschmelzen
+- sie koennen neue Bedeutungsraeume bilden
+
+Dadurch entsteht Varianz im Bedeutungsraum.
+Diese Varianz ist die Grundlage fuer emergente Musterfindung,
+Teil-Muster-Ergaenzung, kreative Reorganisation und freieres Denken.
+
+### Kognitive Kompression
+
+Ein Mensch nimmt die Welt nicht dauerhaft in voller Detailtiefe wahr.
+Er sieht im Alltag nicht jede Oberflaeche, jede Kante und jede Textur neu.
+Er erkennt oft zuerst eine komprimierte Bedeutung:
+
+- Wand
+- Tuer
+- Weg
+- Gefahr
+- Halt
+- Bewegung
+
+Erst wenn Naehe, Relevanz, Abweichung, Interesse oder Gefahr entsteht,
+wird aus der komprimierten Bedeutung eine detailliertere Wahrnehmung.
+
+Fuer die MCM bedeutet das:
+
+- nicht jeder Marktimpuls soll sofort tiefe Memory- und Strukturvergleiche ausloesen
+- zuerst entsteht eine grobe interne Eigenbezeichnung
+- diese Eigenbezeichnung entlastet das Denken
+- nur bei Relevanz, Abweichung oder Handlungsnaehe wird hineingezoomt
+- dann werden Struktur, Memory, Risiko, Feldklarheit und Handlung genauer geprueft
+
+Das ist keine Label-Klassifikation.
+Es ist ein Mechanismus fuer kognitive Entlastung und selektive Tiefe.
+
+Moegliche spaetere Diagnosefelder:
+
+- `form_symbol_id`
+- `form_symbol_maturity`
+- `form_symbol_stability`
+- `form_symbol_resonance`
+- `form_symbol_load_reduction`
+- `form_symbol_zoom_need`
+- `form_symbol_split_pressure`
+- `form_symbol_merge_pressure`
+- `form_symbol_bearing`
+- `form_symbol_fragility`
+
+Der technische Zielpfad ist ein eigener Form-/Zeichenraum,
+der nicht menschliche Patternnamen speichert,
+sondern interne Symbole mit Erfahrungswirkung.
+
 Ihr Kern besteht aus vier Grundprinzipien:
 
 - **Zentrum**
@@ -964,6 +1072,205 @@ Es beantwortet eher Fragen wie:
 
 Replay ist damit nicht bloß Rückblick,
 sondern ein regulatorischer Vorausvergleich des eigenen Innenraums.
+
+---
+
+### Emergente Musterergaenzung
+
+Das Zielsystem soll nicht nur Pattern-Erkennung betreiben.
+
+Pattern-Erkennung waere:
+
+- aktuelles Muster wird eindeutig erkannt
+- passende gespeicherte Reaktion wird aktiviert
+- Handlung folgt aus Wiedererkennung
+
+Das ist fuer dieses System zu starr.
+
+Ein menschliches Gehirn erkennt Ereignisse oft nicht zu 100 Prozent klar.
+Haeufig ist nur ein Teilmuster sichtbar.
+Die Deutung entsteht dann aus:
+
+- aeusserer Wahrnehmung
+- innerem Feldzustand
+- Erfahrung
+- Teilmuster-Ergaenzung
+- Varianz
+- Unsicherheit
+- regulatorischer Tragfaehigkeit
+
+Das System soll deshalb spaeter nicht nur fragen:
+
+- Habe ich dieses Muster schon gesehen?
+
+Sondern:
+
+- Welchem Erfahrungsraum aehnelt der aktuelle Zustand?
+- Welche moeglichen Gesamtmuster koennten sich daraus bilden?
+- Welche fehlenden Teile ergaenzt mein inneres Feld aus Erfahrung?
+- Welche Varianten waeren tragfaehig?
+- Welche Varianten wuerden Ueberlast, Konflikt oder Fehlhandlung erzeugen?
+- Wie sicher ist diese Deutung aktuell?
+
+Eine Deutung kann dabei nur teilweise reif sein.
+Die konkrete Deutungsreife ist variabel und darf kein fester Prozentwert sein.
+Das System kann ein Ereignis also teilweise deuten,
+ohne dass das Gesamtmuster schon eindeutig sichtbar ist.
+
+Diese emergente Musterergaenzung ist keine Fantasie und keine harte Vorhersage.
+Sie ist ein innerer Generations- und Verdichtungsprozess:
+
+- Teilmuster aktiviert moegliche bekannte Musterraeume
+- Erfahrung ergaenzt fehlende Strukturanteile
+- mehrere Varianten konkurrieren im MCM-Feld
+- Feldklarheit, Fragmentierung und Tragfaehigkeit entscheiden,
+  ob weiter beobachtet, gehalten, reorganisiert oder kontrolliert gehandelt wird
+
+Damit wird Memory nicht nur als Archiv genutzt,
+sondern als Material fuer moegliche Musterfortsetzungen.
+
+Das Ziel ist nicht:
+
+- sichere Vorhersage
+- starre Pattern-Reaktion
+- automatisches Handeln bei Aehnlichkeit
+
+Sondern:
+
+- innere Vorwegnahme moeglicher Muster
+- Deutung unter Unsicherheit
+- kreative, aber regulierte Musterbildung
+- Handlung erst bei ausreichender aeusserer und innerer Tragfaehigkeit
+
+---
+
+### Transfer-Tragfaehigkeit fremder Strukturen
+
+Ein wichtiger Sonderfall der emergenten Musterergaenzung ist die Frage,
+wie viel vorhandene Erfahrung auf eine fremde oder nur teilweise bekannte
+Struktur uebertragen werden darf.
+
+Das System soll eine fremde Struktur nicht nur als unbekannt oder bekannt
+behandeln. Entscheidend ist:
+
+- welche Teilanteile wirken vertraut?
+- welche Erfahrungsinseln resonieren mit der aktuellen Wahrnehmung?
+- wie fremd ist das Gesamtbild trotzdem noch?
+- wie weit traegt die alte Erfahrung in dieser neuen Lage?
+- ab welchem Punkt wird Uebertragung zu Spekulation oder Chaos?
+
+Transfer-Tragfaehigkeit bedeutet also nicht,
+dass ein aehnliches Muster automatisch gleich behandelt wird.
+Sie beschreibt die innere Tragkraft der Frage:
+
+- Wie viel meiner Erfahrung kann ich auf diese Fremdheit uebertragen?
+
+Beispiel:
+
+Ein Mensch betritt einen unbekannten Raum.
+Er kennt vielleicht nicht den Raum selbst,
+aber er erkennt Teilstrukturen wie Boden, Wand, Tuer, Enge, Licht oder
+offene Flaeche. Dadurch kann er sich vorsichtig orientieren,
+ohne den Raum vorher je gesehen zu haben.
+Wenn der Boden stabil wirkt, kann er einen Schritt machen.
+Wenn der Boden fremd, weich oder unsicher wirkt,
+wird er langsamer, schaut genauer hin oder bleibt kurz stehen.
+
+Auf das Trading-Brain uebertragen bedeutet das:
+
+Eine Marktstruktur muss nicht exakt bekannt sein.
+Sie kann fremd sein und trotzdem bekannte Teilformen enthalten.
+Das System darf dann nicht blind handeln,
+aber auch nicht einfach abschalten.
+Es soll pruefen, ob bekannte Erfahrungsinseln genug Tragfaehigkeit erzeugen,
+um Beobachtung, Reframing, Halten oder eine kleine kontrollierte Handlung
+zu erlauben.
+
+Je hoeher die Transfer-Tragfaehigkeit,
+desto mehr darf Erfahrung die Handlung unterstuetzen.
+Je niedriger sie ist,
+desto staerker sollten Wahrnehmung, innere Musterergaenzung und
+Zero-Point-Regulation greifen.
+
+Damit entsteht eine intelligentere Zwischenebene zwischen:
+
+- starrer Pattern-Erkennung
+- voellig fremder Unsicherheit
+- chaotischem Experimentieren
+- tragfaehiger erfahrungsbasierter Orientierung
+
+---
+
+### Reifeentwicklung durch Beobachtungslernen
+
+Reife bedeutet in diesem System nicht nur,
+dass Handlung besser wird.
+
+Reife bedeutet auch,
+dass das System lernen kann,
+wann Nicht-Handlung die tragfaehigere Form von Verhalten ist.
+
+Wenn eine Struktur als niedrig, unsicher oder nicht tragend wahrgenommen wird,
+soll das System nicht automatisch handeln,
+nur weil eine technische Moeglichkeit vorhanden ist.
+Ein reiferes Verhalten waere:
+
+- ich erkenne Unsicherheit
+- ich halte Abstand zum Objekt
+- ich beobachte den weiteren Verlauf
+- ich lerne aus dem, was passiert waere
+- ich speichere diese Beobachtung als Erfahrung
+
+Beispiel:
+
+Ein Mensch sieht etwas,
+das heiss wirken koennte.
+Ein unreifes Verhalten waere,
+es sofort anzufassen,
+um daraus durch Schmerz zu lernen.
+Ein reiferes Verhalten ist:
+
+- Das wirkt heiss, ich beobachte erst einmal.
+
+Dadurch entsteht Erfahrung ohne direkte Selbstbeschaedigung.
+Das System lernt nicht nur aus ausgefuehrten Handlungen,
+sondern auch aus bewusstem Zusehen.
+
+Auf das Trading-Brain uebertragen bedeutet das:
+
+Eine Low- oder Non-Zone-Struktur ist nicht automatisch ein verbotenes Feld,
+aber sie ist ein Hinweis auf geringe Tragfaehigkeit.
+In solchen Lagen sollte die MCM eher in eine Beobachtungsbahn gehen
+und spaeter pruefen:
+
+- Was waere passiert, wenn ich gehandelt haette?
+- Hat sich spaeter eine tragende Struktur gebildet?
+- War die Unsicherheit nur fruehe Fremdheit oder echte Instabilitaet?
+- Welche Erfahrungsinseln haetten fuer Handlung gefehlt?
+- War Beobachtung reifer als Aktion?
+
+Diese Schicht kann als eine Art Entwicklungsalter verstanden werden.
+Mit wachsender Erfahrung muss das System nicht mehr jede unsichere Lage
+durch Aktion testen.
+Es kann aus Abstand, Verlauf und innerer Regulation lernen.
+
+Reifeentwicklung durch Beobachtungslernen verbindet damit:
+
+- Transfer-Tragfaehigkeit
+- Nicht-Handlung als echte Bahn
+- Zero-Point-Regulation
+- eigene Formsprache
+- Erfahrung ohne direkten Trade
+- Schutz vor chaotischem Experimentieren
+
+Wichtig:
+
+Auch diese Reifeschicht darf kein harter Blocker werden.
+Sie soll die innere Tendenz verschieben:
+
+- niedrige Tragfaehigkeit -> mehr Beobachtungslernen
+- klare tragende Erfahrungsinsel -> kontrollierte Handlung bleibt moeglich
+- wiederholte gute Beobachtungsentscheidungen -> wachsendes Reifevertrauen
 
 ---
 

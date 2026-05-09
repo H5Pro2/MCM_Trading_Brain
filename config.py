@@ -14,7 +14,7 @@ class Config:
     # ==================================================
     # DATENQUELLE
     # ==================================================
-    BACKTEST_FILEPATH = "data/1-12_2025_5m_SOLUSDT.csv" 
+    BACKTEST_FILEPATH = "data/test_5m_SOLUSDT.csv" 
     # workspace | 1-12_2023_5m_SOLUSDT | 1-12_2024_5m_SOLUSDT | 1-12_2025_5m_SOLUSDT | 1-2_2026_5m_SOLUSDT 
     
     CSV_OHLCV_PATH = "data/workspace.csv"   # Live Mode OHLCV Daten Börse
@@ -66,6 +66,20 @@ class Config:
     TRADE_STATS_JSON_SAVE_EVERY_N = 25 # Schreibt trade_stats.json auf Attempt-Pfaden nur periodisch; Exits/Cancels schreiben weiterhin sofort.
     MCM_FIELD_DECISION_PROTOCOL_DEBUG = True # Schreibt ein kompaktes Feldentscheidungs-Protokoll nach debug/mcm_field_decision_protocol.csv.
     MCM_FIELD_DECISION_PROTOCOL_EVERY_N = 5 # Schreibt jede n-te Feldentscheidung; Phasenwechsel werden trotzdem sofort geschrieben.
+    MCM_MEMORY_THINKING_PROTOCOL_DEBUG = True # Schreibt Memory-/Denkkomplexitaets-Diagnose nach debug/mcm_memory_thinking_protocol.csv.
+    MCM_MEMORY_THINKING_PROTOCOL_EVERY_N = 5 # Schreibt jede n-te Memory-Diagnose; Phasen-/Grundwechsel werden trotzdem sofort geschrieben.
+    MCM_FORM_SYMBOL_PROTOCOL_DEBUG = True # Schreibt interne Eigenzeichen-/Formsymbol-Diagnose nach debug/mcm_form_symbol_protocol.csv.
+    MCM_FORM_SYMBOL_PROTOCOL_EVERY_N = 5 # Schreibt jede n-te Formsymbol-Diagnose; Symbol-/Zoomwechsel werden trotzdem sofort geschrieben.
+    MCM_FORM_SYMBOL_MEMORY_ENABLED = True # Persistenter, separater Speicher fuer eigene Form-Sprache.
+    MCM_FORM_SYMBOL_MEMORY_PATH = "bot_memory/form_symbol_memory.json" # Getrennt vom Trade-/State-Memory.
+    MCM_FORM_SYMBOL_MEMORY_SAVE_EVERY_N = 64 # Speichert periodisch nach N Symbol-Aktualisierungen.
+    MCM_FORM_SYMBOL_MEMORY_MAX_SYMBOLS = 1024 # Begrenzung gegen Speicherwachstum.
+    MCM_FORM_SYMBOL_MEMORY_MAX_VARIANTS = 12 # Pro Form-Familie nur haeufige Varianten behalten.
+    MCM_FORM_SYMBOL_MEMORY_MAX_COMPOUNDS = 768 # Begrenzung fuer zusammengesetzte Formzeichen.
+    MCM_STRUCTURE_ACTION_MIN_QUALITY = 0.70 # Unterhalb davon braucht Handlung zusaetzliche Tragfaehigkeit statt nur Wiedererkennung.
+    MCM_STRUCTURE_ACTION_MID_SUPPORT_MIN = 0.045 # Minimaler Memory-/Feldsupport fuer mittlere Struktur.
+    MCM_STRUCTURE_ACTION_MID_STRENGTH_MIN = 1.36 # Starke Entscheidung darf mittlere Struktur kontrolliert passieren.
+    MCM_STRUCTURE_ACTION_LOW_STRENGTH_MIN = 1.52 # Niedrige Struktur braucht ausserordentlich starke Evidenz.
     MCM_VISUAL_SNAPSHOT_WRITE_EVERY_N = 25 # Schreibt Visual-/Inner-Snapshots nur jeden n-ten Runtime-Markt-Tick.
     MCM_VISUAL_SNAPSHOT_MIN_INTERVAL_SECONDS = 0.0 # Optionale Mindestzeit zwischen Visual-/Inner-Snapshot-Schreibvorgängen.
     MCM_VISUAL_SNAPSHOT_FORCE_ON_STATE_CHANGE = False # Schreibt sofort, wenn Pending-/Position-/Execution-Zustand wechselt.
@@ -140,6 +154,8 @@ class Config:
     MCM_MEMORY_SAVE_COOLDOWN_SECONDS = 5.0 # Minimale Zeit in Sekunden zwischen dem Speichern von Memory-Zuständen, um die Leistung zu optimieren und übermäßiges Schreiben zu vermeiden.
     MCM_SAVE_RUNTIME_STATE = False # Aktiviert das Speichern des Runtime-Zustands der MCM-Interne Simulation, um Einblicke in die interne Dynamik zu erhalten, aber auch mit einem gewissen Leistungsaufwand verbunden.
     DEBUG_WRITE_EVERY_N = 8 # Anzahl der MCM-Interne Zyklen, nach denen Debug-Informationen geschrieben werden. Je höher, desto seltener werden Debug-Informationen geschrieben, was die Leistung verbessern kann, aber weniger Einblicke in die interne Dynamik bietet.
+    DEBUG_AUTO_RUN_DIR = True # Erstellt pro Start automatisch debug/debug_lauf_X und schreibt alle Debug-Dateien dort hinein.
+    DEBUG_RUN_PREFIX = "debug_lauf_" # Namenspraefix fuer automatische Debug-Laufordner.
 
     # ==================================================
     # KOSTEN
