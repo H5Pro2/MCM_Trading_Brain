@@ -355,14 +355,6 @@ Ein sauberes MCM-Neuron für dieses Projekt sollte deshalb nicht wie ein klassis
 
 ---
 
-## ALT-Ausschnitt
-
-Absatz nicht vorhanden.
-
----
-
-## Neu-Ausschnitt
-
 ```python
 # --------------------------------------------------
 # MCM Neuron
