@@ -57,6 +57,11 @@ Debug-Laeufe 13 und 14 wurden nach dem starken Lauf 12 geprueft:
 - `debug_lauf_16`: ca. +11.11 Netto-PnL, Profit Factor ca. 1.62, 54 Trades
 - `debug_lauf_17`: ca. +12.09 Netto-PnL, 42 Trades
 - `debug_lauf_18`: ca. +14.19 Netto-PnL, 37 Trades
+- `debug_lauf_19`: ca. +13.67 Netto-PnL, 41 Trades
+- `debug_lauf_20`: ca. +12.64 Netto-PnL, 47 Trades
+- `debug_lauf_21`: ca. +10.30 Netto-PnL, 46 Trades
+- `debug_lauf_22`: ca. +1.67 Netto-PnL, 40 Trades
+- `debug_lauf_23`: ca. +16.13 Netto-PnL, 41 Trades
 
 Befund:
 
@@ -67,6 +72,11 @@ Befund:
 - Lauf 16 bleibt klar positiv, faellt aber gegen Lauf 15 zurueck.
 - Lauf 17 bleibt ebenfalls klar positiv und reduziert die Tradezahl deutlich.
 - Lauf 18 verbessert sich weiter und reduziert die Tradezahl erneut.
+- Lauf 19 bleibt klar positiv und aktiviert erstmals die Beobachtungslernspur.
+- Lauf 20 bestaetigt die Beobachtungslernspur, aber die Tradezahl steigt wieder.
+- Lauf 21 faellt weiter im PnL, obwohl Beobachtungslernen aktiv bleibt.
+- Lauf 22 zeigt einen massiven PnL-Rueckgang trotz weniger Trades.
+- Lauf 23 erholt sich stark nach Korrektur des realen Struktur-Scopes.
 - Die positive Zone/High-Struktur traegt weiterhin.
 - Der Rueckgang in Lauf 13/14 entstand vor allem, weil weniger High-Trades
   entstanden und Non-Zone/Low weiter konsequent Verlust erzeugte.
@@ -93,6 +103,68 @@ Befund:
   - Gesamt: 37 Trades, 19 TP / 18 SL, ca. +14.19 PnL
   - Zone: 26 Trades, ca. +20.27 PnL
   - Non-Zone: 11 Trades, 0 TP / 11 SL, ca. -6.08 PnL
+- Lauf 19:
+  - Gesamt: 41 Trades, 20 TP / 21 SL, ca. +13.67 PnL
+  - Zone: 30 Trades, ca. +19.66 PnL
+  - Non-Zone: 11 Trades, 0 TP / 11 SL, ca. -6.00 PnL
+  - Beobachtungslernen:
+    - `low_observations`: 948
+    - `resolved`: 948
+    - `saved_loss`: 519
+    - `missed_gain`: 424
+    - `neutral`: 5
+    - `observation_maturity_trust`: ca. 0.549
+    - `observation_action_pressure`: ca. 0.447
+- Lauf 20:
+  - Gesamt: 47 Trades, 22 TP / 25 SL, ca. +12.64 PnL
+  - Zone: 37 Trades, ca. +19.84 PnL
+  - Non-Zone: 10 Trades, 0 TP / 10 SL, ca. -7.20 PnL
+  - Beobachtungslernen:
+    - `low_observations`: 903
+    - `resolved`: 891
+    - `saved_loss`: 507
+    - `missed_gain`: 378
+    - `neutral`: 6
+    - `observation_maturity_trust`: ca. 0.571
+    - `observation_action_pressure`: ca. 0.424
+- Lauf 21:
+  - Gesamt: 46 Trades, 20 TP / 26 SL, ca. +10.30 PnL
+  - Zone: 30 Trades, ca. +18.55 PnL
+  - Non-Zone: 16 Trades, ca. -8.25 PnL
+  - Beobachtungslernen:
+    - `low_observations`: 1026
+    - `resolved`: 1013
+    - `saved_loss`: 566
+    - `missed_gain`: 440
+    - `neutral`: 7
+    - `observation_maturity_trust`: ca. 0.561
+    - `observation_action_pressure`: ca. 0.434
+- Lauf 22:
+  - Gesamt: 40 Trades, 14 TP / 26 SL, ca. +1.67 PnL
+  - Zone: 25 Trades, ca. +11.24 PnL
+  - Non-Zone: 15 Trades, 0 TP / 15 SL, ca. -9.56 PnL
+  - Beobachtungslernen:
+    - `low_observations`: 1040
+    - `resolved`: 1040
+    - `saved_loss`: 548
+    - `missed_gain`: 487
+    - `neutral`: 5
+    - `observation_maturity_trust`: ca. 0.529
+    - `observation_action_pressure`: ca. 0.468
+- Lauf 23:
+  - Gesamt: 41 Trades, 21 TP / 20 SL, ca. +16.13 PnL
+  - Zone: 34 Trades, ca. +20.09 PnL
+  - Non-Zone: 7 Trades, 0 TP / 7 SL, ca. -3.96 PnL
+  - Equity-Peak: ca. +18.28 nach Trade 37
+  - Ruecklauf vom Peak bis Schluss: ca. -2.15
+  - Beobachtungslernen:
+    - `low_observations`: 963
+    - `resolved`: 956
+    - `saved_loss`: 528
+    - `missed_gain`: 423
+    - `neutral`: 5
+    - `observation_maturity_trust`: ca. 0.554
+    - `observation_action_pressure`: ca. 0.442
 - Denk-/Memory-Last steigt leicht weiter:
   - `memory_compare_load` ca. 0.905 -> 0.913 -> 0.939 -> 0.935
   - `blind_thinking_load` ca. 0.440 -> 0.443 -> 0.450 -> 0.451
@@ -240,6 +312,138 @@ Nach Lauf 18 geprueft:
     `low_observations = 1` und eine offene Beobachtung.
 - Lauf 19 ist damit der erste echte Kontrolllauf fuer die signalbasierte
   Beobachtungslernspur.
+
+Nach Lauf 19 geprueft:
+
+- Der Beobachtungslernkanal funktioniert jetzt real im Backtest.
+- Es wurden 948 Low-/Non-Zone-Beobachtungen erzeugt und aufgeloest.
+- Mehr als die Haelfte der hypothetischen Low-Handlungen haette Verlust
+  gespart (`saved_loss`: 519).
+- Ein grosser Anteil haette aber auch Gewinn verpasst (`missed_gain`: 424).
+- Interpretation:
+  - Low/Non-Zone ist nicht einfach "schlecht".
+  - Low/Non-Zone ist ein instabiler Spannungsraum.
+  - Das System lernt dort jetzt nicht nur Vermeidung, sondern Ambivalenz:
+    Zusehen kann reif sein, kann aber auch Chancen kosten.
+- Die bisherige Kopplung ist deshalb fachlich passend vorsichtig:
+  - `maturity_trust` staerkt Beobachtungsreife.
+  - `action_pressure` erzeugt Gegenspannung, wenn Zusehen zu viel Gewinn
+    verpasst haette.
+- Keine direkte Code-Nachschaerfung nach Lauf 19:
+  - Das war der erste echte Aktivierungslauf.
+  - Eine sofortige Drosselung wuerde zu frueh auf einen einzelnen Lauf
+    reagieren.
+  - Lauf 20 soll zeigen, ob die neue Reifeschicht stabil lernt oder zu viel
+    Ambivalenz/Handlungsdruck erzeugt.
+
+Nach Lauf 20 geprueft:
+
+- Die Beobachtungslernspur ist stabil:
+  - `maturity_trust` steigt von ca. 0.549 auf ca. 0.571
+  - `action_pressure` faellt von ca. 0.447 auf ca. 0.424
+- Gleichzeitig steigt die Tradezahl von 41 auf 47.
+- Die Zone traegt weiter stabil, aber mit mehr SL-Anteil.
+- Non-Zone bleibt bei 0 TP und 10 SL negativ.
+- Interpretation:
+  - Das System bildet jetzt Beobachtungsreife.
+  - Diese Reife wird im Brain aber noch zu schwach in reale Zurueckhaltung,
+    Beobachtung oder Replan uebersetzt.
+  - Es fehlt nicht mehr die Lernspur, sondern die Reife-Kopplung ist noch zu
+    zart.
+
+Direkt nachgeschaerft:
+
+- `observation_maturity_balance` wurde ergaenzt:
+  - `maturity_trust - action_pressure`
+  - nur positive Balance wirkt als Reifedruck.
+- Die Kopplung bleibt weich:
+  - etwas weniger `act_push`
+  - etwas mehr `observe_pull`
+  - minimal mehr `replan_pull`
+- Keine harte Low-/Non-Zone-Sperre.
+- Ziel fuer Lauf 21:
+  - weniger unreife Handlung bei weiterhin freier Zone
+  - stabilere Non-Zone-Reduktion
+  - keine komplette Unterdrueckung von Chancen, weil `action_pressure`
+    weiter als Gegenspannung erhalten bleibt.
+
+Nach Lauf 21 geprueft:
+
+- Der PnL-Rueckgang ist real und relevant.
+- Die Reifespur selbst bleibt aktiv:
+  - viele Low-Beobachtungen
+  - mehr `saved_loss` als `missed_gain`
+  - aber weiter deutliche Ambivalenz.
+- Die globale Reife-Kopplung war fachlich zu breit:
+  - Sie kann gute Zone-Handlungen mitdaempfen.
+  - Gleichzeitig loest sie das eigentliche Problem nicht vollstaendig:
+    Viele negative Non-Zone-Outcomes entstehen offenbar nicht nur durch
+    direkten Non-Zone-Einstieg, sondern durch Strukturkippen waehrend
+    offener Positionen.
+- Neue Korrektur:
+  - `observation_maturity_balance` bleibt erhalten.
+  - Neu ist `observation_maturity_scope`.
+  - Die Reife-Balance wirkt jetzt nur stark, wenn die aktuelle
+    Strukturtragfaehigkeit niedrig ist.
+  - Daraus entsteht `observation_scoped_balance`.
+- Ziel:
+  - Zone/tragende Struktur weniger pauschal bremsen.
+  - Low-/Non-Zone-Spannung staerker in Observe/Replan uebersetzen.
+  - Keine harte Sperre, sondern kontextabhaengige Reiferegulation.
+- Zusaetzlicher Befund:
+  - Das naechste groessere Thema ist wahrscheinlich nicht nur Entry-Reife,
+    sondern Halte-/Exit-Reife:
+    Was passiert, wenn eine Position tragend startet, aber das Feld waehrend
+    der offenen Position in Non-Zone kippt?
+
+Nach Lauf 22 geprueft:
+
+- Der scoped Reife-Fix war nicht tragfaehig.
+- PnL faellt stark auf ca. +1.67.
+- Ursache in der Auswertung:
+  - Zone-PnL bricht von ca. +18.55 auf ca. +11.24 ein.
+  - Non-Zone-Verlust steigt auf ca. -9.56.
+  - Die Tradezahl sinkt, aber die Qualitaet der verbleibenden Trades faellt.
+- Technischer Befund:
+  - `observation_maturity_scope` stand auch bei hoher realer
+    `structure_quality` oft fast auf 1.0.
+  - Damit war die Reifewirkung weiterhin zu breit und nicht sauber an echte
+    Low-/Non-Zone-Struktur gebunden.
+- Korrektur:
+  - `observation_maturity_scope` wird jetzt aus der realen aktuellen
+    `structure_perception_state.structure_quality` berechnet.
+  - Nur wenn diese reale Strukturqualitaet niedrig ist, wirkt die Reife-Balance
+    stark.
+  - Tragende Zone soll dadurch weniger pauschal gedämpft werden.
+- Lauf 23 muss pruefen, ob die scoped Reife jetzt wirklich lokal wirkt.
+
+Nach Lauf 23 geprueft:
+
+- Der reale Struktur-Scope funktioniert deutlich besser:
+  - durchschnittlicher `observation_maturity_scope`: ca. 0.121
+  - bei tragender Struktur ist der Scope haeufig 0
+  - `observation_scoped_balance` wirkt nur noch lokal stark
+- Zone erholt sich auf ca. +20.09 PnL.
+- Non-Zone-Verlust sinkt stark auf ca. -3.96.
+- Gesamt-PnL steigt auf ca. +16.13.
+- Der Lauf war zwischenzeitlich noch profitabler:
+  - Peak ca. +18.28
+  - Schluss ca. +16.13
+  - Ruecklauf ca. -2.15 am Ende
+- Interpretation:
+  - Entry-Reife / Low-Regulation wirkt jetzt deutlich besser.
+  - Der naechste Engpass ist wahrscheinlich Halte-/Exit-Reife:
+    Wenn das System bereits deutlich im Gewinn ist oder eine offene Position
+    spaeter Struktur verliert, braucht es eine reifere Sicherungs- oder
+    Reorganisationsreaktion.
+- Keine weitere Entry-Daempfung nach Lauf 23.
+- Naechster sinnvoller Schritt:
+  Halte-/Exit-Reife als eigene weiche Schicht vorbereiten:
+  - Peak-Gewinn nicht starr sichern
+  - aber Rueckgabe nach Strukturkippen wahrnehmen
+  - offene Positionen bei sinkender Tragfaehigkeit beobachten/reduzieren/
+    frueher verlassen koennen
+  - ohne gute Trendfortsetzung abzuwuergen
 
 Naechster Lauf muss deshalb besonders pruefen:
 

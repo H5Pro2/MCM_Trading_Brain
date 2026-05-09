@@ -1,6 +1,6 @@
 # MCM Trading Brain
 
-![alt text](files/bilder/MCM_Trading_Brain.png)
+![alt text](files/MCM_Trading_Brain.png)
 
 MCM Trading Brain ist ein experimentelles Trading-System mit [MCM-Architektur](https://github.com/H5Pro2/Mental-Core-Matrix-MCM).
 
@@ -518,7 +518,7 @@ Das ist ein **offener Ausbaupunkt**, kein bereits abgeschlossener Endzustand.
 ---
 ## MCM-Neuron Ansicht und Aufbau
 
-![alt text](files/bilder/MCM_Neuron.png)
+![alt text](files/MCM_Neuron.png)
 
 ---
 ## Innenfeld, Musterbildung und neuronale Richtung

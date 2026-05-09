@@ -5058,7 +5058,8 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
             "form_symbol_development_quality;form_symbol_action_binding;form_symbol_observation_binding;"
             "form_symbol_reframe_binding;form_symbol_learning_trust;form_symbol_action_trust;"
             "form_symbol_caution_trust;learned_development_uncertainty;"
-            "observation_maturity_trust;observation_action_pressure;observation_low_count;"
+            "observation_maturity_trust;observation_action_pressure;observation_maturity_balance;"
+            "observation_maturity_scope;observation_scoped_balance;observation_low_count;"
             "structure_quality;context_confidence;structure_orientation;structure_orientation_gap;"
             "structure_action_bearing;structure_action_gap;structure_action_uncertainty;"
             "context_cluster_negative_source;context_cluster_id;context_cluster_seen;context_cluster_score;"
@@ -5124,6 +5125,9 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         f"{float(meta.get('learned_development_uncertainty', 0.0) or 0.0):.4f}",
         f"{float(meta.get('observation_maturity_trust', 0.0) or 0.0):.4f}",
         f"{float(meta.get('observation_action_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('observation_maturity_balance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('observation_maturity_scope', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('observation_scoped_balance', 0.0) or 0.0):.4f}",
         int(float(meta.get("observation_low_count", 0) or 0)),
         f"{float(meta.get('structure_quality', felt.get('structure_quality', 0.0)) or 0.0):.4f}",
         f"{float(meta.get('context_confidence', felt.get('context_confidence', 0.0)) or 0.0):.4f}",
@@ -12398,6 +12402,9 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     meta_regulation_state["pattern_replan_pressure"] = float(pattern_replan_pressure)
     meta_regulation_state["observation_maturity_trust"] = float(review_feedback_state.get("observation_maturity_trust", 0.0) or 0.0)
     meta_regulation_state["observation_action_pressure"] = float(review_feedback_state.get("observation_action_pressure", 0.0) or 0.0)
+    meta_regulation_state["observation_maturity_balance"] = float(review_feedback_state.get("observation_maturity_balance", 0.0) or 0.0)
+    meta_regulation_state["observation_maturity_scope"] = float(review_feedback_state.get("observation_maturity_scope", 0.0) or 0.0)
+    meta_regulation_state["observation_scoped_balance"] = float(review_feedback_state.get("observation_scoped_balance", 0.0) or 0.0)
     meta_regulation_state["observation_low_count"] = int(review_feedback_state.get("observation_low_count", 0) or 0)
 
     bot.visual_market_state = dict(visual_market_state)
@@ -12951,6 +12958,13 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
     observation_maturity_trust = float(attempt_feedback.get("observation_maturity_trust", 0.0) or 0.0)
     observation_action_pressure = float(attempt_feedback.get("observation_action_pressure", 0.0) or 0.0)
     observation_low_count = int(attempt_feedback.get("observation_low_count", 0) or 0)
+    observation_maturity_balance = max(0.0, min(1.0, observation_maturity_trust - observation_action_pressure))
+    structure_state = dict(result.get("structure_perception_state", {}) or {})
+    actual_structure_quality = float(structure_state.get("structure_quality", result.get("structure_quality", 0.0)) or 0.0)
+    if actual_structure_quality <= 0.0:
+        actual_structure_quality = float(max(structural_bearing_quality, felt_bearing_score))
+    observation_maturity_scope = max(0.0, min(1.0, (0.56 - actual_structure_quality) / 0.18))
+    observation_scoped_balance = float(observation_maturity_balance * observation_maturity_scope)
     reinforcement = float(context_item.get("reinforcement", 0.0) or 0.0)
     attenuation = float(context_item.get("attenuation", 0.0) or 0.0)
     bearing_effect = float(context_item.get("bearing_effect", 0.0) or 0.0)
@@ -12992,8 +13006,9 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
             carry_capacity
             - (caution_load * 0.68)
             + (pattern_action_support * 0.18)
-            + (observation_action_pressure * 0.035)
-            - (observation_maturity_trust * 0.060),
+            + (observation_action_pressure * 0.033)
+            - (observation_maturity_trust * 0.052)
+            - (observation_scoped_balance * 0.080),
         ),
     )
     observe_pull = max(
@@ -13005,7 +13020,8 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
             + (pattern_observe_pressure * 0.22)
             + (inner_pattern_fragility * 0.08)
             + (0.10 if review_label == "observe_was_correct" else 0.0)
-            + (observation_maturity_trust * 0.085),
+            + (observation_maturity_trust * 0.075)
+            + (observation_scoped_balance * 0.110),
         ),
     )
     replan_pull = max(
@@ -13016,7 +13032,8 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
             + (uncertainty_recognition_quality * 0.12)
             + (pattern_replan_pressure * 0.26)
             + (inner_pattern_conflict * 0.10)
-            + (0.12 if review_label == "correction_was_correct" else 0.0),
+            + (0.12 if review_label == "correction_was_correct" else 0.0)
+            + (observation_scoped_balance * 0.050),
         ),
     )
     hold_pull = max(
@@ -13068,6 +13085,9 @@ def _resolve_review_decision_feedback(bot=None, runtime_result=None):
         "tendency_hint": str(tendency_hint),
         "observation_maturity_trust": float(observation_maturity_trust),
         "observation_action_pressure": float(observation_action_pressure),
+        "observation_maturity_balance": float(observation_maturity_balance),
+        "observation_maturity_scope": float(observation_maturity_scope),
+        "observation_scoped_balance": float(observation_scoped_balance),
         "observation_low_count": int(observation_low_count),
     }
 
