@@ -83,9 +83,9 @@ Er wird erst dann zur Wahrnehmung, wenn er im Innenraum des Systems eine Lage er
 - Was erkenne ich davon?
 - Was bleibt unklar?
 - Was trägt?
-- Was ueberfordert?
-- Was erinnert an fruehere Erfahrung?
-- Wo muss ich handeln, beobachten, halten oder in den Nullpunkt zurueckfinden?
+- Was überfordert?
+- Was erinnert an frühere Erfahrung?
+- Wo muss ich handeln, beobachten, halten oder in den Nullpunkt zurückfinden?
 
 In diesem Sinn ist Wahrnehmung nicht an menschliches Bewusstsein gebunden.
 Auch biologische Systeme wie Pilze, Bäume oder einfache Organismen können
@@ -101,7 +101,7 @@ Tragfähigkeit, Spannung, Reflexion und Handlung.
 ## Eigene Sprache und kognitive Kompression
 
 Ein wichtiger nächster Schritt ist, dass das System nicht nur menschliche
-Begriffe oder Patternnamen uebernimmt.
+Begriffe oder Patternnamen übernimmt.
 
 Wenn wir dem System fertige Bezeichnungen geben, begrenzen wir seine Welt.
 Dann lernt es, unsere Kategorien zu sortieren, aber es entwickelt keine eigene
@@ -110,13 +110,13 @@ innere Semantik.
 Die MCM soll deshalb langfristig eigene interne Zeichen bilden.
 Diese Zeichen sind keine menschlichen Labels wie Trend, Range oder Breakout.
 Sie entstehen aus wiederkehrenden Feldzuständen, innerer Spannung,
-Wahrnehmung, Memory-Resonanz, Tragfähigkeit, Ueberforderung und Erfahrung.
+Wahrnehmung, Memory-Resonanz, Tragfähigkeit, Überforderung und Erfahrung.
 
 Das entspricht einer kognitiven Kompression:
 
 - nicht jeder Reiz muss jedes Mal voll analysiert werden
 - bekannte innere Formen können als verdichtete Information wirken
-- tiefe Analyse startet erst, wenn Relevanz, Abweichung oder Handlung näher ruecken
+- tiefe Analyse startet erst, wenn Relevanz, Abweichung oder Handlung näher rücken
 - dadurch sinkt Denk-/Memory-Last
 - gleichzeitig entsteht mehr Varianz im Bedeutungsraum
 
@@ -183,7 +183,7 @@ Musterfortsetzungen bilden:
 - welche fehlenden Teile könnten sich ergänzen?
 - welche Varianten sind tragfähig?
 - welche Varianten sind riskant, fragil oder überlastend?
-- wie sicher ist diese Deutung aktüll?
+- wie sicher ist diese Deutung aktuell?
 
 Diese emergente Musterergänzung ist keine harte Vorhersage.
 Sie arbeitet mit Unsicherheit, Varianz, Erfahrungsresonanz und innerer Tragfähigkeit.
