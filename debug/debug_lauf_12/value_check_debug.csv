@@ -1,0 +1,7 @@
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.3305141048665803, 'reward': 1.4894559446659343, 'rr': 4.506482243071557}
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.33569831737412414, 'reward': 1.4501113147156843, 'rr': 4.31968597894277}
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.3430507963294076, 'reward': 1.4856045769632829, 'rr': 4.330567347048981}
+VALUE_GATE: {'trade_allowed': False, 'reason': 'reward_too_small'}
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.593032659463006, 'reward': 1.5549682617835288, 'rr': 2.622061765015708}
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.3217947615772516, 'reward': 1.5465666216080365, 'rr': 4.8060652511173965}
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.3433329113618129, 'reward': 1.5225800319096265, 'rr': 4.434704572510654}

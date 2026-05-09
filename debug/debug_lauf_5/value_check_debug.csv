@@ -1,0 +1,4 @@
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.38878082626229116, 'reward': 1.447303211025286, 'rr': 3.722671266840876}
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.3322720313468892, 'reward': 1.4241749442145135, 'rr': 4.286171599943321}
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.3380500867867795, 'reward': 1.5507249693437188, 'rr': 4.587263929092902}
+VALUE_GATE: {'trade_allowed': True, 'risk': 0.3464731230864402, 'reward': 1.4659143293261536, 'rr': 4.230961167398917}
