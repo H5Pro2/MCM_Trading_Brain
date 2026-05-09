@@ -21,6 +21,11 @@ Abgeschlossen:
   fuer wichtige MCM-Denkspuren ist und beim Lesen mit neueren Mechaniken wie
   Formsprache, Transfer-Tragfaehigkeit, Beobachtungslernen, Prozessqualitaet
   und DIO zusammengedacht werden muss.
+- [x] `README.md` um MCM als Spannungsraum ergaenzt.
+  Ergebnis: Der Chart wird fachlich als aeusserer Spannungsverlauf beschrieben,
+  der im MCM-Innenfeld Druck, Entlastung, Resonanz, Tragfaehigkeit,
+  Regulationslast, Beobachtungsbedarf und Handlungstendenz erzeugt. Zudem
+  wurden im bearbeiteten README-Bereich Umlaute sauber korrigiert.
 - [x] Automatische Debug-Laufordner eingebaut.
   Ergebnis: Neue Backtests schreiben Debug-Dateien automatisch nach
   `debug/debug_lauf_X`. Zentrale alte Pfade werden ueber `debug_reader.py`
@@ -199,6 +204,28 @@ Neu aus dem letzten Debug:
   `saved_loss`, `missed_gain`, `maturity_trust`, `action_pressure`, Tradezahl
   und Non-Zone/Low-PnL. Lauf 18 ist der erste echte Nachweis fuer die
   vollstaendige Beobachtungslernmechanik.
+- [x] `debug_lauf_18` geprueft.
+  Ergebnis: PnL ca. +14.19 bei 37 Trades. Gegen Lauf 17 erneut weniger
+  Trades und besseres Ergebnis. Zone traegt ca. +20.27 PnL. Non-Zone bleibt
+  negativ, aber reduziert auf 11 Trades und ca. -6.08 PnL.
+- [x] Beobachtungslernen nach Lauf 18 erneut diagnostiziert.
+  Ergebnis: `observation_learning` blieb wieder bei 0. Non-Zone-Observe,
+  Withhold und Skip kamen weiter ohne Entry/SL/TP an. In vielen Faellen gab es
+  keine explizite LONG-/SHORT-Hypothese mehr, sondern nur noch ein schwaches
+  Signalbild.
+- [x] Signalbasierte Beobachtungshypothese eingebaut.
+  Ergebnis: Der Attempt-Kontext fuehrt jetzt `world_state.current_price` und
+  `world_state.candle_state`. `TradeStats` kann aus Non-Zone + Preis +
+  Signalspannung eine virtuelle Beobachtungshypothese erzeugen. Das ist kein
+  echter Trade und kein harter Blocker, sondern eine Lernspur fuer
+  Nicht-Handlung.
+- [x] Mini-Mechaniktest fuer Beobachtungslernen erfolgreich.
+  Ergebnis: Non-Zone + Observe + Preis + Signal erzeugt jetzt
+  `low_observations = 1` und eine offene Beobachtung.
+- [ ] Lauf 19 pruefen:
+  `low_observations`, offene/aufgeloeste Beobachtungen, `saved_loss`,
+  `missed_gain`, `maturity_trust`, `action_pressure`, Non-Zone/Low-PnL,
+  Tradezahl und ob Zone/High frei genug bleiben.
 
 ---
 

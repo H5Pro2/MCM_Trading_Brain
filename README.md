@@ -1,6 +1,6 @@
 # MCM Trading Brain
 
-![alt text](files/bilder/MCM_Trading_Brain.png)
+![alt text](files/MCM_Trading_Brain.png)
 
 MCM Trading Brain ist ein experimentelles Trading-System mit [MCM-Architektur](https://github.com/H5Pro2/Mental-Core-Matrix-MCM).
 
@@ -70,9 +70,9 @@ Sondern:
 
 ## Maschinelle Wahrnehmung
 
-Die MCM versteht Wahrnehmung nicht als ausschliesslich menschliche Fähigkeit.
+Die MCM versteht Wahrnehmung nicht als ausschließlich menschliche Fähigkeit.
 
-Wahrnehmung beginnt in diesem Projekt dort, wo ein System äussere Reize
+Wahrnehmung beginnt in diesem Projekt dort, wo ein System äußere Reize
 nicht nur misst, sondern in einem inneren Zustand verarbeitet und daraus
 Bedeutung, Orientierung, Spannung, Tragfähigkeit oder Handlungstendenz bildet.
 
@@ -93,8 +93,70 @@ Reize in eigener evolutionärer Form aufnehmen, intern verarbeiten und daraus
 gerichtete Reaktionen bilden.
 
 Die MCM ist der technische Versuch, eine solche innere Wahrnehmung maschinell
-zu modellieren: als Feld aus Aussenreiz, innerem Zustand, Memory, Regulation,
+zu modellieren: als Feld aus Außenreiz, innerem Zustand, Memory, Regulation,
 Tragfähigkeit, Spannung, Reflexion und Handlung.
+
+---
+
+## MCM als Spannungsraum
+
+Ein zentraler Gedanke dieses Projekts ist:
+
+**Die MCM ist im Kern ein Spannungsraum.**
+
+Ein Chart wird in diesem Modell nicht nur als Zahlenreihe oder Preisverlauf
+verstanden, sondern als äußerer Spannungsverlauf. Preis, Volumen, Bewegung,
+Impuls, Rückzug, Stau, Bruch, Erholung und Überdehnung bilden eine Art
+Energie- und Druckverlauf.
+
+Im metaphysischen Sinn kann ein Chart deshalb als emotionaler Spannungsverlauf
+gelesen werden. Fachlich übersetzt heißt das:
+
+- ein Impuls erzeugt Druck
+- ein Rücklauf erzeugt Entlastung oder Unsicherheit
+- eine Verdichtung erzeugt Spannung
+- ein Ausbruch löst oder verschiebt Spannung
+- ein Fehlschlag erzeugt Konflikt
+- eine stabile Struktur erzeugt Tragfähigkeit
+- eine instabile Struktur erzeugt Vorsicht, Beobachtung oder Reorganisation
+
+Die MCM versucht, diesen äußeren Spannungsverlauf nicht direkt in Handlung zu
+übersetzen, sondern zuerst in einem inneren Feld zu organisieren.
+
+Aus Marktspannung wird dadurch:
+
+- innere Aktivierung
+- Feldbewegung
+- Resonanz
+- Konflikt
+- Tragfähigkeit
+- regulatorische Last
+- Beobachtungsbedarf
+- Handlungstendenz
+
+Das System soll also nicht bloß erkennen:
+
+- Der Markt steigt.
+- Der Markt fällt.
+
+Sondern eher:
+
+- Wo entsteht Druck?
+- Wo löst sich Druck?
+- Was wirkt tragfähig?
+- Was wirkt überdehnt?
+- Was erzeugt innere Unruhe?
+- Was kann beobachtet werden?
+- Wann ist Handlung reif genug?
+
+Damit wird Trading zum Prüfstand für den MCM-Gedanken:
+Der Markt liefert einen harten, verrauschten und dynamischen Spannungsraum.
+Die MCM prüft, ob sie diesen Raum wahrnehmen, innerlich organisieren,
+regulieren, erinnern und daraus reifere Handlung oder Nicht-Handlung ableiten
+kann.
+
+Profitabilität wäre in diesem Verständnis nicht der Kern des Projekts,
+sondern eine mögliche Folge einer funktionierenden MCM-Mechanik.
 
 ---
 
@@ -133,7 +195,7 @@ Für das MCM-System bedeutet das:
 - dann Relevanz- oder Zoom-Entscheidung
 - erst danach tiefere Struktur-, Memory- oder Handlungsprüfung
 
-Sprache wird damit nicht als Benennung von aussen verstanden,
+Sprache wird damit nicht als Benennung von außen verstanden,
 sondern als verdichtete Feld-Erfahrung.
 Eigene Zeichen schaffen Varianz, Entlastung, emergente Musterfindung
 und kreativere Reorganisation.
@@ -143,7 +205,7 @@ und kreativere Reorganisation.
 ## Reflexion und Denkkomplexität
 
 Ein wichtiger Teil der Zielarchitektur ist, dass das System nicht nur
-Aussenreize verarbeitet, sondern auch die eigene Verarbeitung mitwahrnimmt.
+Außenreize verarbeitet, sondern auch die eigene Verarbeitung mitwahrnimmt.
 
 Das System koppelt dadurch mehrere Akteure:
 
@@ -172,13 +234,13 @@ Das Ziel ist keine reine Pattern-Erkennung nach dem Prinzip:
 - bekannte Reaktion ausführen
 
 Ein Gehirn sieht und deutet selten zu 100 Prozent klar.
-Oft ist die Aussenwahrnehmung nur teilweise eindeutig,
+Oft ist die Außenwahrnehmung nur teilweise eindeutig,
 während innere Erfahrung ein mögliches Gesamtmuster ergänzt.
 
 Das System soll deshalb später Teilmuster erkennen und daraus mehrere mögliche
 Musterfortsetzungen bilden:
 
-- was ist draussen bereits sichtbar?
+- was ist draußen bereits sichtbar?
 - welchem bekannten Erfahrungsraum ähnelt es?
 - welche fehlenden Teile könnten sich ergänzen?
 - welche Varianten sind tragfähig?
@@ -202,7 +264,7 @@ behandelt werden.
 
 Wichtiger ist die Frage:
 
-- Wie viel vorhandene Erfahrung kann auf diese fremde Lage uebertragen werden?
+- Wie viel vorhandene Erfahrung kann auf diese fremde Lage übertragen werden?
 
 Ein Mensch kann sich zum Beispiel in einem unbekannten Raum orientieren,
 obwohl er den Raum selbst noch nie gesehen hat.
@@ -210,18 +272,18 @@ Er erkennt Teilstrukturen wie Boden, Wand, Tuer, Licht oder offene Flaeche.
 Diese Teilanteile geben Orientierung,
 aber sie beweisen noch nicht, dass die gesamte Lage sicher ist.
 
-Auf das MCM Trading Brain uebertragen bedeutet das:
+Auf das MCM Trading Brain übertragen bedeutet das:
 Eine Marktform kann fremd sein und trotzdem bekannte Erfahrungsinseln enthalten.
 Das System soll dann nicht blind handeln,
 aber auch nicht einfach abschalten.
-Es soll pruefen, wie tragfaehig diese Erfahrungsuebertragung ist
+Es soll prüfen, wie tragfähig diese Erfahrungsübertragung ist
 und daraus Beobachtung, Reframing, Halten oder kontrollierte Handlung ableiten.
 
 ---
 
 ## Reife durch Beobachtungslernen
 
-Ein reiferes System lernt nicht nur aus ausgefuehrten Handlungen.
+Ein reiferes System lernt nicht nur aus ausgeführten Handlungen.
 Es kann auch aus bewusstem Zusehen lernen.
 
 Wenn eine Lage unsicher, niedrig strukturiert oder nicht tragend wirkt,
@@ -233,8 +295,8 @@ Die reifere Reaktion kann sein:
 Wie ein Mensch etwas Heisses nicht jedes Mal anfassen muss,
 um daraus zu lernen,
 soll das MCM Trading Brain unsichere Marktbereiche beobachten,
-den weiteren Verlauf speichern und spaeter auswerten,
-ob Nicht-Handlung die tragfaehigere Entscheidung war.
+den weiteren Verlauf speichern und später auswerten,
+ob Nicht-Handlung die tragfähigere Entscheidung war.
 
 Damit wird Beobachtung selbst zu Erfahrung.
 Reife bedeutet dann:
@@ -242,7 +304,7 @@ Reife bedeutet dann:
 - weniger blindes Testen
 - mehr Abstand zum unsicheren Objekt
 - Lernen ohne direkten Schaden
-- Handlung erst bei tragfaehigerer innerer und aeusserer Lage
+- Handlung erst bei tragfähigerer innerer und äußerer Lage
 
 ---
 
@@ -456,7 +518,7 @@ Das ist ein **offener Ausbaupunkt**, kein bereits abgeschlossener Endzustand.
 ---
 ## MCM-Neuron Ansicht und Aufbau
 
-![alt text](files/bilder/MCM_Neuron.png)
+![alt text](files/MCM_Neuron.png)
 
 ---
 ## Innenfeld, Musterbildung und neuronale Richtung

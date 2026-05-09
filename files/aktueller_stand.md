@@ -37,6 +37,16 @@ Dokumentationspflege:
   - neuere Mechaniken wie Formsprache, Formsymbol-Memory,
     Transfer-Tragfaehigkeit, Beobachtungslernen, Prozessqualitaet und DIO
     muessen beim Lesen mitgedacht werden.
+- `README.md` wurde fachlich um den Abschnitt `MCM als Spannungsraum`
+  erweitert.
+  - Die MCM wird dort als innerer Spannungsraum beschrieben.
+  - Ein Chart wird als aeusserer Spannungsverlauf verstanden:
+    Druck, Entlastung, Verdichtung, Bruch, Erholung, Ueberdehnung,
+    Tragfaehigkeit und Reorganisation.
+  - Trading wird als harter Pruefstand fuer den MCM-Gedanken eingeordnet.
+  - Profitabilitaet wird nicht als Kern des Projekts, sondern als moegliche
+    Folge einer funktionierenden MCM-Mechanik beschrieben.
+  - Im README wurden im bearbeiteten Bereich Umlaute sauber korrigiert.
 
 Debug-Laeufe 13 und 14 wurden nach dem starken Lauf 12 geprueft:
 
@@ -46,6 +56,7 @@ Debug-Laeufe 13 und 14 wurden nach dem starken Lauf 12 geprueft:
 - `debug_lauf_15`: ca. +15.90 Netto-PnL, Profit Factor ca. 1.97, 51 Trades
 - `debug_lauf_16`: ca. +11.11 Netto-PnL, Profit Factor ca. 1.62, 54 Trades
 - `debug_lauf_17`: ca. +12.09 Netto-PnL, 42 Trades
+- `debug_lauf_18`: ca. +14.19 Netto-PnL, 37 Trades
 
 Befund:
 
@@ -55,6 +66,7 @@ Befund:
   der staerkste Lauf.
 - Lauf 16 bleibt klar positiv, faellt aber gegen Lauf 15 zurueck.
 - Lauf 17 bleibt ebenfalls klar positiv und reduziert die Tradezahl deutlich.
+- Lauf 18 verbessert sich weiter und reduziert die Tradezahl erneut.
 - Die positive Zone/High-Struktur traegt weiterhin.
 - Der Rueckgang in Lauf 13/14 entstand vor allem, weil weniger High-Trades
   entstanden und Non-Zone/Low weiter konsequent Verlust erzeugte.
@@ -77,6 +89,10 @@ Befund:
   - Gesamt: 42 Trades, 20 TP / 22 SL, ca. +12.09 PnL
   - Zone: 27 Trades, ca. +20.15 PnL
   - Non-Zone: 15 Trades, ca. -8.07 PnL
+- Lauf 18:
+  - Gesamt: 37 Trades, 19 TP / 18 SL, ca. +14.19 PnL
+  - Zone: 26 Trades, ca. +20.27 PnL
+  - Non-Zone: 11 Trades, 0 TP / 11 SL, ca. -6.08 PnL
 - Denk-/Memory-Last steigt leicht weiter:
   - `memory_compare_load` ca. 0.905 -> 0.913 -> 0.939 -> 0.935
   - `blind_thinking_load` ca. 0.440 -> 0.443 -> 0.450 -> 0.451
@@ -196,6 +212,34 @@ Nach Lauf 17 erneut geprueft:
     (`LONG`/`SHORT`) getrennt.
 - Lauf 18 ist damit der erste echte Kontrolllauf fuer die volle
   Beobachtungslernmechanik.
+
+Nach Lauf 18 geprueft:
+
+- Das Verhalten wurde besser:
+  - weniger Trades
+  - hoeherer Netto-PnL als Lauf 16/17
+  - weniger Non-Zone-Verlust
+- Die Beobachtungslernspur blieb aber erneut bei 0.
+- Diagnose:
+  - Non-Zone-Observe/Withhold/Skip kam im Attempt-Kontext weiter als
+    `WAIT` ohne Entry/SL/TP an.
+  - Teilweise gab es nur noch ein schwaches Signalbild, aber keine
+    explizite innere LONG-/SHORT-Hypothese.
+  - Aus organismischer Sicht heisst das:
+    Das System spuert geringe Tragfaehigkeit, formuliert aber noch nicht
+    immer eine beobachtbare innere Handlungshypothese.
+- Nachkorrektur:
+  - Der Attempt-Kontext fuehrt jetzt `world_state.current_price` und
+    `world_state.candle_state` mit.
+  - `TradeStats` kann fuer Non-Zone-Observe/Withhold/Skip aus Signalspannung
+    und aktuellem Preis eine virtuelle Beobachtungshypothese ableiten.
+  - Das erzeugt keine echte Handlung, sondern nur eine Lernspur:
+    Was waere passiert, wenn diese innere Richtung gehandelt worden waere?
+- Mini-Mechaniktest erfolgreich:
+  - Non-Zone + Observe + Preis + Signal erzeugt jetzt
+    `low_observations = 1` und eine offene Beobachtung.
+- Lauf 19 ist damit der erste echte Kontrolllauf fuer die signalbasierte
+  Beobachtungslernspur.
 
 Naechster Lauf muss deshalb besonders pruefen:
 
