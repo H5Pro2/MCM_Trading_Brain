@@ -45,7 +45,7 @@ def _ensure_exchange():
     global _EXCHANGE, _SYMBOL
 
     if _SYMBOL is None:
-        _SYMBOL = f"{Config.SYMBOL}:USDT"
+        _SYMBOL = ph_ohlcv.resolve_exchange_symbol(Config.SYMBOL)
 
     if _EXCHANGE is None:
         _EXCHANGE = ph_ohlcv.create_exchange(api.API_KEY, api.API_SECRET)

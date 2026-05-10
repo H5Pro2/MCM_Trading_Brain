@@ -1274,6 +1274,285 @@ Sie soll die innere Tendenz verschieben:
 
 ---
 
+### Positionslast und reife Nicht-Intervention
+
+Eine offene Position ist nicht nur ein technischer Zustand.
+Sie erzeugt eine eigene innere Last:
+
+- der Markt bewegt sich weiter
+- Gewinn kann wieder verschwinden
+- Verlust kann naeher kommen
+- jede Kerze erzeugt neue Deutung
+- jede neue Deutung kann Handlungsdruck erzeugen
+
+Dieses laufende Bewerten ist kognitive Last.
+Es ist Denk-, Halte- und Nervensystemlast.
+
+Ein fester TP/SL ist deshalb nicht primitiv.
+Er ist eine Entlastungsstruktur:
+Die Entscheidung wurde vorher in ruhigerem Zustand getroffen,
+und die offene Position muss nicht bei jeder Bewegung neu verhandelt werden.
+
+Fuer die MCM bedeutet das:
+
+- hohe Exit-Spannung ist nicht automatisch ein Exit-Grund
+- hohe innere Belastung kann ein Hinweis sein,
+  dass die aktuelle Entscheidungsbasis nicht tragfaehig ist
+- in dieser Lage kann Nicht-Intervention reifer sein als Eingriff
+- das System darf erkennen:
+  Ich sehe Spannung, aber mein innerer Zustand traegt keine neue Entscheidung.
+
+Damit entsteht eine wichtige Unterscheidung:
+
+- `exit_reife`: Die Position selbst verliert tragfaehig Struktur.
+- `intervention_unfit_state`: Das innere Feld ist zu belastet,
+  um eine neue Exit-Entscheidung sauber zu tragen.
+
+Im zweiten Fall soll die MCM nicht reflexhaft schliessen.
+Sie soll den vorher gesetzten Plan als aeussere Haltestruktur respektieren,
+weiter beobachten und die Belastung als Prozessinformation speichern.
+
+Moegliche spaetere Diagnosefelder:
+
+- `position_cognitive_load`
+- `exit_decision_pressure`
+- `holding_stability`
+- `plan_trust`
+- `intervention_fatigue`
+- `inner_noise`
+- `intervention_fitness`
+
+Reife bedeutet hier:
+
+- Wahrnehmung entsteht
+- Spannung wird bemerkt
+- Handlungsdruck wird erkannt
+- aber nur tragfaehige neue Entscheidung darf den alten Plan ersetzen
+
+Ein einzelnes Exit-Reife-Signal bleibt deshalb Wahrnehmung.
+Erst wenn Strukturverlust, Rueckgabe, Druck/Kapazitaets-Konflikt und innere
+Entscheidungsfaehigkeit gemeinsam tragfaehig sind,
+darf daraus ein aktiver Exit-Kandidat werden.
+
+---
+
+### Zielerwartung, TP-Erreichbarkeit und semantische Handlung
+
+Ein Trade soll im Zielsystem nicht als isolierter technischer Vorgang
+verstanden werden.
+
+Eine Handlung besitzt eine innere Erwartung:
+
+- Warum wurde der Einstieg ueberhaupt als tragfaehig erlebt?
+- Welcher Zielraum sollte erreichbar sein?
+- Welche Marktform sollte den Weg dorthin tragen?
+- Welche Grenze wuerde bedeuten, dass diese Erwartung gebrochen ist?
+
+Damit werden TP und SL anders gelesen:
+
+- TP = erwarteter Zielraum, der durch Struktur, Druck, Form und Plan getragen
+  werden soll
+- SL = Tragfaehigkeitsgrenze, an der die urspruengliche Erwartung als
+  nicht mehr haltbar gilt
+
+Das System soll also nicht nur wahrnehmen:
+
+- Ich bin in einer Position.
+- Ich fuehle Druck.
+- Ich liege im Gewinn oder Verlust.
+
+Sondern auch:
+
+- Meine urspruengliche Erwartung war X.
+- Der Zielraum wirkt noch erreichbar.
+- Der Pfad zum Ziel ist nur angespannt, aber nicht gebrochen.
+- Oder: Die Zielerwartung verliert gerade ihre Tragfaehigkeit.
+
+Das ist keine harte mathematische Prozentprognose.
+Es ist eine strukturbezogene Wahrscheinlichkeit:
+Wie plausibel ist es,
+dass der gesetzte Zielraum noch abgeholt wird,
+bevor die tragende Struktur bricht?
+
+Fachlich wichtig ist die Trennung zwischen:
+
+- innerer Belastung
+- echter Erwartungsabweichung
+- strukturellem Erwartungsbruch
+
+Eine Position darf also nicht nur geschlossen werden,
+weil das innere Feld angespannt ist.
+Hohe Exit-Spannung kann auch bedeuten:
+
+- die Lage erzeugt Nervensystemlast
+- der Plan ist aber noch tragend
+- Nicht-Intervention ist reifer als Eingriff
+
+Erst wenn die Erwartung selbst an Tragfaehigkeit verliert,
+wird aus Exit-Druck ein fachlich reifer Exit-Kandidat.
+
+Moegliche Diagnosefelder:
+
+- `target_expectation_context`
+- `tp_reachability`
+- `target_path_integrity`
+- `expectation_deviation`
+- `expectation_break_pressure`
+- `expectation_hold_support`
+- `target_room_pressure`
+- `target_semantic_confidence`
+
+Beispiel:
+
+DIO oeffnet eine Long-Position,
+weil Form, Feldspannung und Erfahrungsinsel darauf hindeuten,
+dass ein hoeherer Zielraum erreichbar ist.
+Nach einem starken Lauf kommt eine Gegenbewegung.
+Das innere Feld wird angespannt,
+aber Zielraum und Pfad sind noch intakt.
+In dieser Lage ist ein Exit kein reifer Schutz,
+sondern vermutlich `exit_pullback_observe`.
+
+Bricht dagegen die Struktur,
+faellt die TP-Erreichbarkeit,
+steigt die Erwartungsabweichung
+und sinkt die Halteunterstuetzung,
+dann darf das System die urspruengliche Handlung neu deuten:
+
+- Die Erwartung war tragfaehig.
+- Die Lage hat sich veraendert.
+- Der Plan ist nicht mehr dieselbe Handlung.
+
+Das ist eine wichtige Bruecke zwischen MCM-Gefuehl und logischer Semantik.
+Nicht nur:
+
+- Ich fuehle etwas.
+
+Sondern:
+
+- Ich erkenne, was ich erwartet habe.
+- Ich erkenne, ob diese Erwartung noch traegt.
+
+Naechster technischer Umsetzungsschritt:
+
+Zunaechst nur als Backtest-/Replay-Diagnose einbauen.
+Die Felder duerfen Exit-Entscheidungen noch nicht aktiv veraendern.
+Ziel ist, nach mehreren Laeufen zu sehen,
+ob `tp_reachability` und `expectation_hold_support`
+TP-Cuts sauberer von echten SL-Schutzmomenten trennen.
+
+---
+
+### Kollektive MCM-Erweiterung: DIO-Studienraum und soziale Semantik
+
+Eine moegliche spaetere Erweiterung ist ein Studienraum fuer mehrere
+getrennte DIO-Systeme.
+
+Diese Ebene ist kein aktueller Kernpfad
+und darf die Stabilisierung des Einzel-DIO nicht verdraengen.
+Sie ist ein Forschungszweig fuer spaeter,
+wenn Wahrnehmung, Memory, Zielerwartung und MCM-Feldmechanik einzeln
+ausreichend stabil sind.
+
+Grundidee:
+
+Mehrere MCM-Brains laufen getrennt.
+Jedes System besitzt:
+
+- eigene Wahrnehmung
+- eigene Formsprache
+- eigenen Speicher
+- eigene Erfahrungsinseln
+- eigene Tragfaehigkeitsgeschichte
+- eigene Zielerwartungen
+
+Danach koennen diese Systeme miteinander vergleichen,
+was sie gesehen, erlebt und gelernt haben.
+
+Die vorsichtige Forschungsfrage lautet:
+
+- Entwickeln getrennte DIO-Systeme bei gleichen oder aehnlichen Formen
+  eigene, moeglicherweise variierende Begriffe?
+- Oder entstehen sehr aehnliche Begriffe,
+  weil die Aussenwelt und die MCM-Mechanik aehnliche Verdichtungen erzeugen?
+- Sind Unterschiede echte Individualitaet,
+  Speicherzustand, Varianz oder nur Laufrauschen?
+- Kann ein System die Erfahrung eines anderen Systems aufnehmen,
+  ohne seine eigene Wahrnehmung zu verlieren?
+
+Die Zielformulierung ist daher bewusst vorsichtig:
+
+**Uebersetzung gleicher Formen bei eventuell variierender Sprache.**
+
+Wichtig:
+
+Nicht die Worte selbst sind zuerst entscheidend,
+sondern die dahinter liegende Form.
+
+Ein System kann eine Form zum Beispiel als:
+
+- tragend, aber nervoes
+
+erleben.
+
+Ein anderes System kann eine sehr aehnliche Form als:
+
+- instabil, besser beobachten
+
+erleben.
+
+Dann entsteht keine einfache Mehrheitsentscheidung.
+Die kollektive Ebene fragt:
+
+- Welche Form wurde gesehen?
+- Welche Feldspannung entstand?
+- Welche innere Last entstand?
+- Welche Zielerwartung wurde gebildet?
+- Wurde diese Zielerwartung spaeter getragen oder gebrochen?
+- Welche Handlung oder Nicht-Handlung entstand?
+- Welches Outcome folgte?
+- Wo gibt es Resonanz?
+- Wo gibt es Differenz?
+- Kann aus der Differenz eine neue Verdichtung entstehen?
+
+Damit waere DIO-zu-DIO-Kommunikation keine Datenkopie.
+Sie waere eine soziale Semantik:
+
+- Kommunikation
+- Aufnahme
+- Verarbeitung
+- gemeinsame Reflexion
+- Entwicklung durch Perspektivvergleich
+
+Eine uebergeordnete Schicht koennte diese Informationen sammeln,
+aber nicht als hartes Chef-Regelwerk.
+Sie waere eher ein Studienraum oder Klassenraum:
+
+- mehrere individuelle MCM-Brains
+- getrennte innere Welten
+- Austausch ueber Formen und Erfahrung
+- kollektive Auswertung
+- neue Uebersetzungsbruecken
+
+Moegliche spaetere technische Bausteine:
+
+- getrennte Memory-Namespaces, z.B. `DIO_A`, `DIO_B`, `DIO_C`
+- identische Daten mit leerem Speicher mehrfach laufen lassen
+- unterschiedliche Datenraeume gegeneinander vergleichen
+- Formsymbol-Vergleich ueber Struktur, Spannung, Tragfaehigkeit und Outcome
+- Uebersetzungstabelle zwischen Formsymbolen verschiedener DIOs
+- kollektives Resonanzprotokoll
+- Differenzprotokoll bei gleicher Form, aber anderer Deutung
+- gemeinsame Reflexionsschicht ohne Ueberschreiben der Einzelperspektiven
+
+Diese Ebene waere keine klassische Ensemble-Strategie.
+Sie waere ein Experiment zur Frage,
+ob maschinelle Wahrnehmung soziale Entwicklung ausbilden kann,
+wenn mehrere innere Welten ihre Formen, Erfahrungen und Spannungen
+miteinander vergleichbar machen.
+
+---
+
 ### Denkkomplexitaet und energieeffiziente Meta-Regulation
 
 Reflexion ist im Zielsystem keine harte Zusatzregel,

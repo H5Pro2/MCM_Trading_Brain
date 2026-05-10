@@ -12,6 +12,7 @@ from ph_ohlcv import (
     get_sufficient_balance,
     get_account_value,
     fetch_ohlcv,
+    resolve_exchange_symbol,
 )
 
 from place_orders import _SYMBOL, set_context, place_order, ensure_order_monitor_started
@@ -109,6 +110,7 @@ def _run_live_mode():
 
     timeframe = Config.TIMEFRAME
     symbol = Config.SYMBOL
+    exchange_symbol = resolve_exchange_symbol(symbol)
 
     # --------------------------------------------------
     # Chart-Loop Intervall
@@ -122,7 +124,7 @@ def _run_live_mode():
 
     set_context(
         exchange=exchange,
-        symbol=symbol,
+        symbol=exchange_symbol,
         timeframe=timeframe,
         get_sufficient_balance=get_sufficient_balance,
         get_account_value=get_account_value,
@@ -137,7 +139,7 @@ def _run_live_mode():
 
     while True:
 
-        raw = fetch_ohlcv(exchange, symbol, timeframe)
+        raw = fetch_ohlcv(exchange, exchange_symbol, timeframe)
 
         if raw is None or not isinstance(raw, list):
             continue

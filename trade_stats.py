@@ -11,7 +11,7 @@ import json
 import os
 import time
 from config import Config
-from debug_reader import dbr_file_write_profile, dbr_resolve_path
+from debug_reader import dbr_debug, dbr_file_write_profile, dbr_resolve_path
 
 class TradeStats:
 
@@ -27,6 +27,7 @@ class TradeStats:
         self.csv_path = dbr_resolve_path(csv_path)
         self.attempt_path = dbr_resolve_path(attempt_path)
         self.outcome_path = dbr_resolve_path(outcome_path)
+        self.exit_candidate_replay_path = dbr_resolve_path("debug/mcm_exit_candidate_replay.csv")
 
         if str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE":
             try:
@@ -83,6 +84,16 @@ class TradeStats:
             "exploration_sl": 0,
             "exploration_cancels": 0,
             "exploration_pnl": 0.0,
+            "matured_exits": 0,
+            "matured_exit_pnl": 0.0,
+            "exit_candidate_replay_count": 0,
+            "exit_candidate_replay_actual_pnl": 0.0,
+            "exit_candidate_replay_hypothetical_pnl": 0.0,
+            "exit_candidate_replay_delta_pnl": 0.0,
+            "exit_candidate_replay_saved_loss_count": 0,
+            "exit_candidate_replay_saved_giveback_count": 0,
+            "exit_candidate_replay_harmed_count": 0,
+            "exit_candidate_replay_tp_cut_count": 0,
             "equity_peak": float(start_equity),
             "max_drawdown_abs": 0.0,
             "max_drawdown_pct": 0.0,
@@ -383,6 +394,201 @@ class TradeStats:
         return result
 
     # ─────────────────────────────────────────────
+    def _net_pnl_at_price(self, *, side: str, entry: float, exit_price: float, amount: float) -> float:
+        side_key = str(side or "").upper().strip()
+        if side_key == "LONG":
+            gross = (float(exit_price) - float(entry)) * float(amount)
+        elif side_key == "SHORT":
+            gross = (float(entry) - float(exit_price)) * float(amount)
+        else:
+            return 0.0
+
+        fee_rate = getattr(Config, "FEE_RATE", 0.0) or 0.0
+        fees = (
+            (float(entry) * float(amount) * fee_rate) +
+            (float(exit_price) * float(amount) * fee_rate) +
+            (Config.FEE_PER_TRADE or 0.0)
+        )
+        return float(gross - fees)
+
+    # ─────────────────────────────────────────────
+    def _record_exit_candidate_replay(self, *, entry: float, side: str, amount: float, actual_reason: str, actual_exit_price: float, actual_pnl: float, context: dict):
+        replay_state = dict((context or {}).get("exit_candidate_replay_state", {}) or {})
+        if not bool(replay_state.get("exit_candidate", False)):
+            return None
+
+        try:
+            candidate_price = float(replay_state.get("candidate_price", replay_state.get("close", 0.0)) or 0.0)
+        except Exception:
+            candidate_price = 0.0
+        if candidate_price <= 0.0:
+            return None
+
+        hypothetical_pnl = self._net_pnl_at_price(
+            side=str(side),
+            entry=float(entry),
+            exit_price=float(candidate_price),
+            amount=float(amount),
+        )
+        delta_pnl = float(hypothetical_pnl) - float(actual_pnl)
+        actual_reason_key = str(actual_reason or "").strip().lower()
+
+        self.data["exit_candidate_replay_count"] = int(self.data.get("exit_candidate_replay_count", 0) or 0) + 1
+        self.data["exit_candidate_replay_actual_pnl"] = float(self.data.get("exit_candidate_replay_actual_pnl", 0.0) or 0.0) + float(actual_pnl)
+        self.data["exit_candidate_replay_hypothetical_pnl"] = float(self.data.get("exit_candidate_replay_hypothetical_pnl", 0.0) or 0.0) + float(hypothetical_pnl)
+        self.data["exit_candidate_replay_delta_pnl"] = float(self.data.get("exit_candidate_replay_delta_pnl", 0.0) or 0.0) + float(delta_pnl)
+
+        if delta_pnl > 0.0 and actual_pnl < 0.0:
+            self.data["exit_candidate_replay_saved_loss_count"] = int(self.data.get("exit_candidate_replay_saved_loss_count", 0) or 0) + 1
+        elif delta_pnl > 0.0:
+            self.data["exit_candidate_replay_saved_giveback_count"] = int(self.data.get("exit_candidate_replay_saved_giveback_count", 0) or 0) + 1
+        elif delta_pnl < 0.0:
+            self.data["exit_candidate_replay_harmed_count"] = int(self.data.get("exit_candidate_replay_harmed_count", 0) or 0) + 1
+
+        if actual_reason_key == "tp_hit" and delta_pnl < 0.0:
+            self.data["exit_candidate_replay_tp_cut_count"] = int(self.data.get("exit_candidate_replay_tp_cut_count", 0) or 0) + 1
+
+        replay_csv = {
+            "timestamp": self.data.get("current_timestamp"),
+            "candidate_timestamp": replay_state.get("candidate_timestamp"),
+            "candidate_bars_open": replay_state.get("candidate_bars_open"),
+            "side": str(side or "").upper().strip(),
+            "entry": float(entry),
+            "candidate_price": float(candidate_price),
+            "actual_exit_price": float(actual_exit_price),
+            "actual_reason": str(actual_reason_key),
+            "actual_pnl": float(actual_pnl),
+            "hypothetical_pnl": float(hypothetical_pnl),
+            "delta_pnl": float(delta_pnl),
+            "confirmation_score": float(replay_state.get("confirmation_score", 0.0) or 0.0),
+            "exit_decision_pressure": float(replay_state.get("exit_decision_pressure", 0.0) or 0.0),
+            "plan_trust": float(replay_state.get("plan_trust", 0.0) or 0.0),
+            "holding_stability": float(replay_state.get("holding_stability", 0.0) or 0.0),
+            "intervention_fitness": float(replay_state.get("intervention_fitness", 0.0) or 0.0),
+            "intervention_unfit_state": float(replay_state.get("intervention_unfit_state", 0.0) or 0.0),
+            "exit_evidence": float(replay_state.get("exit_evidence", 0.0) or 0.0),
+            "current_r": float(replay_state.get("current_r", 0.0) or 0.0),
+            "candidate_mfe_r": float(replay_state.get("candidate_mfe_r", 0.0) or 0.0),
+            "candidate_mae_r": float(replay_state.get("candidate_mae_r", 0.0) or 0.0),
+            "target_expectation_context": str(replay_state.get("target_expectation_context", "") or ""),
+            "tp_reachability": float(replay_state.get("tp_reachability", 0.0) or 0.0),
+            "target_path_integrity": float(replay_state.get("target_path_integrity", 0.0) or 0.0),
+            "expectation_deviation": float(replay_state.get("expectation_deviation", 0.0) or 0.0),
+            "expectation_break_pressure": float(replay_state.get("expectation_break_pressure", 0.0) or 0.0),
+            "expectation_hold_support": float(replay_state.get("expectation_hold_support", 0.0) or 0.0),
+            "target_recovery_potential": float(replay_state.get("target_recovery_potential", 0.0) or 0.0),
+            "target_recovery_momentum": float(replay_state.get("target_recovery_momentum", 0.0) or 0.0),
+            "target_recovery_confirmation": float(replay_state.get("target_recovery_confirmation", 0.0) or 0.0),
+            "break_to_recovery_delta": float(replay_state.get("break_to_recovery_delta", 0.0) or 0.0),
+            "prior_target_hold_support": float(replay_state.get("prior_target_hold_support", 0.0) or 0.0),
+            "prior_tp_reachability": float(replay_state.get("prior_tp_reachability", 0.0) or 0.0),
+            "expectation_break_persistence": float(replay_state.get("expectation_break_persistence", 0.0) or 0.0),
+            "deep_pullback_recovery_watch": int(bool(replay_state.get("deep_pullback_recovery_watch", False))),
+            "recovery_after_break_watch": int(bool(replay_state.get("recovery_after_break_watch", False))),
+            "entry_route_familiarity": float(replay_state.get("entry_route_familiarity", 0.0) or 0.0),
+            "entry_transfer_bearing": float(replay_state.get("entry_transfer_bearing", 0.0) or 0.0),
+            "current_route_familiarity": float(replay_state.get("current_route_familiarity", 0.0) or 0.0),
+            "current_semantic_shift_pressure": float(replay_state.get("current_semantic_shift_pressure", 0.0) or 0.0),
+            "current_transfer_bearing": float(replay_state.get("current_transfer_bearing", 0.0) or 0.0),
+            "current_interpretation_quality": float(replay_state.get("current_interpretation_quality", 0.0) or 0.0),
+            "current_adaptation_phase": str(replay_state.get("current_adaptation_phase", "") or ""),
+            "route_familiarity_delta": float(replay_state.get("route_familiarity_delta", 0.0) or 0.0),
+            "transfer_bearing_delta": float(replay_state.get("transfer_bearing_delta", 0.0) or 0.0),
+            "semantic_transfer_stress": float(replay_state.get("semantic_transfer_stress", 0.0) or 0.0),
+        }
+        self._append_exit_candidate_replay_csv(replay_csv)
+
+        dbr_debug(
+            "EXIT_CANDIDATE_REPLAY "
+            f"ts={self.data.get('current_timestamp')} "
+            f"candidate_ts={replay_state.get('candidate_timestamp')} "
+            f"side={str(side or '').upper().strip()} "
+            f"entry={float(entry):.4f} candidate_price={candidate_price:.4f} "
+            f"actual_exit_price={float(actual_exit_price):.4f} actual_reason={actual_reason_key} "
+            f"actual_pnl={float(actual_pnl):.6f} hypothetical_pnl={float(hypothetical_pnl):.6f} "
+            f"delta_pnl={float(delta_pnl):.6f} "
+            f"score={float(replay_state.get('confirmation_score', 0.0) or 0.0):.4f} "
+            f"pressure={float(replay_state.get('exit_decision_pressure', 0.0) or 0.0):.4f} "
+            f"plan_trust={float(replay_state.get('plan_trust', 0.0) or 0.0):.4f} "
+            f"fitness={float(replay_state.get('intervention_fitness', 0.0) or 0.0):.4f}",
+            "mcm_exit_candidate_replay_debug.log",
+        )
+
+        return {
+            "candidate_price": float(candidate_price),
+            "hypothetical_pnl": float(hypothetical_pnl),
+            "delta_pnl": float(delta_pnl),
+        }
+
+    # ─────────────────────────────────────────────
+    def _append_exit_candidate_replay_csv(self, record: dict):
+        try:
+            path = str(self.exit_candidate_replay_path)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            keys = [
+                "timestamp",
+                "candidate_timestamp",
+                "candidate_bars_open",
+                "side",
+                "entry",
+                "candidate_price",
+                "actual_exit_price",
+                "actual_reason",
+                "actual_pnl",
+                "hypothetical_pnl",
+                "delta_pnl",
+                "confirmation_score",
+                "exit_decision_pressure",
+                "plan_trust",
+                "holding_stability",
+                "intervention_fitness",
+                "intervention_unfit_state",
+                "exit_evidence",
+                "current_r",
+                "candidate_mfe_r",
+                "candidate_mae_r",
+                "target_expectation_context",
+                "tp_reachability",
+                "target_path_integrity",
+                "expectation_deviation",
+                "expectation_break_pressure",
+                "expectation_hold_support",
+                "target_recovery_potential",
+                "target_recovery_momentum",
+                "target_recovery_confirmation",
+                "break_to_recovery_delta",
+                "prior_target_hold_support",
+                "prior_tp_reachability",
+                "expectation_break_persistence",
+                "deep_pullback_recovery_watch",
+                "recovery_after_break_watch",
+                "entry_route_familiarity",
+                "entry_transfer_bearing",
+                "current_route_familiarity",
+                "current_semantic_shift_pressure",
+                "current_transfer_bearing",
+                "current_interpretation_quality",
+                "current_adaptation_phase",
+                "route_familiarity_delta",
+                "transfer_bearing_delta",
+                "semantic_transfer_stress",
+            ]
+            write_header = not os.path.exists(path)
+            started = time.perf_counter()
+            with open(path, "a", encoding="utf-8") as f:
+                if write_header:
+                    f.write(",".join(keys) + "\n")
+                f.write(",".join(str((record or {}).get(key, "")) for key in keys) + "\n")
+            dbr_file_write_profile(
+                path,
+                (time.perf_counter() - started) * 1000.0,
+                bytes_written=0,
+                operation="exit_candidate_replay_csv_append",
+            )
+        except Exception:
+            pass
+
+    # ─────────────────────────────────────────────
     def _compact_context(self, context: dict) -> dict:
         normalized_context = self._normalize_record_value(context or {})
         compact_attempt = bool(getattr(Config, "TRADE_STATS_ATTEMPT_RECORD_COMPACT", True))
@@ -467,6 +673,169 @@ class TradeStats:
                 "regulation_cost",
                 "relief_quality",
             ]),
+            "position_watch_state": self._pick_fields(normalized_context.get("position_watch_state", {}), [
+                "mfe",
+                "mae",
+                "risk",
+                "mfe_r",
+                "mae_r",
+                "fill_ratio",
+                "bars_open",
+            ]),
+            "position_intervention_state": self._pick_fields(normalized_context.get("position_intervention_state", {}), [
+                "position_cognitive_load",
+                "exit_decision_pressure",
+                "holding_stability",
+                "plan_trust",
+                "intervention_fatigue",
+                "inner_noise",
+                "intervention_fitness",
+                "intervention_unfit_state",
+                "exit_evidence",
+                "sustained_exit_pressure",
+                "current_r",
+                "giveback_r",
+                "mfe_r",
+                "mae_r",
+                "pressure_to_capacity",
+                "structure_quality",
+                "structure_stability",
+                "context_confidence",
+                "bars_open",
+                "intervention_label",
+            ]),
+            "target_expectation_state": self._pick_fields(normalized_context.get("target_expectation_state", {}), [
+                "target_expectation_context",
+                "tp_reachability",
+                "target_path_integrity",
+                "expectation_deviation",
+                "expectation_break_pressure",
+                "expectation_hold_support",
+                "target_room_pressure",
+                "target_semantic_confidence",
+                "target_progress",
+                "target_remaining_r",
+                "target_total_r",
+                "target_recovery_potential",
+                "target_recovery_momentum",
+                "target_recovery_confirmation",
+                "break_to_recovery_delta",
+                "recovery_after_break_watch",
+                "prior_target_hold_support",
+                "prior_tp_reachability",
+                "prior_target_path_integrity",
+                "expectation_break_persistence",
+                "expectation_break_count",
+                "deep_pullback_recovery_watch",
+                "base_entry_expectation",
+                "base_target_expectation",
+                "entry_route_familiarity",
+                "entry_transfer_bearing",
+                "current_route_familiarity",
+                "current_semantic_shift_pressure",
+                "current_transfer_bearing",
+                "current_interpretation_quality",
+                "current_adaptation_phase",
+                "route_familiarity_delta",
+                "transfer_bearing_delta",
+                "semantic_transfer_stress",
+            ]),
+            "matured_exit_state": self._pick_fields(normalized_context.get("matured_exit_state", {}), [
+                "mode",
+                "exit_price",
+                "maturity_pressure",
+                "mfe_r",
+                "mae_r",
+                "current_r",
+                "giveback_r",
+                "structure_quality",
+                "pressure_to_capacity",
+                "recovery_balance",
+                "bars_open",
+            ]),
+            "exit_candidate_observe_state": self._pick_fields(normalized_context.get("exit_candidate_observe_state", {}), [
+                "exit_candidate",
+                "candidate_label",
+                "confirmation_score",
+                "exit_decision_pressure",
+                "plan_trust",
+                "holding_stability",
+                "intervention_fitness",
+                "intervention_unfit_state",
+                "exit_evidence",
+                "current_r",
+                "adverse_depth_ok",
+                "sustained_exit_pressure",
+                "target_expectation_context",
+                "tp_reachability",
+                "target_path_integrity",
+                "expectation_deviation",
+                "expectation_break_pressure",
+                "expectation_hold_support",
+                "target_recovery_potential",
+                "target_recovery_momentum",
+                "target_recovery_confirmation",
+                "break_to_recovery_delta",
+                "prior_target_hold_support",
+                "prior_tp_reachability",
+                "expectation_break_persistence",
+                "deep_pullback_recovery_watch",
+                "recovery_after_break_watch",
+                "entry_route_familiarity",
+                "entry_transfer_bearing",
+                "current_route_familiarity",
+                "current_semantic_shift_pressure",
+                "current_transfer_bearing",
+                "current_interpretation_quality",
+                "current_adaptation_phase",
+                "route_familiarity_delta",
+                "transfer_bearing_delta",
+                "semantic_transfer_stress",
+            ]),
+            "exit_candidate_replay_state": self._pick_fields(normalized_context.get("exit_candidate_replay_state", {}), [
+                "exit_candidate",
+                "candidate_label",
+                "confirmation_score",
+                "exit_decision_pressure",
+                "plan_trust",
+                "holding_stability",
+                "intervention_fitness",
+                "intervention_unfit_state",
+                "exit_evidence",
+                "current_r",
+                "adverse_depth_ok",
+                "sustained_exit_pressure",
+                "candidate_timestamp",
+                "candidate_bars_open",
+                "candidate_price",
+                "candidate_mfe_r",
+                "candidate_mae_r",
+                "target_expectation_context",
+                "tp_reachability",
+                "target_path_integrity",
+                "expectation_deviation",
+                "expectation_break_pressure",
+                "expectation_hold_support",
+                "target_recovery_potential",
+                "target_recovery_momentum",
+                "target_recovery_confirmation",
+                "break_to_recovery_delta",
+                "prior_target_hold_support",
+                "prior_tp_reachability",
+                "expectation_break_persistence",
+                "deep_pullback_recovery_watch",
+                "recovery_after_break_watch",
+                "entry_route_familiarity",
+                "entry_transfer_bearing",
+                "current_route_familiarity",
+                "current_semantic_shift_pressure",
+                "current_transfer_bearing",
+                "current_interpretation_quality",
+                "current_adaptation_phase",
+                "route_familiarity_delta",
+                "transfer_bearing_delta",
+                "semantic_transfer_stress",
+            ]),
             "regulation_snapshot": _compact_snapshot(normalized_context.get("regulation_snapshot", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("regulation_snapshot", {})),
             "state_before": _compact_snapshot(normalized_context.get("state_before", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("state_before", {})),
             "state_after": _compact_snapshot(normalized_context.get("state_after", {})) if compact_attempt else self._normalize_record_value(normalized_context.get("state_after", {})),
@@ -499,6 +868,20 @@ class TradeStats:
                 "action_clearance",
                 "pre_action_phase",
                 "dominant_tension_cause",
+                "known_form_support",
+                "route_familiarity",
+                "semantic_shift_pressure",
+                "transfer_bearing",
+                "interpretation_quality",
+                "adaptation_phase",
+                "trust_transfer_base",
+                "trust_transfer_support",
+                "transfer_maturity_gap",
+                "trust_transfer_mode",
+                "transfer_break_fatigue",
+                "transfer_recovery_need",
+                "transfer_break_trigger",
+                "transfer_break_ready",
             ]),
             "expectation_state": self._pick_fields(normalized_context.get("expectation_state", {}), [
                 "entry_expectation",
@@ -1206,6 +1589,7 @@ class TradeStats:
         reason: str,
         side: str = None,
         amount: float = 1.0,
+        exit_price: float = None,
         exploration_trade: bool = False,
         outcome_decomposition: dict = None,
         context: dict = None,
@@ -1238,10 +1622,33 @@ class TradeStats:
             if exploration_trade:
                 self.data["exploration_sl"] = int(self.data.get("exploration_sl", 0) or 0) + 1
 
+        elif reason == "matured_exit":
+            try:
+                resolved_exit_price = float(exit_price)
+            except Exception:
+                return
+            if resolved_exit_price <= 0.0:
+                return
+            if side == "LONG":
+                pnl = (resolved_exit_price - entry) * float(amount)
+            elif side == "SHORT":
+                pnl = (entry - resolved_exit_price) * float(amount)
+            else:
+                return
+            self.data["matured_exits"] = int(self.data.get("matured_exits", 0) or 0) + 1
+            if pnl >= 0:
+                self.data["tp"] += 1
+                if exploration_trade:
+                    self.data["exploration_tp"] = int(self.data.get("exploration_tp", 0) or 0) + 1
+            else:
+                self.data["sl"] += 1
+                if exploration_trade:
+                    self.data["exploration_sl"] = int(self.data.get("exploration_sl", 0) or 0) + 1
+
         else:
             return
 
-        exit_price = tp if reason == "tp_hit" else sl
+        exit_price = float(exit_price) if reason == "matured_exit" else (tp if reason == "tp_hit" else sl)
         fee_rate = getattr(Config, "FEE_RATE", 0.0) or 0.0
         fees = (
             (entry * float(amount) * fee_rate) +
@@ -1253,6 +1660,15 @@ class TradeStats:
         normalized_context = self._normalize_record_value(context or {})
         compact_context = self._compact_context(normalized_context)
         normalized_decomposition = self._normalize_record_value(outcome_decomposition or {})
+        exit_candidate_replay = self._record_exit_candidate_replay(
+            entry=float(entry),
+            side=str(side),
+            amount=float(amount),
+            actual_reason=str(reason or ""),
+            actual_exit_price=float(exit_price),
+            actual_pnl=float(pnl),
+            context=normalized_context,
+        )
 
         self.data["trades"] += 1
         self.data["last_outcome_decomposition"] = dict(normalized_decomposition or {})
@@ -1270,6 +1686,9 @@ class TradeStats:
         if pnl < 0:
             self.data["pnl_sl"] += pnl
 
+        if reason == "matured_exit":
+            self.data["matured_exit_pnl"] = float(self.data.get("matured_exit_pnl", 0.0) or 0.0) + float(pnl)
+
         structure_quality = self._extract_structure_quality(normalized_context)
         structure_bucket = "zone" if structure_quality >= 0.55 else "non_zone"
         form_symbol_state = dict(normalized_context.get("form_symbol_state", {}) or {})
@@ -1282,6 +1701,7 @@ class TradeStats:
             "entry": float(entry),
             "tp": float(tp),
             "sl": float(sl),
+            "exit_price": float(exit_price),
             "amount": float(amount),
             "pnl": float(pnl),
             "structure_quality": float(structure_quality),
@@ -1296,6 +1716,7 @@ class TradeStats:
             "form_symbol_caution_trust": float(form_symbol_state.get("form_symbol_caution_trust", 0.0) or 0.0),
             "form_symbol_compound_id": str(form_symbol_state.get("form_symbol_compound_id", "") or ""),
             "form_symbol_compound_development_quality": float(form_symbol_state.get("form_symbol_compound_development_quality", 0.0) or 0.0),
+            "exit_candidate_replay": self._normalize_record_value(exit_candidate_replay or {}),
             "outcome_decomposition": normalized_decomposition,
             "context": compact_context,
         }

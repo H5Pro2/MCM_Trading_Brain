@@ -1370,6 +1370,7 @@ class Bot:
             reason=reason,
             side=self.position.get("side"),
             amount=Config.ORDER_SIZE if live_mode else 1.0,
+            exit_price=float(resolved_position.get("matured_exit_price", 0.0) or 0.0) if str(reason).lower() == "matured_exit" else None,
             exploration_trade=False,
             outcome_decomposition=dict(getattr(self, "last_outcome_decomposition", {}) or {}),
             context=exit_context,
@@ -1392,6 +1393,760 @@ class Bot:
         self._commit_regulation_state_snapshot(state_after)
         self.position = None
         return True    
+    # --------------------------------------------------   
+    def _build_position_intervention_state(
+        self,
+        *,
+        close_price: float,
+        entry_price: float,
+        side: str,
+        risk_value: float,
+        mfe_r: float,
+        mae_r: float,
+        fill_ratio: float,
+        pressure_to_capacity: float,
+        bars_open: int,
+    ) -> dict:
+
+        def _clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
+            try:
+                return max(lo, min(hi, float(value)))
+            except Exception:
+                return lo
+
+        if risk_value <= 0.0:
+            return {}
+
+        side = str(side or "").upper().strip()
+        if side == "LONG":
+            current_r = (float(close_price) - float(entry_price)) / max(risk_value, 1e-9)
+        elif side == "SHORT":
+            current_r = (float(entry_price) - float(close_price)) / max(risk_value, 1e-9)
+        else:
+            current_r = 0.0
+
+        giveback_r = max(0.0, float(mfe_r) - float(current_r))
+        structure_quality = float((self.structure_perception_state or {}).get("structure_quality", 0.0) or 0.0)
+        structure_stability = float((self.structure_perception_state or {}).get("structure_stability", structure_quality) or 0.0)
+        context_confidence = float((self.structure_perception_state or {}).get("context_confidence", structure_quality) or 0.0)
+        regulatory_load = float(getattr(self, "regulatory_load", 0.0) or 0.0)
+        action_capacity = float(getattr(self, "action_capacity", 0.0) or 0.0)
+        recovery_need = float(getattr(self, "recovery_need", 0.0) or 0.0)
+        recovery_balance = float(getattr(self, "recovery_balance", 0.0) or 0.0)
+        survival_pressure = float(getattr(self, "survival_pressure", 0.0) or 0.0)
+        if pressure_to_capacity <= 0.0 and action_capacity > 0.0:
+            pressure_to_capacity = regulatory_load / max(0.05, action_capacity)
+
+        pressure_load = _clamp(float(pressure_to_capacity) / 2.25)
+        giveback_load = _clamp(giveback_r / 2.50)
+        adverse_load = _clamp(float(mae_r) / 1.20)
+        recovery_load = _clamp(float(recovery_need) + max(0.0, -float(recovery_balance)))
+        structure_loss = _clamp((0.62 - structure_quality) / 0.35)
+        confidence_loss = _clamp((0.58 - context_confidence) / 0.35)
+        negative_current_load = _clamp((-current_r) / 0.90)
+
+        exit_decision_pressure = _clamp(
+            (giveback_load * 0.30)
+            + (structure_loss * 0.24)
+            + (pressure_load * 0.20)
+            + (negative_current_load * 0.16)
+            + (adverse_load * 0.10)
+        )
+        position_cognitive_load = _clamp(
+            (pressure_load * 0.24)
+            + (regulatory_load * 0.20)
+            + (recovery_load * 0.18)
+            + (exit_decision_pressure * 0.18)
+            + (survival_pressure * 0.10)
+            + (_clamp(float(bars_open) / 64.0) * 0.10)
+        )
+        plan_trust = _clamp(
+            (structure_quality * 0.26)
+            + (structure_stability * 0.18)
+            + (context_confidence * 0.16)
+            + (_clamp(current_r / 1.40) * 0.14)
+            + ((1.0 - pressure_load) * 0.12)
+            + ((1.0 - giveback_load) * 0.10)
+            + ((1.0 - recovery_load) * 0.04)
+        )
+        holding_stability = _clamp(
+            (plan_trust * 0.46)
+            + ((1.0 - exit_decision_pressure) * 0.24)
+            + (_clamp(current_r / 1.75) * 0.16)
+            + ((1.0 - position_cognitive_load) * 0.14)
+        )
+        inner_noise = _clamp(
+            (position_cognitive_load * 0.32)
+            + (exit_decision_pressure * 0.28)
+            + (abs(plan_trust - exit_decision_pressure) * 0.14)
+            + (confidence_loss * 0.14)
+            + (_clamp(giveback_r / max(float(mfe_r), 0.25)) * 0.12)
+        )
+
+        prior_count = int(self.position.get("intervention_pressure_count", 0) or 0) if self.position else 0
+        prior_sum = float(self.position.get("intervention_pressure_sum", 0.0) or 0.0) if self.position else 0.0
+        pressure_count = prior_count + 1
+        pressure_sum = prior_sum + float(exit_decision_pressure)
+        sustained_exit_pressure = _clamp(pressure_sum / max(1, pressure_count))
+        intervention_fatigue = _clamp(
+            (sustained_exit_pressure * 0.48)
+            + (_clamp(pressure_count / 48.0) * 0.20)
+            + (position_cognitive_load * 0.20)
+            + (inner_noise * 0.12)
+        )
+        intervention_unfit_state = _clamp(
+            (position_cognitive_load * 0.34)
+            + (inner_noise * 0.24)
+            + ((1.0 - plan_trust) * 0.20)
+            + (intervention_fatigue * 0.14)
+            + ((1.0 - holding_stability) * 0.08)
+        )
+        exit_evidence = _clamp(
+            (structure_loss * 0.30)
+            + (giveback_load * 0.26)
+            + (negative_current_load * 0.20)
+            + (pressure_load * 0.16)
+            + (adverse_load * 0.08)
+        )
+        intervention_fitness = _clamp(exit_evidence * (1.0 - (intervention_unfit_state * 0.65)))
+
+        if self.position is not None:
+            self.position["intervention_pressure_count"] = int(pressure_count)
+            self.position["intervention_pressure_sum"] = float(pressure_sum)
+
+        if intervention_fitness >= 0.62 and exit_decision_pressure >= 0.55:
+            intervention_label = "confirmed_exit_candidate"
+        elif intervention_unfit_state >= 0.58 and exit_decision_pressure >= 0.45:
+            intervention_label = "intervention_unfit_state"
+        elif plan_trust >= 0.58 and holding_stability >= 0.52:
+            intervention_label = "plan_holding_trust"
+        elif exit_decision_pressure >= 0.46:
+            intervention_label = "exit_nervousness_observe"
+        else:
+            intervention_label = "quiet_position_watch"
+
+        state = {
+            "position_cognitive_load": float(position_cognitive_load),
+            "exit_decision_pressure": float(exit_decision_pressure),
+            "holding_stability": float(holding_stability),
+            "plan_trust": float(plan_trust),
+            "intervention_fatigue": float(intervention_fatigue),
+            "inner_noise": float(inner_noise),
+            "intervention_fitness": float(intervention_fitness),
+            "intervention_unfit_state": float(intervention_unfit_state),
+            "exit_evidence": float(exit_evidence),
+            "sustained_exit_pressure": float(sustained_exit_pressure),
+            "current_r": float(current_r),
+            "giveback_r": float(giveback_r),
+            "mfe_r": float(mfe_r),
+            "mae_r": float(mae_r),
+            "pressure_to_capacity": float(pressure_to_capacity),
+            "structure_quality": float(structure_quality),
+            "structure_stability": float(structure_stability),
+            "context_confidence": float(context_confidence),
+            "bars_open": int(bars_open),
+            "intervention_label": str(intervention_label),
+        }
+
+        if bool(getattr(Config, "MCM_POSITION_INTERVENTION_PROTOCOL_DEBUG", True)):
+            every_n = max(1, int(getattr(Config, "MCM_POSITION_INTERVENTION_PROTOCOL_EVERY_N", 5) or 5))
+            should_write = (int(getattr(self, "processed", 0) or 0) % every_n == 0) or exit_decision_pressure >= 0.46
+            if should_write:
+                dbr_debug(
+                    "POSITION_INTERVENTION "
+                    f"ts={int(getattr(self, 'current_timestamp', 0) or 0)} side={side} "
+                    f"entry={float(entry_price):.4f} close={float(close_price):.4f} "
+                    f"current_r={current_r:.4f} mfe_r={float(mfe_r):.4f} mae_r={float(mae_r):.4f} "
+                    f"giveback_r={giveback_r:.4f} position_cognitive_load={position_cognitive_load:.4f} "
+                    f"exit_decision_pressure={exit_decision_pressure:.4f} plan_trust={plan_trust:.4f} "
+                    f"holding_stability={holding_stability:.4f} intervention_fatigue={intervention_fatigue:.4f} "
+                    f"inner_noise={inner_noise:.4f} intervention_unfit_state={intervention_unfit_state:.4f} "
+                    f"intervention_fitness={intervention_fitness:.4f} label={intervention_label}",
+                    "mcm_position_intervention_protocol.csv",
+                )
+
+        return state
+    # --------------------------------------------------   
+    def _build_target_expectation_state(
+        self,
+        *,
+        position_intervention_state: dict,
+        side: str,
+        entry_price: float,
+        close_price: float,
+        tp_price: float,
+        risk_value: float,
+        bars_open: int,
+    ) -> dict:
+
+        state = dict(position_intervention_state or {})
+        if not state or risk_value <= 0.0:
+            return {}
+
+        def _clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
+            try:
+                return max(lo, min(hi, float(value)))
+            except Exception:
+                return lo
+
+        def _val(key: str) -> float:
+            try:
+                return float(state.get(key, 0.0) or 0.0)
+            except Exception:
+                return 0.0
+
+        side = str(side or "").upper().strip()
+        if side == "LONG":
+            current_r = (float(close_price) - float(entry_price)) / max(float(risk_value), 1e-9)
+            target_total_r = max(0.0, (float(tp_price) - float(entry_price)) / max(float(risk_value), 1e-9))
+        elif side == "SHORT":
+            current_r = (float(entry_price) - float(close_price)) / max(float(risk_value), 1e-9)
+            target_total_r = max(0.0, (float(entry_price) - float(tp_price)) / max(float(risk_value), 1e-9))
+        else:
+            current_r = _val("current_r")
+            target_total_r = 0.0
+
+        target_total_r = max(float(target_total_r), 0.01)
+        target_progress = _clamp(float(current_r) / target_total_r)
+        target_remaining_r = max(0.0, target_total_r - float(current_r))
+        target_remaining_pressure = _clamp(target_remaining_r / max(target_total_r, 0.01))
+
+        plan_trust = _val("plan_trust")
+        holding_stability = _val("holding_stability")
+        exit_decision_pressure = _val("exit_decision_pressure")
+        exit_evidence = _val("exit_evidence")
+        structure_quality = _val("structure_quality")
+        structure_stability = _val("structure_stability")
+        context_confidence = _val("context_confidence")
+        giveback_r = _val("giveback_r")
+        mfe_r = _val("mfe_r")
+        mae_r = _val("mae_r")
+        position_cognitive_load = _val("position_cognitive_load")
+        intervention_unfit_state = _val("intervention_unfit_state")
+
+        position_meta = dict((self.position or {}).get("meta", {}) or {})
+        expectation_state = dict(position_meta.get("expectation_state", {}) or {})
+        experience_state = dict(position_meta.get("experience", {}) or {})
+        entry_meta_regulation_state = dict(position_meta.get("meta_regulation_state", {}) or {})
+        current_meta_regulation_state = dict(getattr(self, "meta_regulation_state", {}) or {})
+        base_entry_expectation = float(
+            expectation_state.get(
+                "entry_expectation",
+                experience_state.get("entry_expectation", 0.0),
+            ) or 0.0
+        )
+        base_target_expectation = float(
+            expectation_state.get(
+                "target_expectation",
+                experience_state.get("target_expectation", 0.0),
+            ) or 0.0
+        )
+        base_expectation_support = _clamp((base_entry_expectation * 0.62) + (base_target_expectation * 0.38))
+
+        giveback_load = _clamp(giveback_r / 2.50)
+        adverse_load = _clamp(mae_r / 1.20)
+        negative_current_load = _clamp((-float(current_r)) / 0.90)
+        path_pullback_load = _clamp(giveback_r / max(float(mfe_r), 0.25))
+        time_pressure = _clamp(float(bars_open) / 96.0)
+
+        tp_reachability = _clamp(
+            (plan_trust * 0.26)
+            + (holding_stability * 0.20)
+            + (structure_quality * 0.16)
+            + (context_confidence * 0.12)
+            + (target_progress * 0.10)
+            + ((1.0 - giveback_load) * 0.07)
+            + ((1.0 - negative_current_load) * 0.05)
+            + (base_expectation_support * 0.04)
+        )
+        target_path_integrity = _clamp(
+            (structure_stability * 0.24)
+            + (plan_trust * 0.22)
+            + (holding_stability * 0.18)
+            + (context_confidence * 0.12)
+            + ((1.0 - path_pullback_load) * 0.10)
+            + ((1.0 - adverse_load) * 0.08)
+            + (base_expectation_support * 0.06)
+        )
+        expectation_deviation = _clamp(
+            ((1.0 - target_path_integrity) * 0.28)
+            + (exit_decision_pressure * 0.22)
+            + (negative_current_load * 0.18)
+            + (giveback_load * 0.14)
+            + ((1.0 - plan_trust) * 0.10)
+            + (position_cognitive_load * 0.08)
+        )
+        expectation_break_pressure = _clamp(
+            (expectation_deviation * 0.38)
+            + (exit_evidence * 0.22)
+            + ((1.0 - tp_reachability) * 0.18)
+            + (negative_current_load * 0.12)
+            + (intervention_unfit_state * 0.10)
+        )
+        expectation_hold_support = _clamp(
+            (tp_reachability * 0.38)
+            + (target_path_integrity * 0.28)
+            + (plan_trust * 0.16)
+            + (holding_stability * 0.12)
+            + ((1.0 - expectation_break_pressure) * 0.06)
+        )
+        target_room_pressure = _clamp(
+            (target_remaining_pressure * 0.34)
+            + (exit_decision_pressure * 0.22)
+            + (time_pressure * 0.14)
+            + (path_pullback_load * 0.14)
+            + (position_cognitive_load * 0.10)
+            + ((1.0 - base_expectation_support) * 0.06)
+        )
+        target_semantic_confidence = _clamp(
+            (context_confidence * 0.30)
+            + (structure_quality * 0.22)
+            + (structure_stability * 0.18)
+            + (base_expectation_support * 0.16)
+            + ((1.0 - position_cognitive_load) * 0.08)
+            + ((1.0 - target_room_pressure) * 0.06)
+        )
+        entry_route_familiarity = _clamp(entry_meta_regulation_state.get("route_familiarity", 0.0))
+        entry_transfer_bearing = _clamp(entry_meta_regulation_state.get("transfer_bearing", 0.0))
+        current_route_familiarity = _clamp(current_meta_regulation_state.get("route_familiarity", entry_route_familiarity))
+        current_semantic_shift_pressure = _clamp(current_meta_regulation_state.get("semantic_shift_pressure", 0.0))
+        current_transfer_bearing = _clamp(current_meta_regulation_state.get("transfer_bearing", entry_transfer_bearing))
+        current_interpretation_quality = _clamp(current_meta_regulation_state.get("interpretation_quality", 0.0))
+        current_adaptation_phase = str(current_meta_regulation_state.get("adaptation_phase", "-") or "-")
+        route_familiarity_delta = max(-1.0, min(1.0, current_route_familiarity - entry_route_familiarity))
+        transfer_bearing_delta = max(-1.0, min(1.0, current_transfer_bearing - entry_transfer_bearing))
+        semantic_transfer_stress = _clamp(
+            (current_semantic_shift_pressure * 0.42)
+            + ((1.0 - current_transfer_bearing) * 0.24)
+            + ((1.0 - current_route_familiarity) * 0.16)
+            + (max(0.0, -route_familiarity_delta) * 0.10)
+            + (max(0.0, -transfer_bearing_delta) * 0.08)
+        )
+
+        prior_target_hold_support = 0.0
+        prior_tp_reachability = 0.0
+        prior_target_path_integrity = 0.0
+        previous_tp_reachability = tp_reachability
+        previous_target_path_integrity = target_path_integrity
+        previous_expectation_hold_support = expectation_hold_support
+        previous_expectation_break_pressure = expectation_break_pressure
+        previous_current_r = current_r
+        previous_target_progress = target_progress
+        prior_break_count = 0
+        if self.position is not None:
+            prior_target_hold_support = float(self.position.get("target_hold_support_peak", 0.0) or 0.0)
+            prior_tp_reachability = float(self.position.get("tp_reachability_peak", 0.0) or 0.0)
+            prior_target_path_integrity = float(self.position.get("target_path_integrity_peak", 0.0) or 0.0)
+            previous_tp_reachability = float(self.position.get("last_tp_reachability", tp_reachability) or 0.0)
+            previous_target_path_integrity = float(self.position.get("last_target_path_integrity", target_path_integrity) or 0.0)
+            previous_expectation_hold_support = float(self.position.get("last_expectation_hold_support", expectation_hold_support) or 0.0)
+            previous_expectation_break_pressure = float(self.position.get("last_expectation_break_pressure", expectation_break_pressure) or 0.0)
+            previous_current_r = float(self.position.get("last_current_r", current_r) or 0.0)
+            previous_target_progress = float(self.position.get("last_target_progress", target_progress) or 0.0)
+            prior_break_count = int(self.position.get("expectation_break_count", 0) or 0)
+
+        break_active = bool(expectation_break_pressure >= 0.58 and expectation_hold_support <= 0.52)
+        if break_active:
+            expectation_break_count = prior_break_count + 1
+        else:
+            expectation_break_count = max(0, prior_break_count - 1)
+
+        expectation_break_persistence = _clamp(
+            (_clamp(expectation_break_count / 4.0) * 0.42)
+            + (expectation_break_pressure * 0.24)
+            + ((1.0 - expectation_hold_support) * 0.16)
+            + (expectation_deviation * 0.12)
+            + (target_room_pressure * 0.06)
+        )
+        target_recovery_potential = _clamp(
+            (prior_target_hold_support * 0.24)
+            + (prior_tp_reachability * 0.18)
+            + (prior_target_path_integrity * 0.12)
+            + (structure_stability * 0.14)
+            + (context_confidence * 0.10)
+            + (_clamp(mfe_r / 2.0) * 0.10)
+            + ((1.0 - negative_current_load) * 0.06)
+            + ((1.0 - path_pullback_load) * 0.04)
+            + (base_expectation_support * 0.02)
+        )
+        target_recovery_momentum = _clamp(
+            (_clamp((tp_reachability - previous_tp_reachability) / 0.18) * 0.24)
+            + (_clamp((target_path_integrity - previous_target_path_integrity) / 0.18) * 0.20)
+            + (_clamp((expectation_hold_support - previous_expectation_hold_support) / 0.18) * 0.20)
+            + (_clamp((previous_expectation_break_pressure - expectation_break_pressure) / 0.20) * 0.16)
+            + (_clamp((current_r - previous_current_r) / 0.45) * 0.12)
+            + (_clamp((target_progress - previous_target_progress) / 0.20) * 0.08)
+        )
+        break_to_recovery_delta = _clamp(
+            (target_recovery_momentum * 0.40)
+            + (expectation_hold_support * 0.20)
+            + (target_path_integrity * 0.18)
+            + ((1.0 - expectation_break_pressure) * 0.14)
+            + (target_semantic_confidence * 0.08)
+        )
+        target_recovery_confirmation = _clamp(
+            (target_recovery_momentum * 0.34)
+            + (break_to_recovery_delta * 0.26)
+            + (target_recovery_potential * 0.18)
+            + ((1.0 - expectation_break_persistence) * 0.12)
+            + (target_semantic_confidence * 0.10)
+        )
+        recovery_after_break_watch = bool(
+            prior_break_count > 0
+            and not break_active
+            and target_recovery_momentum >= 0.30
+            and target_recovery_confirmation >= 0.56
+            and expectation_break_pressure < 0.54
+        )
+        deep_pullback_recovery_watch = bool(
+            break_active
+            and target_recovery_potential >= 0.60
+            and target_recovery_momentum >= 0.28
+            and target_recovery_confirmation >= 0.52
+            and expectation_break_persistence <= 0.68
+        )
+
+        if self.position is not None:
+            self.position["target_hold_support_peak"] = float(max(prior_target_hold_support * 0.92, expectation_hold_support))
+            self.position["tp_reachability_peak"] = float(max(prior_tp_reachability * 0.92, tp_reachability))
+            self.position["target_path_integrity_peak"] = float(max(prior_target_path_integrity * 0.92, target_path_integrity))
+            self.position["expectation_break_count"] = int(expectation_break_count)
+            self.position["last_tp_reachability"] = float(tp_reachability)
+            self.position["last_target_path_integrity"] = float(target_path_integrity)
+            self.position["last_expectation_hold_support"] = float(expectation_hold_support)
+            self.position["last_expectation_break_pressure"] = float(expectation_break_pressure)
+            self.position["last_current_r"] = float(current_r)
+            self.position["last_target_progress"] = float(target_progress)
+
+        if recovery_after_break_watch:
+            expectation_label = "recovery_after_break_watch"
+        elif deep_pullback_recovery_watch:
+            expectation_label = "deep_pullback_recovery_watch"
+        elif break_active:
+            expectation_label = "expectation_break_observe"
+        elif expectation_hold_support >= 0.58 and expectation_break_pressure < 0.48:
+            expectation_label = "target_expectation_holds"
+        elif path_pullback_load >= 0.55 and tp_reachability >= 0.50:
+            expectation_label = "target_pullback_observe"
+        elif target_semantic_confidence <= 0.42 or expectation_deviation >= 0.52:
+            expectation_label = "target_unclear_observe"
+        else:
+            expectation_label = "target_watch"
+
+        result = {
+            "target_expectation_context": str(expectation_label),
+            "tp_reachability": float(tp_reachability),
+            "target_path_integrity": float(target_path_integrity),
+            "expectation_deviation": float(expectation_deviation),
+            "expectation_break_pressure": float(expectation_break_pressure),
+            "expectation_hold_support": float(expectation_hold_support),
+            "target_room_pressure": float(target_room_pressure),
+            "target_semantic_confidence": float(target_semantic_confidence),
+            "target_progress": float(target_progress),
+            "target_remaining_r": float(target_remaining_r),
+            "target_total_r": float(target_total_r),
+            "target_recovery_potential": float(target_recovery_potential),
+            "target_recovery_momentum": float(target_recovery_momentum),
+            "target_recovery_confirmation": float(target_recovery_confirmation),
+            "break_to_recovery_delta": float(break_to_recovery_delta),
+            "recovery_after_break_watch": bool(recovery_after_break_watch),
+            "prior_target_hold_support": float(prior_target_hold_support),
+            "prior_tp_reachability": float(prior_tp_reachability),
+            "prior_target_path_integrity": float(prior_target_path_integrity),
+            "expectation_break_persistence": float(expectation_break_persistence),
+            "expectation_break_count": int(expectation_break_count),
+            "deep_pullback_recovery_watch": bool(deep_pullback_recovery_watch),
+            "base_entry_expectation": float(base_entry_expectation),
+            "base_target_expectation": float(base_target_expectation),
+            "entry_route_familiarity": float(entry_route_familiarity),
+            "entry_transfer_bearing": float(entry_transfer_bearing),
+            "current_route_familiarity": float(current_route_familiarity),
+            "current_semantic_shift_pressure": float(current_semantic_shift_pressure),
+            "current_transfer_bearing": float(current_transfer_bearing),
+            "current_interpretation_quality": float(current_interpretation_quality),
+            "current_adaptation_phase": str(current_adaptation_phase),
+            "route_familiarity_delta": float(route_familiarity_delta),
+            "transfer_bearing_delta": float(transfer_bearing_delta),
+            "semantic_transfer_stress": float(semantic_transfer_stress),
+        }
+
+        if bool(getattr(Config, "MCM_TARGET_EXPECTATION_PROTOCOL_DEBUG", True)):
+            every_n = max(1, int(getattr(Config, "MCM_TARGET_EXPECTATION_PROTOCOL_EVERY_N", 5) or 5))
+            should_write = (
+                (int(getattr(self, "processed", 0) or 0) % every_n == 0)
+                or expectation_break_pressure >= 0.52
+                or expectation_label != "target_watch"
+            )
+            if should_write:
+                dbr_debug(
+                    "TARGET_EXPECTATION "
+                    f"ts={int(getattr(self, 'current_timestamp', 0) or 0)} "
+                    f"label={expectation_label} side={side} "
+                    f"entry={float(entry_price):.4f} close={float(close_price):.4f} tp={float(tp_price):.4f} "
+                    f"tp_reachability={tp_reachability:.4f} target_path_integrity={target_path_integrity:.4f} "
+                    f"expectation_deviation={expectation_deviation:.4f} "
+                    f"expectation_break_pressure={expectation_break_pressure:.4f} "
+                    f"expectation_hold_support={expectation_hold_support:.4f} "
+                    f"target_room_pressure={target_room_pressure:.4f} "
+                    f"target_semantic_confidence={target_semantic_confidence:.4f} "
+                    f"target_progress={target_progress:.4f} target_remaining_r={target_remaining_r:.4f} "
+                    f"target_recovery_potential={target_recovery_potential:.4f} "
+                    f"target_recovery_momentum={target_recovery_momentum:.4f} "
+                    f"target_recovery_confirmation={target_recovery_confirmation:.4f} "
+                    f"break_to_recovery_delta={break_to_recovery_delta:.4f} "
+                    f"current_route_familiarity={current_route_familiarity:.4f} "
+                    f"current_semantic_shift_pressure={current_semantic_shift_pressure:.4f} "
+                    f"current_transfer_bearing={current_transfer_bearing:.4f} "
+                    f"semantic_transfer_stress={semantic_transfer_stress:.4f} "
+                    f"current_adaptation_phase={current_adaptation_phase} "
+                    f"prior_target_hold_support={prior_target_hold_support:.4f} "
+                    f"expectation_break_persistence={expectation_break_persistence:.4f} "
+                    f"deep_pullback_recovery_watch={int(deep_pullback_recovery_watch)} "
+                    f"recovery_after_break_watch={int(recovery_after_break_watch)}",
+                    "mcm_target_expectation_protocol.csv",
+                )
+
+        return result
+    # --------------------------------------------------   
+    def _build_exit_candidate_observe_state(self, position_intervention_state: dict, side: str, entry_price: float, close_price: float, target_expectation_state: dict = None) -> dict:
+
+        state = dict(position_intervention_state or {})
+        if not state:
+            return {}
+
+        def _val(key: str) -> float:
+            try:
+                return float(state.get(key, 0.0) or 0.0)
+            except Exception:
+                return 0.0
+
+        min_pressure = float(getattr(Config, "MCM_EXIT_CANDIDATE_MIN_PRESSURE", 0.58) or 0.58)
+        max_plan_trust = float(getattr(Config, "MCM_EXIT_CANDIDATE_MAX_PLAN_TRUST", 0.52) or 0.52)
+        max_holding_stability = float(getattr(Config, "MCM_EXIT_CANDIDATE_MAX_HOLDING_STABILITY", 0.50) or 0.50)
+        min_fitness = float(getattr(Config, "MCM_EXIT_CANDIDATE_MIN_FITNESS", 0.40) or 0.40)
+        min_evidence = float(getattr(Config, "MCM_EXIT_CANDIDATE_MIN_EVIDENCE", 0.54) or 0.54)
+        max_current_r = float(getattr(Config, "MCM_EXIT_CANDIDATE_MAX_CURRENT_R", -0.45) or -0.45)
+
+        exit_decision_pressure = _val("exit_decision_pressure")
+        plan_trust = _val("plan_trust")
+        holding_stability = _val("holding_stability")
+        intervention_fitness = _val("intervention_fitness")
+        intervention_unfit_state = _val("intervention_unfit_state")
+        exit_evidence = _val("exit_evidence")
+        current_r = _val("current_r")
+        sustained_exit_pressure = _val("sustained_exit_pressure")
+
+        pressure_ok = exit_decision_pressure >= min_pressure
+        trust_ok = plan_trust <= max_plan_trust
+        stability_ok = holding_stability <= max_holding_stability
+        fitness_ok = intervention_fitness >= min_fitness
+        evidence_ok = exit_evidence >= min_evidence
+        adverse_depth_ok = current_r <= max_current_r
+        unfit_not_dominant = intervention_unfit_state <= 0.58
+
+        confirmation_score = max(
+            0.0,
+            min(
+                1.0,
+                (exit_decision_pressure * 0.24)
+                + ((1.0 - plan_trust) * 0.20)
+                + ((1.0 - holding_stability) * 0.16)
+                + (intervention_fitness * 0.18)
+                + (exit_evidence * 0.14)
+                + (sustained_exit_pressure * 0.08),
+            ),
+        )
+
+        is_candidate = bool(
+            pressure_ok
+            and trust_ok
+            and stability_ok
+            and fitness_ok
+            and evidence_ok
+            and adverse_depth_ok
+            and unfit_not_dominant
+        )
+
+        candidate_label = "exit_candidate_observe" if is_candidate else "no_exit_candidate"
+        if not is_candidate and exit_decision_pressure >= min_pressure and not fitness_ok:
+            candidate_label = "exit_pressure_unfit_observe"
+        elif not is_candidate and exit_decision_pressure >= min_pressure and not adverse_depth_ok:
+            candidate_label = "exit_pullback_observe"
+        elif not is_candidate and plan_trust > max_plan_trust:
+            candidate_label = "plan_trust_holds"
+
+        candidate = {
+            "exit_candidate": bool(is_candidate),
+            "candidate_label": str(candidate_label),
+            "confirmation_score": float(confirmation_score),
+            "exit_decision_pressure": float(exit_decision_pressure),
+            "plan_trust": float(plan_trust),
+            "holding_stability": float(holding_stability),
+            "intervention_fitness": float(intervention_fitness),
+            "intervention_unfit_state": float(intervention_unfit_state),
+            "exit_evidence": float(exit_evidence),
+            "current_r": float(current_r),
+            "adverse_depth_ok": bool(adverse_depth_ok),
+            "sustained_exit_pressure": float(sustained_exit_pressure),
+            "side": str(side or "").upper().strip(),
+            "entry": float(entry_price),
+            "close": float(close_price),
+            **dict(target_expectation_state or {}),
+        }
+
+        if bool(getattr(Config, "MCM_EXIT_CANDIDATE_OBSERVE_DEBUG", True)) and candidate_label != "no_exit_candidate":
+            dbr_debug(
+                "EXIT_CANDIDATE "
+                f"ts={int(getattr(self, 'current_timestamp', 0) or 0)} "
+                f"label={candidate_label} candidate={int(is_candidate)} side={candidate['side']} "
+                f"entry={float(entry_price):.4f} close={float(close_price):.4f} "
+                f"confirmation_score={confirmation_score:.4f} "
+                f"exit_decision_pressure={exit_decision_pressure:.4f} plan_trust={plan_trust:.4f} "
+                f"holding_stability={holding_stability:.4f} intervention_fitness={intervention_fitness:.4f} "
+                f"intervention_unfit_state={intervention_unfit_state:.4f} exit_evidence={exit_evidence:.4f} "
+                f"current_r={current_r:.4f} "
+                f"target_expectation_context={str((target_expectation_state or {}).get('target_expectation_context', '-'))} "
+                f"tp_reachability={float((target_expectation_state or {}).get('tp_reachability', 0.0) or 0.0):.4f} "
+                f"expectation_break_pressure={float((target_expectation_state or {}).get('expectation_break_pressure', 0.0) or 0.0):.4f} "
+                f"expectation_hold_support={float((target_expectation_state or {}).get('expectation_hold_support', 0.0) or 0.0):.4f} "
+                f"target_recovery_potential={float((target_expectation_state or {}).get('target_recovery_potential', 0.0) or 0.0):.4f} "
+                f"target_recovery_momentum={float((target_expectation_state or {}).get('target_recovery_momentum', 0.0) or 0.0):.4f} "
+                f"target_recovery_confirmation={float((target_expectation_state or {}).get('target_recovery_confirmation', 0.0) or 0.0):.4f} "
+                f"break_to_recovery_delta={float((target_expectation_state or {}).get('break_to_recovery_delta', 0.0) or 0.0):.4f} "
+                f"expectation_break_persistence={float((target_expectation_state or {}).get('expectation_break_persistence', 0.0) or 0.0):.4f} "
+                f"deep_pullback_recovery_watch={int(bool((target_expectation_state or {}).get('deep_pullback_recovery_watch', False)))} "
+                f"recovery_after_break_watch={int(bool((target_expectation_state or {}).get('recovery_after_break_watch', False)))}",
+                "mcm_exit_candidate_observe.csv",
+            )
+
+        if is_candidate:
+            mark_runtime_episode_event(
+                self,
+                "exit_candidate_observe",
+                dict(candidate),
+            )
+
+        return candidate
+    # --------------------------------------------------   
+    def _resolve_matured_exit_signal(self, last: dict, exit_context: dict, fill_ratio: float, pressure_to_capacity: float, risk_value: float, bars_open: int, live_mode: bool = False):
+
+        mode = str(getattr(Config, "MCM_MATURED_EXIT_MODE", "fixed") or "fixed").strip().lower()
+        if mode not in ("observe", "active"):
+            return None
+
+        if not self.position or risk_value <= 0.0:
+            return None
+
+        side = str(self.position.get("side", "") or "").upper().strip()
+        if side not in ("LONG", "SHORT"):
+            return None
+
+        try:
+            close_price = float(last.get("close", 0.0) or 0.0)
+        except Exception:
+            close_price = 0.0
+        if close_price <= 0.0:
+            return None
+
+        mfe_r = float(self.position.get("mfe", 0.0) or 0.0) / max(risk_value, 1e-9)
+        mae_r = float(self.position.get("mae", 0.0) or 0.0) / max(risk_value, 1e-9)
+        if side == "LONG":
+            current_r = (close_price - float(self.position.get("entry", 0.0) or 0.0)) / max(risk_value, 1e-9)
+        else:
+            current_r = (float(self.position.get("entry", 0.0) or 0.0) - close_price) / max(risk_value, 1e-9)
+
+        giveback_r = max(0.0, mfe_r - current_r)
+        structure_quality = float((self.structure_perception_state or {}).get("structure_quality", 0.0) or 0.0)
+        recovery_balance = float(getattr(self, "recovery_balance", 0.0) or 0.0)
+        action_capacity = float(getattr(self, "action_capacity", 0.0) or 0.0)
+        regulatory_load = float(getattr(self, "regulatory_load", 0.0) or 0.0)
+        if pressure_to_capacity <= 0.0 and action_capacity > 0.0:
+            pressure_to_capacity = regulatory_load / max(0.05, action_capacity)
+
+        min_mfe = float(getattr(Config, "MCM_MATURED_EXIT_MIN_MFE_R", 1.0) or 1.0)
+        min_giveback = float(getattr(Config, "MCM_MATURED_EXIT_GIVEBACK_R", 0.35) or 0.35)
+        max_structure = float(getattr(Config, "MCM_MATURED_EXIT_STRUCTURE_MAX", 0.50) or 0.50)
+        min_pressure = float(getattr(Config, "MCM_MATURED_EXIT_PRESSURE_MIN", 1.15) or 1.15)
+
+        structure_loss = max(0.0, min(1.0, (max_structure - structure_quality) / 0.18))
+        pressure_load = max(0.0, min(1.0, (pressure_to_capacity - min_pressure) / 0.70))
+        giveback_load = max(0.0, min(1.0, (giveback_r - min_giveback) / 0.80))
+        recovery_loss = max(0.0, min(1.0, (-recovery_balance - 0.20) / 0.55))
+        maturity_pressure = (
+            (structure_loss * 0.34)
+            + (giveback_load * 0.30)
+            + (pressure_load * 0.22)
+            + (recovery_loss * 0.14)
+        )
+
+        if mfe_r < min_mfe or giveback_r < min_giveback or maturity_pressure < 0.46:
+            return None
+
+        signal = {
+            "reason": "matured_exit",
+            "mode": str(mode),
+            "timestamp": int(getattr(self, "current_timestamp", 0) or 0),
+            "entry": float(self.position.get("entry", 0.0) or 0.0),
+            "tp": float(self.position.get("tp", 0.0) or 0.0),
+            "sl": float(self.position.get("sl", 0.0) or 0.0),
+            "risk": float(risk_value),
+            "exit_price": float(close_price),
+            "maturity_pressure": float(maturity_pressure),
+            "mfe_r": float(mfe_r),
+            "mae_r": float(mae_r),
+            "current_r": float(current_r),
+            "giveback_r": float(giveback_r),
+            "structure_quality": float(structure_quality),
+            "pressure_to_capacity": float(pressure_to_capacity),
+            "recovery_balance": float(recovery_balance),
+            "bars_open": int(bars_open),
+        }
+        position_intervention_state = dict((exit_context or {}).get("position_intervention_state", {}) or {})
+        if position_intervention_state:
+            signal["position_intervention_state"] = dict(position_intervention_state)
+        exit_candidate_observe_state = dict((exit_context or {}).get("exit_candidate_observe_state", {}) or {})
+        if exit_candidate_observe_state:
+            signal["exit_candidate_observe_state"] = dict(exit_candidate_observe_state)
+
+        if DEBUG:
+            dbr_debug(
+                "MATURED_EXIT "
+                f"mode={mode} ts={int(getattr(self, 'current_timestamp', 0) or 0)} "
+                f"side={side} entry={float(self.position.get('entry', 0.0) or 0.0):.4f} "
+                f"tp={float(self.position.get('tp', 0.0) or 0.0):.4f} "
+                f"sl={float(self.position.get('sl', 0.0) or 0.0):.4f} "
+                f"risk={risk_value:.4f} exit_price={close_price:.4f} "
+                f"maturity_pressure={maturity_pressure:.4f} "
+                f"mfe_r={mfe_r:.4f} mae_r={mae_r:.4f} current_r={current_r:.4f} "
+                f"giveback_r={giveback_r:.4f} structure_quality={structure_quality:.4f} "
+                f"pressure_to_capacity={pressure_to_capacity:.4f} recovery_balance={recovery_balance:.4f} "
+                f"bars_open={int(bars_open)} "
+                f"position_cognitive_load={float(position_intervention_state.get('position_cognitive_load', 0.0) or 0.0):.4f} "
+                f"exit_decision_pressure={float(position_intervention_state.get('exit_decision_pressure', 0.0) or 0.0):.4f} "
+                f"plan_trust={float(position_intervention_state.get('plan_trust', 0.0) or 0.0):.4f} "
+                f"intervention_fitness={float(position_intervention_state.get('intervention_fitness', 0.0) or 0.0):.4f} "
+                f"intervention_label={str(position_intervention_state.get('intervention_label', '-') or '-')} "
+                f"exit_candidate={int(bool(exit_candidate_observe_state.get('exit_candidate', False)))} "
+                f"candidate_label={str(exit_candidate_observe_state.get('candidate_label', '-') or '-')}",
+                "matured_exit_debug.csv",
+            )
+
+        mark_runtime_episode_event(
+            self,
+            "matured_exit_observe" if mode == "observe" else "matured_exit_active",
+            {
+                **dict(signal),
+                "position": dict(self.position or {}),
+                "bearing_context": dict((exit_context or {}).get("bearing_context", {}) or {}),
+                "position_intervention_state": dict(position_intervention_state),
+                "exit_candidate_observe_state": dict(exit_candidate_observe_state),
+            },
+        )
+
+        if mode == "observe" or bool(live_mode):
+            return None
+        return dict(signal)
+
     # --------------------------------------------------   
     def _handle_active_position(self, window, last, live_mode: bool):
 
@@ -1439,6 +2194,13 @@ class Bot:
         if risk_value > 0.0:
             fill_ratio = max(0.0, min(2.0, favorable / risk_value))
 
+        try:
+            close_price = float(last.get("close", 0.0) or 0.0)
+        except Exception:
+            close_price = 0.0
+        mfe_r = float((float(self.position.get("mfe", 0.0) or 0.0) / max(risk_value, 1e-9)) if risk_value > 0.0 else 0.0)
+        mae_r = float((float(self.position.get("mae", 0.0) or 0.0) / max(risk_value, 1e-9)) if risk_value > 0.0 else 0.0)
+
         meta_regulation_state = dict(getattr(self, "meta_regulation_state", {}) or {})
         runtime_state = dict(getattr(self, "mcm_runtime_decision_state", {}) or {})
         position_state_before, position_state_after, position_state_delta = self._capture_regulation_transition()
@@ -1446,6 +2208,35 @@ class Bot:
         pressure_to_capacity = 0.0
         if float(getattr(self, "action_capacity", 0.0) or 0.0) > 0.0:
             pressure_to_capacity = float(getattr(self, "regulatory_load", 0.0) or 0.0) / max(0.05, float(getattr(self, "action_capacity", 0.0) or 0.0))
+
+        position_intervention_state = self._build_position_intervention_state(
+            close_price=float(close_price),
+            entry_price=float(entry_price),
+            side=str(side),
+            risk_value=float(risk_value),
+            mfe_r=float(mfe_r),
+            mae_r=float(mae_r),
+            fill_ratio=float(fill_ratio),
+            pressure_to_capacity=float(pressure_to_capacity),
+            bars_open=int(bars_open),
+        )
+        target_expectation_state = self._build_target_expectation_state(
+            position_intervention_state=dict(position_intervention_state or {}),
+            side=str(side),
+            entry_price=float(entry_price),
+            close_price=float(close_price),
+            tp_price=float(self.position.get("tp", 0.0) or 0.0),
+            risk_value=float(risk_value),
+            bars_open=int(bars_open),
+        )
+        exit_candidate_observe_state = self._build_exit_candidate_observe_state(
+            dict(position_intervention_state or {}),
+            side=str(side),
+            entry_price=float(entry_price),
+            close_price=float(close_price),
+            target_expectation_state=dict(target_expectation_state or {}),
+        )
+        exit_candidate_replay_state = dict(self.position.get("exit_candidate_replay_state", {}) or {})
 
         position_context = dict(self.position.get("meta", {}) or {})
         exit_bearing_context = {
@@ -1464,6 +2255,19 @@ class Bot:
             "bearing_context": dict(exit_bearing_context or {}),
             "structure_perception_state": dict(self.structure_perception_state or {}),
             "outer_visual_perception_state": dict(self.outer_visual_perception_state or {}),
+            "position_watch_state": {
+                "mfe": float(self.position.get("mfe", 0.0) or 0.0),
+                "mae": float(self.position.get("mae", 0.0) or 0.0),
+                "risk": float(risk_value),
+                "mfe_r": float(mfe_r),
+                "mae_r": float(mae_r),
+                "fill_ratio": float(fill_ratio),
+                "bars_open": int(bars_open),
+            },
+            "position_intervention_state": dict(position_intervention_state or {}),
+            "target_expectation_state": dict(target_expectation_state or {}),
+            "exit_candidate_observe_state": dict(exit_candidate_observe_state or {}),
+            "exit_candidate_replay_state": dict(exit_candidate_replay_state or {}),
             "world_state": {
                 **dict((position_context.get("world_state", {}) or {})),
                 "structure_perception_state": dict(self.structure_perception_state or {}),
@@ -1501,6 +2305,10 @@ class Bot:
                 "bearing_context": dict((exit_context.get("bearing_context", {}) or {})),
                 "felt_bearing_score": float(exit_context.get("felt_bearing_score", 0.0) or 0.0),
                 "felt_profile_label": str(exit_context.get("felt_profile_label", "mixed_unclear") or "mixed_unclear"),
+                "position_intervention_state": dict(position_intervention_state or {}),
+                "target_expectation_state": dict(target_expectation_state or {}),
+                "exit_candidate_observe_state": dict(exit_candidate_observe_state or {}),
+                "exit_candidate_replay_state": dict(exit_candidate_replay_state or {}),
                 "reason": "position_watch",
                 "state_before": dict(position_state_before or {}),
                 "state_after": dict(position_state_after or {}),
@@ -1514,32 +2322,95 @@ class Bot:
             self.position,
             "exit_trading_debug.csv",
         )
-        if exit_signal is None:
-            return True
 
-        reason = exit_signal.get("reason")
-        if reason is None:
-            return True
+        reason = None
+        if exit_signal is not None:
+            reason = exit_signal.get("reason")
 
-        resolved_position = dict(self.position or {})
+        if reason is not None:
+            resolved_position = dict(self.position or {})
 
-        if live_mode and Config.AKTIV_ORDER:
-            oid = self.position.get("order_id")
-            cancel_cause = consume_cancelled_cause(oid)
-            if oid is not None and cancel_cause is not None:
-                return self._finalize_active_position_cancel(
-                    resolved_position=dict(resolved_position or {}),
-                    exit_context=dict(exit_context or {}),
-                    order_id=oid,
-                    cancel_cause=cancel_cause,
-                )
+            if live_mode and Config.AKTIV_ORDER:
+                oid = self.position.get("order_id")
+                cancel_cause = consume_cancelled_cause(oid)
+                if oid is not None and cancel_cause is not None:
+                    return self._finalize_active_position_cancel(
+                        resolved_position=dict(resolved_position or {}),
+                        exit_context=dict(exit_context or {}),
+                        order_id=oid,
+                        cancel_cause=cancel_cause,
+                    )
 
-        return self._finalize_active_position_resolution(
-            resolved_position=dict(resolved_position or {}),
+                live_snapshot = get_active_order_snapshot()
+                if isinstance(live_snapshot, dict):
+                    exit_context = {
+                        **dict(exit_context or {}),
+                        "live_exit_confirmation": {
+                            "confirmed_closed": False,
+                            "reason": "exchange_position_or_order_still_active",
+                            "snapshot": dict(live_snapshot or {}),
+                            "local_exit_reason": str(reason or "-"),
+                        },
+                    }
+                    dbr_debug(
+                        "LIVE_EXIT_WAIT "
+                        f"local_reason={str(reason or '-')} "
+                        f"source={str(live_snapshot.get('source', '-') or '-')} "
+                        f"id={str(live_snapshot.get('id', '-') or '-')}",
+                        "live_backtest_debug.csv",
+                    )
+                    return True
+
+                exit_context = {
+                    **dict(exit_context or {}),
+                    "live_exit_confirmation": {
+                        "confirmed_closed": True,
+                        "reason": "exchange_no_active_position_snapshot",
+                        "local_exit_reason": str(reason or "-"),
+                    },
+                }
+
+            return self._finalize_active_position_resolution(
+                resolved_position=dict(resolved_position or {}),
+                exit_context=dict(exit_context or {}),
+                reason=reason,
+                live_mode=bool(live_mode),
+            )
+
+        if bool((exit_candidate_observe_state or {}).get("exit_candidate", False)) and not self.position.get("exit_candidate_replay_state"):
+            self.position["exit_candidate_replay_state"] = {
+                **dict(exit_candidate_observe_state or {}),
+                "candidate_timestamp": int(getattr(self, "current_timestamp", 0) or 0),
+                "candidate_bars_open": int(bars_open),
+                "candidate_price": float(close_price),
+                "candidate_mfe_r": float(mfe_r),
+                "candidate_mae_r": float(mae_r),
+                "target_expectation_state": dict(target_expectation_state or {}),
+            }
+            exit_context["exit_candidate_replay_state"] = dict(self.position.get("exit_candidate_replay_state", {}) or {})
+
+        matured_signal = self._resolve_matured_exit_signal(
+            last=last,
             exit_context=dict(exit_context or {}),
-            reason=reason,
+            fill_ratio=float(fill_ratio),
+            pressure_to_capacity=float(pressure_to_capacity),
+            risk_value=float(risk_value),
+            bars_open=int(bars_open),
             live_mode=bool(live_mode),
         )
+        if matured_signal is not None:
+            exit_context = {
+                **dict(exit_context or {}),
+                "matured_exit_state": dict(matured_signal or {}),
+            }
+            self.position["matured_exit_price"] = float(matured_signal.get("exit_price", 0.0) or 0.0)
+            return self._finalize_active_position_resolution(
+                resolved_position=dict(self.position or {}),
+                exit_context=dict(exit_context or {}),
+                reason="matured_exit",
+                live_mode=bool(live_mode),
+            )
+        return True
     # --------------------------------------------------
     def _handle_pending_entry(self, window, last, live_mode: bool):
 

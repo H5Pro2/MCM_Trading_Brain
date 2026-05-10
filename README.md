@@ -1,6 +1,6 @@
-# MCM Trading Brain
+﻿# MCM Trading Brain
 
-![alt text](files/bilder/systemüberblick.png)
+![alt text](files/BILDER/SYSTEMÜBERBLICK.PNG)
 
 MCM Trading Brain ist ein experimentelles Trading-System mit [MCM-Architektur](https://github.com/H5Pro2/Mental-Core-Matrix-MCM).
 
@@ -31,11 +31,14 @@ Die weiteren Kern-Dokumente sind:
 - `files/UMSETZUNGSPLAN.md`  
   architektonischer Bauplan / Zielbild
 
-- `files/aktueller_stand.md`  
+- `files/AKTUELLER_STAND.md`  
   realer Ist-Zustand des aktuellen Dateistands
 
-- `files/fix_liste.md`  
+- `files/FIX_LISTE.md`  
   reale offene Korrekturen und priorisierte Ausbaurichtung
+
+- `files/MCM_VARIABLEN_MECHANIK.md`  
+  zentrale Variablen, Ebenen, Wirkung und organische Bedeutung
 
 ---
 
@@ -308,6 +311,130 @@ Reife bedeutet dann:
 
 ---
 
+## Positionslast und Nicht-Intervention
+
+Eine offene Position erzeugt eine andere Art von Last als ein Entry.
+
+Nach dem Einstieg muss das System nicht nur den Markt sehen,
+sondern auch den eigenen Umgang mit laufendem Gewinn, Rueckgabe, Verlustnaehe,
+Zweifel und Eingriffsdruck mitwahrnehmen.
+
+Dieses laufende Neubewerten ist kognitive und regulatorische Last.
+Ein fester TP/SL ist deshalb nicht nur eine technische Regel,
+sondern auch eine Entlastungsstruktur:
+Der Plan wurde vorher gesetzt und muss nicht bei jeder Kerze neu verhandelt werden.
+
+Fuer die MCM ist daraus wichtig:
+
+- hohe Exit-Spannung bedeutet nicht automatisch reifen Exit
+- hohe innere Belastung kann bedeuten,
+  dass das System gerade keine tragfaehige neue Entscheidung treffen sollte
+- Nicht-Intervention kann reifer sein als Eingriff
+- der vorher gesetzte Plan kann als aeussere Haltestruktur dienen
+
+Damit entsteht eine eigene Lage:
+
+`intervention_unfit_state`
+
+Das System sieht etwas und fuehlt Belastung,
+aber es erkennt zugleich,
+dass diese Belastung keine gute Entscheidungsbasis ist.
+
+Reife bedeutet dann nicht:
+sofort schliessen.
+
+Reife bedeutet:
+den Handlungsdruck wahrnehmen,
+die eigene Entscheidungsfaehigkeit pruefen
+und nur dann aktiv eingreifen,
+wenn Strukturverlust, Rueckgabe, Druck/Kapazitaets-Konflikt und innere
+Tragfaehigkeit gemeinsam fuer einen neuen Exit sprechen.
+
+---
+
+## Zielerwartung einer Handlung
+
+Ein Trade ist im MCM Trading Brain nicht nur:
+
+- Einstieg
+- TP
+- SL
+
+Er ist eine Handlung mit innerer Erwartung.
+
+Der Einstieg sagt sinngemaess:
+
+- Ich erkenne eine Struktur.
+- Diese Struktur traegt eine Richtung.
+- Der gesetzte Zielraum wirkt erreichbar.
+- Der Plan hat genug innere und aeussere Tragfaehigkeit.
+
+Der TP ist damit nicht einfach ein Belohnungspunkt.
+Er ist der Zielraum der urspruenglichen Erwartung.
+
+Der SL ist nicht einfach Strafe.
+Er ist die Grenze, an der die urspruengliche Tragfaehigkeit als gebrochen
+angenommen wird.
+
+Die offene Position prueft laufend:
+
+- Ist mein Ziel noch erreichbar?
+- Ist der Weg zum Ziel noch strukturell intakt?
+- Ist die Gegenbewegung nur Rueckatmung?
+- Oder ist meine urspruengliche Erwartung wirklich gebrochen?
+
+Damit entsteht eine wichtige semantische Trennung:
+
+- `exit_decision_pressure`: Es fuehlt sich belastend an.
+- `expectation_break_pressure`: Die urspruengliche Zielerwartung verliert
+  wirklich Tragfaehigkeit.
+- `expectation_hold_support`: Der Plan traegt trotz innerem Druck weiter.
+
+Diese Ebene verhindert,
+dass reine Exit-Nervositaet mit echter Exit-Reife verwechselt wird.
+
+Ein starker Trader weiss nicht sicher,
+wo der Markt hingeht.
+Er arbeitet mit Wahrscheinlichkeit,
+aber nicht als starre Prozentzahl.
+Er erkennt einen plausiblen Zielraum,
+in dem der Preis eher abgeholt werden kann,
+bevor die Struktur bricht.
+
+Auf DIO uebertragen bedeutet das:
+Die MCM soll spaeter nicht nur sagen:
+
+- Ich fuehle Druck.
+
+Sondern auch:
+
+- Meine Erwartung war, dass dieser Zielraum erreichbar bleibt.
+- Diese Erwartung ist noch tragend.
+- Oder: Diese Erwartung bricht gerade strukturell.
+
+Moegliche Diagnosefelder fuer diese Schicht:
+
+- `target_expectation_context`
+- `tp_reachability`
+- `target_path_integrity`
+- `expectation_deviation`
+- `expectation_break_pressure`
+- `expectation_hold_support`
+- `target_room_pressure`
+- `target_semantic_confidence`
+
+Beispiel:
+
+Eine Long-Position laeuft stark an und atmet danach zurueck.
+Das innere Feld spuert Exit-Druck.
+Solange Zielraum, Pfad und Planvertrauen noch tragfaehig sind,
+ist das kein reifer Exit, sondern `exit_pullback_observe`.
+Erst wenn die Zielerwartung selbst bricht,
+also der Weg zum TP nicht mehr tragend wirkt,
+darf aus Druck ein echter Exit-Kandidat werden.
+
+---
+
 ## Kernprinzip
 
 **Bot / KI haben keine festen Gates oder starren Handelsregeln als Kernlogik.**
@@ -331,7 +458,7 @@ aber sie ist **nicht** die eigentliche Denklogik des Systems.
 
 ### Ebene 1 – äußeres Wahrnehmen
 
-![Ebene 1 – äußeres Wahrnehmen](files/bilder/ebene_1.png)
+![Ebene 1 – äußeres Wahrnehmen](files/BILDER/EBENE_1.PNG)
 Diese Ebene nimmt die Außenwelt auf,
 ohne sie bereits in Handlung umzuwandeln.
 
@@ -349,7 +476,7 @@ Spannung, Struktur und zeitlicher Veränderung.
 
 ### Ebene 2 – inneres Wahrnehmen / Denken / Handeln
 
-![Ebene 2 – inneres Wahrnehmen / Denken / Handeln](files/bilder/ebene_2.png)
+![Ebene 2 – inneres Wahrnehmen / Denken / Handeln](files/BILDER/EBENE_2.PNG)
 Diese Ebene verarbeitet die Außenreize als inneren Zustandsraum.
 
 Reale Zustandsketten im Projekt:
@@ -379,7 +506,7 @@ Damit ist Entscheidung bereits von technischer Ausführung getrennt.
 
 ### Ebene 3 – Entwicklung aus Erfahrung
 
-![Ebene 3 – Entwicklung aus Erfahrung](files/bilder/ebene_3.png)
+![Ebene 3 – Entwicklung aus Erfahrung](files/BILDER/EBENE_3.PNG)
 Diese Ebene bewertet Verläufe,
 führt Episoden,
 hält Memory-Strukturen
@@ -401,7 +528,7 @@ Reale Bausteine:
 
 ## Runtime-Flow
 
-![Runtime-Flow](files/bilder/ebene_4.png)
+![Runtime-Flow](files/BILDER/EBENE_4.PNG)
 Der reale Ablauf ist im Kern:
 
 ```text
@@ -442,7 +569,7 @@ Wichtig:
 
 ## MCM-Zustandsraum
 
-![MCM-Zustandsraum](files/bilder/ebene_5.png)
+![MCM-Zustandsraum](files/BILDER/EBENE_5.PNG)
 Das System arbeitet bereits mit einem explizit lesbaren Zustandsraum.
 
 Wichtige Zustandsachsen sind:
@@ -481,7 +608,7 @@ sondern ein valider Teil regulatorischer Stabilität und Reifung.
 
 ## Experience-System
 
-![Experience-System](files/bilder/ebene_6.png)
+![Experience-System](files/BILDER/EBENE_6.PNG)
 Das System lernt nicht nur aus Exit-Ergebnissen.
 
 Es lernt aus:
@@ -524,7 +651,7 @@ Das ist ein **offener Ausbaupunkt**, kein bereits abgeschlossener Endzustand.
 ---
 ## MCM-Neuron Ansicht und Aufbau
 
-![alt text](files/bilder/MCM_Neuron.png)
+![alt text](files/BILDER/MCM_NEURON.PNG)
 
 ---
 ## Innenfeld, Musterbildung und neuronale Richtung
@@ -736,6 +863,52 @@ Aktuelle operative Priorität:
 
 ---
 
+## Kollektive MCM-Erweiterung
+
+Eine moegliche spaetere Erweiterung ist ein DIO-Studienraum:
+
+Mehrere getrennte MCM-Brains laufen mit eigener Wahrnehmung,
+eigener Formsprache, eigenem Speicher und eigener Entwicklung.
+
+Sie werden nicht als Ensemble-Regelwerk verstanden
+und sollen nicht einfach Signale mitteln.
+
+Interessant ist die Forschungsfrage:
+
+- Entwickeln getrennte DIO-Systeme bei gleichen oder aehnlichen Formen
+  eigene, moeglicherweise variierende Begriffe?
+- Bleibt die wahrgenommene Form vergleichbar,
+  auch wenn die interne Sprache unterschiedlich ist?
+- Kann ein System die Erfahrung eines anderen Systems aufnehmen,
+  ohne seine eigene Wahrnehmung zu verlieren?
+- Entsteht durch Austausch eine soziale oder kollektive Entwicklungsebene?
+
+Die vorsichtige Zielformulierung lautet:
+
+**Uebersetzung gleicher Formen bei eventuell variierender Sprache.**
+
+Die kollektive Schicht wuerde nicht fragen:
+
+- Wer hat recht?
+
+Sondern:
+
+- Welche Form wurde gesehen?
+- Welche innere Spannung entstand?
+- Welche Zielerwartung wurde gebildet oder gebrochen?
+- Welche Handlung oder Nicht-Handlung entstand daraus?
+- Welches Outcome hatte diese Deutung?
+- Gibt es Resonanz, Differenz oder eine neue gemeinsame Verdichtung?
+
+Damit waere Kommunikation nicht Kopieren,
+sondern Entwicklung durch Vergleich, Aufnahme und Reflexion.
+
+Diese Ebene gehoert nicht vor die Stabilisierung des Einzel-DIO.
+Sie ist ein spaeterer Forschungszweig fuer soziale Semantik,
+kollektive Auswertung und gemeinsame Lernraeume mehrerer MCM-Brains.
+
+---
+
 ## Value Gate
 
 Das Value Gate ist **kein Entscheidungsmodul**.
@@ -810,7 +983,10 @@ Für Architektur und Zielbild:
 siehe `files/UMSETZUNGSPLAN.md`
 
 Für realen Ist-Zustand:
-siehe `files/aktueller_stand.md`
+siehe `files/AKTUELLER_STAND.md`
 
 Für reale offene Korrekturen:
-siehe `files/fix_liste.md`
+siehe `files/FIX_LISTE.md`
+
+Für Variablen und MCM-Mechanik:
+siehe `files/MCM_VARIABLEN_MECHANIK.md`

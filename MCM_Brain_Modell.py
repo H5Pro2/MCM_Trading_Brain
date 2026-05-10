@@ -1,4 +1,4 @@
-# ==================================================
+﻿# ==================================================
 # MCM_Brain_Modell.py
 # Brain + MCM Bridge
 # ==================================================
@@ -1815,7 +1815,7 @@ def _build_experience_similarity_axes(summary):
     active_context_inner_pattern_recognition_strength = float(active_context_trace.get("inner_pattern_recognition_strength", 0.0) or 0.0)
     active_context_inner_pattern_recognition_recurrent = bool(active_context_trace.get("inner_pattern_recognition_recurrent", False))
     active_context_inner_pattern_recognition_changed = bool(active_context_trace.get("inner_pattern_recognition_changed", False))
-    topology_agent_scale = max(1.0, float(getattr(Config, "MCM_FIELD_AGENTS", field_topology_position_count or 1.0) or 1.0))
+    topology_agent_scale = max(1.0, float(getattr(Config, "MCM_FIELD_NEURON", field_topology_position_count or 1.0) or 1.0))
     topology_neighbor_scale = max(1.0, float(getattr(Config, "MCM_FIELD_LOCAL_NEIGHBORS", field_topology_neighbor_count_max or 1.0) or 1.0))
     topology_grid_capacity = max(1.0, field_topology_rows * field_topology_cols)
     active_context_topology_grid_capacity = max(1.0, active_context_topology_rows * active_context_topology_cols)
@@ -5062,6 +5062,9 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
             "observation_maturity_scope;observation_scoped_balance;observation_low_count;"
             "structure_quality;context_confidence;structure_orientation;structure_orientation_gap;"
             "structure_action_bearing;structure_action_gap;structure_action_uncertainty;"
+            "known_form_support;route_familiarity;semantic_shift_pressure;transfer_bearing;interpretation_quality;adaptation_phase;"
+            "trust_transfer_base;trust_transfer_support;transfer_maturity_gap;trust_transfer_mode;"
+            "transfer_break_fatigue;transfer_recovery_need;transfer_break_trigger;transfer_break_ready;"
             "context_cluster_negative_source;context_cluster_id;context_cluster_seen;context_cluster_score;"
             "context_cluster_hit_ratio;context_cluster_loss_ratio;context_cluster_cancel_timeout_ratio;"
             "context_cluster_negative_evidence;context_cluster_quality;context_cluster_distance;context_cluster_trust;context_cluster_variance;"
@@ -5136,6 +5139,20 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         f"{float(meta.get('structure_action_bearing', 0.0) or 0.0):.4f}",
         f"{float(meta.get('structure_action_gap', 0.0) or 0.0):.4f}",
         f"{float(meta.get('structure_action_uncertainty', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('known_form_support', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('route_familiarity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('semantic_shift_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('transfer_bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('interpretation_quality', 0.0) or 0.0):.4f}",
+        _clean(meta.get("adaptation_phase", "-")),
+        f"{float(meta.get('trust_transfer_base', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('trust_transfer_support', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('transfer_maturity_gap', 0.0) or 0.0):.4f}",
+        _clean(meta.get("trust_transfer_mode", "-")),
+        f"{float(meta.get('transfer_break_fatigue', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('transfer_recovery_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('transfer_break_trigger', 0.0) or 0.0):.4f}",
+        int(bool(meta.get("transfer_break_ready", False))),
         _clean(memory_state.get("context_cluster_negative_source", "-")),
         _clean(memory_state.get("context_cluster_id", result.get("context_cluster_id", "-"))),
         int(_num("context_cluster_seen")),
@@ -5502,7 +5519,7 @@ STRUCTURE_ENGINE = StructureEngine()
 # --------------------------------------------------
 def create_mcm_brain():
     field = MCMField(
-        n_agents=int(getattr(Config, "MCM_FIELD_AGENTS", 80) or 80),
+        n_agents=int(getattr(Config, "MCM_FIELD_NEURON", 80) or 80),
         dims=int(getattr(Config, "MCM_FIELD_DIMS", 3) or 3),
     )
 
@@ -11155,6 +11172,10 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     form_symbol_compound_load_reduction = float(form_symbol_state.get("form_symbol_compound_load_reduction", 0.0) or 0.0)
     form_symbol_compound_bearing = float(form_symbol_state.get("form_symbol_compound_bearing", 0.0) or 0.0)
     form_symbol_compound_novelty = float(form_symbol_state.get("form_symbol_compound_novelty", 1.0) or 1.0)
+    form_symbol_maturity = float(form_symbol_state.get("form_symbol_maturity", 0.0) or 0.0)
+    form_symbol_stability = float(form_symbol_state.get("form_symbol_stability", 0.0) or 0.0)
+    form_symbol_novelty = float(form_symbol_state.get("form_symbol_novelty", 1.0) or 1.0)
+    form_symbol_distance = float(form_symbol_state.get("form_symbol_distance", 0.0) or 0.0)
     form_symbol_development_quality = float(form_symbol_state.get("form_symbol_development_quality", 0.0) or 0.0)
     form_symbol_action_binding = float(form_symbol_state.get("form_symbol_action_binding", form_symbol_state.get("form_symbol_action_affinity", 0.50)) or 0.50)
     form_symbol_observation_binding = float(form_symbol_state.get("form_symbol_observation_binding", form_symbol_state.get("form_symbol_observation_affinity", 0.0)) or 0.0)
@@ -11397,6 +11418,236 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             min(1.0, field_action_support - (structure_action_uncertainty * 0.055)),
         )
 
+    semantic_active_context_trace = _normalize_active_context_trace(fused_state.get("active_context_trace", {}) or {})
+    active_context_activation = float(semantic_active_context_trace.get("activation", 0.0) or 0.0)
+    active_context_support = float(semantic_active_context_trace.get("support", 0.0) or 0.0)
+    active_context_conflict = float(semantic_active_context_trace.get("conflict", 0.0) or 0.0)
+    active_context_bearing = float(semantic_active_context_trace.get("bearing", 0.0) or 0.0)
+    known_form_support = max(
+        0.0,
+        min(
+            1.0,
+            (form_symbol_maturity * 0.18)
+            + (form_symbol_stability * 0.16)
+            + (form_symbol_learning_trust * 0.18)
+            + (form_symbol_action_trust * 0.12)
+            + (max(0.0, form_symbol_development_quality) * 0.12)
+            + (form_symbol_compound_bearing * 0.12)
+            + (active_context_support * 0.12),
+        ),
+    )
+    route_familiarity = max(
+        0.0,
+        min(
+            1.0,
+            (known_form_support * 0.30)
+            + (memory_orientation * 0.20)
+            + (memory_support * 0.16)
+            + (context_confidence * 0.12)
+            + (structure_orientation * 0.10)
+            + (field_perception_clarity * 0.08)
+            + (active_context_bearing * 0.04)
+            - (memory_conflict * 0.08)
+            - (active_context_conflict * 0.08),
+        ),
+    )
+    semantic_shift_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (form_symbol_novelty * 0.18)
+            + (form_symbol_compound_novelty * 0.12)
+            + (form_symbol_distance * 0.10)
+            + (form_symbol_zoom_need * 0.10)
+            + (form_symbol_detail_pressure * 0.08)
+            + (learned_development_uncertainty * 0.14)
+            + (structure_action_uncertainty * 0.12)
+            + (orientation_gap * 0.10)
+            + (blind_thinking_load * 0.08)
+            + (memory_conflict * 0.05)
+            + (active_context_conflict * 0.05)
+            - (route_familiarity * 0.20)
+            - (known_form_support * 0.06),
+        ),
+    )
+    transfer_bearing = max(
+        0.0,
+        min(
+            1.0,
+            (route_familiarity * 0.26)
+            + (structure_action_bearing * 0.18)
+            + (memory_orientation * 0.16)
+            + (known_form_support * 0.14)
+            + (context_confidence * 0.10)
+            + (field_action_support * 0.08)
+            + (form_symbol_action_binding * 0.08)
+            - (semantic_shift_pressure * 0.16)
+            - (learned_development_uncertainty * 0.08),
+        ),
+    )
+    trust_transfer_base = max(
+        0.0,
+        min(
+            1.0,
+            (form_symbol_learning_trust * 0.24)
+            + (form_symbol_action_trust * 0.18)
+            + ((1.0 - form_symbol_caution_trust) * 0.14)
+            + (max(0.0, form_symbol_development_quality) * 0.14)
+            + (memory_orientation * 0.12)
+            + (active_context_support * 0.08)
+            + (structure_action_bearing * 0.10),
+        ),
+    )
+    trust_transfer_support = max(
+        0.0,
+        min(
+            1.0,
+            (trust_transfer_base * 0.34)
+            + (route_familiarity * 0.24)
+            + (transfer_bearing * 0.20)
+            + (structure_orientation * 0.12)
+            + (context_confidence * 0.10)
+            - (semantic_shift_pressure * 0.14)
+            - (structure_action_uncertainty * 0.10),
+        ),
+    )
+    transfer_maturity_gap = max(
+        0.0,
+        min(
+            1.0,
+            ((1.0 - trust_transfer_support) * 0.28)
+            + ((1.0 - transfer_bearing) * 0.22)
+            + ((1.0 - route_familiarity) * 0.16)
+            + (semantic_shift_pressure * 0.14)
+            + (structure_action_uncertainty * 0.12)
+            + (learned_development_uncertainty * 0.10)
+            + (form_symbol_caution_trust * 0.06)
+            - (form_symbol_action_trust * 0.06),
+        ),
+    )
+    trust_transfer_mode = "trusted_transfer"
+    if transfer_maturity_gap >= 0.58 and trust_transfer_support < 0.42:
+        trust_transfer_mode = "immature_transfer_watch"
+    elif transfer_maturity_gap >= 0.46:
+        trust_transfer_mode = "partial_transfer"
+    elif trust_transfer_support >= 0.56 and transfer_bearing >= 0.48:
+        trust_transfer_mode = "bearing_transfer"
+    interpretation_quality = max(
+        0.0,
+        min(
+            1.0,
+            (route_familiarity * 0.30)
+            + (transfer_bearing * 0.24)
+            + (memory_orientation * 0.16)
+            + (field_perception_clarity * 0.12)
+            + (structure_orientation * 0.10)
+            + ((1.0 - orientation_gap) * 0.08)
+            - (semantic_shift_pressure * 0.12),
+        ),
+    )
+    transfer_break_fatigue = max(
+        0.0,
+        min(
+            1.0,
+            (transfer_maturity_gap * 0.26)
+            + (expectation_pressure * 0.18)
+            + (aftereffect_pressure * 0.14)
+            + (learned_development_uncertainty * 0.14)
+            + (structure_action_uncertainty * 0.12)
+            + (max(0.0, 0.46 - trust_transfer_support) * 0.20)
+            + (max(0.0, 0.42 - transfer_bearing) * 0.14)
+            + (field_replan_pressure * 0.08)
+            - (form_symbol_action_trust * 0.08)
+            - (max(0.0, trust_transfer_support - 0.48) * 0.10),
+        ),
+    )
+    transfer_recovery_need = max(
+        0.0,
+        min(
+            1.0,
+            (transfer_break_fatigue * 0.38)
+            + (orientation_gap * 0.18)
+            + (blind_thinking_load * 0.14)
+            + (field_observation_need * 0.12)
+            + (max(0.0, 0.50 - interpretation_quality) * 0.18),
+        ),
+    )
+    transfer_break_trigger = max(
+        0.0,
+        min(
+            1.0,
+            (transfer_break_fatigue * 0.32)
+            + (transfer_maturity_gap * 0.20)
+            + (structure_action_uncertainty * 0.16)
+            + (max(0.0, 0.42 - transfer_bearing) * 0.14)
+            + (max(0.0, 0.42 - trust_transfer_support) * 0.12)
+            + (expectation_pressure * 0.10)
+            + (aftereffect_pressure * 0.08)
+            - (structure_action_bearing * 0.10)
+            - (form_symbol_action_trust * 0.06),
+        ),
+    )
+    transfer_break_ready = bool(
+        transfer_break_trigger >= 0.48
+        and transfer_maturity_gap >= 0.48
+        and trust_transfer_support < 0.40
+        and transfer_bearing < 0.40
+        and structure_action_bearing < 0.48
+    )
+    if transfer_break_ready and transfer_break_fatigue >= 0.48:
+        adaptation_phase = "transfer_break_fatigue"
+    elif transfer_maturity_gap >= 0.58 and trust_transfer_support < 0.42:
+        adaptation_phase = "immature_transfer_watch"
+    elif semantic_shift_pressure >= 0.56 and route_familiarity < 0.48:
+        adaptation_phase = "new_market_grammar_watch"
+    elif transfer_bearing < 0.42 and semantic_shift_pressure >= 0.42:
+        adaptation_phase = "transfer_observe"
+    elif route_familiarity >= 0.58 and transfer_bearing >= 0.50:
+        adaptation_phase = "familiar_route"
+    else:
+        adaptation_phase = "interpretation_watch"
+    if semantic_shift_pressure > 0.0:
+        transfer_gap = max(0.0, 1.0 - transfer_bearing)
+        field_observation_need = max(
+            0.0,
+            min(1.0, field_observation_need + (semantic_shift_pressure * transfer_gap * 0.075)),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(1.0, field_replan_pressure + (semantic_shift_pressure * transfer_gap * 0.045)),
+        )
+        field_action_support = max(
+            0.0,
+            min(1.0, field_action_support - (semantic_shift_pressure * transfer_gap * 0.040)),
+        )
+    if transfer_maturity_gap > 0.0:
+        field_observation_need = max(
+            0.0,
+            min(1.0, field_observation_need + (transfer_maturity_gap * 0.065)),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(1.0, field_replan_pressure + (max(0.0, transfer_maturity_gap - 0.38) * 0.070)),
+        )
+        field_action_support = max(
+            0.0,
+            min(1.0, field_action_support - (transfer_maturity_gap * 0.045)),
+        )
+    fatigue_excess = max(0.0, transfer_break_fatigue - 0.34)
+    if fatigue_excess > 0.0:
+        field_observation_need = max(
+            0.0,
+            min(1.0, field_observation_need + (fatigue_excess * 0.045)),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(1.0, field_replan_pressure + (max(0.0, transfer_recovery_need - 0.34) * 0.055)),
+        )
+        field_action_support = max(
+            0.0,
+            min(1.0, field_action_support - (fatigue_excess * 0.022)),
+        )
+
     regulated_courage = max(
         0.0,
         min(
@@ -11452,6 +11703,22 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             0.0,
             min(1.0, action_inhibition + (learned_development_uncertainty * 0.14)),
         )
+    if semantic_shift_pressure > 0.0:
+        transfer_gap = max(0.0, 1.0 - transfer_bearing)
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (semantic_shift_pressure * transfer_gap * 0.11)),
+        )
+    if transfer_maturity_gap > 0.0:
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (transfer_maturity_gap * 0.090)),
+        )
+    if fatigue_excess > 0.0:
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (fatigue_excess * 0.045)),
+        )
 
     action_clearance = max(
         0.0,
@@ -11477,6 +11744,22 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         action_clearance = max(
             0.0,
             min(1.0, action_clearance - (learned_development_uncertainty * 0.095)),
+        )
+    if semantic_shift_pressure > 0.0:
+        transfer_gap = max(0.0, 1.0 - transfer_bearing)
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance - (semantic_shift_pressure * transfer_gap * 0.075)),
+        )
+    if transfer_maturity_gap > 0.0:
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance - (transfer_maturity_gap * 0.065)),
+        )
+    if fatigue_excess > 0.0:
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance - (fatigue_excess * 0.035)),
         )
     orientation_gap = max(
         0.0,
@@ -11704,6 +11987,27 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             allow_block = False
             rejection_reason = "structure_bearing_observe"
             pre_action_phase = "observe"
+    elif bool(allow_plan) and semantic_shift_pressure >= 0.56 and transfer_bearing <= 0.42 and decision_strength < 1.28:
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(form_symbol_reframe_binding >= 0.30 or field_replan_pressure >= 0.58)
+        allow_block = False
+        rejection_reason = "new_market_grammar_replan" if allow_ruminate else "new_market_grammar_observe"
+        pre_action_phase = "replan" if allow_ruminate else "observe"
+    elif bool(allow_plan) and transfer_maturity_gap >= 0.58 and trust_transfer_support < 0.42 and decision_strength < (1.18 + form_symbol_action_trust * 0.24):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(form_symbol_reframe_binding >= 0.26 or transfer_maturity_gap >= 0.68)
+        allow_block = False
+        rejection_reason = "immature_transfer_replan" if allow_ruminate else "immature_transfer_observe"
+        pre_action_phase = "replan" if allow_ruminate else "observe"
+    elif bool(allow_plan) and transfer_break_ready and decision_strength < (1.24 + form_symbol_action_trust * 0.18):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(transfer_recovery_need >= 0.46 or form_symbol_reframe_binding >= 0.24)
+        allow_block = False
+        rejection_reason = "transfer_break_replan" if allow_ruminate else "transfer_break_observe"
+        pre_action_phase = "replan" if allow_ruminate else "observe"
 
     return {
         "allow_observe": bool(allow_observe),
@@ -11790,6 +12094,20 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "structure_action_gap": float(structure_action_gap),
         "structure_action_uncertainty": float(structure_action_uncertainty),
         "structure_orientation_guard": bool(structure_orientation_guard),
+        "known_form_support": float(known_form_support),
+        "route_familiarity": float(route_familiarity),
+        "semantic_shift_pressure": float(semantic_shift_pressure),
+        "transfer_bearing": float(transfer_bearing),
+        "interpretation_quality": float(interpretation_quality),
+        "adaptation_phase": str(adaptation_phase),
+        "trust_transfer_base": float(trust_transfer_base),
+        "trust_transfer_support": float(trust_transfer_support),
+        "transfer_maturity_gap": float(transfer_maturity_gap),
+        "trust_transfer_mode": str(trust_transfer_mode),
+        "transfer_break_fatigue": float(transfer_break_fatigue),
+        "transfer_recovery_need": float(transfer_recovery_need),
+        "transfer_break_trigger": float(transfer_break_trigger),
+        "transfer_break_ready": bool(transfer_break_ready),
         "readiness": float(decision_readiness),
         "maturity": float(state_maturity),
         "uncertainty": float(uncertainty_score),

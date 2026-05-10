@@ -79,8 +79,7 @@ def set_context(
     try:
         if symbol is not None:
             symbol_value = str(symbol)
-            if ':USDT' not in symbol_value:
-                symbol_value = f"{symbol_value}:USDT"
+            symbol_value = ph_ohlcv.resolve_exchange_symbol(symbol_value)
             of._SYMBOL = symbol_value
     except Exception:
         pass
@@ -260,7 +259,7 @@ def _order_monitor_loop():
 
             price_data = ph_ohlcv.get_current_price(
                 exchange,
-                Config.SYMBOL,
+                of._SYMBOL or ph_ohlcv.resolve_exchange_symbol(Config.SYMBOL),
             )
 
             if not price_data:
@@ -367,7 +366,7 @@ def place_order(order_type, price, amount, open_orders=None, tp=None, sl=None, p
 
     of._bootstrap_once()
 
-    _SYMBOL = f"{Config.SYMBOL}:USDT"
+    _SYMBOL = ph_ohlcv.resolve_exchange_symbol(Config.SYMBOL)
     of._SYMBOL = _SYMBOL
 
     exchange = ph_ohlcv.create_exchange(api.API_KEY, api.API_SECRET)

@@ -38,6 +38,20 @@ def create_exchange(api_key=api.API_KEY, secret=api.API_SECRET):
     })
 # --------------------------------------------------
 
+def resolve_exchange_symbol(symbol=None):
+    resolved = str(symbol or getattr(Config, "SYMBOL", "") or "").strip()
+    if not resolved:
+        resolved = f"{getattr(Config, 'COIN', '')}/{getattr(Config, 'USDT', 'USDT')}"
+
+    mechanik = str(getattr(Config, "MECHANIK", "") or "").strip().lower()
+    quote = str(getattr(Config, "USDT", "USDT") or "USDT").strip()
+
+    if mechanik in ("swap", "future", "futures") and f":{quote}" not in resolved:
+        resolved = f"{resolved}:{quote}"
+
+    return resolved
+# --------------------------------------------------
+
 # ---------------------------------------------------  
 
 def _load_csv_ohlcv():
