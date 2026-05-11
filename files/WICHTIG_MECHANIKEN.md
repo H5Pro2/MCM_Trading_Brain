@@ -522,23 +522,8 @@ class MCMNeuron:
 
 ---
 
-## geändert wurde:
-
-`MCM_KI_Modell.py`
-
----
-
-## was wurde umgesetzt ?
-
-Ein echtes MCM-Neuron als lokaler Innenraumträger:
+Ein MCM-Neuron als lokaler Innenraumträger:
 Reizaufnahme, Replay-Spur, Nachbarschaftskopplung, Regulation, Trägheit und Snapshot.
-
----
-
-## was kommt als nächstes !
-
-`MCMField` auf `list[MCMNeuron]` umstellen, damit das Feld nicht nur Vektormatrix bleibt, sondern aus echten Neuronen/Agenten zusammengesetzt wird. Dabei sollte `field.energy` als kompatibler Sammel-Output weiter erhalten bleiben.  
-
 
 
 # --------------------------------------------------------------------------------------------------------------
