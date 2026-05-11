@@ -352,7 +352,7 @@ Ein sauberes MCM-Neuron für dieses Projekt sollte deshalb nicht wie ein klassis
 # --------------------------------------------------
 
 **Dateiname · Funktionsname · Abschnitt**
-`MCM_KI_Modell.py` · Absatz nicht vorhanden · neuer Klassenblock `MCMNeuron`
+`MCM_KI_Modell.py` · Klassenblock `MCMNeuron`
 
 ---
 
