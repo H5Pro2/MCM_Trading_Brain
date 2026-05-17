@@ -3281,3 +3281,49 @@ Wie es weitergeht:
 Block S sollte als naechster Theorieanker in `WICHTIG_MECHANIKEN.md` und
 `MCM_VARIABLEN_MECHANIK.md` sauber vorbereitet werden. Danach kann die
 technische Diagnose fuer DIOs Metaregulatoren beginnen.
+
+README-Ergaenzung:
+Die zusaetzlich relevanten MCM-Quellen wurden im README als kompakte
+Landkarte aufgenommen:
+- Block S - Metaregulatoren
+- Block V - KI und starre Logik
+- Block O - Kreativitaet
+- Block J/K - Psyche und Selbstregulation
+- Von Resonanz zu Sprache
+- ProtoMind / selbstaktive Feldkognition
+- konzentrisch-dipolare Feldstruktur
+
+Zweck:
+Das README bleibt Einstieg und Orientierung. Die Detailuebersetzung dieser
+Quellen gehoert danach in `WICHTIG_MECHANIKEN.md` und
+`MCM_VARIABLEN_MECHANIK.md`.
+
+MD-Aktualisierung:
+Die zusaetzlichen Theoriequellen wurden jetzt auch in die Mechanikdokumente
+uebertragen.
+
+Aktualisiert:
+- `files/UMSETZUNGSPLAN.md`
+  - weitere MCM-Theorieanker ergaenzt
+  - Zielschicht `Metaregulation zweiter Ordnung` ergaenzt
+- `files/WICHTIG_MECHANIKEN.md`
+  - `Metaregulator-Schicht` in die Organuebersicht aufgenommen
+  - Abschnitt `11.2 Weitere MCM-Theorieanker / Metaregulation` ergaenzt
+- `files/MCM_VARIABLEN_MECHANIK.md`
+  - Abschnitt `Metaregulator-Schicht / Regler zweiter Ordnung` ergaenzt
+  - Zielachsen dokumentiert:
+    `return_strength`, `integration_capacity`, `variance_regulation`,
+    `load_tolerance`, `impulse_control`, `frustration_tolerance`,
+    `protective_distance_regulation`, `self_reflection_regulator`,
+    `distance_regulation`
+
+Wichtig:
+Das ist aktuell Dokumentation und Mechanikvorbereitung, noch keine
+Runtime-Implementierung. Die offene technische Aufgabe bleibt:
+Metaregulatoren diagnostisch in den Runtime-State bringen.
+
+Wie es weitergeht:
+Naechster sinnvoller Umsetzungsschritt ist eine reine Diagnose-Schicht fuer
+Metaregulatoren: DIO soll sichtbar machen, wie er Spannung, Varianz,
+Impulse, Distanz, Schutzweite, Integration und Rueckfuehrung verarbeitet,
+ohne dass daraus sofort eine Handelsregel entsteht.

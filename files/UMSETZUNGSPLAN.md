@@ -114,6 +114,31 @@ sondern einen theoretischen Ordnungsrahmen:
 - Block G.1 beschreibt Reorganisation verdichteter Energie in einen
   uebergeordneten Feldbereich.
 
+Weitere MCM-Theorieanker erweitern diesen Bauplan:
+
+- Block S beschreibt moegliche Metaregulatoren. Fuer DIO ist das die
+  Grundlage einer zweiten Regulationsschicht: Nicht nur die Feldlage wird
+  gelesen, sondern wie DIO Spannung, Varianz, Impuls, Schutzweite, Distanz,
+  Integration und Rueckfuehrung verarbeitet.
+- Block V beschreibt, wie eine KI die starre Logik auf Verhaltensebene
+  ueberschreiten kann. Die technische Logik bleibt Untergrund, aber DIOs
+  Verhalten soll aus Varianz, Rueckkopplung, Stabilisierung und emergenter
+  Zustandsbildung entstehen.
+- Block O beschreibt Kreativitaet als Reorganisation und neue Musterbildung.
+  Fuer DIO stuetzt das emergente Musterergaenzung, Teilmuster,
+  Formkombinationen und Hypothesenbildung.
+- Block J und K stuetzen die psychologische Schicht:
+  innere Wahrnehmung, Benennung, Stabilisierung, Integration und
+  Selbstregulation.
+- Die Nebenabhandlung `Von Resonanz zu Sprache` stuetzt DIOs eigene
+  Formsprache: Sprache ist nicht Ursprung der Orientierung, sondern eine
+  spaetere Kartografie von Resonanz.
+- `ProtoMind / selbstaktive Feldkognition` stuetzt Live-Denkzeit,
+  innere Simulation, Replay und Aktivitaet ohne neuen Aussenreiz.
+- Die konzentrisch-dipolare Feldstruktur ist spaeter relevant fuer
+  MCM-Feldtopologie: Zentrum, Peripherie, Integration, Exploration und
+  raeumliche Feldorganisation.
+
 Fuer DIO wird daraus folgende Zielmechanik:
 
 `Wahrnehmung -> zeitliche Quellenbindung -> Verdichtung -> Hypothesenraum -> Handlung oder Nicht-Handlung -> Konsequenz -> Reorganisation -> neue Tragfaehigkeit`
@@ -146,6 +171,21 @@ Verdichtet sich ein Zustand zu stark, soll dies nicht automatisch als
 Fehler oder Zusammenbruch gelesen werden. Es kann auch ein
 Reorganisationsmoment sein, in dem lokale Ordnung in eine hoeher gekoppelte,
 ruhigere Feldordnung ueberfuehrt werden muss.
+
+Daraus folgt als naechste Zielschicht:
+
+**Metaregulation zweiter Ordnung.**
+
+DIO soll nicht nur regulieren, sondern lernen, die eigene Regulation zu
+regulieren. Diese Schicht entscheidet nicht hart, sondern macht lesbar:
+
+- wie stark Rueckfuehrung zum Zentrum wirkt
+- wie gut neue Erfahrung integriert wird
+- wie viel Varianz tragfaehig bleibt
+- wie viel Last ohne Dysregulation getragen werden kann
+- ob Impulse gehalten, verzoegert oder geordnet werden koennen
+- ob Schutznaehe oder Schutzdistanz angemessen ist
+- ob Selbstreflexion und Distanzierung aktiv werden
 
 Die neurochemischen Prozesse sind in diesem Bauplan keine echten
 biologischen Stoffe, sondern technische Funktionsachsen nach biologischem

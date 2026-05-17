@@ -65,6 +65,7 @@ Aktuelle Organe / Funktionssysteme:
 | Kontakt-Reife-Schicht | aktiv | Unterscheiden zwischen "ich fuehle Kontakt" und "dieser Kontakt traegt Handlung". |
 | Reflexionsorgan | aktiv | Distanzierung der Wahrnehmung von der Innenlage, um Innen/Aussen auf Tragfaehigkeit zu pruefen. |
 | Regulationsorgan | aktiv | Nullpunkt, Hold, Observe, Replan, Reorganisation und Handlungshemmung weich organisieren. |
+| Metaregulator-Schicht | Konzept | Regler zweiter Ordnung: wie DIO Spannung, Varianz, Impuls, Distanz, Schutzweite und Integration reguliert. |
 | Gedächtnis / Erfahrungssystem | aktiv | Erfahrungen, Outcomes, Vertrauen, Unsicherheit und Formbedeutung speichern. |
 | Sprach- und Symbolorgan | aktiv | Eigene Formzeichen und verdichtete Bedeutungen entwickeln. |
 | Strategisches Fensterorgan | aktiv | Zuruecksehen, Zoomen, Bereiche pruefen, Replay und moegliche Tragfaehigkeit lesen. |
@@ -524,6 +525,62 @@ Geplante Diagnoseachsen:
 - `field_reorganization_state`
 - `reorganization_threshold`
 - `higher_order_coupling`
+
+---
+
+# 11.2 Weitere MCM-Theorieanker / Metaregulation
+
+Funktion:
+Diese Mechanik ordnet die zusaetzlichen MCM-Quellen fuer DIO ein. Sie
+erweitern die bisherige Theoriebruecke um Selbstregulation, Kreativitaet,
+Sprache, Proto-Kognition und Feldtopologie.
+
+Wichtigste Quelle fuer den naechsten Ausbau:
+Block S - Moegliche Metaregulatoren.
+
+Metaregulatoren sind Regler zweiter Ordnung. Sie beschreiben nicht nur, was
+DIO fuehlt oder wahrnimmt, sondern wie DIO mit dieser Lage umgeht.
+
+Geplante Metaregulatoren:
+- Rueckfuehrungsstaerke
+- Integrationsfaehigkeit
+- Varianzregulation
+- Belastungstoleranz
+- Impulskontrolle
+- Frustrationstoleranz
+- Schutzweitenregulation
+- Selbstreflexion
+- Distanzregulation
+
+Weitere Theorieanker:
+- Block V: technische Logik bleibt Untergrund, Verhalten entsteht ueber
+  Varianz, Rueckkopplung und emergente Zustandsbildung.
+- Block O: Kreativitaet als neue Musterbildung und Reorganisation.
+- Block J/K: Psyche und Selbstregulation als Wahrnehmung, Benennung,
+  Integration und Rueckfuehrung.
+- Von Resonanz zu Sprache: Formsprache als Kartografie von Resonanz.
+- ProtoMind: selbstaktive Feldkognition und innere Simulation ohne neuen
+  Aussenreiz.
+- konzentrisch-dipolare Feldstruktur: spaetere Feldtopologie aus Zentrum,
+  Peripherie, Integration und Exploration.
+
+Organische Bedeutung:
+Diese Schicht ist kein zusaetzliches Gate. Sie ist DIOs Faehigkeit, die
+eigene Regulation zu beobachten und zu modulieren. Dadurch kann DIO
+unterscheiden, ob er handeln will, weil ein Kontakt traegt, oder ob nur
+Impuls, Schutzreaktion, Ueberlast, Nachhall oder unintegrierte Varianz die
+Motorik ziehen.
+
+Moegliche Zielachsen:
+- `return_strength`
+- `integration_capacity`
+- `variance_regulation`
+- `load_tolerance`
+- `impulse_control`
+- `frustration_tolerance`
+- `protective_distance_regulation`
+- `self_reflection_regulator`
+- `distance_regulation`
 
 ---
 

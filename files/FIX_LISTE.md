@@ -731,3 +731,6 @@ Regelwerk: `files/MD_ANWEISUNG.md`.
 - [x] MCM-Abhandlungen D bis G.1 als Theoriebruecke in README,
   UMSETZUNGSPLAN, WICHTIG_MECHANIKEN und MCM_VARIABLEN_MECHANIK
   zusammengefasst.
+- [x] Weitere MCM-Theorieanker aus dem MCM-Repository in README,
+  UMSETZUNGSPLAN, WICHTIG_MECHANIKEN und MCM_VARIABLEN_MECHANIK
+  dokumentiert.

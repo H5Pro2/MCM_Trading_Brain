@@ -2331,6 +2331,77 @@ auftaucht oder zu nah an das Handlungszentrum rueckt.
 
 ---
 
+# Metaregulator-Schicht / Regler zweiter Ordnung
+
+Diese Achsen sind Zielbegriffe aus Block S der MCM-Abhandlungen. Sie
+beschreiben nicht die unmittelbare Feldlage, sondern wie DIO seine eigene
+Lage verarbeitet. Sie sind keine harten Gates.
+
+## `return_strength`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Rueckfuehrung / Zentrum
+- Funktion: beschreibt, wie stark DIO nach Abweichung, Aktivierung oder
+  Instabilitaet in Richtung stabilerer Zustaende zurueckfindet.
+
+## `integration_capacity`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Integration / Erfahrung
+- Funktion: beschreibt, wie gut neue Erfahrung, Spannung, Konflikt oder
+  Irritation in tragfaehige Muster ueberfuehrt werden kann.
+
+## `variance_regulation`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Varianz / Flexibilitaet
+- Funktion: beschreibt, ob DIO zwischen Flexibilitaet und Stabilitaet
+  balancieren kann, ohne in Chaos oder Starre zu kippen.
+
+## `load_tolerance`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Belastungstoleranz
+- Funktion: beschreibt, wie viel Spannung, Unsicherheit oder Ueberforderung
+  DIO tragen kann, ohne in Dysregulation oder starre Schutzmuster zu fallen.
+
+## `impulse_control`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Impulsregulation
+- Funktion: beschreibt, ob DIO ploetzliche Handlungs- oder Schutzimpulse
+  halten, verzoegern oder in geordnetere Reaktionsformen ueberfuehren kann.
+
+## `frustration_tolerance`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Frustrationsverarbeitung
+- Funktion: beschreibt, wie DIO mit nicht erfuellter Erwartung,
+  Fehlschlag, blockiertem Impuls oder widerspruechlicher Lage umgeht.
+
+## `protective_distance_regulation`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Schutzweite
+- Funktion: beschreibt, ob DIO Naehe und Distanz zu belastenden Reizen
+  organisch dosieren kann.
+
+## `self_reflection_regulator`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Selbstreflexion
+- Funktion: beschreibt, ob DIO eigene Zustaende bemerkt, benennt und dadurch
+  regulierend auf sich selbst einwirkt.
+
+## `distance_regulation`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Distanzierung / Kontakt
+- Funktion: beschreibt, ob DIO einen Reiz, eine Erinnerung oder Hypothese
+  bewusst naeher heranlaesst, auf Abstand haelt oder wieder loslaesst.
+
+---
+
 # Noch Zu Dokumentieren
 
 - `nervous_variance`
