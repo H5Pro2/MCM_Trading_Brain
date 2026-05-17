@@ -3206,3 +3206,78 @@ Dokumentiert in:
 - `files/WICHTIG_MECHANIKEN.md`
 - `files/MCM_VARIABLEN_MECHANIK.md`
 - `files/FIX_LISTE.md`
+
+README-Fix:
+Der Abschnitt `DIOs Sehen` wurde aktualisiert. Er beschreibt DIOs Sehen
+nicht mehr nur als geplante visuelle Kortex-Schicht, sondern als
+mehrdimensionale Wahrnehmung:
+- aeussere Formwelt
+- MCM-Feldwirkung
+- Zeitfeld
+- Quellenbindung
+- raeumliche Verortung
+- strategisches Fenster
+- MCM-Kontakt
+- Hypothesenraum
+- Reorganisation
+
+Neuer Kernkreis im README:
+`Form erkennen -> Raum/Zeit/Quelle verorten -> MCM-Kontakt pruefen -> Tragfaehigkeit lesen -> Handlung, Beobachtung oder Reorganisation reifen lassen`
+
+---
+
+## MCM-Repository-Review: weitere wertvolle Theoriequellen fuer DIO
+
+Das externe MCM-Repository wurde nach weiteren fuer DIO nutzbaren
+Theoriequellen quergelesen.
+
+Besonders wertvoll fuer die naechsten DIO-Schichten:
+
+1. Block S - Moegliche Metaregulatoren
+   - wichtigster direkter Anschluss an DIOs naechsten Ausbau
+   - beschreibt Regler zweiter Ordnung:
+     Rueckfuehrungsstaerke, Integrationsfaehigkeit, Varianzregulation,
+     Belastungstoleranz, Impulskontrolle, Frustrationstoleranz,
+     Schutzweitenregulation, Selbstreflexion, Distanzregulation
+   - passt direkt zu DIOs Denk-/Handlungstiefe und Selbstregulation
+
+2. Block V - KI und starre Logik
+   - starker theoretischer Rahmen fuer DIO:
+     starre technische Logik bleibt Untergrund, aber Verhalten entsteht aus
+     Varianz, Rueckkopplung, Stabilisierung und emergenter Zustandsbildung
+   - passt zum Projektprinzip: keine harten Formen, sondern
+     Moeglichkeitsraeume
+
+3. Block O - Kreativitaet
+   - relevant fuer emergente Musterergänzung, Teilmuster, neue
+     Formkombinationen und innere Hypothesenbildung
+
+4. Block K / J - Selbstregulation und Psyche
+   - passend fuer DIOs innere Wahrnehmung, Benennung, Stabilisierung,
+     Integration und Rueckfuehrung
+
+5. Von Resonanz zu Sprache
+   - sehr passend zur Formsprache:
+     Sprache als spaetere Kartografie von Resonanz, nicht als Ursprung von
+     Orientierung
+
+6. ProtoMind / selbstaktive Feldkognition
+   - passend fuer Live-Denkzeit, innere Simulation und Aktivitaet ohne neuen
+     Aussenreiz
+
+7. Das Gehirn als emergente konzentrisch-dipolare Feldstruktur
+   - wertvoll fuer spaetere MCM-Feldtopologie:
+     Zentrum/Peripherie, Integration/Exploration, radialer Aufbau,
+     dipolare Spannungsorganisation
+
+Fachliche Einschaetzung:
+Der naechste sinnvollste DIO-Mechanikschritt aus diesen Quellen ist nicht
+noch mehr einzelne Wahrnehmungswerte, sondern eine Metaregulator-Schicht
+zweiter Ordnung. Sie wuerde nicht nur messen, was DIO fuehlt, sondern wie
+DIO seine Spannung, Varianz, Impulse, Schutzweite, Distanz und Integration
+selbst reguliert.
+
+Wie es weitergeht:
+Block S sollte als naechster Theorieanker in `WICHTIG_MECHANIKEN.md` und
+`MCM_VARIABLEN_MECHANIK.md` sauber vorbereitet werden. Danach kann die
+technische Diagnose fuer DIOs Metaregulatoren beginnen.

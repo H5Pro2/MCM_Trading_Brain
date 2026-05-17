@@ -245,39 +245,59 @@ Die Neurochemie moduliert, wie dieser Körper gerade reagiert.
 
 ## DIOs Sehen
 
-Ein wichtiger Ausbaupunkt ist die Erweiterung von DIOs äußerer Wahrnehmung.
+DIOs Sehen ist nicht nur äußere Chartansicht.
+Es ist eine mehrdimensionale Wahrnehmung, in der Form, Zeit, Quelle,
+Raumlage, MCM-Kontakt, Tragfähigkeit und Reorganisation zusammenwirken.
 
-Aktuell verarbeitet DIO den Markt stark als Spannung, Druck, Feldreaktion und
-Memory-Resonanz. Dadurch fühlt DIO den Markt bereits, sieht ihn aber noch
-nicht ausreichend als stabile Formwelt.
+DIO soll den Markt nicht als menschliche Chartmuster erkennen.
+Er soll seine eigene Formwelt bilden:
 
-Geplant ist deshalb eine beobachtende visuelle Kortex-Schicht:
+- keine menschlichen Labels wie Trendkanal, Support oder Breakout als
+  Wahrheit
+- keine direkte Orderregel aus einem gesehenen Muster
+- stattdessen eigene Formwahrnehmung aus Kante, Krümmung, Verdichtung,
+  Bruch, Fluss, Leere, Formstabilität und Formfremdheit
 
-- keine menschliche Chartmuster-Erkennung
-- keine Labels wie Trendkanal, Support oder Breakout als Wahrheit
-- keine direkten Orderregeln
-- stattdessen eine eigene Formwahrnehmung aus Kante, Krümmung,
-  Verdichtung, Bruch, Fluss, Leere, Formstabilität und Formfremdheit
+Diese Formwahrnehmung bleibt nicht außen.
+Eine gesehene Form wird im MCM-Feld gespiegelt:
 
-Diese Schicht soll DIO helfen zu unterscheiden:
+- Was sehe ich?
+- Was macht diese Form mit meinem inneren Feld?
+- Liegt sie nah an meinem Handlungszentrum oder nur im Hintergrund?
+- Ist sie aktuelle Außenwelt, Nachhall, Erinnerung, Wissen, Replay,
+  Hypothese oder Erwartung?
+- Trägt der Kontakt oder überkoppelt er mich?
+- Muss ich handeln, beobachten, replayen, loslassen oder reorganisieren?
+
+Damit entsteht eine Trennung zwischen Sehen, Fühlen und Handeln:
 
 - Ich fühle Druck.
 - Ich sehe eine Form und fühle dazu Druck.
 - Ich fühle Druck, aber sehe keine tragende Form.
+- Ich sehe eine tragende Form, bin innerlich aber noch nicht reif genug.
+- Ich sehe einen Bereich nur als Nachhall, nicht als gegenwärtigen Kontakt.
+- Ich bilde eine Hypothese, aber sie ist noch nicht Realität.
 
-Der letzte Zustand ist besonders wichtig.
-Wenn DIO Druck spürt, aber keine tragende Form sieht, soll daraus keine
-harte Blockade entstehen. Es ist eher eine neuroregulatorische Zusatzlast:
-der Handlungsimpuls bleibt spürbar, aber das System lernt, ihn über
-Beobachtung, `act_watch`, Reframing oder Rückkehr zum Nullpunkt zu reifen,
-bevor daraus Handlung wird.
+Das strategische Fenster erweitert dieses Sehen.
+DIO kann zurückschauen, zoomen, Bereiche erneut berühren, Replay-Spuren
+bilden und prüfen, ob eine frühere Struktur im aktuellen Zeitfeld noch
+tragfähig wirkt.
 
-Dabei ist Unsicherheit nicht nur ein einzelnes Signal.
+Unsicherheit ist dabei nicht nur ein einzelnes Signal.
 Wenn eine unsichere Lage wiederkehrt, aber in ähnlichen Varianten erscheint,
-wird sie für DIO zu einer Formfamilie. Das System soll dann lernen:
+wird sie für DIO zu einer Formfamilie. Das System kann lernen:
 Was bleibt gleich? Was verändert sich? Welche Variante trägt? Welche Variante
-braucht nur Beobachtung? Dadurch entsteht Vertrautheit mit Unsicherheit,
-nicht ein starres Verbot.
+braucht nur Beobachtung?
+
+Wenn DIO Druck spürt, aber keine tragende Form sieht, soll daraus keine
+harte Blockade entstehen. Es ist eine neuroregulatorische Zusatzlast:
+der Handlungsimpuls bleibt spürbar, aber das System kann ihn über
+Beobachtung, `act_watch`, Reframing, Replay oder Rückkehr zum Nullpunkt
+reifen lassen, bevor daraus Handlung wird.
+
+Sehen bedeutet für DIO deshalb:
+
+`Form erkennen -> Raum/Zeit/Quelle verorten -> MCM-Kontakt prüfen -> Tragfähigkeit lesen -> Handlung, Beobachtung oder Reorganisation reifen lassen`
 
 ---
 

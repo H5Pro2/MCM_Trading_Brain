@@ -668,6 +668,22 @@ Regelwerk: `files/MD_ANWEISUNG.md`.
   - `reorganization_threshold`
   - `higher_order_coupling`
 
+- [ ] Metaregulator-Schicht aus MCM Block S vorbereiten.
+  Ziel:
+  - Regler zweiter Ordnung fuer DIO sichtbar machen
+  - nicht nur Feldlage messen, sondern wie DIO diese Lage verarbeitet
+  - direkte Bruecke zu selbstregulativer Erfahrungsorganisation
+  Moegliche Achsen:
+  - `return_strength`
+  - `integration_capacity`
+  - `variance_regulation`
+  - `load_tolerance`
+  - `impulse_control`
+  - `frustration_tolerance`
+  - `protective_distance_regulation`
+  - `self_reflection_regulator`
+  - `distance_regulation`
+
 - [ ] Markdown-Dateien weiter nach `MD_ANWEISUNG.md` pflegen.
   Ziel:
   - keine doppelten Laufanalysen
