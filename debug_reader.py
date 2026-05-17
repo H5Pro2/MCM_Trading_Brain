@@ -22,12 +22,128 @@
 # ============================================================
 import os
 import time
+import atexit
 from config import Config
 _RESET_DONE = set()
 _DEBUG_COUNTERS = {}
 _PROFILE_HEADER_DONE = set()
 _FILE_PROFILE_HEADER_DONE = set()
 _DEBUG_RUN_DIR = None
+_WRITE_BUFFERS = {}
+_WRITE_BUFFER_COUNTS = {}
+_WRITE_BUFFER_LAST_FLUSH = {}
+_BUFFER_FLUSHING = False
+
+def _debug_write_mode():
+    mode = str(getattr(Config, "DEBUG_WRITE_MODE", "immediate") or "immediate").strip().lower()
+    if mode not in {"immediate", "buffered", "buffered_safe"}:
+        return "immediate"
+    return mode
+
+def _buffered_debug_enabled(path=None, mode="a", write_once=False):
+    if _debug_write_mode() == "immediate":
+        return False
+    if str(mode or "a") != "a":
+        return False
+    if bool(write_once):
+        return False
+    normalized = str(path or "").replace("\\", "/")
+    if normalized.endswith("mcm_file_write_profile.csv"):
+        return False
+    return True
+
+def _write_text_immediate(path, text, mode="a", operation="write"):
+    _ensure_dir(path)
+    profile_start = time.perf_counter()
+    with open(path, mode, encoding="utf-8") as f:
+        f.write(str(text or ""))
+    dbr_file_write_profile(
+        path,
+        (time.perf_counter() - profile_start) * 1000.0,
+        bytes_written=len(str(text or "").encode("utf-8")),
+        operation=operation,
+    )
+
+def dbr_flush_buffers(path: str | None = None):
+    global _BUFFER_FLUSHING
+
+    if _BUFFER_FLUSHING:
+        return
+
+    _BUFFER_FLUSHING = True
+    try:
+        paths = [dbr_resolve_path(path)] if path else list(_WRITE_BUFFERS.keys())
+        for resolved_path in list(paths or []):
+            lines = list(_WRITE_BUFFERS.get(resolved_path, []) or [])
+            if not lines:
+                continue
+
+            text = "".join(str(item or "") for item in lines)
+            _WRITE_BUFFERS[resolved_path] = []
+            _WRITE_BUFFER_COUNTS[resolved_path] = 0
+            _WRITE_BUFFER_LAST_FLUSH[resolved_path] = float(time.time())
+
+            try:
+                _write_text_immediate(
+                    resolved_path,
+                    text,
+                    mode="a",
+                    operation=f"buffer_flush:{len(lines)}",
+                )
+            except Exception:
+                try:
+                    _WRITE_BUFFERS[resolved_path] = lines + list(_WRITE_BUFFERS.get(resolved_path, []) or [])
+                    _WRITE_BUFFER_COUNTS[resolved_path] = len(_WRITE_BUFFERS.get(resolved_path, []) or [])
+                except Exception:
+                    pass
+    finally:
+        _BUFFER_FLUSHING = False
+
+def _buffer_debug_text(path, text):
+    resolved_path = dbr_resolve_path(path)
+    line_text = str(text or "")
+    if not line_text:
+        return
+
+    _WRITE_BUFFERS.setdefault(resolved_path, []).append(line_text)
+    count = int(_WRITE_BUFFER_COUNTS.get(resolved_path, 0) or 0) + 1
+    _WRITE_BUFFER_COUNTS[resolved_path] = count
+
+    mode = _debug_write_mode()
+    max_lines = max(1, int(getattr(Config, "DEBUG_BUFFER_MAX_LINES_PER_FILE", 50000) or 50000))
+    if count >= max_lines:
+        dbr_flush_buffers(resolved_path)
+        return
+
+    if mode != "buffered_safe":
+        return
+
+    every_n = max(1, int(getattr(Config, "DEBUG_BUFFER_FLUSH_EVERY_N", 1000) or 1000))
+    seconds = max(0.0, float(getattr(Config, "DEBUG_BUFFER_FLUSH_SECONDS", 10.0) or 10.0))
+    last_flush = float(_WRITE_BUFFER_LAST_FLUSH.get(resolved_path, 0.0) or 0.0)
+    now_ts = float(time.time())
+    due_by_count = count >= every_n
+    due_by_time = seconds > 0.0 and (now_ts - last_flush) >= seconds
+
+    if due_by_count or due_by_time:
+        dbr_flush_buffers(resolved_path)
+
+def dbr_append_text(path, text, operation="append", extra=None):
+    try:
+        resolved_path = dbr_resolve_path(path)
+        payload = str(text or "")
+        if not payload:
+            return
+
+        if _buffered_debug_enabled(resolved_path, mode="a", write_once=False):
+            _buffer_debug_text(resolved_path, payload)
+            return
+
+        _write_text_immediate(resolved_path, payload, mode="a", operation=operation)
+    except Exception:
+        pass
+
+atexit.register(dbr_flush_buffers)
 
 def dbr_get_debug_dir():
     global _DEBUG_RUN_DIR
@@ -160,15 +276,12 @@ def dbr_write(
                 if (count % every_n) != 0:
                     return
 
-        profile_start = time.perf_counter()
-        with open(path, mode, encoding="utf-8") as f:
-            f.write(s + "\n")
-        dbr_file_write_profile(
-            path,
-            (time.perf_counter() - profile_start) * 1000.0,
-            bytes_written=len((s + "\n").encode("utf-8")),
-            operation=f"dbr_write:{mode}",
-        )
+        payload = s + "\n"
+        if _buffered_debug_enabled(path, mode=mode, write_once=write_once):
+            _buffer_debug_text(path, payload)
+            return
+
+        _write_text_immediate(path, payload, mode=mode, operation=f"dbr_write:{mode}")
 
     except Exception:
         pass
@@ -232,15 +345,7 @@ def dbr_profile(section, elapsed_ms, extra=None, txt="mcm_profile.csv"):
         cleaned_extra = str(extra or "").replace("\n", " ").replace(";", "|")
 
         line = f"{section};{elapsed:.4f};{cleaned_extra}\n"
-        profile_start = time.perf_counter()
-        with open(path, "a", encoding="utf-8") as f:
-            f.write(line)
-        dbr_file_write_profile(
-            path,
-            (time.perf_counter() - profile_start) * 1000.0,
-            bytes_written=len(line.encode("utf-8")),
-            operation="profile_append",
-        )
+        dbr_append_text(path, line, operation="profile_append")
 
     except Exception:
         pass

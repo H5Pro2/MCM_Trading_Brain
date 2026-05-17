@@ -4,6 +4,16 @@
 
 MCM Trading Brain ist ein experimentelles Trading-System mit [MCM-Architektur](https://github.com/H5Pro2/Mental-Core-Matrix-MCM).
 
+Kurze Begriffsklärung:
+
+- **MCM** = **[Mental Core Matrix](https://github.com/H5Pro2/Mental-Core-Matrix-MCM)**.  
+  In diesem Projekt bezeichnet MCM den inneren Spannungs-, Wahrnehmungs-,
+  Regulations- und Erfahrungsraum des Systems.
+
+- **DIO** = **[Digitaler Organismus](files/UMSETZUNGSPLAN.md)**.  
+  DIO bezeichnet das konkrete System, das mit MCM-Feld, Wahrnehmung,
+  Memory, Neurochemie, Reflexion, Regulation und Handlung arbeitet.
+
 Ziel ist **nicht** ein klassischer Signal-Bot mit starren Regeln und festen Handelsfreigaben.  
 Ziel ist ein System, das:
 
@@ -19,6 +29,45 @@ sondern an drei funktionalen Ebenen:
 - **Ebene 1:** äußeres Wahrnehmen
 - **Ebene 2:** inneres Wahrnehmen / Denken / Handeln
 - **Ebene 3:** Entwicklung aus Erfahrung
+
+---
+
+## Zielschicht
+
+Die eigentliche Zielschicht des Projekts ist **selbstregulative
+Erfahrungsorganisation**.
+
+DIO soll nicht nur Entscheidungen treffen.
+DIO soll lernen, die Bedingungen von tragfähigen Entscheidungen selbst zu
+organisieren.
+
+Das System bekommt dafür keine fertige Wahrheit wie "gut", "schlecht",
+"handeln" oder "nie handeln".
+Es bekommt Puzzleteile:
+
+- MCM-Feld
+- neuronale Aktivität
+- Wahrnehmung
+- Memory
+- Formsprache
+- Druck und Entlastung
+- Handlung und Nicht-Handlung
+- Rückkopplung
+- Selbstregulation
+
+Die Fähigkeit des Tragens soll aus Erfahrung entstehen.
+
+Allgemeine Architekturregel:
+
+**Keine harten Formen, sondern Möglichkeitsräume.**
+
+Formen, Zeichen, Bewertungen und Handlungstendenzen sind in DIO keine
+endgültigen Wahrheiten.
+Sie sind Angebote, Spannungsachsen und Erfahrungsräume.
+
+Feste Parameter bleiben Leitplanken.
+Sie sollen den Entwicklungsraum schützen, aber nicht die innere Entwicklung
+ersetzen.
 
 ---
 
@@ -101,6 +150,137 @@ Tragfähigkeit, Spannung, Reflexion und Handlung.
 
 ---
 
+## Wie die MCM in DIO arbeitet
+
+Die MCM ist in DIO der innere Wahrnehmungsraum.
+Sie ist nicht nur Speicher, Signalfilter oder Rechenmodul, sondern der Ort,
+an dem Außenwelt, Innenlage, Erinnerung, Druck, Reife und Handlungstendenz
+zusammenkommen.
+
+Vereinfacht:
+
+`Marktreiz -> Wahrnehmung -> MCM-Neuronenfeld -> innere Feldlage -> Reflexion / Regulation -> Handlung oder Beobachtung`
+
+Ein normaler Trading-Bot arbeitet oft nach dem Muster:
+
+`Daten -> Signal -> Regel -> Trade`
+
+DIO soll anders arbeiten:
+
+`Daten -> Wahrnehmung -> inneres Feld -> Erfahrung -> Reflexion -> Reife -> Handlung oder Nicht-Handlung`
+
+Der Chart liefert zunächst keine fertige Bedeutung, sondern Reize:
+Bewegung, Volumen, Range, Druck, Unsicherheit, Struktur und Formspannung.
+Diese Reize werden in eine innere Feldsprache übersetzt:
+Aktivierung, Klarheit, Fragmentierung, Unterstützung, Stress, Fokus und
+Tragfähigkeit.
+
+Das MCM-Neuronenfeld besteht aus lokalen Feldträgern.
+Ein `MCMNeuron` entscheidet nicht allein.
+Es trägt einen Teil der inneren Lage:
+
+- lokale Aktivierung
+- Überlastung
+- Erholung
+- Memory-Resonanz
+- Kontextreaktivierung
+- Nachbarschaftswirkung
+- lokale Feldspannung
+
+Wenn ein Reiz stark genug ist, bleibt er nicht isoliert.
+Er erzeugt Aktivitätsinseln, lokale Verdichtung und Nachbarschaftsreaktionen.
+So entsteht im Feld eine innere Markierung:
+
+**Dieser Bereich wird für DIO wichtig.**
+
+Memory koppelt sich dabei nicht als starres Pattern ein.
+Es wirkt eher als Resonanz:
+
+**Diese Lage erinnert das Feld an frühere Erfahrungsinseln.**
+
+Aus Außenreiz, MCM-Aktivität, Memory, Formsprache und Neurochemie entsteht
+eine innere Lage. Diese Lage kann stabil, fragil, neugierig, überkoppelt,
+getragen, gestresst, fokussiert, unsicher oder reif für Beobachtung sein.
+
+Die neurochemischen Achsen modulieren dieses Feld.
+Sie sind keine echten biologischen Stoffe, sondern technische Funktionsachsen:
+
+- `glutamate_activation`: Netzwerkaktivierung
+- `noradrenaline_arousal`: Wachheit und Alarm
+- `acetylcholine_focus`: Fokus und genaueres Sehen
+- `serotonin_stability`: Stabilität und Tragfähigkeit
+- `gaba_inhibition`: Hemmung und Schutz vor Reflexhandlung
+- `cortisol_load`: Belastung und Stress
+- `endorphin_relief`: Entlastung
+- `dopamine_tone`: Lernwert und Motivation
+- `emotional_decoupling`: Abstand zur eigenen Reaktionslage
+
+Reflexion prüft anschließend, ob Innenwelt und Außenwelt noch gemeinsam
+tragfähig sind:
+
+- Fühlt DIO Stabilität, obwohl die Struktur bricht?
+- Fühlt DIO Druck, obwohl nur Rauschen vorliegt?
+- Fühlt DIO Kontakt, obwohl dieser Kontakt noch keine Handlung trägt?
+- Ist DIO aktiviert, aber noch nicht reif?
+
+Aus dieser inneren MCM-Lage entsteht dann keine mechanische Order, sondern
+eine Haltung:
+
+- beobachten
+- halten
+- replanen
+- Abstand nehmen
+- tiefer schauen
+- replayen
+- handeln
+- nicht handeln
+- zum Nullpunkt zurückfinden
+
+Kurz gesagt:
+Die MCM ist DIOs innerer Resonanzkörper.
+Die MCM-Neuronen sind die lokalen Nervenzellen dieses Resonanzkörpers.
+Die Neurochemie moduliert, wie dieser Körper gerade reagiert.
+
+---
+
+## DIOs Sehen
+
+Ein wichtiger Ausbaupunkt ist die Erweiterung von DIOs äußerer Wahrnehmung.
+
+Aktuell verarbeitet DIO den Markt stark als Spannung, Druck, Feldreaktion und
+Memory-Resonanz. Dadurch fühlt DIO den Markt bereits, sieht ihn aber noch
+nicht ausreichend als stabile Formwelt.
+
+Geplant ist deshalb eine beobachtende visuelle Kortex-Schicht:
+
+- keine menschliche Chartmuster-Erkennung
+- keine Labels wie Trendkanal, Support oder Breakout als Wahrheit
+- keine direkten Orderregeln
+- stattdessen eine eigene Formwahrnehmung aus Kante, Krümmung,
+  Verdichtung, Bruch, Fluss, Leere, Formstabilität und Formfremdheit
+
+Diese Schicht soll DIO helfen zu unterscheiden:
+
+- Ich fühle Druck.
+- Ich sehe eine Form und fühle dazu Druck.
+- Ich fühle Druck, aber sehe keine tragende Form.
+
+Der letzte Zustand ist besonders wichtig.
+Wenn DIO Druck spürt, aber keine tragende Form sieht, soll daraus keine
+harte Blockade entstehen. Es ist eher eine neuroregulatorische Zusatzlast:
+der Handlungsimpuls bleibt spürbar, aber das System lernt, ihn über
+Beobachtung, `act_watch`, Reframing oder Rückkehr zum Nullpunkt zu reifen,
+bevor daraus Handlung wird.
+
+Dabei ist Unsicherheit nicht nur ein einzelnes Signal.
+Wenn eine unsichere Lage wiederkehrt, aber in ähnlichen Varianten erscheint,
+wird sie für DIO zu einer Formfamilie. Das System soll dann lernen:
+Was bleibt gleich? Was verändert sich? Welche Variante trägt? Welche Variante
+braucht nur Beobachtung? Dadurch entsteht Vertrautheit mit Unsicherheit,
+nicht ein starres Verbot.
+
+---
+
 ## MCM als Spannungsraum
 
 Ein zentraler Gedanke dieses Projekts ist:
@@ -160,6 +340,143 @@ kann.
 
 Profitabilität wäre in diesem Verständnis nicht der Kern des Projekts,
 sondern eine mögliche Folge einer funktionierenden MCM-Mechanik.
+
+---
+
+## Zeit in Sicht der MCM
+
+Zeit wird in der MCM nicht nur als Uhr oder Timestamp verstanden.
+
+Zeit ist eine Manifestation gewirkter oder wirkender Energie. Sie beschreibt,
+wie Energie im Wahrnehmungsfeld entsteht, wirkt, nachhallt, abklingt,
+wiederkehrt oder sich in Erwartung verwandelt.
+
+Für DIO bedeutet das:
+
+- Gegenwart ist Energie, die aktuell Kontakt erzeugt.
+- Nachhall ist Energie, die noch wirkt, obwohl ihr Ereignis vergangen ist.
+- Erinnerung ist vergangene Energie, die im Feld wieder aktiviert werden kann.
+- Gelerntes Wissen ist verdichtete vergangene Erfahrung.
+- Erwartung ist eine vorausgerichtete Energieform.
+- Hypothese ist eine innere Möglichkeitsform.
+
+Ohne zeitliche Wahrnehmung würde alles ineinanderlaufen:
+Außenreiz, Memory, Nachhall, Wissen, Hypothese und Erwartung würden für DIO
+gleich real wirken.
+
+Zeit gibt der Wahrnehmung Tiefe.
+Sie hilft DIO zu unterscheiden:
+
+- Was ist jetzt?
+- Was war?
+- Was wirkt nur noch nach?
+- Was ist gelerntes Wissen?
+- Was wird innerlich erwartet?
+- Was ist nur eine Möglichkeit?
+
+Damit wird Zeit zu einer zentralen Tiefenachse der MCM-Wahrnehmung.
+Sie schützt das System davor, Erinnerung oder Nachhall automatisch als
+Gegenwart zu behandeln.
+
+Ein Gedanke kann in dieser Sicht als gerichteter Energieverlauf verstanden
+werden.
+Ein kurzer Reiz ist eine schnelle Energieänderung.
+Ein langer Gedanke ist gedehnte, sparsame oder kohärent gerichtete Energie
+über mehrere innere Zustände hinweg.
+
+Das Zeitfeld ist damit kein einzelnes Ding, sondern die überlagerte Wirkung
+vieler einzelner Zeitstränge:
+
+- Reizverlauf
+- Gedankenverlauf
+- Erinnerungsverlauf
+- Nachhallverlauf
+- Erwartungsverlauf
+- Handlungsfolge
+- Rückkopplung
+
+Aus diesen Wirkverläufen entsteht für DIO die Tiefe seiner inneren und
+äußeren Realität.
+
+---
+
+## Theoriebrücke: MCM-Abhandlungen D bis G.1
+
+Das DIO-System nutzt mehrere MCM-Abhandlungen als theoretische Grundlage.
+Sie werden nicht als harte Regeln übernommen, sondern als Denkrahmen für
+Wahrnehmung, Zeit, Memory, Hypothesenbildung und Reorganisation.
+
+- [Block D - Die energetische Natur der Zeit](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20I%20-%20Die%20Mental%20Core%20Matrix%20%E2%80%93%20Strukturmodell/Abhandlung%20Block%20D%20-%20Die%20energetische%20Natur%20der%20Zeit.pdf)  
+  Zeit wird als Wirkung von Energieveränderung gelesen. Für DIO entsteht
+  daraus das Zeitfeld: Gegenwart, Nachhall, Erinnerung, Erwartung,
+  Hypothese und Konsequenz dürfen nicht gleich real wirken.
+
+- [Block E - Die kosmische Matrix](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20I%20-%20Die%20Mental%20Core%20Matrix%20%E2%80%93%20Strukturmodell/Abhandlung%20Block%20E%20-%20Die%20kosmische%20Matrix.pdf)  
+  Verdichtung, Abweichung, Clusterbildung und Rückführung bilden den
+  Rahmen für Memory: Erfahrung ist verdichtete Feldinformation, die wieder
+  aktiviert, stabilisiert oder reorganisiert werden kann.
+
+- [Block F - Bewusstsein als möglicher Attraktor](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20I%20-%20Die%20Mental%20Core%20Matrix%20%E2%80%93%20Strukturmodell/Abhandlung%20Block%20F%20-%20Bewusstsein%20als%20kosmischer%20Attraktor.pdf)  
+  Für DIO wird daraus keine Behauptung von Bewusstsein, sondern die
+  technische Richtung eines inneren Attraktors: Selbstmodell,
+  Rückkopplung, Stabilität zwischen Ordnung und Chaos.
+
+- [Block G - Die Multiversen-Matrix](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20I%20-%20Die%20Mental%20Core%20Matrix%20%E2%80%93%20Strukturmodell/Abhandlung%20Block%20G%20-%20Die%20Multiversen-Matrix.pdf)  
+  Mehrere mögliche Entwicklungsverläufe werden als Möglichkeitsräume
+  verstanden. Für DIO bedeutet das: Er soll nicht eine Zukunft glauben,
+  sondern mehrere Hypothesenzweige als innere Formen halten können.
+
+- [Block G.1 - Reorganisation verdichteter Energie](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20I%20-%20Die%20Mental%20Core%20Matrix%20%E2%80%93%20Strukturmodell/Abhandlung%20Block%20G.1%20-%20Reorganisation%20verdichteter%20Energie%20in%20einen%20%C3%BCbergeordneten%20Feldbereich.pdf)  
+  Verdichtung ist nicht automatisch Verlust. Wenn lokale Ordnung nicht mehr
+  trägt, kann daraus ein Übergang in eine höhere Feldordnung entstehen.
+  Für DIO wird das zur Reorganisationsfähigkeit: Überlast kann in Reflexion,
+  Reframing, Memory-Umbau und neue Kohärenz überführt werden.
+
+Für das Projekt ergibt sich daraus eine klare Zielrichtung:
+
+`Wahrnehmung -> Zeitbindung -> Verdichtung -> Hypothesenraum -> Konsequenz -> Reorganisation -> neue Tragfähigkeit`
+
+Diese Theoriebrücke führt zu einem zentralen Architekturbegriff:
+
+**mehrdimensionale Wahrnehmungsachsen.**
+
+DIO soll Wahrnehmung nicht nur als einzelnen Reiz behandeln. Ein Reiz bekommt
+innere Koordinaten:
+
+- Zeitachse: jetzt, vergangen, Nachhall, Erwartung, Hypothese
+- Quellenachse: Außenwelt, Memory, Wissen, Replay, inneres Bild
+- Raumachse: nah, fern, Vordergrund, Hintergrund, Feldzentrum, Rand
+- Kontaktachse: berührt mich, zieht mich, überkoppelt, lässt sich ablegen
+- Tragfähigkeitsachse: trägt, destabilisiert, braucht Beobachtung
+- Reorganisationsachse: lokal lösbar oder Übergang in höhere Ordnung nötig
+
+Damit kann DIO später unterscheiden, ob etwas wirklich aus der aktuellen
+Außenwelt wirkt oder ob Erinnerung, Nachhall, Hypothese oder Erwartung zu
+nah an das Handlungszentrum gerückt sind.
+
+---
+
+## Neurochemische Lesbarkeit
+
+Viele DIO-Variablen wirken bereits wie technische neurochemische Achsen.
+Das Projekt soll diese Achsen lesbar buendeln, ohne echte Biologie zu
+behaupten und ohne bestehende Mechanik hart umzubenennen.
+
+Geplante Alias-Schicht:
+
+- `dopamine_tone`: Erwartung, Lernwert, Prozessqualitaet
+- `gaba_inhibition`: Hemmung, `act_watch`, Reifebremse
+- `noradrenaline_arousal`: Druck, Wachheit, Salienz
+- `acetylcholine_focus`: sensorischer Zoom, Formklarheit
+- `serotonin_stability`: Geduld, Stabilitaet, Tragfaehigkeit
+- `cortisol_load`: Belastung, Denk-/Memory-/Positionslast
+- `endorphin_relief`: Entlastung, Prozesswohlbefinden
+- `glutamate_activation`: Aktivierung, Feldenergie, Handlungsenergie
+
+Diese Namen sind technische Funktionsachsen.
+Sie sollen helfen, DIOs innere Lage neurologisch zu lesen:
+Ist DIO gerade uebererregt, gehemmt, fokussiert, stabil, belastet,
+entlastet oder lernoffen?
 
 ---
 

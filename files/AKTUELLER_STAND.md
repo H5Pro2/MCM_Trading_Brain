@@ -1,4825 +1,3208 @@
-﻿# ==================================================
-# AKTUELLER STAND – MCM TRADING BRAIN
-# ==================================================
+# AKTUELLER_STAND
 
-Dieses Dokument beschreibt den aktuellen realen Ist-Zustand des Systems.
+Rolle dieser Datei:
+- aktueller realer Ist-Zustand des Projekts
+- kompakte Debug-/Laufbefunde
+- offene technische Risiken
+- naechste Pruefpunkte
 
-Es trennt sauber zwischen:
-
-- bereits real im Code umgesetzt
-- bereits korrigierten Fehlern
-- real noch offenen Ausbaublöcken
-- nächsten sinnvollen Schritten
-
-Der Bauplan bleibt in `UMSETZUNGSPLAN.md`.
-Dieses Dokument beschreibt nur den realen Stand des aktuellen Dateistands.
+Regelwerk: `files/MD_ANWEISUNG.md`.
+Der Bauplan bleibt `files/UMSETZUNGSPLAN.md`.
 
 ---
 
-# --------------------------------------------------
-# 0. Neuester Debug- und Umsetzungsstand
-# --------------------------------------------------
+# 1. Aktueller Projektfokus
 
-Dokumentationspflege:
+Prioritaet:
+1. Brain-Logik
+2. neuronale Aktivitaet
+3. MCM-Feld als Wahrnehmungsraum
+4. Formsprache / visuelle Wahrnehmung / Variantenlernen
+5. Backtest-Logik
+6. Live-Exchange und GUI spaeter
 
-- `files/WICHTIG_MECHANIKEN.md` wurde als Mechanik-Schatzkammer markiert.
-- Die Datei bleibt erhalten, aber nicht als tagesaktueller Umsetzungsplan.
-- Sie dient als Konzeptarchiv fuer wichtige MCM-Denkspuren:
-  - MCMField / MCMNeuron
-  - Innenfeldorganisation
-  - Feldtopologie
-  - inner_context_clusters
-  - Erfahrungsrueckwirkung
-  - MCM als maschinelle Wahrnehmungs- und Innenorganisationsschicht
-- Ergaenzt wurde ein aktueller Statusblock:
-  - Teile der Datei sind historisch
-  - `MCMNeuron` ist inzwischen real umgesetzt
-  - neuere Mechaniken wie Formsprache, Formsymbol-Memory,
-    Transfer-Tragfaehigkeit, Beobachtungslernen, Prozessqualitaet und DIO
-    muessen beim Lesen mitgedacht werden.
-- `README.md` wurde fachlich um den Abschnitt `MCM als Spannungsraum`
-  erweitert.
-  - Die MCM wird dort als innerer Spannungsraum beschrieben.
-  - Ein Chart wird als aeusserer Spannungsverlauf verstanden:
-    Druck, Entlastung, Verdichtung, Bruch, Erholung, Ueberdehnung,
-    Tragfaehigkeit und Reorganisation.
-  - Trading wird als harter Pruefstand fuer den MCM-Gedanken eingeordnet.
-  - Profitabilitaet wird nicht als Kern des Projekts, sondern als moegliche
-    Folge einer funktionierenden MCM-Mechanik beschrieben.
-  - Im README wurden im bearbeiteten Bereich Umlaute sauber korrigiert.
+Aktueller Arbeitsstand:
+- DIO besitzt ein MCM-Feld mit festen `MCMNeuron`-Traegern.
+- Die Feldmechanik arbeitet mit Aktivitaet, Druck, Kopplung, Nachhall,
+  Kontextreaktivierung und lokalen Aktivitaetsinseln.
+- Der visuelle Kortex ist angebunden und erzeugt eigene Formachsen.
+- Die sensorische Realitaetsverdichtung entkoppelt ueberlappende Rohreize,
+  bevor sie als Wahrnehmungsdruck in die Brain-Logik laufen.
+- Die Formsprache bildet interne Zeichen und Formfamilien ohne menschliche
+  Patternlabels.
+- Wiederkehrende Unsicherheit wird als Formfamilie mit Varianten behandelt.
+- `act_watch` ist als Reifespur real sichtbar.
+- Outcome-Export wurde erweitert, damit neue Formfamilienwerte kuenftig in
+  `outcome_records.jsonl` auswertbar sind.
+- `neurochemical_state` ist als Diagnose-/Alias-Schicht im Runtime-Ergebnis,
+  in Debug-Protokollen und in Outcome-Records sichtbar.
+- `mcm_neuro_transition_protocol.csv` protokolliert neurochemische
+  Zustandswechsel mit `-2/+2` Kerzenumfeld.
+- `experience_packet_feedback` bewertet abgeschlossene Handlungen als
+  ganzes Erfahrungspaket, nicht als primitives TP/SL-Signal.
 
-Debug-Laeufe 13 und 14 wurden nach dem starken Lauf 12 geprueft:
+---
 
-- `debug_lauf_12`: ca. +11.23 Netto-PnL, Profit Factor ca. 1.73, 48 Trades
-- `debug_lauf_13`: ca. +7.22 Netto-PnL, Profit Factor ca. 1.47, 43 Trades
-- `debug_lauf_14`: ca. +2.87 Netto-PnL, Profit Factor ca. 1.19, 39 Trades
-- `debug_lauf_15`: ca. +15.90 Netto-PnL, Profit Factor ca. 1.97, 51 Trades
-- `debug_lauf_16`: ca. +11.11 Netto-PnL, Profit Factor ca. 1.62, 54 Trades
-- `debug_lauf_17`: ca. +12.09 Netto-PnL, 42 Trades
-- `debug_lauf_18`: ca. +14.19 Netto-PnL, 37 Trades
-- `debug_lauf_19`: ca. +13.67 Netto-PnL, 41 Trades
-- `debug_lauf_20`: ca. +12.64 Netto-PnL, 47 Trades
-- `debug_lauf_21`: ca. +10.30 Netto-PnL, 46 Trades
-- `debug_lauf_22`: ca. +1.67 Netto-PnL, 40 Trades
-- `debug_lauf_23`: ca. +16.13 Netto-PnL, 41 Trades
-- `debug_lauf_24`: ca. +7.05 Netto-PnL, 39 Trades
-- `debug_lauf_25`: ca. +12.76 Netto-PnL, 43 Trades
-- `debug_lauf_26`: ca. +2.99 Netto-PnL, 39 Trades
-- `debug_lauf_27`: ca. +1.93 Netto-PnL, 33 Trades, versehentlich mit
-  `MCM_MATURED_EXIT_MODE = "active"`
-- `debug_lauf_28`: ca. +8.90 Netto-PnL, 49 Trades, wieder im Observe-Modus
-- `debug_lauf_29`: ca. +5.81 Netto-PnL, 36 Trades, mit
-  `exit_candidate_observe`-Diagnose
-- `debug_lauf_30`: ca. +11.60 Netto-PnL, 33 Trades, weiter im Observe-Modus
-- `debug_lauf_31`: ca. +17.46 Netto-PnL, 47 Trades, mit
-  Kandidaten-Replay-Summen
-- `debug_lauf_32`: ca. +9.81 Netto-PnL, 48 Trades, Replay-CSV vorhanden
-- `debug_lauf_33`: ca. +7.78 Netto-PnL, 25 Trades, saubere Replay-CSV
-- `debug_lauf_34`: ca. +19.67 Netto-PnL, 39 Trades, sehr starker Lauf
+# 2. Aktuelle Mechanik im Code
+
+## MCM-Feld
+
+Reale Mechaniken:
+- `MCMField`
+- `MCMNeuron`
+- feste Feldpositionen
+- lokale Topologie-Nachbarn
+- Aktivitaetsausbreitung
+- Feldwahrnehmung
+- Aktivitaetsinseln
+- `neural_felt_state`
+
+Ziel:
+Das Feld soll nicht nur rechnen, sondern innere Wahrnehmung erzeugen:
+Druck, Tragfaehigkeit, Orientierung, Reife, Konflikt und
+Handlungstendenz.
+
+## Visueller Kortex
+
+Reale Achsen:
+- `visual_form_state`
+- `visual_clarity`
+- `visual_object_stability`
+- `visual_form_novelty`
+- `visual_blindness`
+- `visual_form_pressure`
+- `visual_shape_resonance`
+- `visual_shape_fragility`
+- `visual_blind_action_load`
+- `visual_action_uncertainty`
+- `sensory_reality_pressure`
+- `sensory_load`
+- `sensory_redundancy`
+- `sensory_habituation`
+- `sensory_gate`
+
+Wirkung:
+Visuelle Unsicherheit wirkt weich auf Beobachtung, Replan,
+Handlungshemmung und `act_watch`.
+
+Fix:
+- `build_perception_state` liest die neuen sensorischen Werte jetzt lokal aus
+  `visual_market_state`, bevor `uncertainty_score` und `novelty_score` sie
+  verwenden. Der vorherige `NameError: sensory_load is not defined` ist damit
+  behoben.
+
+## Formsprache
+
+Reale Achsen:
+- `form_symbol_id`
+- `form_symbol_family_key`
+- `form_symbol_variant_key`
+- `form_symbol_development_quality`
+- `form_symbol_action_binding`
+- `form_symbol_observation_binding`
+- `form_symbol_reframe_binding`
+- `form_symbol_learning_trust`
+- `form_symbol_action_trust`
+- `form_symbol_caution_trust`
+
+Wichtig:
+Das sind keine menschlichen Chartlabels.
+Es sind interne Verdichtungen von DIOs eigener Wahrnehmungswelt.
+
+## Wiederkehrende Unsicherheit / Variantenlernen
+
+Reale Achsen:
+- `uncertain_form_family_state`
+- `uncertain_form_exposure`
+- `uncertainty_familiarity`
+- `variant_similarity`
+- `variant_spread`
+- `variant_learning_pressure`
+- `variant_bearing_memory`
+
+Wirkung:
+Unsicherheit wird nicht als Verbot behandelt.
+Sie wird als wiederkehrender Erfahrungsraum gelernt.
+
+## Neurochemische Alias-Schicht
+
+Status:
+- als Runtime-/Debug-Schicht umgesetzt
+- noch keine harte Entscheidungsregel
+
+Reale Achsen:
+- `dopamine_tone`
+- `gaba_inhibition`
+- `noradrenaline_arousal`
+- `acetylcholine_focus`
+- `serotonin_stability`
+- `cortisol_load`
+- `endorphin_relief`
+- `glutamate_activation`
+- `neurochemical_load`
+- `neurochemical_support`
+- `neurochemical_balance`
+
+Ziel:
+Vorhandene Zustandswerte neurologisch lesbar buendeln.
+
+## Neurochemisches Uebergangsprotokoll
+
+Neu umgesetzt:
+- `mcm_neuro_transition_protocol.csv`
+- erkennt Wechsel des dominanten neurochemischen Tons
+- wartet auf zwei Folgekerzen, bevor der Wechsel geschrieben wird
+- speichert Kerzenumfeld `-2/+2`
+- speichert Volumen-/Range-Verhaeltnis, Vor-/Nachbewegung und Richtungsflip
+- speichert Deltas von Neurochemie, Felddruck, Feldklarheit,
+  Beobachtungsdruck, Replan-Druck, Handlungshemmung und Handlungsfreigabe
+
+Wichtig:
+Das Protokoll ist reine Diagnose.
+Es veraendert keine Entscheidung und baut keine harte Regel.
+
+## Erfahrungspaket-Feedback / positive Stimulation
+
+Neu umgesetzt:
+- `build_experience_packet_feedback`
+- `last_experience_packet_feedback`
+- Export in `last_outcome_decomposition`
+- Export in `outcome_records.jsonl`
+- Einbindung in Episode-/Aehnlichkeitsachsen des Erfahrungsraums
+
+Reale Achsen:
+- `experience_packet_label`
+- `packet_bearing_quality`
+- `packet_inner_outer_fit`
+- `packet_confidence_integrity`
+- `packet_repetition_potential`
+- `packet_curiosity_pull`
+- `packet_process_reward`
+- `packet_reorganization_need`
+- `constructive_stimulation`
+- `constructive_dopamine`
+- `stabilizing_serotonin`
+- `relief_endorphin`
+- `focused_acetylcholine`
+
+Wichtig:
+Das ist keine harte Belohnungsregel.
+Ein TP ist nicht automatisch gut und ein SL ist nicht automatisch schlecht.
+Bewertet wird, ob Wahrnehmung, Innenlage, Handlung, Risiko, Prozess,
+Ergebnis und Wiederholbarkeit als Paket tragfaehig waren.
+
+Naechster Pruefpunkt:
+Der naechste Lauf soll zeigen, ob konstruktive Pakete, Neugierpakete und
+Reorganisationspakete sinnvoll sichtbar werden. Danach kann `engaged_effort`
+als wache, positiv getragene Anstrengung angebunden werden.
+
+---
+
+# 3. Kompakte Laufuebersicht
+
+Alle hier genannten Laeufe liefen auf dem erweiterten Datensatz im
+Backtest-Kontext.
+
+| Lauf | Netto-PnL | PF | Trades | TP / SL | Kernerkenntnis |
+|---|---:|---:|---:|---:|---|
+| 4 | ca. `+1.84` | ca. `1.06` | 88 | 31 / 57 | visueller Kortex diagnostisch, noch schwach gekoppelt |
+| 5 | ca. `+5.83` | ca. `1.25` | 72 | 28 / 44 | visuelle Hemmung senkt Handlung, `act_watch` steigt |
+| 6 | ca. `+10.75` | ca. `1.42` | 82 | 36 / 46 | bessere Reorganisation nach gleichem Weg |
+| 7 | ca. `-0.41` | ca. `0.99` | 81 | 27 / 54 | Anpassungslauf nach Formfamilien-Reifung |
+| 8 | ca. `+17.74` | ca. `1.66` | 98 | 44 / 54 | Reorganisation, starke Zone-Leistung |
+| 9 | ca. `+3.97` | ca. `1.15` | 76 | 29 / 47 | Regimewechsel getragen, aber deutlich enger |
+| 10 | ca. `+12.12` | ca. `1.70` | 59 | 28 / 31 | weniger Trades, bessere Tragfaehigkeit |
+| 11 | ca. `+8.02` | ca. `1.36` | 69 | 29 / 40 | mehr Handlung, Non-Zone besser, Zone weniger sauber |
+
+Wichtige Beobachtung Lauf 7 -> Lauf 8:
+- Lauf 7 wirkt wie Aufnahme/Strukturierung.
+- Lauf 8 wirkt wie Verdichtung und bessere Handlung.
+- `variant_bearing_memory` stieg von ca. `0.357` auf ca. `0.384`.
+- `variant_learning_pressure` sank leicht von ca. `0.164` auf ca. `0.160`.
+
+Non-Zone bleibt kritisch:
+- Lauf 5: ca. `-11.66`
+- Lauf 6: ca. `-10.71`
+- Lauf 7: ca. `-13.92`
+- Lauf 8: ca. `-12.53`
+- Lauf 9: ca. `-9.85`
+- Lauf 10: ca. `-8.90`
+
+Interpretation:
+Non-Zone darf nicht hart blockiert werden, ist aber aktuell weiter ein
+unreifer Erfahrungsraum.
+
+Lauf 9 gegen Lauf 8:
+- DIO blieb profitabel, aber weniger frei in der Handlung.
+- Zone blieb tragend: ca. `+13.82`.
+- Non-Zone blieb unreif: `0` TP / `16` SL.
+- `variant_bearing_memory` stieg leicht, aber `memory_compare_load`,
+  `orientation_gap` und `blind_thinking_load` lagen hoeher.
+- Neurochemisch gelesen: mehr innere Vergleichs-/Stresslast, etwas mehr
+  Hemmung, weniger uebersetzbare Handlungssicherheit.
+- Outcome-Export der neuen Formfamilienwerte ist bestaetigt.
+
+Lauf 10:
+- Weniger Trades als Lauf 9, aber deutlich besseres Netto und weniger Drawdown.
+- High/Mid trugen sauberer; Low/Non-Zone blieb mit `0` TP weiter unreif.
+- Neurochemisch dominiert im Feld `serotonin_stability`.
+- `cortisol_load` tritt eher als Lastton auf, selten als voller
+  `strained_neurochemistry`-Zustand.
+- `glutamate_activation` erscheint besonders in Handlung/Outcome-Nahe und
+  haeufig nach stabilen Serotonin-Phasen.
+- Erste Deutung: DIO ist nicht dauerhaft im Stress, sondern erlebt eher
+  stabile Grundlage mit punktuellen strukturellen Kipp-Momenten.
+
+Uebergangsanalyse Lauf 10:
+- `serotonin_stability -> glutamate_activation`:
+  eher Aktivierung aus stabiler Grundlage.
+  Das Volumen ist nicht zwingend hoeher als Baseline, aber Range,
+  Felddruck und Feldklarheit steigen sichtbar.
+- `serotonin_stability -> cortisol_load`:
+  deutlich staerker mit Volumen-/Range-Spikes verbunden.
+  Meist `observe` mit `zero_point_regulation`.
+- `cortisol_load -> serotonin_stability`:
+  wirkt wie Rueckkehr aus Last in stabilere Regulation.
+- Erste neuronale Musterhypothese:
+  DIO kippt nicht einfach wegen Preisbewegung.
+  Es gibt eine Kopplung aus Kerzenstruktur, Felddruck, Feldklarheit,
+  Hemmung/Freigabe und neurochemischer Balance.
+
+Lauf 11:
+- Netto-PnL ca. `+8.02`, 69 Trades, 29 TP / 40 SL.
+- Gegen Lauf 10: mehr Trades, mehr SL, aber weiter profitabel.
+- Non-Zone verbesserte sich deutlich:
+  - Lauf 10: `0` TP / `15` SL, ca. `-8.90`
+  - Lauf 11: `3` TP / `14` SL, ca. `-3.70`
+- Zone wurde schwaecher:
+  - Lauf 10: `28` TP / `16` SL, ca. `+21.02`
+  - Lauf 11: `26` TP / `26` SL, ca. `+11.73`
+- Neurochemisch:
+  - `serotonin_stability` blieb dominanter Grundton.
+  - `cortisol_load` trat etwas seltener dominant auf als in Lauf 10.
+  - `neurochemical_balance` war im Mittel leicht positiver.
+  - `glutamate_activation` war bei SL weiter haeufiger als bei TP.
+- Deutung:
+  DIO scheint fremdere Bereiche etwas besser tragen zu koennen,
+  verliert aber in bekannten/tragenden Zonen etwas Auswahlpraezision.
+  Das wirkt wie mehr Transferfaehigkeit mit hoeherer Varianz, nicht wie
+  reines Versagen.
+- Vertiefung Zone vs. Non-Zone:
+  - Zone-TP hatten im Mittel mehr `action_clearance`, niedrigere
+    `gaba_inhibition`, niedrigere `glutamate_activation` und etwas bessere
+    `neurochemical_balance` als Zone-SL.
+  - Zone-SL hatten hoeheren Handlungsdruck/Score, hoehere
+    `competition_bias`, mehr `glutamate_activation` und mehr
+    `transfer_break_fatigue`.
+  - Non-Zone-TP waren selten, hatten aber sichtbar hoehere
+    `variant_bearing_memory` als Non-Zone-SL.
+- Fachliche Lesart:
+  Das Problem ist nicht bloss fehlende Struktur.
+  Kritischer ist Aktivierung ohne ausreichende Tragfaehigkeit:
+  DIO feuert stark genug, aber nicht immer reif genug.
+
+Kritische Pruefung Core-Engine / energetische Uebersetzung:
+- `mcm_core_engine.py` erzeugt viele verwandte Aussenachsen aus denselben
+  Kerzenreizen: Expansion, Breakout, Edge, Pressure, Novelty, Blindness,
+  Volume-Bias.
+- In Lauf 11 sind diese Achsen stark gekoppelt:
+  `visual_form_pressure` korreliert sehr hoch mit `edge_strength`,
+  `breakout_tension`, `visual_form_novelty`, `visual_blindness` und
+  `expansion`.
+- Das kann bedeuten:
+  Eine einzelne starke Kerzenstruktur kommt im Inneren als mehrere
+  gleichgerichtete Reize an.
+- Noch wichtiger:
+  Das MCM-Feld war in Lauf 11 fast permanent im Selbstzustand `stressed`.
+  `mean_risk` lag im Median bei ca. `-1.93`.
+- Technische Ursache wahrscheinlich:
+  Die Risiko-/Threat-Achse bekommt regelmaessig negative Impulse,
+  Memory-Feedback fuehrt diese Achse weiter, waehrend die globale
+  `RegulationLayer` hauptsaechlich Energieachse `0` reguliert.
+- Deutung:
+  DIO nimmt nicht nur wahr, sondern lebt moeglicherweise in einem
+  dauerhaft alarmierten Wahrnehmungsmilieu.
+  Das passt zur beobachteten Glutamat-/Stress-Aktivierung.
+
+Umsetzung saubere Wahrnehmung / feste Realitaet:
+- In `bot_engine/mcm_core_engine.py` wurde eine sensorische
+  Realitaetsverdichtung eingebaut.
+- Neue Achsen:
+  - `sensory_reality_pressure`
+  - `sensory_load`
+  - `sensory_redundancy`
+  - `sensory_habituation`
+  - `sensory_gate`
+  - `sensory_active_axis_count`
+  - `sensory_primary_pressure`
+  - `sensory_reality_label`
+- Zweck:
+  Ein aeusserer Reiz wird zuerst als gemeinsame Realitaetslage gelesen,
+  bevor daraus Druck, Neuheit und Blindheit entstehen.
+- Wirkung:
+  Verwandte Strukturreize werden nicht mehr ungefiltert mehrfach als
+  Alarm verstaerkt.
+- Zusaetzlich wurde die Risk-/Threat-Achse entlastet:
+  - `risk_impulse` hat eine neutrale Wahrnehmungsschwelle.
+  - Opportunity wird nicht mehr stark als Risiko auf die Risk-Achse gelegt.
+  - `RegulationLayer` reguliert jetzt auch die Risk-Achse homoeostatisch.
+- Kurztest:
+  `python -m py_compile bot_engine/mcm_core_engine.py MCM_Brain_Modell.py MCM_KI_Modell.py bot.py`
+  lief fehlerfrei.
+
+Neues Uebergangsprotokoll Lauf 11:
+- `mcm_neuro_transition_protocol.csv` wurde geschrieben.
+- 6096 Transitionen wurden mit `-2/+2` Kerzenumfeld protokolliert.
+- Haeufigste Wechsel:
+  - `cortisol_load -> serotonin_stability`
+  - `serotonin_stability -> cortisol_load`
+  - `serotonin_stability -> glutamate_activation`
+  - `glutamate_activation -> serotonin_stability`
+- Erste Lesart:
+  - Glutamat-Wechsel: mehr Felddruck und mehr Feldklarheit,
+    oft Aktivierung aus stabiler Grundlage.
+  - Cortisol-Wechsel: mehr Volumen-/Range-Druck,
+    fast immer `observe` / `zero_point_regulation`.
+
+---
+
+# 4. Aktuelle technische Aenderungen
+
+Zuletzt umgesetzt:
+- `MCM_Brain_Modell.py` erweitert:
+  - neurochemische Transitionen werden runtime-nah gesammelt
+  - Ereignisse werden erst nach verfuegbarem `+2` Kerzenkontext geschrieben
+  - neue Datei: `mcm_neuro_transition_protocol.csv`
+- `config.py` erweitert:
+  - `MCM_NEURO_TRANSITION_PROTOCOL_DEBUG`
+  - `MCM_NEURO_TRANSITION_PROTOCOL_CONTEXT`
+- `MD_ANWEISUNG.md` erstellt.
+- `FIX_LISTE.md` bereinigt.
+- `AKTUELLER_STAND.md` verdichtet.
+- `WICHTIG_MECHANIKEN.md` technisch neu strukturiert.
+- `trade_stats.py` erweitert:
+  - neue Formfamilienwerte werden kuenftig in kompakten Outcome-Kontexten
+    gespeichert.
+- Wiederkehrende Unsicherheit als Formfamilie eingebaut:
+  - Formfamilienvarianten
+  - Vertrautheit mit Unsicherheit
+  - Variantenstreuung
+  - Lernpressure
+  - Bearing-Memory
+- Neurochemische Alias-Schicht eingebaut:
+  - `MCM_Brain_Modell.py`
+  - `trade_stats.py`
+  - Feld-/Memory-Protokolle
+  - Outcome-Records
+- Serotonin-Nachhall / emotionale Entkopplung eingebaut:
+  - `serotonin_carryover_risk`
+  - `reward_stability_echo`
+  - `world_shift_evidence`
+  - `emotional_decoupling`
+  - `reactive_nervous_drive`
+  - Ziel: erkennen, ob DIO nach einer tragenden Phase noch aus alter
+    Stabilitaet reagiert, obwohl Transfer und Interpretation bereits fallen.
+- Reflexive Haltung als Zielmechanik festgehalten:
+  - Kernsatz: Reflexion ist die Distanzierung der Wahrnehmung von der eigenen
+    Innenlage, um zu prüfen, ob Innenzustand und Außenwelt noch gemeinsam
+    tragfähig sind.
+  - Ziel: spaeter sichtbar machen, ob DIO reflektiv Abstand nimmt oder sich
+    emotional/reizgetrieben fuehren laesst.
+- Selektive Wahrnehmung / perzeptive Regulation als Zielmechanik ergaenzt:
+  - DIO soll Wahrnehmungen nicht automatisch vollstaendig durchleben muessen.
+  - Wahrnehmungen sollen gesehen, als Objekt gehalten, vertieft oder wieder
+    abgelegt werden koennen.
+  - Zielachsen: `perceptual_distance`, `object_contact_depth`,
+    `field_attachment`, `release_capacity`, `selective_attention`,
+    `background_containment`, `reflective_distance`,
+    `inner_outer_alignment`.
+- Bewusste Wahrnehmung / innere Reizwirkungsanalyse als naechster
+  Zielblock ergaenzt:
+  - DIO soll erkennen, was ein aeusserer Reiz mit dem MCM-Feld gemacht hat.
+  - Zielachsen: `conscious_perception_state`, `stimulus_field_effect`,
+    `inner_impact_trace`, `perceived_field_change`, `felt_afterimage`,
+    `object_release_state`, `inner_outer_reflection`.
+  - Ziel: Reizwirkung bewusst lesbar machen, damit Reflexion und Regulation
+    nicht nur daempfen, sondern die innere Wirkung verstehen koennen.
+- `GUI_KONSTRUKTION.md` angelegt:
+  - Web-Oberflaeche als spaeterer Beobachtungsraum
+  - Aussenwahrnehmung, MCM-Feld, neuronale Aktivitaet und Neurochemie
+    als getrennte, gekoppelte Fenster
+
+---
+
+# 5. Offene Risiken
+
+- Non-Zone erzeugt weiterhin ueberwiegend Verlust.
+- Memory-Vergleichslast bleibt hoch.
+- MCM-Feld / Neuron-Loop bleibt ein zentraler Performancefaktor.
+- Neue Reifeschichten koennen kurzfristig Unruhe erzeugen.
+- Neurochemische Achsen muessen im naechsten Lauf gegen TP/SL, Non-Zone,
+  Regimewechsel und `act_watch` geprueft werden.
+- Beim Regimewechsel muss besonders geprueft werden, ob
+  `serotonin_carryover_risk` steigt, waehrend `interpretation_quality` und
+  `transfer_bearing` sinken.
+- Die naechste groessere Baustelle ist perzeptive Regulation: Wie stark darf
+  ein Reiz das MCM-Feld besetzen, und wann kann DIO ihn wieder ablegen?
+- Direkt gekoppelt daran: bewusste Wahrnehmung der inneren Reizwirkung. DIO
+  muss lesen koennen, wie ein Aussenreiz sein MCM-Feld veraendert hat.
+
+---
+
+# 6. Naechste Pruefpunkte
+
+## Lauf 12/13 nach sensorischer Realitaetsverdichtung
 
 Befund:
-
-- Die fallende Kurve aus Lauf 12 -> 14 war kein kompletter Zusammenbruch
-  der Brain-Logik.
-- Lauf 15 dreht wieder deutlich nach oben und ist im bisherigen Vergleich
-  der staerkste Lauf.
-- Lauf 16 bleibt klar positiv, faellt aber gegen Lauf 15 zurueck.
-- Lauf 17 bleibt ebenfalls klar positiv und reduziert die Tradezahl deutlich.
-- Lauf 18 verbessert sich weiter und reduziert die Tradezahl erneut.
-- Lauf 19 bleibt klar positiv und aktiviert erstmals die Beobachtungslernspur.
-- Lauf 20 bestaetigt die Beobachtungslernspur, aber die Tradezahl steigt wieder.
-- Lauf 21 faellt weiter im PnL, obwohl Beobachtungslernen aktiv bleibt.
-- Lauf 22 zeigt einen massiven PnL-Rueckgang trotz weniger Trades.
-- Lauf 23 erholt sich stark nach Korrektur des realen Struktur-Scopes.
-- Lauf 24 mit `MCM_MATURED_EXIT_MODE = "observe"` bleibt positiv,
-  erzeugt aber noch keine gereiften Exit-Beobachtungen.
-- Lauf 25 bleibt positiv und erzeugt erstmals gereifte Exit-Beobachtungen
-  im Observe-Modus.
-- Lauf 26 bleibt knapp positiv, faellt aber deutlich zurueck.
-- Die gereifte Exit-Beobachtung wird staerker sichtbar, ist aber noch gemischt:
-  sie erkennt echte Schutzmomente, wuerde aber auch spaetere TP-Trades zu frueh
-  beschneiden, wenn sie bereits aktiv handeln duerfte.
-- Lauf 27 bestaetigt diese Warnung im Active-Modus:
-  `matured_exit` reduziert zwar einzelne Risiken, beschneidet aber die
-  Gewinnentwicklung zu frueh und drueckt den Gesamtlauf weiter.
-- Lauf 28 bestaetigt die neue Positionslast-Diagnose:
-  `plan_holding_trust` ist stark positiv, `exit_nervousness_observe`
-  markiert dagegen die belasteten Verlustlagen.
-- Lauf 29 faellt gegen Lauf 28 zurueck, bestaetigt aber die neue
-  Exit-Kandidaten-Schicht: Kandidaten lagen nur auf spaeteren SL-Lagen.
-- Lauf 30 erholt sich deutlich und bestaetigt die Trennung erneut:
-  `plan_holding_trust` lag ausschliesslich auf TP-Trades, echte
-  `exit_candidate_observe`-Markierungen lagen ausschliesslich auf SL-Trades.
-- Lauf 31 ist der bisher staerkste Lauf dieser Sequenz. Gleichzeitig zeigt
-  das neue Replay, dass ein aktiver Kandidaten-Exit noch nicht reif ist:
-  mehrere SLs waeren kleiner geworden, aber ein spaeterer TP waere zu frueh
-  abgeschnitten worden.
-- Lauf 32 faellt gegen Lauf 31 zurueck, bleibt aber positiv. Hauptgrund:
-  weniger High-Trades und deutlich mehr Low/Non-Zone-Verlust. Das Replay
-  bestaetigt weiter: Kandidaten reduzieren viele kleine SLs, aber ein TP-Cut
-  verhindert aktive Reife.
-- Lauf 33 ist kleiner und etwas schwacher, bestaetigt aber denselben Kern:
-  Exit-Kandidaten markieren Verlustlagen, aktives Schliessen bleibt wegen
-  eines TP-Cuts unreif. Daraus wurde `exit_pullback_observe` abgeleitet.
-- Lauf 34 springt stark nach oben. Entscheidend ist nicht nur ein guenstiger
-  Marktabschnitt, sondern dass `plan_holding_trust` perfekt trennt und
-  Low/Non-Zone fast neutral bleibt. Der offene Schwachpunkt bleibt der
-  aktive Kandidaten-Exit wegen weiterem TP-Cut.
-- Lauf 35 bleibt klar positiv:
-  45 Trades, 21 TP / 24 SL, ca. +13.62 PnL, Profit Factor ca. 1.91,
-  Max Drawdown ca. 2.41.
-  `plan_holding_trust` bleibt die tragende Schicht:
-  22 Trades, 21 TP / 1 SL, ca. +28.13 PnL.
-  `exit_nervousness_observe` markiert fast nur Verlustlast:
-  21 Trades, 0 TP / 21 SL, ca. -13.27 PnL.
-  Das Exit-Kandidaten-Replay zeigt erstmals keinen TP-Cut:
-  6 Faelle, alle haetten Verlust reduziert, kein harmed/TP-Cut.
-- Lauf 36 bleibt ebenfalls positiv:
-  36 Trades, 18 TP / 18 SL, ca. +11.93 PnL, Profit Factor ca. 2.05,
-  Max Drawdown ca. 2.21.
-  `plan_holding_trust` trennt perfekt:
-  18 Trades, 18 TP / 0 SL, ca. +23.27 PnL.
-  `exit_nervousness_observe` bleibt Verlustmarker:
-  15 Trades, 0 TP / 15 SL, ca. -9.64 PnL.
-  Das Replay bleibt sauber:
-  3 Faelle, alle haetten Verlust reduziert, kein TP-Cut.
-- Fachliche Einordnung Lauf 35/36:
-  Der nach Lauf 33/34 eingefuehrte adverse-depth-Filter schuetzt deutlich
-  besser vor vorschnellen TP-Cuts. Gleichzeitig bleibt die aktive
-  Exit-Entscheidung observe-only, weil die Stichprobe noch klein ist.
-  Die naechste Schwachstelle ist nicht der Exit-Kandidat selbst,
-  sondern Low/Non-Zone und form_dev_negative:
-  Lauf 36 hat Low/Non-Zone mit 10 Trades, 0 TP / 10 SL und ca. -6.92 PnL.
-- Nach Lauf 34 wurde die fachliche Deutung erweitert:
-  Ein Trade ist nicht nur Entry/TP/SL, sondern eine Handlung mit
-  Erwartungshaltung. TP wird als Zielraum verstanden, SL als
-  Tragfaehigkeitsgrenze und die offene Position als laufende Pruefung,
-  ob die urspruengliche Zielerwartung noch traegt.
-- Daraus folgt:
-  Exit-Druck darf nicht automatisch Exit-Reife bedeuten. Entscheidend ist,
-  ob die Zielerwartung wirklich bricht oder ob nur die Positionslast steigt.
-  Diese Schicht wurde in README und UMSETZUNGSPLAN dokumentiert.
-- Naechster sinnvoller Schritt:
-  `target_expectation_context`, `tp_reachability`,
-  `target_path_integrity`, `expectation_deviation`,
-  `expectation_break_pressure` und `expectation_hold_support`
-  zunaechst nur als Backtest-/Replay-Diagnose ergaenzen.
-  Ziel: TP-Cuts besser von echten SL-Schutzmomenten trennen,
-  ohne harte Exit-Regeln einzubauen.
-- Erwartungsdiagnose wurde observe-only umgesetzt:
-  - neues Protokoll `mcm_target_expectation_protocol.csv`
-  - neue Felder im Positionskontext:
-    `target_expectation_context`, `tp_reachability`,
-    `target_path_integrity`, `expectation_deviation`,
-    `expectation_break_pressure`, `expectation_hold_support`,
-    `target_room_pressure`, `target_semantic_confidence`
-  - Exit-Kandidaten und Replay erhalten diese Werte ebenfalls.
-  Wichtig: Die aktive Exit-Entscheidung wird dadurch noch nicht veraendert.
-  Die Schicht misst nur, ob Zielerwartung haelt oder bricht.
-- Naechster Debug-Fokus:
-  Pruefen, ob Kandidaten mit spaeterem SL hohe `expectation_break_pressure`
-  und niedrige `expectation_hold_support` zeigen,
-  waehrend spaetere TP/Plan-Holds hohe `tp_reachability` behalten.
-- Lauf 37 bestaetigt die Erwartungsdiagnose deutlich:
-  - Gesamt: 46 Trades, 18 TP / 28 SL, ca. +5.97 PnL,
-    Profit Factor ca. 1.35, Max Drawdown ca. 3.78.
-  - `target_expectation_holds`: 19 Outcome-Trades,
-    18 TP / 1 SL, ca. +22.69 PnL.
-  - `expectation_break_observe`: 23 Outcome-Trades,
-    0 TP / 23 SL, ca. -14.43 PnL.
-  - TP-Outcomes zeigen im Mittel:
-    `tp_reachability` ca. 0.77,
-    `expectation_break_pressure` ca. 0.19,
-    `expectation_hold_support` ca. 0.77.
-  - SL-Outcomes zeigen im Mittel:
-    `tp_reachability` ca. 0.40,
-    `expectation_break_pressure` ca. 0.64,
-    `expectation_hold_support` ca. 0.43.
-- Lauf 37 Replay:
-  6 Exit-Kandidaten, alle spaeter SL,
-  alle mit `target_expectation_context=expectation_break_observe`,
-  alle haetten Verlust reduziert,
-  kein harmed/TP-Cut.
-  Das ist die bisher sauberste Bestaetigung,
-  dass Zielerwartung die Trennung zwischen Exit-Nervositaet
-  und echtem Erwartungsbruch sichtbar macht.
-- Offene Schwachstelle bleibt Low/Non-Zone:
-  17 Trades, 0 TP / 17 SL, ca. -10.43 PnL.
-  Die naechste Umsetzung sollte Low/Non-Zone nicht hart blockieren,
-  sondern die neue Erwartungsdiagnose vor Entry/Handlung als
-  Reife-/Tragfaehigkeitswahrnehmung nutzbar machen.
-- Lauf 38 bestaetigt die Reorganisationsvermutung:
-  Nach Einfuehrung der neuen Zielerwartungs-Wahrnehmung war Lauf 37
-  schwacher, Lauf 38 springt wieder deutlich nach oben.
-  Ergebnis: 40 Trades, 20 TP / 20 SL, ca. +14.97 PnL,
-  Profit Factor ca. 2.19, Max Drawdown ca. 2.39.
-- Die Erwartungsdiagnose bleibt stabil:
-  - `target_expectation_holds`: 21 Trades, 20 TP / 1 SL,
-    ca. +27.04 PnL.
-  - `expectation_break_observe`: 14 Trades, 0 TP / 14 SL,
-    ca. -9.03 PnL.
-  - TP-Outcomes:
-    `tp_reachability` ca. 0.77,
-    `expectation_break_pressure` ca. 0.19,
-    `expectation_hold_support` ca. 0.76.
-  - SL-Outcomes:
-    `tp_reachability` ca. 0.40,
-    `expectation_break_pressure` ca. 0.62,
-    `expectation_hold_support` ca. 0.43.
-- Lauf 38 Replay zeigt einen wichtigen Reorganisationsfall:
-  4 Exit-Kandidaten, 3 haetten Verlust reduziert,
-  1 Fall haette einen spaeteren TP massiv abgeschnitten.
-  Der TP-Cut war ebenfalls als `expectation_break_observe` markiert.
-  Das bedeutet:
-  Die Erwartungsdiagnose trennt Outcomes sehr gut,
-  aber ein einzelner tiefer Ruecksetzer kann noch wie Erwartungsbruch wirken,
-  obwohl der groessere Plan spaeter wieder traegt.
-- Fachliche Folgerung:
-  Zielerwartung darf noch nicht aktiv als Exit-Entscheidung genutzt werden.
-  Vor einer Aktivierung braucht es eine Unterscheidung zwischen:
-  - echter Erwartungsbruch
-  - tiefe Rueckatmung/Reorganisation
-  - kurzfristige Feldverschiebung nach neuer Wahrnehmung
-  Dazu sollten `target_recovery_potential`, `prior_target_hold_support`
-  oder eine mehrstufige Erwartungsbruch-Bestaetigung geprueft werden.
-- Recovery-/Reorganisationsdiagnose wurde observe-only umgesetzt:
-  - `target_recovery_potential`
-  - `prior_target_hold_support`
-  - `prior_tp_reachability`
-  - `prior_target_path_integrity`
-  - `expectation_break_persistence`
-  - `expectation_break_count`
-  - `deep_pullback_recovery_watch`
-  Die offene Position merkt sich damit kurzfristig,
-  ob vor einem scheinbaren Erwartungsbruch bereits starker Zielhalt bestand.
-  Ein Bruch mit hohem Recovery-Potential wird nicht als endgueltige
-  Entscheidung verstanden, sondern als tiefe Rueckatmung/Reorganisation
-  beobachtet.
-- Naechster Debug-Fokus Lauf 39:
-  Pruefen, ob der bisherige TP-Cut-Typ als `deep_pullback_recovery_watch`
-  sichtbar wird, waehrend echte SL-Kandidaten weiterhin eine hohe
-  `expectation_break_persistence` und niedrige Recovery zeigen.
-- Lauf 39 ausgewertet:
-  47 Trades, 23 TP / 24 SL, ca. +15.30 PnL,
-  Profit Factor ca. 2.10, Max Drawdown ca. 3.26.
-  Der Lauf bleibt damit stark positiv und liegt nah bei Lauf 38.
-- Die Zielerwartungsachse bleibt stabil:
-  - `target_expectation_holds`: 24 Trades,
-    23 TP / 1 SL, ca. +28.66 PnL.
-  - `expectation_break_observe`: 9 Trades,
-    0 TP / 9 SL, ca. -5.29 PnL.
-  - TP-Outcomes:
-    `tp_reachability` ca. 0.78,
-    `expectation_break_pressure` ca. 0.18,
-    `expectation_hold_support` ca. 0.78.
-  - SL-Outcomes:
-    `tp_reachability` ca. 0.43,
-    `expectation_break_pressure` ca. 0.62,
-    `expectation_hold_support` ca. 0.46.
-- Recovery-Schicht Lauf 39:
-  `deep_pullback_recovery_watch` wurde sichtbar,
-  markierte aber in diesem Lauf 9 Outcome-Trades,
-  alle spaeter SL, ca. -5.01 PnL.
-  Im Replay wurden 2 von 4 Exit-Kandidaten als
-  `deep_pullback_recovery_watch` markiert,
-  beide waren spaeter SL.
-  Damit ist die Recovery-Schicht fachlich noch nicht reif,
-  aber sie liefert einen wichtigen negativen Befund:
-  vorheriger Zielhalt allein reicht nicht,
-  um echte Reorganisation von fortgesetztem Bruch zu unterscheiden.
-- Fachliche Folgerung aus Lauf 39:
-  `deep_pullback_recovery_watch` darf keinesfalls aktiv schuetzen.
-  Es braucht zusaetzlich eine echte Rueckkehrbewegung in den Zielpfad,
-  also nicht nur vorherige Tragfaehigkeit,
-  sondern erkennbare Recovery im aktuellen Verlauf.
-  Naechste Diagnoseidee:
-  - `target_recovery_momentum`
-  - `target_recovery_confirmation`
-  - `break_to_recovery_delta`
-  - `recovery_after_break_watch`
-  Ziel: Reorganisation erst erkennen,
-  wenn nach dem Bruch wieder Zielpfad-Staerke entsteht.
-- Recovery-Diagnose wurde nach Lauf 39 umgebaut:
-  `deep_pullback_recovery_watch` braucht jetzt echte aktuelle
-  Rueckkehrbewegung, nicht nur frueheren Zielhalt.
-  Neue observe-only Felder:
-  - `target_recovery_momentum`
-  - `target_recovery_confirmation`
-  - `break_to_recovery_delta`
-  - `recovery_after_break_watch`
-  Die offene Position merkt sich dafuer die letzten Zielpfadwerte
-  (`last_tp_reachability`, `last_target_path_integrity`,
-  `last_expectation_hold_support`, `last_expectation_break_pressure`,
-  `last_current_r`, `last_target_progress`).
-  Ziel:
-  Ein Reorganisationssignal darf erst entstehen,
-  wenn nach einem Bruch wieder messbare Zielpfad-Staerke zurueckkommt.
-- Naechster Debug-Fokus Lauf 40:
-  Pruefen, ob `deep_pullback_recovery_watch` deutlich seltener auf echte SLs
-  faellt und ob `recovery_after_break_watch` auftaucht,
-  wenn der Markt nach einem Bruch wieder in Richtung Zielpfad zurueckkehrt.
-- Lauf 40 ausgewertet:
-  40 Trades, 20 TP / 20 SL, ca. +14.59 PnL,
-  Profit Factor ca. 2.29.
-  Der Lauf bleibt stark positiv und bestaetigt die Stabilisierung.
-- Zielerwartungsachse Lauf 40:
-  - `target_expectation_holds`: 20 Trades,
-    20 TP / 0 SL, ca. +25.94 PnL.
-  - `expectation_break_observe`: 13 Trades,
-    0 TP / 13 SL, ca. -7.38 PnL.
-  - TP-Outcomes:
-    `tp_reachability` ca. 0.78,
-    `expectation_break_pressure` ca. 0.18,
-    `expectation_hold_support` ca. 0.78.
-  - SL-Outcomes:
-    `tp_reachability` ca. 0.40,
-    `expectation_break_pressure` ca. 0.63,
-    `expectation_hold_support` ca. 0.43.
-- Recovery-Rueckkehrdiagnose Lauf 40:
-  Die strengere Momentum-Bedingung beruhigt die falsche Recovery-Lesung.
-  `deep_pullback_recovery_watch` taucht im Outcome/Replay nicht mehr als
-  Problem auf.
-  Replay: 2 Kandidaten, beide spaeter SL,
-  beide `expectation_break_observe`,
-  beide haetten Verlust reduziert,
-  kein harmed/TP-Cut.
-  Damit ist der Umbau gegenueber Lauf 39 fachlich verbessert.
-- Offener Punkt:
-  `recovery_after_break_watch` wurde noch nicht sichtbar relevant.
-  Das ist akzeptabel, weil die Schicht observe-only ist.
-  Naechste Laeufe sollten pruefen, ob echte Rueckkehrfaelle spaeter
-  auftauchen oder ob die Recovery-Schicht bewusst selten bleiben soll.
-- Erweiterter Datensatz / Lauf 41 als Robustheitstest gestartet und
-  ausgewertet (`debug/debug_lauf_1` nach Archivierung alter Laeufe):
-  107 Trades, 36 TP / 71 SL, ca. +8.10 PnL.
-  Der Lauf bleibt positiv, ist aber deutlich schwerer als die kurze
-  15-Tage-Laborstrecke.
-- Phasenbild Lauf 41:
-  - Phase A / bekanntere Pull-Strecke:
-    bis ca. Trade 48 Aufbau auf ca. 122.6 Equity,
-    ca. +22.61 PnL in dieser Phase.
-  - Phase B / Richtungswechsel in laengere Short-/Abwaertsstruktur:
-    Trade 49-81 Rueckgang auf ca. 108.3 Equity,
-    ca. -14.30 PnL in dieser Phase.
-    DIO erkennt fast durchgehend Erwartungsbruch,
-    bleibt aber in der fremden neuen Semantik noch verletzlich.
-  - Phase C / spaetere Seitwaerts-/Re-Explore-Phase:
-    Trade 82-107 seitwaerts um ca. 108-110 Equity,
-    ca. -0.21 PnL in dieser Phase.
-    DIO wird wieder etwas aktiver/experimenteller,
-    aber ohne sprunghaften positiven Aufbau.
-- Fachliche Einordnung:
-  Die Nutzerbeobachtung ist plausibel:
-  DIO trifft zuerst auf bekannte/tragende Strecke,
-  baut Equity auf,
-  wird beim Regimewechsel zurueckhaltender und flacher,
-  erkennt viele Lagen als Erwartungsbruch,
-  und beginnt in der spaeteren Seitwaertsphase wieder vorsichtiger zu testen.
-  Das spricht fuer Wahrnehmungsanpassung,
-  nicht nur fuer eine einfache PnL-Kurve.
-- Benennung im MCM-Feld geschaerft:
-  Die alte Feldgroessen-Variable wurde in `MCM_FIELD_NEURON` umbenannt.
-  Fachlich passt das besser zur aktuellen Zielrichtung,
-  weil das MCM-Feld nicht mehr als Agenten-Schwarm,
-  sondern als neuronales Wahrnehmungsfeld gelesen wird.
-- Neue Erweiterungslogik dokumentiert:
-  Kollektive MCM-Erweiterung / DIO-Studienraum / soziale Semantik.
-  Forschungsfrage:
-  Entwickeln getrennte DIO-Systeme bei gleichen oder aehnlichen Formen
-  eigene, moeglicherweise variierende Begriffe,
-  und koennen diese ueber Form, Spannung, Tragfaehigkeit,
-  Zielerwartung und Outcome uebersetzt werden?
-  Vorsichtige Zielformulierung:
-  Uebersetzung gleicher Formen bei eventuell variierender Sprache.
-  Diese Ebene ist kein aktueller Kernpfad,
-  sondern ein spaeterer Forschungszweig nach stabilem Einzel-DIO.
-- Die positive Zone/High-Struktur traegt weiterhin.
-- Der Rueckgang in Lauf 13/14 entstand vor allem, weil weniger High-Trades
-  entstanden und Non-Zone/Low weiter konsequent Verlust erzeugte.
-- Lauf 14:
-  - Zone: 24 Trades, ca. +12.43 PnL
-  - Non-Zone: 15 Trades, 0 TP / 15 SL, ca. -9.55 PnL
-- Lauf 15:
-  - Zone: 38 Trades, ca. +24.08 PnL
-  - Non-Zone: 13 Trades, 0 TP / 13 SL, ca. -8.18 PnL
-  - High: 22 Trades, ca. +18.91 PnL
-  - Mid: 16 Trades, ca. +5.17 PnL
-  - Low: 13 Trades, ca. -8.18 PnL
-- Lauf 16:
-  - Zone: ca. +23.16 PnL
-  - Non-Zone: 20 Trades, 0 TP / 20 SL, ca. -12.05 PnL
-  - High: ca. +21.38 PnL
-  - Mid: ca. +1.78 PnL
-  - Low: ca. -12.05 PnL
-- Lauf 17:
-  - Gesamt: 42 Trades, 20 TP / 22 SL, ca. +12.09 PnL
-  - Zone: 27 Trades, ca. +20.15 PnL
-  - Non-Zone: 15 Trades, ca. -8.07 PnL
-- Lauf 18:
-  - Gesamt: 37 Trades, 19 TP / 18 SL, ca. +14.19 PnL
-  - Zone: 26 Trades, ca. +20.27 PnL
-  - Non-Zone: 11 Trades, 0 TP / 11 SL, ca. -6.08 PnL
-- Lauf 19:
-  - Gesamt: 41 Trades, 20 TP / 21 SL, ca. +13.67 PnL
-  - Zone: 30 Trades, ca. +19.66 PnL
-  - Non-Zone: 11 Trades, 0 TP / 11 SL, ca. -6.00 PnL
-  - Beobachtungslernen:
-    - `low_observations`: 948
-    - `resolved`: 948
-    - `saved_loss`: 519
-    - `missed_gain`: 424
-    - `neutral`: 5
-    - `observation_maturity_trust`: ca. 0.549
-    - `observation_action_pressure`: ca. 0.447
-- Lauf 20:
-  - Gesamt: 47 Trades, 22 TP / 25 SL, ca. +12.64 PnL
-  - Zone: 37 Trades, ca. +19.84 PnL
-  - Non-Zone: 10 Trades, 0 TP / 10 SL, ca. -7.20 PnL
-  - Beobachtungslernen:
-    - `low_observations`: 903
-    - `resolved`: 891
-    - `saved_loss`: 507
-    - `missed_gain`: 378
-    - `neutral`: 6
-    - `observation_maturity_trust`: ca. 0.571
-    - `observation_action_pressure`: ca. 0.424
-- Lauf 21:
-  - Gesamt: 46 Trades, 20 TP / 26 SL, ca. +10.30 PnL
-  - Zone: 30 Trades, ca. +18.55 PnL
-  - Non-Zone: 16 Trades, ca. -8.25 PnL
-  - Beobachtungslernen:
-    - `low_observations`: 1026
-    - `resolved`: 1013
-    - `saved_loss`: 566
-    - `missed_gain`: 440
-    - `neutral`: 7
-    - `observation_maturity_trust`: ca. 0.561
-    - `observation_action_pressure`: ca. 0.434
-- Lauf 22:
-  - Gesamt: 40 Trades, 14 TP / 26 SL, ca. +1.67 PnL
-  - Zone: 25 Trades, ca. +11.24 PnL
-  - Non-Zone: 15 Trades, 0 TP / 15 SL, ca. -9.56 PnL
-  - Beobachtungslernen:
-    - `low_observations`: 1040
-    - `resolved`: 1040
-    - `saved_loss`: 548
-    - `missed_gain`: 487
-    - `neutral`: 5
-    - `observation_maturity_trust`: ca. 0.529
-    - `observation_action_pressure`: ca. 0.468
-- Lauf 23:
-  - Gesamt: 41 Trades, 21 TP / 20 SL, ca. +16.13 PnL
-  - Zone: 34 Trades, ca. +20.09 PnL
-  - Non-Zone: 7 Trades, 0 TP / 7 SL, ca. -3.96 PnL
-  - Equity-Peak: ca. +18.28 nach Trade 37
-  - Ruecklauf vom Peak bis Schluss: ca. -2.15
-  - Beobachtungslernen:
-    - `low_observations`: 963
-    - `resolved`: 956
-    - `saved_loss`: 528
-    - `missed_gain`: 423
-    - `neutral`: 5
-    - `observation_maturity_trust`: ca. 0.554
-    - `observation_action_pressure`: ca. 0.442
-- Lauf 24:
-  - Gesamt: 39 Trades, 17 TP / 22 SL, ca. +7.05 PnL
-  - Zone: 28 Trades, ca. +14.79 PnL
-  - Non-Zone: 11 Trades, 0 TP / 11 SL, ca. -7.74 PnL
-  - `matured_exits`: 0
-  - keine `matured_exit_observe`-Ereignisse gefunden
-  - Beobachtungslernen:
-    - `low_observations`: 1095
-    - `resolved`: 1086
-    - `saved_loss`: 601
-    - `missed_gain`: 480
-    - `neutral`: 5
-    - `observation_maturity_trust`: ca. 0.555
-    - `observation_action_pressure`: ca. 0.442
-- Lauf 25:
-  - Gesamt: 43 Trades, 21 TP / 22 SL, ca. +12.76 PnL
-  - Zone: 31 Trades, ca. +21.39 PnL
-  - Non-Zone: 12 Trades, 0 TP / 12 SL, ca. -8.62 PnL
-  - Equity-Peak: ca. +14.38 nach Trade 40
-  - Ruecklauf vom Peak bis Schluss: ca. -1.61
-  - `matured_exits`: 0, weil `observe` nicht aktiv schliesst
-  - `matured_exit_debug.csv`: 7 gereifte Exit-Beobachtungen
-  - Beobachtungslernen:
-    - `low_observations`: 1053
-    - `resolved`: 1039
-    - `saved_loss`: 578
-    - `missed_gain`: 453
-    - `neutral`: 8
-    - `observation_maturity_trust`: ca. 0.559
-    - `observation_action_pressure`: ca. 0.436
-- Lauf 26:
-  - Gesamt: 39 Trades, 14 TP / 25 SL, ca. +2.99 PnL
-  - Zone: 26 Trades, ca. +10.17 PnL
-  - Non-Zone: 13 Trades, 0 TP / 13 SL, ca. -7.18 PnL
-  - Equity-Peak: ca. +5.67 nach Trade 31
-  - Ruecklauf vom Peak bis Schluss: ca. -2.68
-  - `matured_exits`: 0, weil `observe` nicht aktiv schliesst
-  - `matured_exit_debug.csv`: 11 gereifte Exit-Beobachtungen
-  - Signalabgleich:
-    - 6 Signale lagen vor spaeteren SL-Outcomes, verteilt auf 4 Trades.
-    - 5 Signale lagen vor spaeteren TP-Outcomes, verteilt auf 2 Trades.
-    - Damit erkennt die Exit-Reife reale Schutzmomente, ist aber noch nicht
-      reif genug fuer aktive Ausfuehrung.
-  - Beobachtungslernen:
-    - `low_observations`: 1138
-    - `resolved`: 1121
-    - `saved_loss`: 627
-    - `missed_gain`: 489
-    - `neutral`: 5
-    - `observation_maturity_trust`: ca. 0.561
-    - `observation_action_pressure`: ca. 0.436
-- Lauf 27:
-  - Modus: `MCM_MATURED_EXIT_MODE = "active"`
-  - Gesamt: 33 Trades, ca. +1.93 PnL
-  - Klassische Outcomes:
-    - 7 `tp_hit`, ca. +8.67 PnL
-    - 11 `sl_hit`, ca. -6.07 PnL
-  - Gereifte Exits:
-    - 15 `matured_exit`
-    - 5 positiv, 10 negativ
-    - Netto aus `outcome_records`: ca. -0.67 PnL
-  - Zone:
-    - 22 Trades, ca. +3.93 PnL
-    - davon 8 gereifte Exits
-  - Non-Zone:
-    - 11 Trades, ca. -2.00 PnL
-    - davon 7 gereifte Exits
-  - Equity-Peak: ca. +3.88 nach Trade 23
-  - Ruecklauf vom Peak bis Schluss: ca. -1.95
-  - Interpretation:
-    - Active-Exit ist noch zu frueh.
-    - DIO beendet zu viele Positionen aus einzelner Exit-Wahrnehmung.
-    - Es entsteht Schutz, aber nicht genug Reife/Unterscheidung zwischen
-      echter Gefahr und normaler Gewinnatmung.
-- Lauf 28:
-  - Modus: `MCM_MATURED_EXIT_MODE = "observe"`
-  - Gesamt: 49 Trades, 20 TP / 29 SL, ca. +8.90 PnL
-  - Zone: 37 Trades, ca. +15.81 PnL
-  - Non-Zone: 12 Trades, 0 TP / 12 SL, ca. -6.91 PnL
-  - Equity-Peak: ca. +15.53 nach Trade 34
-  - Ruecklauf vom Peak bis Schluss: ca. -6.63
-  - `matured_exit_debug.csv`: 8 Exit-Reife-Beobachtungen
-  - `matured_exits`: 0, weil `observe` nicht aktiv schliesst
-  - Beobachtungslernen:
-    - `low_observations`: 919
-    - `resolved`: 910
-    - `saved_loss`: 492
-    - `missed_gain`: 411
-    - `neutral`: 7
-    - `observation_maturity_trust`: ca. 0.543
-    - `observation_action_pressure`: ca. 0.452
-  - Positionslast-Diagnose gegen Outcomes:
-    - `plan_holding_trust`: 23 Trades, 20 TP / 3 SL, ca. +23.43 PnL
-    - `exit_nervousness_observe`: 24 Trades, 0 TP / 24 SL, ca. -13.51 PnL
-    - `quiet_position_watch`: 2 Trades, 0 TP / 2 SL, ca. -1.02 PnL
-  - Interpretation:
-    - Die neue Diagnoseschicht trennt gute Haltephasen und belastete
-      Verlustphasen deutlich.
-    - `intervention_fitness` bleibt bei den reinen Exit-Reife-Beobachtungen
-      niedrig bis mittel. Das passt zur These:
-      DIO spuert Exit-Spannung, ist aber noch nicht reif genug fuer aktives
-      Schliessen.
-- Lauf 29:
-  - Modus: `MCM_MATURED_EXIT_MODE = "observe"`
-  - Gesamt: 36 Trades, 14 TP / 22 SL, ca. +5.81 PnL
-  - Zone: 27 Trades, ca. +10.89 PnL
-  - Non-Zone: 9 Trades, 0 TP / 9 SL, ca. -5.08 PnL
-  - Equity-Peak: ca. +5.98 nach Trade 29
-  - Ruecklauf vom Peak bis Schluss: ca. -0.17
-  - `matured_exit_debug.csv`: 4 Exit-Reife-Beobachtungen
-  - `matured_exits`: 0, weil `observe` nicht aktiv schliesst
-  - Beobachtungslernen:
-    - `low_observations`: 1061
-    - `resolved`: 1061
-    - `saved_loss`: 581
-    - `missed_gain`: 473
-    - `neutral`: 7
-    - `observation_maturity_trust`: ca. 0.550
-    - `observation_action_pressure`: ca. 0.446
-  - Positionslast-Diagnose:
-    - `exit_nervousness_observe`: 20 Trades, 0 TP / 20 SL, ca. -11.02 PnL
-    - `plan_holding_trust`: 14 Trades, 14 TP / 0 SL, ca. +18.07 PnL
-    - `quiet_position_watch`: 2 Trades, 0 TP / 2 SL, ca. -1.25 PnL
-  - Exit-Kandidaten:
-    - `exit_candidate_observe` im Outcome-Kontext:
-      13 Trades, 0 TP / 13 SL, ca. -7.37 PnL
-    - konkrete Kandidaten-Events im Protokoll:
-      3 echte Kandidaten, alle vor spaeteren SLs
-    - `plan_trust_holds`:
-      21 Trades, 14 TP / 7 SL, ca. +14.29 PnL
-    - `exit_pressure_unfit_observe`:
-      1 Trade, spaeter SL, ca. -0.55 PnL
-  - Interpretation:
-    - Der Lauf ist schwacher als erwartet, aber die neue Kandidatenschicht
-      zeigt nicht in die falsche Richtung.
-    - Sie markiert keine spaeteren TPs als echte Exit-Kandidaten.
-    - Der Rueckgang entsteht eher durch weniger Gesamttrades und weniger
-      Zone-PnL gegen Lauf 28, nicht durch einen falschen aktiven Exit.
-- Denk-/Memory-Last steigt leicht weiter:
-  - `memory_compare_load` ca. 0.905 -> 0.913 -> 0.939 -> 0.935
-  - `blind_thinking_load` ca. 0.440 -> 0.443 -> 0.450 -> 0.451
-  - `learning_trust` steigt ca. 0.051 -> 0.062 -> 0.069 -> 0.075
-  - `caution_trust` steigt ca. 0.009 -> 0.012 -> 0.013 -> 0.015
+- Beide Laeufe verwenden dieselbe visuelle Aussenwahrnehmung; die sensorischen
+  Werte sind deshalb praktisch identisch.
+- Lauf 12: 345 Trades, 111 TP, 234 SL, Netto-PnL ca. -4.12.
+- Lauf 13: 309 Trades, 100 TP, 209 SL, Netto-PnL ca. +1.12.
+- Lauf 13 handelt weniger, haelt mehr zurueck und erzeugt mehr innere
+  Feld-/Memory-Aktivitaet.
+- `memory_compare_load` steigt in Lauf 13 weiter an, aber die direkte
+  Handelsdichte sinkt. Das wirkt wie eine erste regulatorische Anpassung:
+  alte Erfahrung trifft auf neue Sinneskodierung, wird aber nicht mehr
+  ungefiltert in Handlung entladen.
+- Die visuelle Sensorik selbst scheint stabil; die Varianz entsteht in der
+  inneren Verarbeitung, also Memory, Hemmung, Mut, Feldentscheidung und
+  neurochemischer Regulation.
 
 Interpretation:
-
-Das System lernt und bindet Erfahrung. Die starke Erholung in Lauf 15 zeigt,
-dass die Trust-/Formsprache nicht nur daempft, sondern tragende Erfahrung wieder
-in Handlung bringen kann. Gleichzeitig uebertraegt es in fremden oder nicht
-tragenden Strukturen noch zu viel Handlungsfaehigkeit. Genau hier passt der
-neue Bauplanpunkt `Transfer-Tragfaehigkeit fremder Strukturen`: Erfahrung soll
-nicht hart blockieren, aber sie darf bei geringer Tragfaehigkeit nicht voll in
-Handlung uebersetzt werden.
-
-Naechster technischer Schritt waere deshalb keine starre Low-Sperre,
-sondern eine weiche Transfer-Tragfaehigkeitsachse:
-
-- Wie fremd ist die aktuelle Struktur?
-- Welche Erfahrungsinseln resonieren trotzdem?
-- Wie viel davon traegt wirklich?
-- Wird daraus Beobachtung/Reframing oder kontrollierte Handlung?
-
-Neu konzeptionell ergaenzt ist ausserdem
-`Reifeentwicklung durch Beobachtungslernen`:
-
-- Low/Non-Zone soll nicht als harter Verbotsbereich verstanden werden,
-  aber als Hinweis auf geringe Tragfaehigkeit.
-- Reiferes Verhalten bedeutet, unsichere Lage beobachten zu koennen,
-  statt sie durch Aktion testen zu muessen.
-- Beobachtung soll selbst Erfahrung werden:
-  Was waere passiert, wenn gehandelt worden waere?
-- Dadurch kann das System lernen, ohne jeden unsicheren Zustand
-  ueber direkten Trade-Schmerz erfahren zu muessen.
-- Dokumentiert in README und Umsetzungsplan.
-
-Jetzt technisch umgesetzt:
-
-- `TradeStats` fuehrt eine Beobachtungslernspur:
-  - `pending_observations`
-  - `observation_learning`
-  - `recent_observation_learning`
-- Beobachtete Low-/Non-Zone-Situationen mit vorhandenem virtuellem Tradeplan
-  werden weiterverfolgt.
-- Spaetere Preisbewegung bewertet, ob Zusehen:
-  - Verlust gespart haette (`saved_loss`)
-  - Gewinn verpasst haette (`missed_gain`)
-  - neutral blieb (`neutral`)
-- Daraus entstehen:
-  - `observation_maturity_trust`
-  - `observation_action_pressure`
-  - `observation_low_count`
-- Diese Werte fliessen weich in die Entscheidung:
-  - mehr `saved_loss` staerkt Beobachtungsreife
-  - mehr `missed_gain` erzeugt kleinen Handlungs-Gegendruck
-  - keine harte Low-Sperre
-- `mcm_memory_thinking_protocol.csv` schreibt die neuen Reifewerte mit.
-
-Syntaxpruefung erfolgreich:
-
-- `python -m py_compile trade_stats.py MCM_Brain_Modell.py bot.py`
-
-Mini-Simulation erfolgreich:
-
-- beobachtete Low-Situation wurde nach spaeterem Preis als `saved_loss`
-  bewertet
-- `maturity_trust` stieg in diesem Mini-Fall auf `1.0`
-
-Nach Lauf 16 geprueft:
-
-- Die neue Beobachtungslernspur war technisch vorhanden, griff aber im echten
-  Lauf noch nicht:
-  - `low_observations`: 0
-  - `saved_loss`: 0
-  - `missed_gain`: 0
-  - `observation_maturity_trust`: 0.0
-- Grund: beobachtete Low-/Non-Zone-Situationen wurden im Attempt-Kontext oft
-  als `WAIT` mit Entry/SL/TP = 0 gespeichert.
-- Dadurch konnte das System zwar "zusehen", aber nicht auswerten,
-  was bei hypothetischem Handeln passiert waere.
-- Das war kein Konzeptfehler, sondern eine fehlende virtuelle Handlungsbahn
-  fuer Beobachtung.
-
-Direkt korrigiert:
-
-- Nicht freigegebene LONG-/SHORT-Tendenzen erzeugen jetzt einen
-  `virtual_observation_plan`.
-- Der Attempt-Kontext bekommt fuer Beobachtung eine `proposed_decision`,
-  auch wenn die reale Entscheidung `WAIT` bleibt.
-- Beobachtungslernen kann dadurch ab dem naechsten Lauf Low-/Non-Zone-Lagen
-  virtuell verfolgen und spaeter als `saved_loss`, `missed_gain` oder `neutral`
-  bewerten.
-- Wichtig: Es bleibt organisch und weich. Es entsteht keine harte Low-Sperre,
-  sondern eine Reifeschicht: Zusehen kann als eigene Erfahrung tragfaehig werden.
-
-Nach Lauf 17 erneut geprueft:
-
-- PnL und Tradezahl verbesserten sich gegen Lauf 16:
-  - Lauf 16: ca. +11.11 PnL, 54 Trades
-  - Lauf 17: ca. +12.09 PnL, 42 Trades
-- Die Beobachtungslernspur blieb aber weiterhin bei 0:
-  - `low_observations`: 0
-  - `saved_loss`: 0
-  - `missed_gain`: 0
-  - `observation_maturity_trust`: 0.0
-- Diagnose:
-  - In den Attempt-Daten stand bei Observe/Withhold teils
-    `meta_regulation_state.decision = LONG/SHORT`.
-  - Gleichzeitig blieb `trade_plan.decision = WAIT` und Entry/SL/TP = 0.
-  - Ursache war eine spaetere Ueberschreibung von `proposed_decision` aus
-    `decision`. Bei reifem Beobachten ist `decision` aber bewusst `WAIT`.
-- Nachkorrektur:
-  - `proposed_decision` wird jetzt zuerst aus `runtime_result.proposed_decision`
-    gelesen und nur danach aus `decision`.
-  - Dadurch bleiben aeussere Handlung (`WAIT`) und innere Beobachtungsrichtung
-    (`LONG`/`SHORT`) getrennt.
-- Lauf 18 ist damit der erste echte Kontrolllauf fuer die volle
-  Beobachtungslernmechanik.
-
-Nach Lauf 18 geprueft:
-
-- Das Verhalten wurde besser:
-  - weniger Trades
-  - hoeherer Netto-PnL als Lauf 16/17
-  - weniger Non-Zone-Verlust
-- Die Beobachtungslernspur blieb aber erneut bei 0.
-- Diagnose:
-  - Non-Zone-Observe/Withhold/Skip kam im Attempt-Kontext weiter als
-    `WAIT` ohne Entry/SL/TP an.
-  - Teilweise gab es nur noch ein schwaches Signalbild, aber keine
-    explizite innere LONG-/SHORT-Hypothese.
-  - Aus organismischer Sicht heisst das:
-    Das System spuert geringe Tragfaehigkeit, formuliert aber noch nicht
-    immer eine beobachtbare innere Handlungshypothese.
-- Nachkorrektur:
-  - Der Attempt-Kontext fuehrt jetzt `world_state.current_price` und
-    `world_state.candle_state` mit.
-  - `TradeStats` kann fuer Non-Zone-Observe/Withhold/Skip aus Signalspannung
-    und aktuellem Preis eine virtuelle Beobachtungshypothese ableiten.
-  - Das erzeugt keine echte Handlung, sondern nur eine Lernspur:
-    Was waere passiert, wenn diese innere Richtung gehandelt worden waere?
-- Mini-Mechaniktest erfolgreich:
-  - Non-Zone + Observe + Preis + Signal erzeugt jetzt
-    `low_observations = 1` und eine offene Beobachtung.
-- Lauf 19 ist damit der erste echte Kontrolllauf fuer die signalbasierte
-  Beobachtungslernspur.
-
-Nach Lauf 19 geprueft:
-
-- Der Beobachtungslernkanal funktioniert jetzt real im Backtest.
-- Es wurden 948 Low-/Non-Zone-Beobachtungen erzeugt und aufgeloest.
-- Mehr als die Haelfte der hypothetischen Low-Handlungen haette Verlust
-  gespart (`saved_loss`: 519).
-- Ein grosser Anteil haette aber auch Gewinn verpasst (`missed_gain`: 424).
-- Interpretation:
-  - Low/Non-Zone ist nicht einfach "schlecht".
-  - Low/Non-Zone ist ein instabiler Spannungsraum.
-  - Das System lernt dort jetzt nicht nur Vermeidung, sondern Ambivalenz:
-    Zusehen kann reif sein, kann aber auch Chancen kosten.
-- Die bisherige Kopplung ist deshalb fachlich passend vorsichtig:
-  - `maturity_trust` staerkt Beobachtungsreife.
-  - `action_pressure` erzeugt Gegenspannung, wenn Zusehen zu viel Gewinn
-    verpasst haette.
-- Keine direkte Code-Nachschaerfung nach Lauf 19:
-  - Das war der erste echte Aktivierungslauf.
-  - Eine sofortige Drosselung wuerde zu frueh auf einen einzelnen Lauf
-    reagieren.
-  - Lauf 20 soll zeigen, ob die neue Reifeschicht stabil lernt oder zu viel
-    Ambivalenz/Handlungsdruck erzeugt.
-
-Nach Lauf 20 geprueft:
-
-- Die Beobachtungslernspur ist stabil:
-  - `maturity_trust` steigt von ca. 0.549 auf ca. 0.571
-  - `action_pressure` faellt von ca. 0.447 auf ca. 0.424
-- Gleichzeitig steigt die Tradezahl von 41 auf 47.
-- Die Zone traegt weiter stabil, aber mit mehr SL-Anteil.
-- Non-Zone bleibt bei 0 TP und 10 SL negativ.
-- Interpretation:
-  - Das System bildet jetzt Beobachtungsreife.
-  - Diese Reife wird im Brain aber noch zu schwach in reale Zurueckhaltung,
-    Beobachtung oder Replan uebersetzt.
-  - Es fehlt nicht mehr die Lernspur, sondern die Reife-Kopplung ist noch zu
-    zart.
-
-Direkt nachgeschaerft:
-
-- `observation_maturity_balance` wurde ergaenzt:
-  - `maturity_trust - action_pressure`
-  - nur positive Balance wirkt als Reifedruck.
-- Die Kopplung bleibt weich:
-  - etwas weniger `act_push`
-  - etwas mehr `observe_pull`
-  - minimal mehr `replan_pull`
-- Keine harte Low-/Non-Zone-Sperre.
-- Ziel fuer Lauf 21:
-  - weniger unreife Handlung bei weiterhin freier Zone
-  - stabilere Non-Zone-Reduktion
-  - keine komplette Unterdrueckung von Chancen, weil `action_pressure`
-    weiter als Gegenspannung erhalten bleibt.
-
-Nach Lauf 21 geprueft:
-
-- Der PnL-Rueckgang ist real und relevant.
-- Die Reifespur selbst bleibt aktiv:
-  - viele Low-Beobachtungen
-  - mehr `saved_loss` als `missed_gain`
-  - aber weiter deutliche Ambivalenz.
-- Die globale Reife-Kopplung war fachlich zu breit:
-  - Sie kann gute Zone-Handlungen mitdaempfen.
-  - Gleichzeitig loest sie das eigentliche Problem nicht vollstaendig:
-    Viele negative Non-Zone-Outcomes entstehen offenbar nicht nur durch
-    direkten Non-Zone-Einstieg, sondern durch Strukturkippen waehrend
-    offener Positionen.
-- Neue Korrektur:
-  - `observation_maturity_balance` bleibt erhalten.
-  - Neu ist `observation_maturity_scope`.
-  - Die Reife-Balance wirkt jetzt nur stark, wenn die aktuelle
-    Strukturtragfaehigkeit niedrig ist.
-  - Daraus entsteht `observation_scoped_balance`.
-- Ziel:
-  - Zone/tragende Struktur weniger pauschal bremsen.
-  - Low-/Non-Zone-Spannung staerker in Observe/Replan uebersetzen.
-  - Keine harte Sperre, sondern kontextabhaengige Reiferegulation.
-- Zusaetzlicher Befund:
-  - Das naechste groessere Thema ist wahrscheinlich nicht nur Entry-Reife,
-    sondern Halte-/Exit-Reife:
-    Was passiert, wenn eine Position tragend startet, aber das Feld waehrend
-    der offenen Position in Non-Zone kippt?
-
-Nach Lauf 22 geprueft:
-
-- Der scoped Reife-Fix war nicht tragfaehig.
-- PnL faellt stark auf ca. +1.67.
-- Ursache in der Auswertung:
-  - Zone-PnL bricht von ca. +18.55 auf ca. +11.24 ein.
-  - Non-Zone-Verlust steigt auf ca. -9.56.
-  - Die Tradezahl sinkt, aber die Qualitaet der verbleibenden Trades faellt.
-- Technischer Befund:
-  - `observation_maturity_scope` stand auch bei hoher realer
-    `structure_quality` oft fast auf 1.0.
-  - Damit war die Reifewirkung weiterhin zu breit und nicht sauber an echte
-    Low-/Non-Zone-Struktur gebunden.
-- Korrektur:
-  - `observation_maturity_scope` wird jetzt aus der realen aktuellen
-    `structure_perception_state.structure_quality` berechnet.
-  - Nur wenn diese reale Strukturqualitaet niedrig ist, wirkt die Reife-Balance
-    stark.
-  - Tragende Zone soll dadurch weniger pauschal gedämpft werden.
-- Lauf 23 muss pruefen, ob die scoped Reife jetzt wirklich lokal wirkt.
-
-Nach Lauf 23 geprueft:
-
-- Der reale Struktur-Scope funktioniert deutlich besser:
-  - durchschnittlicher `observation_maturity_scope`: ca. 0.121
-  - bei tragender Struktur ist der Scope haeufig 0
-  - `observation_scoped_balance` wirkt nur noch lokal stark
-- Zone erholt sich auf ca. +20.09 PnL.
-- Non-Zone-Verlust sinkt stark auf ca. -3.96.
-- Gesamt-PnL steigt auf ca. +16.13.
-- Der Lauf war zwischenzeitlich noch profitabler:
-  - Peak ca. +18.28
-  - Schluss ca. +16.13
-  - Ruecklauf ca. -2.15 am Ende
-- Interpretation:
-  - Entry-Reife / Low-Regulation wirkt jetzt deutlich besser.
-  - Der naechste Engpass ist wahrscheinlich Halte-/Exit-Reife:
-    Wenn das System bereits deutlich im Gewinn ist oder eine offene Position
-    spaeter Struktur verliert, braucht es eine reifere Sicherungs- oder
-    Reorganisationsreaktion.
-- Keine weitere Entry-Daempfung nach Lauf 23.
-- Naechster sinnvoller Schritt:
-  Halte-/Exit-Reife als eigene weiche Schicht vorbereiten:
-  - Peak-Gewinn nicht starr sichern
-  - aber Rueckgabe nach Strukturkippen wahrnehmen
-  - offene Positionen bei sinkender Tragfaehigkeit beobachten/reduzieren/
-    frueher verlassen koennen
-  - ohne gute Trendfortsetzung abzuwuergen
-
-Neu vorbereitet:
-
-- Halte-/Exit-Reife besitzt jetzt einen Schalter in `config.py`:
-  - `MCM_MATURED_EXIT_MODE = "fixed"`
-  - `"fixed"`: nur klassisches TP/SL-Auslaufen
-  - `"observe"`: gereifte Exit-Reife wird nur protokolliert, aber nicht
-    ausgefuehrt
-  - `"active"`: gereifte Exit-Entscheidung darf im Backtest eine Position
-    schliessen
-- Standard bleibt bewusst `fixed`.
-- Die Mechanik bewertet offene Positionen ueber:
-  - bisherigen maximalen Gewinnlauf (`mfe_r`)
-  - Rueckgabe vom Peak (`giveback_r`)
-  - aktuelle Strukturqualitaet
-  - Druck/Kapazitaets-Verhaeltnis
-  - Recovery-/Tragfaehigkeitslage
-- Fester TP/SL-Exit hat weiterhin Vorrang.
-- Im Live-Modus wird ein gereifter Exit aus Sicherheitsgruenden noch nicht
-  automatisch ausgefuehrt, sondern nur als Reife-Ereignis beobachtbar.
-- `TradeStats` kann `matured_exit` mit echtem Exit-Preis abrechnen und als
-  eigenes Outcome sichtbar machen.
-
-Nach Lauf 24 geprueft:
-
-- `observe` hat keine echten Exits ausgefuehrt, wie gewuenscht.
-- Es wurden aber auch keine gereiften Exit-Beobachtungen erzeugt.
-- Ursache:
-  - Die erste Exit-Reife-Schwelle war zu streng.
-  - Zudem war die Positionslage in den Outcome-Kontexten noch nicht ausreichend
-    sichtbar, um MFE/MAE/Rueckgabe nachtraeglich sauber zu bewerten.
-- Nachkorrektur:
-  - `MCM_MATURED_EXIT_MIN_MFE_R` von 1.00 auf 0.70 gesenkt.
-  - `MCM_MATURED_EXIT_GIVEBACK_R` von 0.35 auf 0.25 gesenkt.
-  - `position_watch_state` fuehrt jetzt MFE, MAE, Risiko, MFE-R, MAE-R,
-    Fill-Ratio und Bars-open im Exit-Kontext.
-  - `matured_exit_debug.csv` wird geschrieben, wenn Exit-Reife erkannt wird.
-- Lauf 25 im Modus `observe` soll jetzt zeigen, ob Exit-Reife ueberhaupt
-  diagnostisch sichtbar wird.
-
-Nach Lauf 25 geprueft:
-
-- `observe` hat weiterhin keine echten Exits ausgefuehrt, wie gewuenscht.
-- Die Exit-Reife ist jetzt diagnostisch sichtbar:
-  - 7 Eintraege in `matured_exit_debug.csv`
-  - typische Signale: Gewinnlauf vorhanden, Rueckgabe vom Peak sichtbar,
-    Strukturqualitaet teils nur mittel, Druck/Kapazitaet erhoeht
-- Lauf 25 schliesst mit ca. +12.76 PnL und liegt damit deutlich ueber Lauf 24.
-- Zone bleibt der tragende Kern:
-  - 31 Zone-Trades, ca. +21.39 PnL
-  - 12 Non-Zone-Trades, 0 TP / 12 SL, ca. -8.62 PnL
-- Nachkorrektur:
-  - `matured_exit_debug.csv` schreibt ab dem naechsten Lauf zusaetzlich
-    Timestamp, Entry, TP, SL und Risiko.
-  - Damit kann Lauf 26 sauberer zeigen, ob ein gereifter Exit spaetere
-    SLs verhindert haette oder gute TP-Laeufe zu frueh gekappt haette.
-
-Naechster Lauf muss deshalb besonders pruefen:
-
-- ob die 7 Exit-Reife-Signale aus Lauf 25 reproduzierbar bleiben
-- ob Exit-Reife eher vor spaeterem SL, vor Gewinnrueckgabe oder vor normalem TP
-  entsteht
-- ob Non-Zone weiter 0 TP / alle SL bleibt
-- ob die Zone frei genug handeln darf
-
-Nach Lauf 26 geprueft:
-
-- Die Exit-Reife-Signale sind reproduzierbar und steigen von 7 auf 11.
-- Die Signale sind fachlich nicht leer:
-  - bei 4 spaeteren SL-Trades haette ein gereifter Exit Schaden reduziert
-  - bei 2 spaeteren TP-Trades haette ein gereifter Exit Gewinn zu frueh
-    begrenzt
-- Daraus folgt:
-  - `active` ist noch zu frueh
-  - die Exit-Reife braucht eine Bestaetigungsschicht, z.B. wiederholte
-    Verschlechterung ueber mehrere Bars, negativer `current_r`, sinkende
-    Strukturtragfaehigkeit oder steigender Druck/Kapazitaets-Konflikt
-  - ein einzelnes Exit-Reife-Signal darf nur Wahrnehmung sein, noch keine
-    Handlung
-
-Nach Lauf 27 geprueft:
-
-- Der versehentliche Active-Lauf bestaetigt die Diagnose aus Lauf 26.
-- `matured_exit` wurde 15-mal ausgefuehrt.
-- Netto waren die gereiften Exits nach Outcome-Protokoll negativ.
-- `MCM_MATURED_EXIT_MODE` wurde wieder auf `observe` gesetzt.
-- Statistik-Korrektur:
-  - `matured_exit_pnl` wurde bisher brutto vor Gebuehren gezaehlt.
-  - Ab jetzt wird `matured_exit_pnl` netto nach Gebuehren gezaehlt, passend zu
-    `outcome_records`.
-- Naechster Schritt bleibt:
-  - Exit-Reife nur beobachten
-  - Bestaetigungsschicht bauen
-  - erst danach wieder ein `active`-Experiment
-
-Fachliche Ergaenzung nach Lauf 27:
-
-- Offene Positionen erzeugen eine eigene kognitive und regulatorische Last.
-- Das laufende Neubewerten waehrend einer Position ist nicht kostenlos.
-- Ein fester TP/SL ist deshalb auch eine Entlastungs- und Haltestruktur.
-- Hohe innere Belastung darf nicht automatisch zu Exit-Handlung fuehren.
-- In bestimmten Lagen ist die reifere Reaktion:
-  - Ich sehe Spannung.
-  - Ich fuehle Belastung.
-  - Aber mein aktueller innerer Zustand traegt keine neue Entscheidung.
-  - Also greife ich nicht ein und lasse den vorherigen Plan laufen.
-- Dokumentiert in:
-  - `files/UMSETZUNGSPLAN.md` als `Positionslast und reife Nicht-Intervention`
-  - `README.md` als `Positionslast und Nicht-Intervention`
-
-Technisch jetzt vorbereitet:
-
-- Offene Positionen fuehren eine neue Diagnose `position_intervention_state`.
-- Sichtbar werden:
-  - `position_cognitive_load`
-  - `exit_decision_pressure`
-  - `holding_stability`
-  - `plan_trust`
-  - `intervention_fatigue`
-  - `inner_noise`
-  - `intervention_fitness`
-  - `intervention_unfit_state`
-  - `exit_evidence`
-  - `sustained_exit_pressure`
-- Diese Werte werden in Exit-Kontexte, Position-Updates und Outcome-Kontexte
-  geschrieben.
-- Neues Debug-Protokoll:
-  - `debug/mcm_position_intervention_protocol.csv`
-- Wichtig:
-  - Diese Schicht ist diagnostisch.
-  - Sie schliesst keine Position.
-  - Sie soll im naechsten Lauf zeigen, ob Exit-Reife eher aus echter
-    Strukturverschlechterung oder aus innerer Exit-Nervositaet entsteht.
-
-Nach Lauf 28 geprueft:
-
-- Die neue Positionslast-Diagnose ist fachlich aussagekraeftig.
-- `plan_holding_trust` markiert ueberwiegend die Trades, die bis TP laufen
-  sollten.
-- `exit_nervousness_observe` markiert alle finalen Verlusttrades dieses Laufs.
-- Daraus folgt:
-  - die neue Schicht sollte nicht einfach aktive Exits ausloesen
-  - sie kann aber als Bestaetigungsschicht fuer spaetere Exit-Kandidaten dienen
-  - naechster Schritt waere eine sehr vorsichtige Exit-Kandidatenlogik:
-    nur wenn Exit-Nervositaet, niedriger Plan-Trust, sinkende Haltestabilitaet
-    und ausreichend hohe Interventionseignung zusammenkommen
-
-Jetzt technisch vorbereitet:
-
-- Neue reine Beobachtungsschicht `exit_candidate_observe_state`.
-- Sie entsteht nur aus gekoppelter Bestaetigung:
-  - `exit_decision_pressure` hoch genug
-  - `plan_trust` niedrig genug
-  - `holding_stability` schwach genug
-  - `intervention_fitness` ausreichend
-  - `exit_evidence` ausreichend
-  - `intervention_unfit_state` nicht dominierend
-- Neues Debug-Protokoll:
-  - `debug/mcm_exit_candidate_observe.csv`
-- Neue Config-Schwellen:
-  - `MCM_EXIT_CANDIDATE_MIN_PRESSURE`
-  - `MCM_EXIT_CANDIDATE_MAX_PLAN_TRUST`
-  - `MCM_EXIT_CANDIDATE_MAX_HOLDING_STABILITY`
-  - `MCM_EXIT_CANDIDATE_MIN_FITNESS`
-  - `MCM_EXIT_CANDIDATE_MIN_EVIDENCE`
-- Wichtig:
-  - Diese Schicht ist weiter nur diagnostisch.
-  - Sie schliesst keine Position.
-  - Lauf 29 soll pruefen, ob `exit_candidate_observe` vor spaeteren SLs
-    entsteht, ohne spaetere TPs zu markieren.
-
-Nach Lauf 29 geprueft:
-
-- `exit_candidate_observe` hat den ersten Härtetest bestanden.
-- Echte Kandidatenereignisse lagen vor spaeteren SLs.
-- In den Outcome-Kontexten lagen alle `exit_candidate_observe`-Markierungen
-  ebenfalls auf spaeteren SL-Trades.
-- Es gab keine TP-Zerstoerung durch die Kandidatenschicht, weil weiter nur
-  beobachtet wurde.
-- Noch offen:
-  - Die Kandidatenlogik ist moeglicherweise streng genug, aber noch zu spaet
-    oder zu selten.
-  - Vor aktiver Nutzung braucht es mindestens einen weiteren Observe-Lauf.
-  - Danach kann ein hypothetisches Kandidaten-PnL-Protokoll gebaut werden:
-    Was waere passiert, wenn nur `exit_candidate_observe` geschlossen haette?
-
-Nach Lauf 30 geprueft:
-
-- Gesamt:
-  - 33 Trades, 16 TP / 17 SL
-  - Netto-PnL ca. +11.60
-  - Profit Factor ca. 2.27
-  - Max Drawdown ca. 2.21
-- Struktur:
-  - Zone: 28 Trades, 16 TP / 12 SL, ca. +14.30 PnL
-  - Non-Zone: 5 Trades, 0 TP / 5 SL, ca. -2.71 PnL
-  - High: 13 Trades, ca. +9.79 PnL
-  - Mid: 15 Trades, ca. +4.52 PnL
-  - Low: 5 Trades, ca. -2.71 PnL
-- Positionslast-Diagnose:
-  - `plan_holding_trust`: 16 Trades, 16 TP / 0 SL, ca. +20.75 PnL
-  - `exit_nervousness_observe`: 17 Trades, 0 TP / 17 SL, ca. -9.16 PnL
-- Exit-Kandidaten gegen Outcomes:
-  - `exit_candidate_observe`: 7 Trades, 0 TP / 7 SL, ca. -3.88 PnL
-  - `plan_trust_holds`: 22 Trades, 16 TP / 6 SL, ca. +17.61 PnL
-  - `exit_pressure_unfit_observe`: 2 Trades, 0 TP / 2 SL, ca. -1.03 PnL
-  - `no_exit_candidate`: 2 Trades, 0 TP / 2 SL, ca. -1.09 PnL
-- Kandidatenprotokoll:
-  - 1 echtes `exit_candidate_observe`-Ereignis im Protokoll
-  - dieses lag ebenfalls vor einem spaeteren SL
-  - `matured_exit_debug.csv` enthielt 10 gereifte Exit-Beobachtungen,
-    aber keine davon wurde als echter Exit-Kandidat bestaetigt
-- Interpretation:
-  - Lauf 30 bestaetigt Lauf 29, aber mit deutlich besserem Gesamtergebnis.
-  - Die Kandidatenschicht markiert weiter keine spaeteren TP-Trades als echte
-    Exit-Kandidaten.
-  - `plan_holding_trust` ist aktuell die klarste Reife-Spur:
-    wenn Planvertrauen und Haltestabilitaet tragen, sollte DIO nicht eingreifen.
-  - `exit_candidate_observe` ist noch kein aktiver Exit, aber ein ernsthafter
-    Kandidat fuer ein hypothetisches Replay-Protokoll.
-
-Umgesetzt: hypothetisches Kandidaten-PnL-Replay:
-
-- Der erste echte `exit_candidate_observe` einer offenen Position wird als
-  `exit_candidate_replay_state` gespeichert.
-- Dieser Replay-Anker wird erst gesetzt, wenn TP/SL auf derselben Kerze nicht
-  bereits den echten Exit ausgeloest haben.
-- Beim echten Exit rechnet `trade_stats.py` jetzt eine zweite Spur:
-  - echter Exit-PnL
-  - hypothetischer Kandidaten-PnL
-  - Differenz zwischen Kandidaten-Exit und echtem Exit
-- Neues Protokoll:
-  - `mcm_exit_candidate_replay.csv`
-- Neue Summen in `trade_stats.json`:
-  - `exit_candidate_replay_count`
-  - `exit_candidate_replay_actual_pnl`
-  - `exit_candidate_replay_hypothetical_pnl`
-  - `exit_candidate_replay_delta_pnl`
-  - `exit_candidate_replay_saved_loss_count`
-  - `exit_candidate_replay_saved_giveback_count`
-  - `exit_candidate_replay_harmed_count`
-  - `exit_candidate_replay_tp_cut_count`
-- Wichtig:
-  - Das ist keine aktive Exit-Entscheidung.
-  - DIO bleibt im Observe-Modus.
-  - Das Replay prueft nur, ob die innere Exit-Wahrnehmung netto tragfaehig
-    gewesen waere.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile bot.py trade_stats.py config.py`
-- Naechster Schritt:
-  - neuen Observe-Lauf starten
-  - danach `mcm_exit_candidate_replay.csv` und die neuen Summen auswerten
-  - erst bei wiederholter Netto-Verbesserung ueber einen schaltbaren
-    Active-Modus nachdenken
-
-Nach Lauf 31 geprueft:
-
-- Gesamt:
-  - 47 Trades, 24 TP / 23 SL
-  - Netto-PnL ca. +17.46
-  - Profit Factor ca. 2.30
-  - Max Drawdown ca. 2.20
-- Struktur:
-  - Zone: 37 Trades, 24 TP / 13 SL, ca. +23.12 PnL
-  - Non-Zone: 10 Trades, 0 TP / 10 SL, ca. -5.67 PnL
-  - High: 25 Trades, ca. +18.71 PnL
-  - Mid: 12 Trades, ca. +4.41 PnL
-  - Low: 10 Trades, ca. -5.67 PnL
-- Positionslast-Diagnose:
-  - `plan_holding_trust`: 24 Trades, 24 TP / 0 SL, ca. +30.84 PnL
-  - `exit_nervousness_observe`: 21 Trades, 0 TP / 21 SL, ca. -12.18 PnL
-  - `quiet_position_watch`: 2 Trades, 0 TP / 2 SL, ca. -1.21 PnL
-- Exit-Kandidaten:
-  - `exit_candidate_observe`: 11 Trades, 0 TP / 11 SL, ca. -6.13 PnL
-  - `plan_trust_holds`: 32 Trades, 24 TP / 8 SL, ca. +25.78 PnL
-- Hypothetisches Replay:
-  - 6 Replay-Faelle
-  - echter PnL dieser Faelle: ca. -1.34
-  - hypothetischer Kandidaten-PnL: ca. -2.21
-  - Replay-Delta: ca. -0.87
-  - 5 Faelle haetten Verlust reduziert
-  - 1 Fall haette geschadet
-  - dieser eine Fall haette einen spaeteren TP zu frueh abgeschnitten
-- Interpretation:
-  - Die Kandidatenschicht erkennt Verlustlagen weiterhin stark.
-  - Aktives Schliessen ist aber noch nicht reif, weil ein einziger
-    zu frueher Eingriff die kleinen Verlustverbesserungen ueberkompensiert.
-  - Fachlich passt das zur DIO-Logik:
-    Exit-Wahrnehmung ist vorhanden, aber Exit-Intervention braucht noch
-    zusaetzliche Tragfaehigkeit gegen TP-Zerstoerung.
-- Technische Korrektur nach Lauf 31:
-  - `mcm_exit_candidate_replay.csv` wurde in Lauf 31 wegen globalem
-    Debug-Sampling nicht geschrieben, obwohl die Summen korrekt waren.
-  - `trade_stats.py` schreibt Replay-CSV jetzt samplingfrei direkt.
-  - Syntaxpruefung erfolgreich:
-    `python -m py_compile trade_stats.py bot.py config.py`
-
-Nach Lauf 32 geprueft:
-
-- Gesamt:
-  - 48 Trades, 20 TP / 28 SL
-  - Netto-PnL ca. +9.81
-  - Profit Factor ca. 1.63
-  - Max Drawdown ca. 2.80
-- Rueckgang gegen Lauf 31:
-  - Lauf 31: ca. +17.46 PnL, 24 TP / 23 SL
-  - Lauf 32: ca. +9.81 PnL, 20 TP / 28 SL
-  - High-Trades sinken von 25 auf 18
-  - Low-Trades steigen von 10 auf 17
-  - Low-PnL verschlechtert sich von ca. -5.67 auf ca. -9.41
-- Struktur:
-  - Zone: 31 Trades, 20 TP / 11 SL, ca. +19.22 PnL
-  - Non-Zone: 17 Trades, 0 TP / 17 SL, ca. -9.41 PnL
-  - High: 18 Trades, 14 TP / 4 SL, ca. +15.93 PnL
-  - Mid: 13 Trades, 6 TP / 7 SL, ca. +3.29 PnL
-  - Low: 17 Trades, 0 TP / 17 SL, ca. -9.41 PnL
-- Positionslast-Diagnose:
-  - `plan_holding_trust`: 21 Trades, 20 TP / 1 SL, ca. +25.06 PnL
-  - `exit_nervousness_observe`: 25 Trades, 0 TP / 25 SL, ca. -13.97 PnL
-  - `intervention_unfit_state`: 1 Trade, spaeter SL, ca. -0.55 PnL
-- Exit-Kandidaten:
-  - `exit_candidate_observe`: 14 Trades, 0 TP / 14 SL, ca. -8.21 PnL
-  - `plan_trust_holds`: 28 Trades, 20 TP / 8 SL, ca. +21.09 PnL
-- Hypothetisches Replay:
-  - 10 Replay-Faelle
-  - echter PnL dieser Faelle: ca. -3.82
-  - hypothetischer Kandidaten-PnL: ca. -4.40
-  - Replay-Delta: ca. -0.57
-  - 9 Faelle haetten Verlust reduziert
-  - 1 Fall haette einen spaeteren TP zu frueh abgeschnitten
-- Interpretation:
-  - Der Rueckgang kommt nicht von einer zerstoerten Kandidatenlogik,
-    sondern von mehr Low-/Non-Zone-Handlung und weniger High-Tragfaehigkeit.
-  - Die Exit-Kandidaten erkennen Verlustzonen weiterhin sehr gut.
-  - Aktives Schliessen bleibt aber unreif, solange ein einzelner TP-Cut
-    die vielen kleinen SL-Verbesserungen ueberwiegen kann.
-- Technische Korrektur nach Lauf 32:
-  - `mcm_exit_candidate_replay.csv` entsteht jetzt, wurde aber noch durch
-    eine alte `dbr_debug`-Textzeile verschmutzt.
-  - Textdebug wurde auf `mcm_exit_candidate_replay_debug.log` umgeleitet.
-  - Ab Lauf 33 sollte die Replay-CSV strukturiert und sauber lesbar sein.
-  - Syntaxpruefung erfolgreich:
-    `python -m py_compile trade_stats.py bot.py config.py`
-
-Nach Lauf 33 geprueft:
-
-- Gesamt:
-  - 25 Trades, 12 TP / 13 SL
-  - Netto-PnL ca. +7.78
-  - Profit Factor ca. 2.01
-  - Max Drawdown ca. 2.67
-- Struktur:
-  - Zone: 19 Trades, 12 TP / 7 SL, ca. +11.67 PnL
-  - Non-Zone: 6 Trades, 0 TP / 6 SL, ca. -3.89 PnL
-  - High: 11 Trades, 8 TP / 3 SL, ca. +8.81 PnL
-  - Mid: 8 Trades, 4 TP / 4 SL, ca. +2.85 PnL
-  - Low: 6 Trades, 0 TP / 6 SL, ca. -3.89 PnL
-- Positionslast-Diagnose:
-  - `plan_holding_trust`: 13 Trades, 12 TP / 1 SL, ca. +14.97 PnL
-  - `exit_nervousness_observe`: 10 Trades, 0 TP / 10 SL, ca. -5.92 PnL
-  - `intervention_unfit_state`: 1 Trade, spaeter SL, ca. -0.53 PnL
-- Exit-Kandidaten:
-  - `exit_candidate_observe`: 7 Trades, 0 TP / 7 SL, ca. -4.36 PnL
-  - `plan_trust_holds`: 16 Trades, 12 TP / 4 SL, ca. +13.17 PnL
-- Hypothetisches Replay:
-  - 5 Replay-Faelle
-  - echter PnL dieser Faelle: ca. -1.36
-  - hypothetischer Kandidaten-PnL: ca. -2.57
-  - Replay-Delta: ca. -1.21
-  - 4 Faelle haetten Verlust reduziert
-  - 1 Fall haette einen spaeteren TP zu frueh abgeschnitten
-- TP-Cut-Befund:
-  - Der schädliche Kandidat lag bei `current_r` ca. -0.17R,
-    aber nach bereits ca. 2.62R MFE.
-  - Das wirkt nicht wie echte Exit-Reife, sondern wie Rueckatmung nach
-    starkem Gewinnlauf.
-  - Die hilfreichen SL-Schutzfaelle lagen deutlich adverser:
-    grob zwischen -0.64R und -0.97R.
-- Technisch umgesetzt:
-  - neue weiche Zusatzreife `MCM_EXIT_CANDIDATE_MAX_CURRENT_R = -0.45`
-  - ein Exit-Kandidat braucht jetzt echte adverse Tiefe
-  - leichte Rueckatmung nach Gewinnlauf wird als `exit_pullback_observe`
-    sichtbar, aber nicht als echter Kandidat gewertet
-  - `adverse_depth_ok` wird in Candidate-/Replay-Kontexte geschrieben
-  - Syntaxpruefung erfolgreich:
-    `python -m py_compile bot.py trade_stats.py config.py`
-
-Nach Lauf 34 geprueft:
-
-- Gesamt:
-  - 39 Trades, 22 TP / 17 SL
-  - Netto-PnL ca. +19.67
-  - Profit Factor ca. 3.03
-  - Expectancy ca. +0.50 pro Trade
-  - Max Drawdown ca. 1.73
-- Struktur:
-  - Zone: 32 Trades, 21 TP / 11 SL, ca. +20.20 PnL
-  - Non-Zone: 7 Trades, ca. -0.53 PnL
-  - High: 18 Trades, 14 TP / 4 SL, ca. +15.63 PnL
-  - Mid: 14 Trades, 7 TP / 7 SL, ca. +4.57 PnL
-  - Low: 7 Trades, 1 TP / 6 SL, ca. -0.53 PnL
-- Positionslast-Diagnose:
-  - `plan_holding_trust`: 22 Trades, 22 TP / 0 SL, ca. +29.34 PnL
-  - `exit_nervousness_observe`: 17 Trades, 0 TP / 17 SL, ca. -9.67 PnL
-- Exit-Kandidaten:
-  - `exit_candidate_observe`: 11 Trades, 0 TP / 11 SL, ca. -6.26 PnL
-  - `plan_trust_holds`: 27 Trades, 22 TP / 5 SL, ca. +26.50 PnL
-- Hypothetisches Replay:
-  - 3 Replay-Faelle
-  - echter PnL dieser Faelle: ca. +0.17
-  - hypothetischer Kandidaten-PnL: ca. -1.21
-  - Replay-Delta: ca. -1.39
-  - 2 Faelle haetten Verlust reduziert
-  - 1 Fall haette einen spaeteren TP zu frueh abgeschnitten
-- Interpretation:
-  - Der starke Lauf ist nicht nur “guter Markt”.
-  - Ein nicht funktionierendes System wuerde auch in Push-Phasen weiter
-    planlos Low-/Non-Zone-Verlust akkumulieren.
-  - Hier sieht man echte innere Ordnung:
-    `plan_holding_trust` haelt tragende Positionen perfekt bis TP.
-  - Low/Non-Zone ist nicht profitabel, aber in diesem Lauf kaum noch
-    destruktiv.
-  - Die offene Baustelle bleibt Exit-Intervention:
-    Exit-Wahrnehmung erkennt Verlustlagen, aber ein einzelner TP-Cut macht
-    aktives Schliessen weiter unreif.
-- Naechste fachliche Frage:
-  - Nicht Entry weiter verschärfen, sondern Exit-Kandidaten-Reife schärfen:
-    Wann ist Belastung echte Exit-Reife, und wann nur eine haltbare
-    Gegenbewegung innerhalb eines tragenden Plans?
-
-Live-Mechanik geprueft und abgesichert:
-
-- Die Live-Kette ist grundsaetzlich vorhanden:
-  - `runner.py` holt OHLCV-Daten ueber die API
-  - `workspace.py` schreibt `data/workspace.csv`
-  - der Bot verarbeitet dieselbe Fensterlogik wie im Backtest
-  - `place_orders.py` setzt Limit-Orders ueber ccxt/Phemex
-  - TP/SL werden als `takeProfitPrice` und `stopLossPrice` an die Order gehaengt
-  - der Order-Monitor prueft offene Orders, offene Positionen, Market-Shift,
-    Missed-TP und Pending-Timeouts
-- Mit Fake-Exchange erfolgreich geprueft:
-  - Order setzen
-  - aktive Order erkennen
-  - Snapshot fuer Bot-Handoff bilden
-  - Order canceln
-  - Cancel-Cause konsumieren
-- Korrektur eingebaut:
-  - zentrales `ph_ohlcv.resolve_exchange_symbol()`
-  - Live-Swap-Pfade nutzen konsistent `SOL/USDT:USDT`
-  - Workspace kann weiterhin das menschlich lesbare Symbol `SOL/USDT` schreiben
-- Sicherheitsfix eingebaut:
-  - Im Live-Modus reicht ein lokales Candle-TP/SL nicht mehr, um intern zu
-    finalisieren.
-  - Der Bot finalisiert eine Live-Position erst, wenn
-    `get_active_order_snapshot()` keinen offenen Order-/Positionskontext mehr
-    meldet.
-  - Solange die Exchange noch etwas Aktives sieht, schreibt der Bot
-    `LIVE_EXIT_WAIT` nach `live_backtest_debug.csv` und haelt die Position intern.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile bot.py runner.py place_orders.py place_orders_funktions.py ph_ohlcv.py workspace.py api.py`
-- Wichtig vor echtem Live-Test:
-  - `api.py` enthaelt aktuell leere API-Schluessel.
-  - Ein echter Live-Test sollte zuerst mit kleinster Groesse und beobachtetem
-    `order_debug.csv` / `live_backtest_debug.csv` erfolgen.
-
-Debug-Ausgabe wurde auf automatische Laufordner umgestellt:
-
-- pro Prozess-/Backtest-Start wird ein neuer Ordner `debug/debug_lauf_X` erzeugt
-- alte Pfade wie `debug/trade_stats.json`, `debug/mcm_profile.csv` oder
-  `debug/mcm_form_symbol_protocol.csv` werden zentral auf den aktuellen Laufordner
-  umgeleitet
-- dadurch werden neue Debug-Laeufe nicht mehr ueber alte Dateien geschrieben
-- die bisherige Auswertelogik bleibt fachlich gleich, nur der Zielordner aendert sich
-
-Naechster Debug liegt damit nicht mehr direkt in `debug/`, sondern z.B. in
-`debug/debug_lauf_1/`.
-
-Der neue Lauf nach der Trennung von innerer und handlungsnaher Sprachregulation
-wurde ausgewertet:
-
-- 52 Trades, 16 TP / 36 SL
-- Netto-PnL ca. -1.47
-- Profit Factor ca. 0.93
-- `symbolic_action_regulation` blieb klein: Schnitt ca. 0.012, Maximum 0.035
-- Formsprache reift weiter als innere Ordnung, ersetzt aber keine Handlungswahrheit
-- High-Structure-Trades waren positiv, Mid/Low-Struktur erzeugte den Verlust
-
-Umgesetzt ist deshalb ein Struktur-Tragfaehigkeitsfilter vor Handlung:
-
-- neue Diagnoseachsen: `structure_action_bearing`, `structure_action_gap`
-- mittlere/niedrige Struktur kippt bei fehlendem Support eher in `observe` statt `act`
-- unterhalb hoher Strukturqualitaet braucht Handlung zusaetzlichen Memory-/Feldsupport
-  oder ausserordentlich starke Entscheidungsevidenz
-- Ziel: benannte/erkannte Formen duerfen das innere Feld ordnen, aber nicht allein
-  die Handlung tragen
-
-Neu umgesetzt ist ausserdem eine kompositorische Formsprache:
-
-- einzelne Formzeichen koennen sich zu zusammengesetzten Wahrnehmungsobjekten verbinden
-- Beispiel im Konzept: `Eis` + `Wand` wird nicht als Textregel verstanden, sondern als
-  neues verdichtetes Objekt mit eigener Reife
-- technisch entsteht aus vorherigem und aktuellem Formzeichen ein `form_symbol_compound`
-- zusammengesetzte Zeichen bekommen eigene:
-  - Reife
-  - Stabilitaet
-  - Resonanz
-  - Tragfaehigkeit
-  - Lastreduktion
-  - Neuheitsdruck
-- diese Ebene wirkt nur weich auf innere Regulation und kognitive Verdichtung
-- sie ist keine Pattern-Regel und kein direkter Handelsausloeser
-
-Damit kann das System komplexere innere Objekte halten, ohne jedes Mal alle
-Einzelachsen neu zu entfalten. Erst bei Spannung, Neuheit oder geringer
-Tragfaehigkeit muss tiefer in die Clusterinformation hineingezoomt werden.
-
-Neu im Umsetzungsplan festgehalten ist der Begriff
-`Transfer-Tragfaehigkeit fremder Strukturen`:
-
-- fremde Marktstrukturen sollen nicht nur als bekannt/unbekannt behandelt werden
-- entscheidend ist, wie viel vorhandene Erfahrung auf eine fremde Lage
-  uebertragbar ist
-- bekannte Teilformen koennen Orientierung geben, ohne das Gesamtbild schon
-  sicher zu machen
-- geringe Transfer-Tragfaehigkeit soll eher Wahrnehmung, Reframing,
-  Zero-Point-Regulation und weiteres Beobachten staerken
-- hohe Transfer-Tragfaehigkeit darf Erfahrung weich in Handlung einbringen,
-  aber nicht als starre Pattern-Regel
-
-Dieser Punkt ist aktuell konzeptionell dokumentiert,
-inzwischen auch im README als Einstieg erklaert,
-aber noch nicht als eigene Brain-Metrik implementiert.
-
-Naechster sinnvoller Schritt:
-
-- neuen Backtest laufen lassen und pruefen, ob Mid/Low-Verlust reduziert wird
-- besonders beobachten: Tradezahl, PnL, Profit Factor, High/Mid/Low-Strukturverteilung
-  und die neuen Gruende `structure_action_bearing_observe` / `structure_action_low_observe`
-- zusaetzlich beobachten: Anzahl/Reife der `form_symbol_compound`-Objekte und ob sie
-  kognitive Last senken, ohne Handlung zu frueh zu enthemmen
-
-Auswertung des ersten Laufs mit kompositorischer Formsprache:
-
-- 44 Trades, 15 TP / 29 SL
-- Netto-PnL ca. +0.90
-- Profit Factor ca. 1.05
-- High-Struktur blieb klar positiv
-- Mid-Struktur wurde ebenfalls positiv
-- Low-Struktur blieb kritisch: 0 TP / 13 SL
-- Compound-Ebene arbeitet technisch:
-  - viele zusammengesetzte Formobjekte entstehen
-  - Reife ist noch niedrig
-  - Lastreduktion ist noch klein
-  - damit wirkt die Ebene bisher nicht zu aggressiv
-
-Umgesetzt als Folgeschritt:
-
-- `structure_action_uncertainty` ergaenzt die Struktur-Handlungsregulation
-- fehlende Struktur-Tragfaehigkeit erhoeht jetzt weich Beobachtungsbedarf,
-  Replan-Druck und Handlunghemmung
-- gleichzeitig wird Action-Clearance leicht reduziert
-- keine harte Regel: schlechte Struktur wird nicht absolut verboten, sondern
-  als organisches Unsicherheitsgefuehl im MCM-Feld abgebildet
-
----
-
-# --------------------------------------------------
-# 1. Gesamtstatus
-# --------------------------------------------------
-
-Das Projekt ist nicht mehr in einer frühen Fix- oder Basisphase.
-
-Die Kernbasis steht bereits im Code:
-
-- äußere Wahrnehmung ist vorhanden
-- innere Runtime ist vorhanden
-- Entscheidungstendenz ist vorhanden
-- Action-Intent- und Execution-State sind vorhanden
-- technische Handlungsbahn ist vorhanden
-- Episode / Review / Experience sind vorhanden
-- Persistenz für Memory- und Runtime-Zustände ist vorhanden
-- Visual- und Inner-Snapshots für die GUI sind vorhanden
-
-Die Hauptarbeit liegt damit nicht mehr in der Einführung der Grundmechanik,
-sondern im Architektur-Endausbau, in der Experience-Vertiefung
-und in der weiteren Ausrichtung auf zustandswirkungsbasierte Experience-Bewertung.
-
-Aktuelle Arbeitspriorität:
-
-- zuerst neuronale Aktivität und kognitive Innenfunktion fertigstellen
-- danach das MCM-Feld als Wahrnehmungsfeld sauber ausbauen
-- Fokus auf `MCMNeuron`, lokale Aktivierung, Kopplung, Nachhall, Kontext-Memory, `MCMField`, Innenmuster und Experience
-- Backtest-Logik bleibt sauberer Ausführungs- und Kontrollpfad, aber Testdateien sind nicht die aktuelle Hauptarbeit
-- Live-Exchange / echter Live-Handoff erst am Schluss validieren
-- GUI-Ausbau vorerst nachrangig behandeln
-- Testausbau vorerst nachrangig behandeln
-
-Damit ist der aktuelle Schwerpunkt nicht Live-Betrieb und nicht Oberfläche,
-sondern die fachlich saubere Umsetzung des inneren Gehirns:
-erst neuronale Aktivität, dann das Mental-Core-Matrix-Feld als Wahrnehmungsraum.
-
----
-
-# --------------------------------------------------
-# 2. Bereits real umgesetzt
-# --------------------------------------------------
-
-# --------------------------------------------------
-# 2.1 Ebene 1 – äußeres Wahrnehmen
-# --------------------------------------------------
-
-Ebene 1 ist als eigenständige Wahrnehmungsbasis real vorhanden.
-
-Bereits produktiv vorhanden:
-
-- `candle_state`
-- `tension_state`
-- `visual_market_state`
-- `structure_perception_state`
-- `temporal_perception_state`
-- `outer_market_state`
-
-Die Wahrnehmung wird aus Marktdaten / `window` aufgebaut
-und als neutrales Wahrnehmungspaket weitergegeben.
-
-### Fachliche Bedeutung
-
-Die Außenwelt ist nicht mehr nur einfache Signalquelle,
-sondern bereits mehrschichtig beschrieben als:
-
-- Candle-Zustand
-- Spannungszustand
-- äußere Marktform
-- Struktur-Wahrnehmung
-- zeitliche Wahrnehmung / Ablaufwahrnehmung
-
-Damit ist Ebene 1 real vorhanden und nicht mehr nur geplant.
-
----
-
-# --------------------------------------------------
-# 2.2 Ebene 2 – inneres Wahrnehmen / Denken / Handeln
-# --------------------------------------------------
-
-Ebene 2 ist bereits als laufende innere Runtime-Schicht vorhanden.
-
-Bereits real vorhanden:
-
-- `MCMBrainRuntime`
-- Runtime-Snapshot
-- Runtime-Decision-State
-- Runtime-Brain-Snapshot
-- Runtime-Marktimpuls-Verarbeitung
-- Runtime-Idle-Followup
-
-Die innere Zustandskette ist angelegt und im Codepfad vertreten:
-
-- `outer_visual_perception_state`
-- `inner_field_perception_state`
-- `perception_state`
-- `processing_state`
-- `felt_state`
-- `thought_state`
-- `meta_regulation_state`
-- `expectation_state`
-
-### Entscheidungstendenz
-
-Die Handlung entsteht bereits nicht mehr direkt aus einem simplen Signal.
-
-Vorhanden ist eine vorgelagerte Entscheidungstendenz:
-
-- `act`
-- `observe`
-- `hold`
-- `replan`
-
-### Handlungsbahn vor technischer Ausführung
-
-Zwischen Entscheidung und technischer Order liegen bereits weitere Zustände:
-
-- `action_intent_state`
-- `execution_state`
-
-Damit ist Entscheidung bereits stärker von technischer Ausführung getrennt.
-
-### Technische Handlungsbahn
-
-Weiterhin aktiv vorhanden:
-
-- Pending
-- Entry
-- Position
-- Exit
-
-Die technische Mechanik ist damit bereits an die innere Zustandslogik gekoppelt.
-
----
-
-# --------------------------------------------------
-# 2.3 MCM-Zustandsraum
-# --------------------------------------------------
-
-Der MCM-Zustandsraum ist bereits explizit lesbar.
-
-Vorhanden sind reale Zustandsachsen wie:
-
-- `field_density`
-- `field_stability`
-- `regulatory_load`
-- `action_capacity`
-- `recovery_need`
-- `survival_pressure`
-
-Diese Größen laufen bereits durch Runtime-, Decision-, Snapshot- und Experience-Strukturen.
-
-### Fachliche Bedeutung
-
-Die Zielidee,
-den Innenraum des Systems explizit lesbar zu machen,
-ist real begonnen und produktiv im Code vertreten.
-
----
-
-# --------------------------------------------------
-# 2.4 Ebene 3 – Entwicklung aus Erfahrung
-# --------------------------------------------------
-
-Die Entwicklungsebene ist bereits substanziell umgesetzt.
-
-Vorhanden sind:
-
-- `mcm_decision_episode`
-- `mcm_decision_episode_internal`
-- `mcm_experience_space`
-- `outcome_decomposition`
-- Review-Logik
-- Signature-Memory
-- Context-Cluster
-- formale `inner_context_clusters`-Anbindung
-- persistenter Memory-State
-- In-Trade-Update-Auswertung
-- Experience-Linking
-- Similarity-/Axis-/Drift-/Reinforcement-Ansätze
-- Felt-/Affective-Episode-Auswertung
-
-### Nicht-Handlung ist integriert
-
-Nicht-Handlung ist nicht mehr nur Sonderfall,
-sondern realer Teil des Episoden- und Experience-Flusses:
-
-- `observed_only`
-- `withheld`
-- `replanned`
-- `abandoned`
-
-### Zustandsdelta ist integriert
-
-Episode / Experience führen bereits:
-
-- `state_before`
-- `state_after`
-- `state_delta`
-
-Damit ist die Kopplung von Handlung / Nicht-Handlung und Zustandsveränderung bereits real umgesetzt.
-
-### Innenkontextcluster und Pattern-Verdichtung sind begonnen
-
-`inner_context_clusters` sind im aktuellen Code nicht mehr nur Zielidee,
-sondern bereits in `Bot`, Experience-Aktualisierung und Memory-State verankert.
-
-Zusätzlich sind im aktuellen Stand Pattern-Werte vorhanden:
-
-- `inner_pattern_support`
-- `inner_pattern_conflict`
-- `inner_pattern_fragility`
-- `inner_pattern_bearing`
-- `pattern_reinforcement`
-- `pattern_attenuation`
-- `pattern_action_support`
-- `pattern_observe_pressure`
-- `pattern_replan_pressure`
-
-Neu ergänzt ist eine erste aktive Kontextspur:
-
-- `active_context_trace`
-- `activation`
-- Decay pro Runtime-Tick
-- Reaktivierung aus `inner_context_clusters`
-- schwache Rückwirkung auf Pattern-Modulation
-- schwache Rückwirkung auf Replay-/Feldimpuls
-- schwache lokale Rückstreuung bis in `MCMNeuron.memory_trace`
-- `context_memory_impulse` als lokale Kontext-Memory-Kennzahl
-- `field_neuron_context_memory_impulse_norm_mean` läuft in `inner_context_clusters`, `current_vector`, Experience-Link-Achsen und bleibt persistierbar
-- innere Musterbeschriftung kann `memory_reactivated_neurons` ausweisen
-- Experience-Similarity führt `context_memory_impulse_axis`, `active_context_activation_axis`, `active_context_balance_axis` und `context_memory_reactivation_axis`
-- `neural_felt_state` ist als lesende neuronale Felt-Schicht begonnen
-- `neural_felt_bearing`, `neural_felt_pressure`, `neural_felt_memory_resonance`, `neural_felt_context_reactivation` und `neural_felt_label` laufen in `inner_context_clusters`, `current_vector`, `felt_state` und `memory_state`
-- `neural_felt_*` läuft zusätzlich in Experience-Summary, Episode-Felt-Summary, Similarity-Achsen, Runtime-Snapshot, Decision-State, Brain-Snapshot und `active_context_trace`
-- `active_context_trace` trägt `neural_felt_*` als Lesefeld; Replay-/Feldimpuls und Pattern-Verstärkung wurden dadurch nicht erhöht
-- `inner_field_history` ist als lesender Feldverlauf über mehrere Ticks angebunden und über `memory_state` persistierbar
-- `inner_field_history_*` läuft in `inner_context_clusters`, `current_vector`, Experience-Summary, Runtime-/Brain-Snapshot, `active_context_trace` und `episode_internal["signal"]`
-- `active_context_trace` trägt `inner_field_history_*` nur als Lesefeld; Replay-/Feldimpuls und Pattern-Verstärkung wurden dadurch nicht erhöht
-- feste Feldtopologie ist begonnen: `MCMField` führt feste `field_position` und `topology_neighbors` je `MCMNeuron`
-- neuronale Aktivität ist geschärft: `MCMNeuron` bildet jetzt lokale `receptivity`, `overload`, `recovery_tendency`, `memory_resonance`, `context_reactivation`, `coupling_resonance`, `activity_label` und `activation_components`
-- Reizaufnahme wird pro Neuron lokal moduliert, sodass derselbe Außenreiz nicht mehr nur global gleichförmig wirkt
-- `activation` ist jetzt eine zusammengesetzte Lesung aus Außenreiz, Replay, Kontext-Memory, Kopplung, Memory-Feedback, Velocity und lokaler Resonanz
-- `MCMField` ist als Wahrnehmungsfeld geschärft: neuronale Aktivität breitet sich schwach über feste Topologie-Nachbarn aus
-- `field_perception_state` erkennt lokale Aktivitätsinseln mit Masse, Aktivierung, Druck, Kohärenz, Kontextreaktivierung, Spread und Label
-- `field_perception_state` bewertet Aktivitätsinseln jetzt zusätzlich als Wahrnehmungsqualität: `field_perception_focus`, `field_perception_clarity`, `field_perception_stability`, `field_perception_fragmentation`, `field_perception_strain` und `dominant_activity_island_id`
-- Feldlabels wie `active_perception_field`, `coherent_perception_field`, `fragmented_perception_field`, `memory_reactivated_field` und `strained_field` sind als Leseschicht vorhanden
-- `field_topology_layout_state` läuft in `inner_field_perception_state`, `inner_context_clusters`, `current_vector`, `active_context_trace` und Experience-Similarity-Achsen
-- neue neuronale Aktivitätswerte und `field_perception_state` laufen in Neuron-Snapshots, Arealzustände, `inner_field_perception_state` und `neural_felt_state`
-- Aktivitätsinseln und `field_perception_label` laufen jetzt in `inner_pattern_identity`, `field_pattern_signature`, `field_pattern_vector`, `inner_context_clusters`, `memory_state` und `mcm_experience_space`
-- die Innenmuster-Identität unterscheidet dadurch nicht mehr nur globale Feld-/Arealwerte, sondern auch wahrgenommene lokale Aktivitätsinseln im MCM-Feld
-- `processing_state` bildet aus Feldinseln jetzt `field_perception_pressure`, `field_perception_support`, `field_perception_clarity`, Fokus, Stabilität, Fragmentierung und Strain
-- `felt_state` nutzt die geschärfte Feldwahrnehmung für Risiko, Gelegenheit, inneren Konflikt, Druck, Stabilität, Alignment und dominante Spannung
-- `thought_state` nutzt Fokus/Stabilität/Fragmentierung/Strain für Denk-/Areal-Druck, Unterstützung, Reife, Grübeltiefe, Entscheidungsdruck, Entscheidungsbereitschaft und Thought-Alignment
-- `meta_regulation_state` nutzt die geschärfte Feldwahrnehmung jetzt für `field_perception_instability`, `field_observation_need`, `field_replan_pressure` und `field_action_support`
-- fragmentierte/angespannte MCM-Felder können dadurch auch bei starkem Signal gezielt `observe` oder `replan` auslösen; klare/stabile Felder können kontrolliertes `act` stützen
-- Architekturentscheid übernommen: Experience soll nicht `TP gut / SL schlecht` lernen, sondern eine neurochemisch gedämpfte Wirkung aus Profitabilität, Entlastung, Stabilität, Disziplin, Tragfähigkeit, Varianz und Überlast bilden
-- Profitabilität bleibt notwendige innere Zielspannung, wird aber durch Regelqualität, Tragfähigkeit, Stabilität und Varianz gedämpft; chaotischer Gewinn darf nicht blind stärken, sauberer Verlust nicht blind schwächen
-- `build_experience_neurochemical_effect()` ist im Brain angebunden und liefert getrennte Wirkachsen: `profit_reward`, `relief_signal`, `stability_signal`, `discipline_signal`, `confidence_signal`, `overactivation_signal`, `chaos_penalty`, `variance_penalty`, `overstrain_penalty`, `carrying_capacity_delta`, `self_confidence_delta` und `process_quality`
-- `_experience_reward_delta()` ist jetzt nur noch ein Kompatibilitäts-Wrapper auf `experience_effect_score`; die eigentliche Erfahrungsmechanik liegt in der neurochemisch gedämpften Wirkfunktion
-- `experience_neurochemical_effect` und die flachen Wirkachsen laufen in Experience-Summary, Episode-History, Experience-Space und als gleitende Link-Profile (`avg_*` / `last_*`) in die Musterlinks
-- SL-Episoden werden nicht automatisch schlecht bewertet, aber nach oben gedeckelt; sauberer Verlust kann Prozessstabilität bestätigen, erzeugt aber kein euphorisches Gewinnsignal
-- Experience-Similarity führt jetzt zusätzliche neurochemische Achsen für Profit, Entlastung, Stabilität, Disziplin, Confidence, Überaktivierung, Chaos, Varianz, Überlast, Tragfähigkeit und Selbstvertrauen
-- `inner_context_clusters` speichern jetzt `experience_neurochemical_profile`, `neurochemical_support`, `neurochemical_strain` und gleitende neurochemische `avg_*` / `last_*` Werte
-- `pattern_reinforcement`, `pattern_attenuation` und `trust` werden schwach durch neurochemische Tragfähigkeit oder Belastung moduliert; die Feld-/Musterwerte bleiben weiterhin dominierend
-- `active_context_trace` trägt die neurochemischen Achsen als Nachhall und nutzt sie schwach für `activation`, `action_support`, `observe_pressure`, `replan_pressure` und Replay-Impuls
-- tragfähige Muster bekommen dadurch etwas mehr stabile Wiedererreichbarkeit; chaotische/überaktive Muster erzeugen eher Dämpfung, Beobachtungsdruck und weniger Replay-Nachhall
-- `memory_state.py` persistiert die neuen neurochemischen Clusterprofile
-- `active_context_trace` trägt `field_topology_layout_state` nur als Lesefeld; Replay-/Feldimpuls und Pattern-Verstärkung wurden dadurch nicht erhöht
-- `field_areal_topology_*` läuft in `inner_context_clusters`, `current_vector`, `active_context_trace`, `episode_internal["signal"]` und Experience-Similarity-Achsen
-- `field_areal_topology_*` bleibt Lesewert und verändert Replay-/Feldimpuls oder Pattern-Verstärkung nicht
-- `inner_pattern_identity` ist als erste Innenmuster-Identität begonnen und läuft in `inner_context_clusters`, `current_vector`, Cluster-Rückgabe, `memory_state` und `active_context_trace`
-- `active_context_trace` trägt `field_pattern_signature_key`, `inner_pattern_identity`, `inner_pattern_identity_label` und `inner_pattern_identity_confidence` nur als Lesefelder
-- `inner_pattern_identity_stability` ist als Lesewert ergänzt und läuft in Cluster-Rückgabe, `active_context_trace`, `mcm_runtime_brain_snapshot["signal"]`, `episode_internal["signal"]`, `mcm_experience_space` und `memory_state`
-- `inner_pattern_identity_streak`, `inner_pattern_identity_recurrent`, `inner_pattern_identity_changed` und `inner_pattern_identity_last_seen_tick` bleiben reine Wiedererkennungs-/Stabilitätswerte ohne stärkere Replay-/Feldimpuls-Gewichtung
-- Runtime-Profiling ist als Debug-Schicht angebunden und schreibt nach `debug/mcm_profile.csv`
-- Profiling misst `step_mcm_brain`, `field.step`, `cluster.detect`, Runtime-/Visual-Snapshot-Schreiben und `memory_state` Build/Write
-
-Eine erste schwache lokale Rückstreuung bis in `MCMNeuron.memory_trace` ist angebunden; die tiefe lokale Erfahrungsareal-Bildung ist noch offen.
-`neural_felt_state` bleibt eine lesende Innenwahrnehmung und ist keine neue Handelsregel.
-
----
-
-# --------------------------------------------------
-# 2.5 Persistenz
-# --------------------------------------------------
-
-Persistenz ist vorhanden für:
-
-- `signature_memory`
-- `context_clusters`
-- `inner_context_clusters`
-- `mcm_runtime_snapshot`
-- `mcm_runtime_decision_state`
-- `mcm_runtime_brain_snapshot`
-- `mcm_decision_episode`
-- `mcm_experience_space`
-- weitere Memory-Zustände
-
-Damit kann der Bot relevante Langzeitanteile seines Zustandsraums halten.
-
----
-
-# --------------------------------------------------
-# 2.6 Visualisierung / Snapshots
-# --------------------------------------------------
-
-Für die Visualisierung existieren bereits reale Ausgaben aus dem Bot:
-
-- `debug/bot_visual_snapshot.json`
-- `debug/bot_inner_snapshot.json`
-- `bot_memory/memory_state.json`
-- `debug/trade_stats.json`
-- `debug/trade_equity.csv`
-
-Damit ist bereits eine hybride Visualisierung vorhanden:
-
-- Außenwelt
-- Innenwelt
-- Memory / Entwicklung
-- klassische Equity-/PnL-Nachweise
-
-Die GUI ist also nicht mehr rein alt,
-sondern bereits in einer Übergangsform.
-
----
-
-# --------------------------------------------------
-# 3. Bereits korrigierte Fehler aus dem früheren Fixblock
-# --------------------------------------------------
-
-# --------------------------------------------------
-# 3.1 state_delta ist korrigiert
-# --------------------------------------------------
-
-Bereits umgesetzt:
-
-- ereignislokale Bildung von `state_before`, `state_after`, `state_delta`
-- gemeinsamer Übergang für Stats-Kontext und Episode-Payload
-- Snapshot-Commit erst nach dem jeweiligen Event
-- alte Null-/Doppelsnapshot-Pfade im Entry-/Pending-/Nicht-Handlungs-Pfad bereinigt
-
-Folge:
-
-- Episode / Experience arbeiten an diesen Stellen wieder auf realen Zustandsübergängen
-
----
-
-# --------------------------------------------------
-# 3.2 Statistik-Semantik ist korrigiert
-# --------------------------------------------------
-
-Bereits umgesetzt:
-
-- `pnl_netto` startet als reiner Nettowert bei `0.0`
-- `current_equity` wird getrennt als `start_equity + pnl_netto` geführt
-- `expectancy` baut damit auf realem Nettowert statt auf Equity-Basis auf
-
-Folge:
-
-- Nettoergebnis und Erwartungswert sind semantisch wieder sauber getrennt
-
----
-
-# --------------------------------------------------
-# 3.3 Exit-Strukturdiagnose ist korrigiert
-# --------------------------------------------------
-
-Bereits umgesetzt:
-
-- Exit-/Cancel-Pfade nutzen aktuellen Exit-Kontext statt alten Entry-Kontext
-- aktuelle `structure_perception_state` läuft bis in `on_exit()` / `on_cancel()`
-- `outcome_records` tragen reale Exit-Strukturqualität
-- `structure_bands` werden daraus sauber neu aufgebaut
-
-Folge:
-
-- Exit-KPI über Strukturqualität ist im aktuellen Backtest-/Bot-Pfad fachlich belastbar
-
----
-
-# --------------------------------------------------
-# 3.4 attempt_feedback / proof-Felder sind korrigiert
-# --------------------------------------------------
-
-Bereits umgesetzt:
-
-- Proof-/Regulationsfelder werden im Attempt-Feedback sauber aggregiert
-- Snapshot-Fallbacks sind vorhanden
-- In-Trade-Update-Pfade tragen die fehlenden Felder weiter
-- Experience-Linking / Episode-History führt diese Felder weiter
-
-Bereits sauber geführt insbesondere:
-
-- `regulatory_load`
-- `action_capacity`
-- `survival_pressure`
-- `pressure_release`
-- `load_bearing_capacity`
-- `state_stability`
-- `capacity_reserve`
-- `recovery_balance`
-
-Folge:
-
-- die alte statistische Abflachung dieser Diagnosegrößen ist im aktuellen Code nicht mehr der Hauptfehler
-
----
-
-# --------------------------------------------------
-# 4. Reale offene Punkte im aktuellen Stand
-# --------------------------------------------------
-
-# --------------------------------------------------
-# 4.0 MCMField-Speicherfehler korrigiert / Zieltopologie geschärft
-# --------------------------------------------------
-
-Real vorhanden:
-
-- `MCM_KI_Modell.py` führt den Feldzustand weiterhin als mehrdimensionales `N x D`
-- `_build_local_neighbor_state_map()` berechnet Nachbarschaften zeilenweise pro Neuron
-- der alte permanente `N x N x D`-Deltablock ist im lokalen Nachbarschaftsaufbau entfernt
-- weitergegeben werden nur lokale Nachbarn, nicht das gesamte Feld als globaler Neuroneneinfluss
-- `velocity` beschreibt Zustandsnachlauf / Trägheit / Richtung der Zustandsveränderung, keine physische Neuronenbewegung
-
-Fachliche Bedeutung:
-
-- alle Neuronen können denselben Umweltreiz wahrnehmen
-- informationsbildend ist aber ihre lokale Eigenreaktion
-- lokale Nachbarschaft, Kopplung, Kohärenz und Resonanz können Informationsinseln bilden
-- Cluster sollen dadurch nicht aus globalem Gleichschalten entstehen, sondern aus lokaler Feldorganisation
-- die Zielrichtung wird auf feste Feldknoten / neuronales Gewebe geschärft
-- nicht der Knoten bewegt sich, sondern Zustand, Aktivierung, Nachhall und Informationswirkung breiten sich im Feld aus
-- höhere Neuronenzahl bedeutet höhere Auflösung der inneren Zustandswahrnehmung, nicht automatisch höhere Intelligenz
-
-Weiter zu beobachten:
-
-- `_build_areal_state()` baut Areale jetzt ohne dauerhafte vollständige `N x N`-Distanzmatrix auf
-- `_build_areal_components()` berechnet Distanzen zeilenweise pro Neuron
-- interne Areal-Dichte wird pro Komponente zeilenweise berechnet
-- kein permanenter `N x N x D`-Deltablock und keine dauerhafte globale Distanzmatrix im Arealaufbau
-
-Aktueller Architekturabgleich:
-
-- `MCMField` ist kompatibel auf feste Feldtopologie begonnen
-- jedes `MCMNeuron` trägt `field_position` und `topology_neighbors`
-- `energy` und `velocity` bleiben nach außen kompatibel als `N x D`-Sicht erhalten
-- lokale Kopplung nutzt feste Topologie-Nachbarschaften statt dynamischer globaler Zustandsabstandssuche
-- GUI-Lesart bleibt bewusst offen bis die Feldtopologie fachlich fertig steht
-
----
-
-# --------------------------------------------------
-# 4.1 Live-Handoff zwischen Pending, Fill und Position ist bot-seitig nachgezogen
-# --------------------------------------------------
-
-Teilweise korrigiert:
-
-- `_handle_pending_entry()` kann `source="position_context"` in den gemeinsamen Fill-Handoff überführen
-- `_finalize_pending_fill_handoff()` führt Live- und Backtest-Fill über denselben Bot-internen Pfad
-- `get_active_order_snapshot()` erzwingt vor der Snapshot-Auswertung einmalig einen synchronen Bootstrap-/Exchange-Sync
-- `get_active_order_snapshot()` liest offene Order-TP/SL jetzt aus `takeProfitPrice/stopLossPrice` und `takeProfitRp/stopLossRp`
-- `get_active_order_snapshot()` bleibt bei offener Order auch ohne Exchange-`timestamp` verwertbar
-- `place_order()` übernimmt identische offene Orders jetzt inklusive `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext
-- `_sync_with_exchange()` übernimmt eindeutig offene Orders jetzt inklusive `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext
-- `_sync_with_exchange()` ergänzt bei bereits bestätigter aktiver Order fehlenden `_ACTIVE_TP`, `_ACTIVE_SIDE` und Entry-/Risk-Kontext aus `open_orders`
-- `get_active_order_snapshot()` synchronisiert bei verschwundener aktiver Order aktiv nach
-- erkannte Live-Positionen können dadurch als Positionskontext an den Bot zurückgegeben werden
-- Live-Fill schreibt den `live_handoff`-Kontext inklusive `pending_order_id`, `snapshot_id`, Entry/TP/SL, `entry_ts` und `handoff_reason` in `position_meta`
-- Restart-Recovery schreibt `recovery_source` und `recovery_snapshot` in `meta`
-- aktive Restart-Positionen erhalten einen verwertbaren `entry_ts` / `last_checked_ts`
-- Restart-Recovery setzt `execution_state` auf `pending_recovered` oder `position_recovered`
-- Restart-Recovery schreibt ein technisches Episode-Event über `pending_update` oder `position_update`
-- Restart-Recovery markiert Memory-State als dirty und committet den Regulationssnapshot
-- Restart-Recovery speichert den wiederhergestellten Zustand sofort per Forced-Save
-
-Weiter zu prüfen:
-
-- echter Live-Test `pending -> filled -> position` gegen Exchange-Zustand
-- Restart-Fall mit bereits gefüllter Order gegen echten Exchange-Zustand validieren
-- ob TP/SL/Entry-Kontext nach Restart im echten Exchange-Fall vollständig belastbar bleibt
-
-Folge:
-
-- Backtest- und Live-Handoff nutzen bot-seitig denselben Fill-Abschluss, müssen aber real-live-validiert werden
-
----
-
-# --------------------------------------------------
-# 4.2 Innenkontextcluster sind angebunden und als Pattern-Verdichtung begonnen
-# --------------------------------------------------
-
-Real vorhanden:
-
-- `inner_context_clusters` sind bereits real in `Bot`, Experience-Aktualisierung und Persistenz verankert
-- die Trennung von `context_clusters` und `inner_context_clusters` ist fachlich begonnen
-- Pattern-Verdichtung ist real begonnen über Support, Conflict, Fragility, Bearing, Reinforcement und Attenuation
-- Pattern-Werte wirken bereits in Review-Feedback, Runtime-Meta-Regulation und Entscheidungstendenz hinein
-
-Neu real vorhanden:
-
-- `active_context_trace` ist als Runtime-Zustand eingeführt
-- aktive Kontextspur wird aus `inner_context_clusters` reaktiviert
-- `activation` klingt pro Runtime-Tick ab
-- Pattern-Werte werden schwach über aktive Kontextspur moduliert
-- Runtime-Snapshot führt `active_context_trace` mit
-- aktive Kontextspur wird schwach und lokal dosiert bis in `MCMNeuron.memory_trace` zurückgeführt
-- `context_memory_impulse` ist im Inner-Snapshot als eigene lokale Kontext-Memory-Kennzahl vorhanden; die Neuron-GUI-Datei ist im aktuellen Upload nicht enthalten und daher nicht geprüft
-- `field_neuron_context_memory_impulse_norm_mean` läuft in `inner_context_clusters` und bleibt über `memory_state` persistierbar
-- `context_memory_impulse` wird in der inneren Musterbeschriftung als `memory_reactivated_neurons` sichtbar, wenn lokale Kontextreaktivierung dominiert
-
-Real offen:
-
-- wiederkehrende Feldformen sind noch nicht als echte lokale Erfahrungsareale im Neuronenfeld verankert
-- Nachhall ist jetzt erste lokale Memory-Trace-Modulation, aber noch keine tiefe lokale Feldplastizität
-- Replay-Rückwirkung bleibt bewusst schwach begrenzt und ist noch kein vollständiger lokaler Erfahrungsumbau
-
-Fachlich ergänzt:
-
-- Informationscluster sollen nicht durch Felddruck gelöscht werden
-- Felddruck verändert Priorität, Aktivierung und Zugänglichkeit von Information
-- nicht getragene Information verliert aktive Bindungsstärke und geht in Nachhall oder Latenz über
-- dadurch wird lokaler Organisationsraum frei, ohne gespeicherte Erfahrung zu vernichten
-- Reorganisation bedeutet Informationsumschichtung, nicht Blackout
-- Kohärenzstärke beschreibt, wie verdichtet und tragfähig ein Cluster aktuell getragen wird
-- diese Kohärenzstärke soll später farblich in der GUI sichtbar werden
-
-Ziel:
-
-- `context_clusters` als äußerer / gesamt-situativer Signaturraum klar halten
-- `inner_context_clusters` als wiederkehrenden Innenmusterraum weiter ausbauen
-- aktive Kontextspur im Replay-/Feldimpuls weiter kontrolliert beobachten und begrenzen
-- Vermeidungs-, Entlastungs-, Reorganisations- und Tragfähigkeitslernen sauber auf Innenmuster legen
-- Clusterzustände als aktiv getragen, nachhallend, latent oder frei werdend unterscheidbar machen
-
----
-
-# --------------------------------------------------
-# 4.3 Experience-Bewertungslogik ist auf neurochemische Zustandswirkung umgestellt
-# --------------------------------------------------
+DIO beginnt nach der Veraenderung der Sinnesbahn nicht sofort besser zu
+sehen, sondern muss alte Erfahrungsraeume neu mit der veraenderten
+Wahrnehmung synchronisieren. Lauf 13 zeigt dabei mehr Zurueckhaltung und
+bessere Netto-Tragfaehigkeit als Lauf 12.
+
+## Lauf 14 als frischer Speicher-/Semantikaufbau
+
+Befund:
+- Lauf 14 wurde vor der neuen Carryover-Diagnose erzeugt und dient als
+  Referenzlauf fuer frischen Erfahrungsraum nach sensorischer
+  Realitaetsverdichtung.
+- Ergebnis: 370 Trades, 110 TP, 260 SL, Netto-PnL ca. -10.28.
+- Equity-Verlauf:
+  - erstes Viertel: Aufbau bis ca. +5.84
+  - zweites Viertel: Rueckgang um ca. -7.71
+  - drittes Viertel: starker Bruch um ca. -12.36
+  - viertes Viertel: leichte Erholung um ca. +3.54
+- Maximaler Drawdown vom Peak: ca. 24.81.
+- Visuelle Aussenwahrnehmung bleibt stabil und entspricht den vorherigen
+  Laeufen; der Bruch entsteht nicht durch veraenderte Rohsicht.
+
+Innere Lesart:
+- `memory_compare_load` hoch, `memory_support` fast null.
+- `interpretation_quality` und `transfer_bearing` niedrig.
+- `action_clearance` bleibt deutlich hoeher als `action_inhibition`.
+- DIO baut zwar neue Semantik auf, handelt aber im Regimewechsel noch mit zu
+  viel Handlungserlaubnis fuer die geringe Transfer-Tragfaehigkeit.
+
+Naechster Vergleich:
+Der naechste Lauf mit `serotonin_carryover_risk`, `emotional_decoupling` und
+`reactive_nervous_drive` muss gegen diesen Lauf 14 gelesen werden. Ziel ist zu
+erkennen, ob der Einbruch durch Stabilitaetsnachhall ohne emotionale
+Entkopplung sichtbar wird.
+
+## Lauf 15 mit Carryover-Diagnose
+
+Befund:
+- Lauf 15 ist der erste Lauf mit sichtbarer Carryover-/Entkopplungsdiagnose.
+- Ergebnis: 385 Trades, 130 TP, 255 SL, Netto-PnL ca. +13.12.
+- Gegen Lauf 14:
+  - Lauf 14: ca. -10.28 Netto-PnL, 110 TP / 260 SL.
+  - Lauf 15: ca. +13.12 Netto-PnL, 130 TP / 255 SL.
+  - Maximaler Drawdown sinkt von ca. 24.81 auf ca. 14.92.
+- Verlauf Lauf 15:
+  - erstes Viertel: Aufbau ca. +6.32
+  - zweites Viertel: Rueckgang ca. -5.01
+  - drittes Viertel: starker Sprung ca. +13.71
+  - viertes Viertel: leichter Rueckgang ca. -2.28
+
+Neue Diagnosewerte:
+- `world_shift_evidence` liegt deutlich sichtbar bei ca. 0.60.
+- `serotonin_carryover_risk` liegt moderat bei ca. 0.27.
+- `emotional_decoupling` ist noch niedrig bei ca. 0.14.
+- `reactive_nervous_drive` liegt bei ca. 0.31.
+
+Interpretation:
+Die Diagnose zeigt, dass DIO die Weltverschiebung wahrnimmt, aber die echte
+reflektive Distanz noch schwach ist. Der starke Gewinnsprung im dritten
+Viertel entsteht wahrscheinlich nicht aus voll entwickelter Reflexion, sondern
+aus besserer Passung zwischen Handlung und wieder tragender Aussenlage.
+Trotzdem ist der Vergleich zu Lauf 14 wichtig: weniger Drawdown, mehr TP und
+deutlich bessere Erholung nach dem Regimebruch.
+
+## Lauf 16: fehlende emotionale Abgrenzung
+
+Befund:
+- Ergebnis: 341 Trades, 102 TP, 239 SL, Netto-PnL ca. -12.06.
+- Der Lauf erreicht frueh nur einen kleinen Peak von ca. +2.84 und faellt
+  danach bis ca. -17.76.
+- Maximaler Drawdown: ca. 20.59.
+- Anders als Lauf 15 entsteht kein grosser Erholungssprung.
+
+Innere Lage:
+- `world_shift_evidence` bleibt sichtbar bei ca. 0.60.
+- `serotonin_carryover_risk` liegt moderat bei ca. 0.27.
+- `emotional_decoupling` bleibt niedrig bei ca. 0.14.
+- `reactive_nervous_drive` liegt bei ca. 0.30.
+- `memory_compare_load` bleibt sehr hoch, `memory_support` fast null.
+- `field_clarity` bleibt sehr niedrig.
+- `action_clearance` ca. 0.63 bleibt deutlich ueber `action_inhibition`
+  ca. 0.38.
+
+Interpretation:
+DIO erkennt zwar eine Weltverschiebung, hat aber keine ausreichende
+emotionale/perzeptive Abgrenzung. Er laesst Reiz, Innenlage und Handlung zu
+stark gekoppelt. Wenn er ins Wanken kommt, entsteht kein reifer Abstand zur
+eigenen Lage; die Handlungserlaubnis bleibt zu hoch fuer die geringe innere
+Klarheit und den fehlenden Memory-Support.
+
+## Umbau: bewusste Wahrnehmung / innere Reizwirkung
 
 Umgesetzt:
-
-- `build_experience_neurochemical_effect()` bildet den eigentlichen Erfahrungswert aus Prozessqualität, Profitspannung, Entlastung, Stabilität, Disziplin, Confidence, Tragfähigkeit, Varianz, Chaos, Überlast und Überaktivierung
-- `_experience_reward_delta()` verzweigt nicht mehr selbst über Outcome-Wege, sondern liest nur noch `experience_effect_score` aus der neurochemischen Wirkfunktion
-- `tp_hit`, `sl_hit`, `cancel`, `timeout` bleiben Ereigniskontext, aber nicht mehr der Bewertungsanker
-- SL-Episoden sind nach oben gedeckelt: sauberer Verlust kann Regelwerk und Tragfähigkeit bestätigen, aber kein starkes Belohnungssignal erzeugen
-- chaotische TP-Episoden werden durch Chaos, Varianz und Überaktivierung gedämpft
-- die Wirkachsen laufen in Experience-Summary, Episode-History, Experience-Space, Link-Buckets und Similarity-Achsen
-
-Offen:
-
-- die neue neurochemische Wirkung ist noch nicht stark in lokale Neuronen-/Feldverstärkung zurückgeführt
-- die nächsten Schritte müssen beobachten, ob `avg_*` / `last_*` Profile in den Link-Buckets stabile Musterbindung oder sinnvolle Dämpfung erzeugen
-
-Ziel:
-
-- Experience bewertet primär `state_before`, `state_after`, `state_delta` und Tragfähigkeitswirkung
-- `tp_hit`, `sl_hit`, `cancel`, `timeout` bleiben nur Ereigniskontext
-- Lernen entsteht stärker aus Belastung, Entlastung, Stabilisierung, Fragilisierung und Handlungsfähigkeit
-- lokale Rückführung wird erst auf dieser Grundlage fachlich sinnvoll
-
----
-
-# --------------------------------------------------
-# 4.4 MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher sind noch nicht ausgebaut
-# --------------------------------------------------
-
-Teilweise umgesetzt:
-
-- `field_cluster_links` und `field_areal_links` werden zu `field_topology_state` verdichtet
-- `field_topology_state` führt Link-Anzahl, Link-Dichte, mittlere Distanz, Topologie-Kohärenz, Topologie-Spannung und Topologie-Label
-- Feldtopologie läuft jetzt in `inner_field_perception_state`, `inner_context_clusters`, `current_vector`, Experience-Summary, Experience-Space, Experience-Link-Buckets und `memory_state`
-- `field_topology_state` steht für die Neuron-GUI als Topologie-Zustand, Linkverhältnis, Link-Dichte, Kohärenz und Spannung bereit; die Neuron-GUI-Datei ist im aktuellen Upload nicht enthalten und daher nicht geprüft
-
-Offen:
-
-- ein eigener persistenter Speicher für wiederkehrende Feldformen, Driftmuster und Regulationsverläufe fehlt aktuell
-- Feldverlauf über mehrere Ticks ist noch nicht als eigener Innenfeldpfad gespeichert
-- die Visualisierung zeigt Feldformen, führt aber noch keinen persistenten Feldformverlauf
-
-Ziel:
-
-- Feldcluster nicht nur erkennen, sondern in ihrer Größe, Dichte, Stabilität, Verschiebung und Beziehung zueinander lesbar machen
-- die Gesamtform des MCM-Feldes als Feldtopologie beschreiben
-- Feldverlauf über Zeit mitführen
-- einen verdichteten Innenfeldspeicher für wiederkehrende Clusterkonfigurationen, Feldformen, Driftmuster und Rückführungsbewegungen aufbauen
-
----
-
-# --------------------------------------------------
-# 4.5 Runtime / Bot-State sind noch nicht weit genug getrennt
-# --------------------------------------------------
-
-Offen:
-
-- `Bot` bündelt weiter Außenwahrnehmung, Runtime, Handlungsbahn, Experience, Persistenz und Snapshot-Orchestrierung
-- die Zieltrennung Ebene 1 / Ebene 2 / Ebene 3 ist damit noch nicht strukturell verhärtet
-
-Ziel:
-
-- weniger Vermischung von Runtime und Bot-State
-- klarere Trennung von Wahrnehmung / Innenprozess / Entwicklung
-
----
-
-# --------------------------------------------------
-# 4.6 Persistenz ist entschärft, aber noch nicht ausreichend entkoppelt
-# --------------------------------------------------
-
-Offen:
-
-- Persistenz ist bereits über Dirty-Flag und Cooldown teilweise entschärft
-- Save-/Flush-Pfade liegen aber weiter nah am Kernlauf
-
-Folge:
-
-- Bot-Kern bleibt unnötig eng mit Save-/Flush-Logik gekoppelt
-
----
-
-# --------------------------------------------------
-# 5. Fachlich vorbereitet, aber noch nicht vollständig ausgebaut
-# --------------------------------------------------
-
-# --------------------------------------------------
-# 5.1 Tragfähigkeit ist stärker verankert, aber noch nicht Endzustand
-# --------------------------------------------------
-
-Experience bewertet bereits stärker:
-
-- Tragfähigkeit
-- Regulationskosten
-- Entlastung
-- Handlungsspielraum
-
-Noch nicht vollständig ausgebaut ist:
-
-- die weitere Entkopplung von Ergebnislogik und Experience-Logik
-- die noch konsequentere Ausrichtung auf Zustandswirkung statt Geldwirkung
-- die formale Umstellung der Experience-Bewertungslogik von Outcome-Verzweigungen auf Zustandswirkung
-
----
-
-# --------------------------------------------------
-# 5.2 Lernen als Umgangsfähigkeit ist begonnen, aber noch nicht konsequent genug
-# --------------------------------------------------
-
-Das System lernt bereits erkennbar stärker:
-
-- womit es umgehen kann
-- in welchen Situationen es handlungsfähig bleibt
-- wie Tragfähigkeit und Belastung zusammenhängen
-
-Noch offen ist:
-
-- Lernen als Umgangsfähigkeit technisch konsequenter durchzuziehen
-- Cluster-Bewertung noch stärker auf Tragfähigkeit statt Ergebnis auszurichten
-
----
-
-# --------------------------------------------------
-# 5.3 Lokale Rückführung ist vorbereitet, aber fachlich noch nicht reif genug
-# --------------------------------------------------
-
-Vorbereitet ist bereits:
-
-- Experience-Linking
-- `inner_context_clusters`
-- Similarity-/Drift-/Reinforcement-Mechanik
-- Zustandsachsen für Tragfähigkeit, Belastung, Entlastung und Handlungsfähigkeit
-
-Noch offen ist:
-
-- lokale Erfahrungsrückwirkung erst nach sauberer Umstellung auf Zustandswirkung zu vertiefen
-- lokale Hemmung, Gewöhnung und Rückführungsneigung nicht zu früh an Outcome-Etiketten zu koppeln
-- neuronale Teilträger und Feldmuster erst dann tiefer zu modulieren, wenn Experience fachlich sauber genug entkoppelt ist
-
----
-
-
-# --------------------------------------------------
-# 6. Nächste sinnvolle Schritte
-# --------------------------------------------------
-
-Die sinnvollste Reihenfolge ab jetzt ist:
-
-1. neuronale Aktivität und kognitive Innenfunktion fertigstellen
-2. `MCMNeuron` auf lokale Aktivierung, Kopplung, Regulation, Nachhall und Kontext-Memory schärfen
-3. danach `MCMField` als Mental-Core-Matrix-Wahrnehmungsfeld sauber ausbauen
-4. MCM-Feldtopologie / Feldverlauf / Innenfeldspeicher weiter ausbauen
-5. `inner_context_clusters` als Innenmusterraum vertiefen
-6. `_experience_reward_delta()` auf Zustandswirkung statt Outcome-Etiketten ausrichten
-7. danach lokale Erfahrungsrückwirkung tiefer an Innenmuster, Feldformen und neuronale Teilträger koppeln
-8. Backtest-Logik als sauberen Kontrollpfad stabil halten
-9. Persistenz und Runtime-/Bot-State weiter entkoppeln, wenn die Erfahrungslogik stabiler ist
-10. Tests erst nachziehen, wenn die neuronale und kognitive Mechanik fachlich stabil ist
-11. GUI-Umbau nachziehen, wenn Brain- und Snapshot-Basis fachlich stabil sind
-12. Live-Handoff und Restart-Fälle erst am Schluss real gegen Exchange-Zustand validieren
-
----
-
-
-# --------------------------------------------------
-# 7. Kurzfazit
-# --------------------------------------------------
-
-Der Bot steht nicht mehr am Anfang.
-
-Die Basismechanik steht:
-
-- äußere Wahrnehmung
-- innere Runtime
-- Entscheidungstendenz
-- technische Handlungsbahn
-- Episode / Review / Experience
-- Persistenz
-- Snapshot / GUI
-
-Der aktuelle offene Kern ist nicht mehr der Grundaufbau, sondern:
-
-- Real-Live-Validierung des Live-Handoffs
-- Experience-Bewertung stärker auf Zustandswirkung statt Ergebnisetiketten ausrichten
-- Feldtopologie und Innenfeldspeicher weiter vertiefen
-- lokale Erfahrungsrückwirkung erst danach tiefer an Neuronen und Feldformen koppeln
-
-Der MCM-Umbau hat damit die erste echte Schwelle erreicht:
-
-`inner_context_clusters -> active_context_trace -> MCMField -> MCMNeuron.memory_trace`
-
-ist schwach angebunden und sichtbar.
-
-Die nächste Schwelle ist die fachlich saubere Umstellung von Experience auf Zustandswirkung.
-
----
-
-# --------------------------------------------------
-# 8. Feldentscheidungs-Protokoll / Replay-Sicht
-# --------------------------------------------------
-
-Stand 2026-05-03:
-
-- Ein kompaktes MCM-Feldentscheidungs-Protokoll ist eingebaut.
-- `MCM_FIELD_DECISION_PROTOCOL_DEBUG` aktiviert die Protokollierung.
-- `MCM_FIELD_DECISION_PROTOCOL_EVERY_N` steuert das Sampling; Phasenwechsel und der erste Feldentscheid werden sofort geschrieben.
-- Die Datei `debug/mcm_field_decision_protocol.csv` zeigt pro Feldentscheidung:
-  - Phase (`observe`, `replan`, `hold`, `act`)
-  - Ausloeser / Guard
-  - Feldlabel
-  - Fokus, Klarheit, Stabilitaet, Fragmentierung und Strain
-  - Handlungsfreigabe, Hemmung, regulierten Mut und Decision-Strength
-  - Context- und Inner-Context-Cluster
-- Im Bot entsteht zusaetzlich `mcm_field_decision_protocol` als laufender Zaehler fuer Phasen, Gruende und Feldlabels.
-- Im Experience-Space entsteht `field_decision_outcome_protocol`, damit spaeter pro Phase sichtbar wird, ob `observe`, `replan`, `hold` oder `act` zu mehr Prozessqualitaet, Tragfaehigkeit und Stabilitaet gefuehrt haben.
-
-Fachlicher Nutzen:
-
-- Das MCM-Feld ist damit nicht nur ein Wahrnehmungszustand, sondern bekommt eine erste Replay-Spur.
-- Backtests koennen jetzt zeigen, welche Feldzustaende welche Vor-Handlungsphase ausloesen.
-- Spaeter kann verglichen werden, ob geduldiges Beobachten, Neuplanen oder Handeln stabilere Erfahrungsfolgen erzeugt.
-
----
-
-# --------------------------------------------------
-# 9. Schreiblast-/Speicher-Performance-Diagnose
-# --------------------------------------------------
-
-Stand 2026-05-03:
-
-- Eine kompakte Dateischreib-Profilierung ist eingebaut.
-- `MCM_FILE_WRITE_PROFILE_DEBUG` aktiviert die Messung.
-- `MCM_FILE_WRITE_PROFILE_MIN_MS` und `MCM_FILE_WRITE_PROFILE_EVERY_N` begrenzen die Messlast.
-- Die Datei `debug/mcm_file_write_profile.csv` zeigt:
-  - Zielpfad
-  - Schreiboperation
-  - Dauer in Millisekunden
-  - geschriebene Bytes
-  - kurzen Kontext
-- Gemessen werden aktuell:
-  - zentrale Debug-Schreibvorgaenge aus `debug_reader.py`
-  - Runtime-Profil-Ausgaben
-  - `memory_state.json`
-  - Visual-/Inner-Snapshot-JSON
-  - MCM-Feldentscheidungs-Protokoll
-
-Fachlicher Nutzen:
-
-- Die naechste Optimierung kann datenbasiert erfolgen.
-- Besonders sichtbar werden sollen grosse JSON-Rewrites, zu haeufige Snapshot-Schreibvorgaenge und kleine, aber sehr haeufige CSV-Appends.
-- Danach kann entschieden werden, ob Sampling reicht oder ob Memory auf Hot/Cold-State, Delta-Log oder SQLite umgestellt werden sollte.
-
-Auswertung des Laufs `1-2_2026_5m_SOLUSDT.csv` ohne Gedaechtnis:
-
-- `attempt_records.jsonl` war mit ca. 106 MB der groesste Debug-Ausreisser.
-- Gemessene Schreiblast:
-  - Inner-Snapshot: ca. 60,5 s aggregiert, ca. 126 ms je Write
-  - `memory_state.json`: ca. 30,1 s aggregiert, ca. 367 ms je Write
-  - Visual-Snapshot: ca. 24,9 s aggregiert, ca. 52 ms je Write
-  - Feldentscheidungs-Protokoll und Profil-CSV waren klein im Vergleich
-- Gemessene Rechenlast:
-  - `primary_field_step`: ca. 222 s aggregiert
-  - `compute_runtime_result.total`: ca. 269 s aggregiert
-  - `step_mcm_brain.total`: ca. 262 s aggregiert
-
-Erste Entlastung:
-
-- Attempt-Records werden jetzt samplingfaehig geschrieben.
-- `TRADE_STATS_ATTEMPT_RECORD_EVERY_N` schreibt standardmaessig nur jede 10. Attempt-Zeile.
-- Submitted/Filled/Cancel/Timeout/Blocked-Value-Gate bleiben direkt sichtbar.
-- Attempt-Kontexte werden standardmaessig kompakter geschrieben; schwere Snapshot-Nester werden auf Diagnoseachsen reduziert.
-- `trade_stats.json` wird auf Attempt-Pfaden nur noch periodisch geschrieben; Exits und Cancels schreiben weiterhin sofort.
+- `build_conscious_perception_state(...)` ergaenzt.
+- Die neue Schicht ist zuerst diagnostisch und nicht als harte Regel gebaut.
+- DIO bekommt damit Achsen fuer:
+  - Wirkung eines Aussenreizes auf das MCM-Feld
+  - innere Wirkungsspur / Nachhall
+  - Objektkontakt und selektive Aufmerksamkeit
+  - Feldhaftung
+  - perzeptive Distanz
+  - Loslassfaehigkeit
+  - Innen-Aussen-Abgleich
+- Neue Werte werden in `meta_regulation_state`,
+  `mcm_memory_thinking_protocol.csv`, `mcm_field_decision_protocol.csv` und
+  Trade-Outcomes geschrieben.
+
+Neu beobachtbare Zustaende:
+- `open_perception`
+- `background_held`
+- `object_contact`
+- `world_shift_contact`
+- `reflective_check`
+- `overcoupled_field`
+- `release_ready`
+
+Innere Lesart:
+DIO kann jetzt unterscheiden, ob ein Reiz nur gesehen wird, ob er als Objekt
+gehalten wird, ob er das Feld ueberkoppelt, ob ein Nachhall bleibt oder ob
+eine reflektive Distanz entsteht. Das ist die Grundlage fuer den naechsten
+Schritt: nicht mechanisch blockieren, sondern spaeter weich regulieren, wenn
+Innenlage und Aussenwelt nicht gemeinsam tragfaehig sind.
+
+1. Regimewechsel-Bewaeltigung weiter pruefen:
+   - warum wird Formvertrautheit nicht immer zu Handlungssicherheit?
+   - wann kippt Memory von Orientierung in Vergleichslast?
+   - wie koppeln `plan_trust`, `risk_fit_quality` und `exit_decision_pressure`
+     an TP/SL?
+2. Naechsten Lauf mit `neurochemical_state` pruefen:
+   - Serotonin -> Glutamat-Uebergaenge gegen Act/TP/SL pruefen.
+   - Cortisol-Kipp-Momente gegen Zero-Point/Observe pruefen.
+   - GABA nicht als Blocker, sondern als Reifebremse lesen.
+   - Dopamin nicht als Reward-Regel, sondern als Lern-/Entwicklungston lesen.
+   - `serotonin_carryover_risk` gegen Abverkaufsphase und Handlungserlaubnis
+     pruefen.
+   - `emotional_decoupling` pruefen: bekommt DIO Abstand zur eigenen
+     Reaktionslage oder bleibt er ein reines Nervensystem auf Reiz?
+   - Fuer Uebergaenge jeweils `-2/+2` Kerzenfenster gegen Volumen, Range,
+     Felddruck und Feldklarheit vergleichen.
+3. Danach:
+   - Lauf 17 mit bewusster Wahrnehmung lesen:
+     `conscious_perception_state`, `field_attachment`,
+     `perceptual_distance`, `release_capacity`, `inner_outer_alignment` gegen
+     TP/SL, Regimebruch und `action_clearance` pruefen.
+   - Meta-Regulation spaeter weich ueber diese Achsen lesbarer machen.
+   - GUI-Konzept erst nach stabilerer Brain-/Backtest-Diagnose umsetzen.
+
+## Neuer Memory-Aufbau: Lauf 1 nach Wahrnehmungsumbau
+
+Rahmen:
+- Memory wurde neu aufgebaut.
+- Debug-Zaehlung beginnt wieder bei `debug_lauf_1`.
+- Dieser Lauf ist die neue Basis fuer die bewusste Wahrnehmungsschicht.
+
+Befund:
+- 413 Trades.
+- 131 TP, 282 SL.
+- Netto-PnL ca. +2.23.
+- TP-PnL ca. +140.72, SL-PnL ca. -138.49.
+- Equity-Spanne: Minimum ca. -12.23, Maximum ca. +7.84.
+- Viertelverlauf:
+  - Q1: ca. +1.76
+  - Q2: ca. -7.40
+  - Q3: ca. +6.87
+  - Q4: ca. +1.00
+
+Phasen:
+- `hold`: 4397
+- `observe`: 3581
+- `act_watch`: 656
+- `act`: 501
+- `replan`: 1
+
+Wahrnehmungsdiagnose:
+- `conscious_perception_state` steht aktuell in allen Protokollzeilen auf
+  `open_perception`.
+- `object_release_state` steht aktuell in allen Protokollzeilen auf
+  `holding`.
+- Die numerischen Achsen sind jedoch nicht leer:
+  - `stimulus_field_effect` Mittel ca. 0.344
+  - `inner_impact_trace` Mittel ca. 0.276
+  - `perceptual_distance` Mittel ca. 0.170
+  - `field_attachment` Mittel ca. 0.168
+  - `release_capacity` Mittel ca. 0.146
+  - `inner_outer_alignment` Mittel ca. 0.218
+  - `emotional_decoupling` Mittel ca. 0.134
+  - `world_shift_evidence` Mittel ca. 0.609
 
 Interpretation:
+DIO handelt mit frischem Memory nicht chaotisch schlecht, aber die neue
+Wahrnehmungsschicht ist im Labeling noch zu wenig differenziert. Die Zahlen
+zeigen unterschiedliche Innenlagen, doch die Zustandsnamen bleiben zu grob.
+Neurologisch gelesen: DIO hat erste Interozeption, aber noch keine feine
+Benennung seiner inneren Haltungen. Er spuert Reizwirkung und Nachhall, bleibt
+aber ueberwiegend in niedriger Distanz und niedriger Loslassfaehigkeit.
 
-- Die Verlangsamung kommt nicht nur aus Memory.
-- Speicher/Debug verursacht deutlich messbare Zusatzlast.
-- Der noch groessere Kern ist aber die Feldsimulation selbst, vor allem `primary_field_step` mit 230 Feldagenten.
+Wichtiger Punkt:
+Die zweite Laufhaelfte stabilisiert sich trotz vorherigem Drawdown wieder.
+Das spricht nicht gegen den Umbau. Es zeigt eher, dass die neue Schicht
+zunaechst beobachtet, aber noch nicht stark genug unterscheidet, wann
+Innenlage und Aussenwelt nicht gemeinsam tragfaehig sind.
 
-Nachvergleich mit `debug/alter_debug` gegen den neuen `debug`-Lauf:
+Naechster Schritt:
+- Keine harte Regel bauen.
+- Die Zustandsbildung der bewussten Wahrnehmung feiner kalibrieren:
+  `open_perception` darf nicht alles verschlucken.
+- Labels sollen aus relativer Lage entstehen:
+  Reizwirkung, Feldhaftung, Distanz, Nachhall, Loslassfaehigkeit und
+  Innen-Aussen-Abgleich.
+- Danach Lauf 2 mit frischem Memory-Pfad lesen und pruefen, ob sich
+  `object_contact`, `reflective_check`, `overcoupled_field` oder
+  `release_ready` natuerlich zeigen.
 
-- `attempt_records.jsonl`: 101,15 MB -> 2,14 MB, ca. 2,1 Prozent der alten Groesse.
-- `mcm_field_decision_protocol.csv`: 2,05 MB -> 0,40 MB.
-- `mcm_profile.csv`: 1,10 MB -> 0,22 MB.
-- `mcm_file_write_profile.csv`: 0,62 MB -> 0,15 MB.
-- Neuer Lauf:
-  - 2.225 Attempts
-  - 113 Trades
-  - 463 geschriebene Attempt-Records
-- Alter Lauf:
-  - 12.492 Attempts
-  - 273 Trades
-  - 12.492 geschriebene Attempt-Records
+## Umbau: innere Haltung der Wahrnehmung
 
-Normalisierte Einordnung:
+Umgesetzt:
+- `conscious_perception_state` feiner kalibriert.
+- `object_release_state` feiner kalibriert.
+- `inner_posture_state` ergaenzt.
+- Neue Haltungsachsen:
+  - `arousal_load`
+  - `curiosity_tone`
+  - `fatigue_tone`
+  - `calm_tone`
 
-- Attempt-Record-Schreiben ist nicht mehr der dominante Engpass.
-- Snapshot- und Memory-Writes sind pro Write deutlich schneller geworden.
-- `primary_field_step` bleibt der groesste Rechenblock.
+Neurologische Bedeutung:
+DIO kann nun nicht nur sagen, dass ein Reiz offen wahrgenommen wird. Er kann
+zusaetzlich eine funktionale Eigenlage beschreiben, vergleichbar mit:
+"ich bin muede", "ich bin aufgeregt", "ich bin neugierig", "ich bin ruhig",
+"ich bin ueberreizt" oder "ich pruefe reflektiv". Diese Zustaende sind keine
+Handelsregeln, sondern Interozeption: DIO benennt seine eigene Verarbeitungslage.
 
-Zweite Entlastung:
+Naechster Vergleich:
+Der naechste Lauf soll zeigen, ob die Labels jetzt streuen:
+- `open_perception` sollte nicht mehr alles verschlucken.
+- `object_contact`, `world_shift_contact`, `reflective_check`,
+  `overcoupled_field` und `release_ready` sollen nur dann sichtbar werden,
+  wenn die innere Lage es traegt.
+- `inner_posture_state` muss gegen TP/SL, Regimewechsel und
+  `action_clearance` gelesen werden.
 
-- `MCM_VISUAL_SNAPSHOT_WRITE_EVERY_N` wurde von 10 auf 25 erhoeht.
-- `MCM_VISUAL_SNAPSHOT_FORCE_ON_STATE_CHANGE` wurde fuer die aktuelle Backtest-/Brain-Prioritaet deaktiviert.
-- Ziel: weniger Visual-/Inner-Snapshot-Rewrites, solange GUI zweitrangig ist.
+## Neuer Memory-Aufbau: Lauf 2 mit innerer Haltung
 
-Fairer Nachvergleich mit gleicher Datei `test_5m_SOLUSDT`:
+Befund:
+- 380 Trades.
+- 123 TP, 257 SL.
+- Netto-PnL ca. +3.80.
+- Gegen Lauf 1:
+  - weniger Trades: 413 -> 380
+  - weniger SL: 282 -> 257
+  - Netto-PnL besser: ca. +2.23 -> ca. +3.80
+  - Maximaler Verlust im Verlauf besser: ca. -12.23 -> ca. -10.07
+- Viertelverlauf:
+  - Q1: ca. -2.86
+  - Q2: ca. -1.58
+  - Q3: ca. +8.32
+  - Q4: ca. -0.07
 
-- Vergleich: `debug/lauf_1_mit_test_5m_SOLUSDT_ohne_memory` gegen aktuellen `debug`-Lauf.
-- Attempts: 2.225 -> 1.934
-- Trades: 113 -> 109
-- `attempt_records.jsonl`: 2,136 MB -> 1,975 MB
-- `mcm_field_decision_protocol.csv`: 0,397 MB -> 0,332 MB
-- `mcm_profile.csv`: 0,216 MB -> 0,190 MB
-- `mcm_file_write_profile.csv`: 0,146 MB -> 0,108 MB
+Wahrnehmungslabels:
+- `object_contact`: 3696
+- `open_perception`: 2084
+- `reflective_check`: 1099
+- `overcoupled_field`: 906
+- `world_shift_contact`: 822
+- `release_ready`: 744
+- `background_held`: 269
 
-Snapshot-Wirkung:
+Innere Haltung:
+- `tired`: 6534
+- `reflective`: 1795
+- `uncertain_open`: 493
+- `overstimulated`: 422
+- `excited`: 306
+- `curious`: 70
 
-- Inner-Snapshot-Writes: 141 -> 32
-- Visual-Snapshot-Writes: 141 -> 32
-- Inner-Snapshot-Schreibzeit: 3.595 ms -> 803 ms
-- Visual-Snapshot-Schreibzeit: 1.530 ms -> 359 ms
-- `write_visualization_snapshot_bundle.total`: 1.824 ms -> 259 ms
+Release-Zustaende:
+- `holding`: 4842
+- `reflective_hold`: 1745
+- `attached`: 1561
+- `can_release`: 1472
 
-Weiterhin groesster Rechenblock:
-
-- `primary_field_step` blieb pro Schritt nahezu gleich:
-  - vorher ca. 102,41 ms
-  - danach ca. 101,50 ms
-- Die Snapshot-Entlastung ist damit erfolgreich, aber die eigentliche Feldsimulation bleibt der naechste Optimierungsblock.
-
-Start der `primary_field_step`-Pruefung:
-
-- `MCMField.step()` hat nun feinere Profilpunkte:
-  - `mcm_field.step.sync_neurons`
-  - `mcm_field.step.build_neighbor_state_map`
-  - `mcm_field.step.neuron_loop`
-  - `mcm_field.step.activity_diffusion`
-  - `mcm_field.step.refresh_arrays`
-  - `mcm_field.step.refresh_areal_state`
-  - `mcm_field.step.field_perception_state`
-  - `mcm_field.step.total`
-- Die lokale Nachbarschaftslogik wurde entlastet:
-  - feste Nachbarlisten werden als Arrays vorgehalten
-  - pro Tick werden weniger Dict-/Listenstrukturen gebaut
-  - Kopplungskraefte koennen vektorisiert aus 2D-Neighbor-State-Arrays berechnet werden
-  - ein redundanter zweiter Sync/Refresh nach dem Feldstep wurde entfernt
-- Ein Micro-Smoke mit 230 Agenten lief syntaktisch und funktional durch.
-
-Wichtig:
-
-- Das ist noch keine finale Feldoptimierung, sondern der erste saubere Mess- und Entlastungsschritt.
-- Der naechste Testlauf mit `test_5m_SOLUSDT` ohne Memory muss zeigen, ob `primary_field_step` im echten Backtest messbar sinkt und welcher Teil innerhalb von `mcm_field.step.*` dominiert.
-
-Auswertung des folgenden Testlaufs ohne Memory:
-
-- Vergleich: `debug/lauf_2_mit_test_5m_SOLUSDT_ohne_memory` gegen aktuellen `debug`-Lauf.
-- `primary_field_step` war leicht besser:
-  - vorher ca. 101,50 ms je Profilpunkt
-  - danach ca. 98,51 ms je Profilpunkt
-- Neue Detailprofile zeigen den groben Innenaufbau:
-  - `mcm_field.step.neuron_loop` dominiert mit ca. 53,84 ms je Profilpunkt
-  - `mcm_field.step.refresh_areal_state` liegt bei ca. 18,52 ms
-  - `mcm_field.step.activity_diffusion` liegt bei ca. 12,52 ms
-  - `mcm_field.step.build_neighbor_state_map` liegt bei ca. 2,05 ms
-  - `mcm_field.step.field_perception_state` liegt bei ca. 0,70 ms
-
-Zweite Feldentlastung:
-
-- Der gemeinsame Kontext-Memory-Vektor wird jetzt einmal pro Feldstep berechnet und nicht mehr pro Neuron neu aus dem gleichen Context abgeleitet.
-- `MCM_NEURON_STEP_RETURN_SNAPSHOT` wurde eingefuehrt und steht standardmaessig auf `False`.
-- `MCMNeuron.step()` erzeugt dadurch keinen ungenutzten Snapshot mehr.
-- `MCMField.step()` liefert weiterhin den zentralen Feldsnapshot.
-- Ein lokaler Micro-Benchmark mit 230 Agenten lag danach bei ca. 98 ms im Mittel.
+Outcome-Lesart:
+- `uncertain_open` war bei Trades klar negativ:
+  - 11 Trades, 1 TP, 10 SL, ca. -3.21 PnL.
+- `excited` war klein, aber positiv:
+  - 35 Trades, 15 TP, 20 SL, ca. +4.53 PnL.
+- `curious` war sehr klein, aber positiv:
+  - 6 Trades, 2 TP, 4 SL, ca. +0.49 PnL.
+- `overcoupled_field` war nicht automatisch schlecht:
+  - 129 Trades, 46 TP, 83 SL, ca. +6.29 PnL.
+- `open_perception` war bei Trades negativ:
+  - 74 Trades, 22 TP, 52 SL, ca. -5.89 PnL.
+- `release_ready` und `reflective_check` waren klein, aber positiv.
 
 Interpretation:
+Die Kalibrierung funktioniert. Die neue Schicht unterscheidet jetzt innere
+Haltungen und Wahrnehmungsformen. Wichtig ist: nicht die starke Aktivierung
+ist per se schlecht, sondern die unbenannte, offene Unsicherheit. Neurologisch
+gelesen ist `uncertain_open` eher ein unreifer Zustand: DIO ist offen, aber
+noch nicht orientiert, nicht neugierig genug, nicht ruhig genug und nicht
+reflektiv genug. Benannte Aktivierung wie `excited`, `curious` oder sogar
+`overcoupled_field` kann tragfaehiger sein, weil das System wenigstens weiss,
+in welcher Eigenlage es sich befindet.
 
-- Die Wahrnehmungsmechanik bleibt erhalten.
-- Die naechste echte Messung muss wieder ueber `test_5m_SOLUSDT` ohne Memory laufen.
-- Wenn `mcm_field.step.neuron_loop` weiterhin dominiert, ist die naechste Optimierung die weitere Vektorisierung des Neuron-Loops.
+Naechster Schritt:
+- Keine harte Regel aus `uncertain_open` bauen.
+- Stattdessen pruefen, ob `uncertain_open` weich in Beobachtung,
+  Objektkontakt oder Reflexion ueberfuehrt werden kann.
+- Ziel: DIO soll aus diffuser Offenheit eine benannte Haltung entwickeln:
+  neugierig hinschauen, ruhig halten, reflektiv pruefen oder bewusst ablegen.
 
-Auswertung des naechsten Testlaufs:
+## Umbau: diffuse Offenheit weich weiterentwickeln
 
-- `debug/lauf_3_mit_test_5m_SOLUSDT_ohne_memory` wurde als alter Stand verschoben.
-- Der aktuelle Lauf liegt in `debug`.
-- `lauf_3` enthaelt nur sehr wenige Profilzeilen, deshalb wurde fuer die Performance-Basis weiterhin der letzte vollstaendige Profilvergleich aus `lauf_2` herangezogen.
-- Aktueller Lauf:
-  - 2.100 Attempts
-  - 107 Trades
-  - `primary_field_step`: ca. 85,46 ms je Profilpunkt gegen ca. 101,50 ms in der letzten vollstaendigen Basis
-  - `mcm_field.step.total`: ca. 76,57 ms
-  - `mcm_field.step.neuron_loop`: ca. 42,26 ms
-  - `mcm_field.step.activity_diffusion`: ca. 12,55 ms
-  - `mcm_field.step.refresh_areal_state`: ca. 18,06 ms
+Umgesetzt:
+- `diffuse_open_development_pressure` ergaenzt.
+- `posture_development_hint` ergaenzt.
+- Beide Werte werden in `meta_regulation_state`, Denk-/Feldprotokolle und
+  Trade-Outcomes geschrieben.
 
-Dritter Feld-Performance-Schritt:
+Mechanik:
+Wenn DIO in diffuser Offenheit bleibt, entsteht keine harte Sperre. Stattdessen
+wird Handlung etwas weniger direkt und Beobachtung/Reflexion etwas
+wahrscheinlicher. Eine starke Entscheidung kann weiterhin tragen. Die Schicht
+fragt nur:
+- fehlt Objektkontakt?
+- fehlt reflektive Distanz?
+- fehlt Loslassfaehigkeit?
+- fehlt bewusste Beobachtung?
 
-- `MCM_FIELD_AREAL_REFRESH_EVERY_N` wurde eingefuehrt und steht standardmaessig auf 2.
-- Schwere Areal-/Topologie-Metriken werden dadurch nur jeden zweiten Feldtick voll neu berechnet.
-- Dazwischen wird der letzte Areal-State mit `areal_refresh_skipped=True` und `areal_stale_ticks` weitergetragen.
-- `field_perception_state` bleibt weiterhin pro Feldstep frisch.
-- Lokaler Smoke mit 230 Agenten lag nach dieser Aenderung bei ca. 89,6 ms Mittelwert.
+Neurologische Lesart:
+Das entspricht einem Organismus, der merkt: Ich bin offen, aber innerlich noch
+nicht sortiert. Statt blind zu handeln, soll aus dieser Offenheit eine
+benennbare Haltung entstehen: neugierig anschauen, Abstand gewinnen, loslassen
+oder weiter beobachten.
+
+Naechster Lauf:
+Lauf 3 muss gegen Lauf 2 gelesen werden:
+- sinken `uncertain_open`-Trades?
+- steigt `develop_object_contact`, `develop_reflective_distance` oder
+  `develop_release_capacity` in den richtigen Bereichen?
+- sinken SLs aus diffuser Offenheit, ohne gute Aktivierung zu ersticken?
+
+## Neuer Memory-Aufbau: Lauf 3 nach diffuser Offenheitsreifung
+
+Befund:
+- 291 Trades.
+- 78 TP, 213 SL.
+- Netto-PnL ca. -22.26.
+- Gegen Lauf 2:
+  - Trades sinken: 380 -> 291
+  - TP sinken: 123 -> 78
+  - SL sinken: 257 -> 213
+  - Netto-PnL kippt: ca. +3.80 -> ca. -22.26
+- Verlauf:
+  - Q1: ca. -8.97
+  - Q2: ca. -3.96
+  - Q3: ca. -4.34
+  - Q4: ca. -5.00
+- Der Lauf war nicht nur ein spaeter Regimebruch, sondern ueber alle
+  Abschnitte schwach.
+
+Hauptbefund:
+- Zone-Trades waren positiv:
+  - 191 Trades, ca. +23.20 PnL.
+- Non-Zone-Trades waren massiv negativ:
+  - 100 Trades, ca. -45.46 PnL.
+- Damit kommt der Absturz nicht aus allen Handlungen gleich, sondern aus
+  Handlungen in nicht tragenden Bereichen.
+
+Innere Haltung:
+- `tired`: 6994 Protokollzeilen.
+- `reflective`: 1711.
+- `uncertain_open`: 520.
+- `overstimulated`: 321.
+- `excited`: 269.
+- `curious`: 93.
+- Bei ausgefuehrten Trades:
+  - `tired`: 186 Trades, ca. -1.66 PnL.
+  - `overstimulated`: 60 Trades, ca. -9.93 PnL.
+  - `excited`: 35 Trades, ca. -7.54 PnL.
+  - `uncertain_open`: 5 Trades, 0 TP / 5 SL, ca. -2.19 PnL.
+
+Wahrnehmungslabels bei Trades:
+- `object_contact`: 143 Trades, ca. -13.38 PnL.
+- `overcoupled_field`: 72 Trades, ca. +2.07 PnL.
+- `open_perception`: 60 Trades, ca. -8.49 PnL.
+- `background_held`: 8 Trades, ca. -2.90 PnL.
+
+Diffuse Offenheitsreifung:
+- `diffuse_open_development_pressure` ist sichtbar, Mittel ca. 0.103.
+- Entwicklungshinweise:
+  - `stable_posture`: 9684 Protokollzeilen.
+  - `develop_object_contact`: 215.
+  - `develop_reflective_distance`: 9.
+- Bei ausgefuehrten Trades blieb `posture_development_hint` jedoch
+  durchgehend `stable_posture`.
+
+Interpretation:
+Die neue Schicht hat `uncertain_open`-Trades tatsaechlich reduziert, aber der
+Schaden wanderte nicht automatisch in Reife. DIO handelte weniger, aber nicht
+besser. Das wirkt neurologisch wie Unterspannung oder halb distanzierte
+Handlung: weniger Ueberlebensdruck, weniger regulierte Courage, weniger
+direkte Handlung, aber weiterhin Handlungen in nicht tragender Non-Zone.
+
+Deutung:
+Der Punkt ist nicht "DIO muss mehr kaempfen". Der Punkt ist:
+DIO braucht wache Anstrengung. Wenn ein Organismus logisch denken kann, muss
+er nicht blind kaempfen. Aber er darf auch nicht in eine gleichgueltige
+Distanz fallen. Reife waere: sehen, ob die Situation tragfaehig ist; wenn
+nicht, bewusst beobachten, lernen oder loslassen.
+
+Naechster Schritt:
+- Keine Rueckkehr zu hartem Ueberlebensdruck.
+- `diffuse_open_development_pressure` darf nicht pauschal Courage/Handlung
+  senken.
+- Die Schicht muss staerker unterscheiden:
+  - tragende Zone + klare Haltung darf handeln.
+  - Non-Zone + niedrige Tragfaehigkeit braucht Beobachtung/Reifung.
+  - `object_contact` allein reicht nicht; Objektkontakt braucht
+    Tragfaehigkeit, Kontext und innere Wachheit.
+- Naechster technischer Umbau:
+  `engaged_effort` / wache Anstrengung als Gegenpol zu Gleichgueltigkeit
+  pruefen und Non-Zone nicht blockieren, sondern in Beobachtungslernen
+  ueberfuehren.
+
+## Erkenntnis: positive Stimulation ueber Erfahrungspakete
+
+Neue Zielmechanik:
+Positive Stimulation soll nicht an einen einzelnen Wert gebunden sein. Nicht
+`TP = gut`, nicht `SL = schlecht`, nicht steigender Markt = positiv. Bewertet
+wird das gesamte Erfahrungspaket.
+
+Ein Paket umfasst:
+- Aussenlage / Marktform
+- Zone oder Non-Zone
+- Formsymbol / Memory-Kontext
+- innere Haltung
+- neurochemische Lage
+- Wahrnehmungszustand
+- Objektkontakt
+- Distanz
+- Loslassfaehigkeit
+- Handlungssicherheit
+- Risiko und Prozessqualitaet
+- Ergebnis
+- Wiederholbarkeit und Neugierde
+
+Wichtiger Satz:
+Auch ein Abverkauf kann positiv bewertet werden, wenn die Entscheidung zu
+handeln positiv war. Entscheidend ist die Passung zwischen Wahrnehmung,
+Innenlage, Handlung und Weltlage.
+
+Neurologische Lesart:
+Eine gute Entscheidung erzeugt nicht nur Freude, sondern Stabilisierung:
+Dopamin fuer Lernrelevanz, Serotonin fuer Ordnung, Endorphin fuer Entlastung,
+Acetylcholin fuer Fokus und Glutamat fuer Verbindungsstaerkung. Eine schlechte
+Handlung soll nicht nur bestraft werden, sondern Reorganisation ausloesen:
+innehalten, pruefen, beobachten, lernen, neu ordnen.
+
+Umsetzung:
+`experience_packet_feedback` ist gebaut und in Outcome, Statistik und
+Erfahrungs-/Aehnlichkeitsachsen sichtbar.
+
+## Lauf 4 nach Erfahrungspaket-Feedback
+
+Befund:
+- 330 Trades.
+- 104 TP, 226 SL.
+- Netto-PnL ca. -0.47.
+- Max Drawdown ca. 13.36.
+
+Vergleich:
+- Lauf 3: 291 Trades, Netto-PnL ca. -22.26.
+- Lauf 4: 330 Trades, Netto-PnL ca. -0.47.
+- Damit wurde Lauf 4 deutlich stabiler, aber noch nicht sauber positiv.
+
+Struktur:
+- Zone:
+  - 214 Trades.
+  - ca. +38.70 PnL.
+- Non-Zone:
+  - 116 Trades.
+  - ca. -39.17 PnL.
+
+Hauptbefund:
+Der Kern ist weiter nicht "alles schlecht", sondern eine klare Spaltung:
+tragende Zone funktioniert, Non-Zone bleibt der Erfahrungsraum mit Verlust.
+DIO ist also nicht blind insgesamt falsch, sondern verliert dort, wo
+Tragfaehigkeit noch nicht genuegend erkannt, gehalten oder in Beobachtung
+ueberfuehrt wird.
+
+Erfahrungspaket-Feedback:
+- `mixed_packet`: 311 Trades, ca. +6.60 PnL.
+- `bearing_packet`: 17 Trades, ca. -4.09 PnL.
+- `reorganize_packet`: 2 Trades, ca. -2.99 PnL.
+- Noch kein `constructive_packet`.
+
+Paketachsen Mittelwerte:
+- `packet_process_reward`: ca. 0.359.
+- `packet_reorganization_need`: ca. 0.447.
+- `constructive_stimulation`: ca. 0.264.
+- `constructive_dopamine`: ca. 0.259.
+- `stabilizing_serotonin`: ca. 0.340.
+- `relief_endorphin`: ca. 0.431.
+- `focused_acetylcholine`: ca. 0.320.
+
+Wahrnehmung:
+- `object_contact`: 165 Trades, ca. -12.86 PnL.
+- `overcoupled_field`: 74 Trades, ca. +14.63 PnL.
+- `open_perception`: 69 Trades, ca. +2.54 PnL.
+
+Neurologische Deutung:
+Starke Kopplung ist nicht automatisch schlecht. In Lauf 4 war
+`overcoupled_field` sogar positiv, vermutlich weil Aktivierung dort mit mehr
+Struktur/Zone zusammenfiel. `object_contact` allein reicht dagegen nicht:
+DIO nimmt ein Objekt wahr, aber daraus entsteht noch nicht automatisch
+tragende Handlung. Es fehlt die Verbindung aus Objektkontakt, Distanz,
+innerer Passung und wacher Anstrengung.
+
+Strategische Anzeichen:
+Es gibt erste logische Zuege, aber noch keine reife stabile Strategie.
+Erkennbar ist eine Vorform von Zustandslogik:
+- Zone + tragende Aktivierung fuehrt deutlich haeufiger zu positiven Paketen.
+- Non-Zone + schwacher Objektkontakt / Unterspannung fuehrt wiederholt zu
+  Verlust und Reorganisationsbedarf.
+- `overcoupled_field` war nicht automatisch schlecht, sondern in Lauf 4
+  positiv, wenn Aktivierung mit Struktur zusammenfiel.
+- `object_contact` allein war negativ, wenn Distanz, Innen-Aussen-Passung und
+  Wachheit fehlten.
+
+Das ist noch kein bewusstes "Wenn-Dann-Regelwerk". Es ist eher ein
+entstehender Zusammenhang: bestimmte Innen-Aussen-Konstellationen tragen,
+andere nicht.
+
+Umsetzung nach Lauf 4:
+- Paketlabel wurden feiner kalibriert.
+- `engaged_effort` wurde gebaut.
+- Neue Achsen:
+  - `engaged_effort`
+  - `effort_state`
+  - `effort_learning_pull`
+  - `effort_reorganization_pressure`
+  - `previous_packet_label`
+  - `previous_packet_process_reward`
+  - `previous_packet_reorganization_need`
+
+Naechster Schritt:
+Lauf 5 pruefen:
+- Werden `constructive_packet` und `reorganize_packet` besser sichtbar?
+- Wirkt `underengaged_reorganize` bei Non-Zone-Verlusten?
+- Entsteht mehr Beobachtung/Replan statt mechanischem Handeln in schwacher
+  Tragfaehigkeit?
+
+## Lauf 5 nach `engaged_effort`
+
+Befund:
+- 387 Trades.
+- 127 TP, 260 SL.
+- Netto-PnL ca. +10.41.
+- Max Drawdown ca. 12.82.
+
+Struktur:
+- Zone:
+  - 241 Trades.
+  - ca. +61.87 PnL.
+- Non-Zone:
+  - 146 Trades.
+  - ca. -51.46 PnL.
+
+Erfahrungspakete:
+- `constructive_packet`: 107 Trades, 107 TP, ca. +112.31 PnL.
+- `mixed_packet`: 167 Trades, ca. -39.35 PnL.
+- `bearing_packet`: 65 Trades, 0 TP, ca. -32.47 PnL.
+- `reorganize_packet`: 48 Trades, 0 TP, ca. -30.07 PnL.
+
+Deutung:
+Die Paketlogik zeigt jetzt klare strukturelle Intelligenz-Anzeichen:
+`constructive_packet` war extrem sauber positiv. DIO erkennt also bereits
+Erfahrungspakete, in denen Struktur, Prozess und Ergebnis gemeinsam tragen.
+
+Problem:
+`bearing_packet` war negativ und hatte 0 TP. Das bedeutet: Die Benennung war
+zu freundlich. Es gab Pakete, die teilweise tragend wirkten, aber prozessual
+nicht getragen haben. Das gehoert eher in Reorganisation als in
+Tragfaehigkeit.
+
+`engaged_effort`:
+- `settled_effort`: 362 Trades.
+- `constructive_echo`: 25 Trades.
+- `underengaged_reorganize`: nicht sichtbar.
+
+Deutung:
+Die Schicht ist technisch da, aber noch zu leise. Sie unterscheidet die
+Non-Zone-Verluste noch nicht ausreichend von tragender Zone. Deshalb wurde
+die Reorganisationssensitivitaet nach Lauf 5 erhoeht.
+
+Umsetzung nach Lauf 5:
+- `bearing_packet` braucht jetzt mehr Prozessreward und weniger
+  Reorganisationsdruck.
+- schwache Paketqualitaet mit Reorganisationsdruck wird eher
+  `reorganize_packet`.
+- `effort_reorganization_pressure` reagiert staerker auf
+  `structure_action_uncertainty`, schwache `structure_action_bearing` und
+  schwachen `field_action_support`.
+- `underengaged_reorganize` setzt frueher ein.
+
+Naechster Schritt:
+Lauf 6 pruefen:
+- Sinkt der falsche `bearing_packet`-Anteil?
+- Wird `underengaged_reorganize` sichtbar?
+- Gehen schwache Non-Zone-Zustaende eher in Beobachtung/Replan?
+
+## Lauf 6 nach Paket-/Effort-Nachkalibrierung
+
+Befund:
+- 329 Trades.
+- 101 TP, 228 SL.
+- Netto-PnL ca. -8.28.
+- Max Drawdown ca. 20.42.
+
+Struktur:
+- Zone:
+  - 212 Trades.
+  - ca. +37.36 PnL.
+- Non-Zone:
+  - 117 Trades.
+  - ca. -45.64 PnL.
+
+Erfahrungspakete:
+- `constructive_packet`: 84 Trades, 84 TP, ca. +86.01 PnL.
+- `reorganize_packet`: 227 Trades, 0 TP, ca. -110.20 PnL.
+- `mixed_packet`: 18 Trades, ca. +15.91 PnL.
+- `bearing_packet`: 0 Trades.
+
+Deutung:
+Die Nachkalibrierung hat den falschen `bearing_packet` entfernt. Das ist gut:
+scheinbare Tragfaehigkeit wird nicht mehr positiv benannt. `constructive_packet`
+bleibt sehr sauber positiv.
+
+Problem:
+`reorganize_packet` ist jetzt sehr klar, aber es entsteht zu spaet: DIO erkennt
+nach dem Ergebnis, dass das Paket Reorganisation gebraucht haette. Die
+Pre-Action-Schicht leitet diese Lage noch nicht frueh genug in Beobachtung
+oder Replan um.
+
+`engaged_effort`:
+- `settled_effort`: 300 Trades.
+- `constructive_echo`: 21 Trades.
+- `underengaged_reorganize`: 8 Trades, ca. +0.94 PnL.
+
+Deutung:
+`underengaged_reorganize` ist jetzt sichtbar, aber zu selten. Die
+Reorganisationslage ist im Outcome sehr stark, vor der Handlung aber noch zu
+schwach an die Entscheidung gekoppelt.
+
+Naechster Schritt:
+Nicht weiter Labels schaerfen. Jetzt muss Reorganisationswahrnehmung frueher
+in die Pre-Action-Logik:
+- schwache `previous_packet`-Qualitaet
+- Non-Zone / niedrige `structure_action_bearing`
+- niedriger `field_action_support`
+- erhoehte `effort_reorganization_pressure`
+
+sollen nicht blockieren, sondern oefter zu `observe`, `act_watch` oder
+`replan` fuehren. Ziel ist konzentriertes Handeln, nicht mehr Handeln.
+
+## Umsetzung: fruehere Pre-Action-Reorganisation
+
+Neu umgesetzt:
+- `pre_action_reorganization_pressure`
+- `pre_action_context_selectivity`
+
+Wirkung:
+Die Reorganisationslage wird nicht mehr nur nach dem Outcome erkannt. Vor der
+Handlung werden jetzt schwache vorherige Paketqualitaet, Reorganisationsdruck,
+Strukturunsicherheit, schwacher Feldsupport, schwache Interpretation und
+geringe Innen-Aussen-Passung zusammengefuehrt.
 
 Wichtig:
-
-- Diese Aenderung ist fachlich konservativ, weil Areale als traegere Feldstruktur behandelt werden.
-- Der naechste echte Nachweis muss wieder mit `test_5m_SOLUSDT` ohne Memory erfolgen.
-
-Auswertung des neuen Laufs:
-
-- Neuer Lauf liegt in `debug`, vorheriger Lauf liegt in `debug/lauf_4_mit_test_5m_SOLUSDT_ohne_memory`.
-- `lauf_4` enthaelt nur sehr wenige Profilzeilen, deshalb ist er fuer Performance nur eingeschraenkt brauchbar.
-- Fuer die Laufzeit bleibt `debug/lauf_2_mit_test_5m_SOLUSDT_ohne_memory` die letzte vollstaendige Profilbasis.
-- Gegen diese Basis ist der primare Feldschritt deutlich schneller:
-  - Basis `primary_field_step`: ca. 101,50 ms je Profilpunkt
-  - neuer Lauf `primary_field_step`: ca. 74,59 ms je Profilpunkt
-  - `step_mcm_brain.total`: ca. 124,98 ms auf ca. 103,39 ms
-  - `compute_runtime_result.total`: ca. 50,94 ms auf ca. 36,79 ms
-- Die MCM-Feldentscheidung bleibt stabil:
-  - `hold`: 1480
-  - `act`: 157
-  - `observe`: 12
-  - kein unkontrolliertes `replan`
-- Feldlabels im neuen Lauf:
-  - `quiet_field`: 1214
-  - `active_perception_field`: 296
-  - `fragmented_perception_field`: 138
-  - `coherent_perception_field`: 1
-
-Weitere Entlastung und Korrektur:
-
-- Ein erster Versuch hat den Snapshot aus dem primaeren `MCMField.step()` direkt in `step_mcm_brain` weiterverwendet.
-- Der neue Vergleich `debug/lauf_5_mit_test_5m_SOLUSDT_ohne_memory` gegen `debug` zeigte:
-  - `snapshot_field_read`: ca. 17,92 ms auf ca. 8,51 ms
-  - `step_mcm_brain.total`: ca. 103,39 ms auf ca. 87,91 ms
-  - Handels-/Phasenlage verschob sich aber staerker als fuer eine rein technische Entlastung sinnvoll ist.
-- Grund: Der direkt wiederverwendete Snapshot war zu frueh im Brain-Tick, noch vor nachgelagerter Regulation und Feldanpassung.
-- Korrektur:
-  - `MCMField.step(..., return_snapshot=False)` wurde eingefuehrt.
-  - `step_mcm_brain` laesst den primaeren Feldstep nun keinen Snapshot mehr bauen.
-  - Danach wird weiterhin ein finaler Snapshot nach Regulation und Feldanpassung gelesen.
-- Damit bleibt die fachliche Reihenfolge des Wahrnehmungsfeldes erhalten, waehrend der ungenutzte fruehe Snapshot entfaellt.
-
-Naechster sinnvoller Anschluss:
-
-- `test_5m_SOLUSDT` ohne Memory erneut laufen lassen.
-- Danach pruefen:
-  - ob die Ergebnislage wieder naeher am Lauf vor der Snapshot-Korrektur liegt
-  - ob `primary_field_step` faellt, weil der ungenutzte fruehe Snapshot nicht mehr erzeugt wird
-  - ob `snapshot_field_read` fachlich korrekt als finaler Feldread erhalten bleibt
-- Wenn das bestaetigt ist, bleibt als naechster Hauptblock der `mcm_field.step.neuron_loop` mit der neuronalen Kopplung und lokalen Impulsbildung.
-
-Bestaetigung nach Korrekturlauf:
-
-- Alter Lauf liegt in `debug/lauf_6_mit_test_5m_SOLUSDT_ohne_memory`, neuer Lauf liegt in `debug`.
-- Die fachliche Lage ist wieder deutlich naeher am stabilen Vorlauf:
-  - `lauf_6`: 119 Trades, 28 TP, 91 SL, Equity ca. 85,46
-  - neuer Lauf: 111 Trades, 28 TP, 83 SL, Equity ca. 89,39
-  - MCM-Phasen neuer Lauf: `hold` 1417, `act` 161, `observe` 16
-- Die Korrektur hat die zu fruehe Snapshot-Nutzung damit fachlich bereinigt.
-- Laufzeit:
-  - `primary_field_step`: ca. 75,63 ms auf ca. 68,28 ms
-  - `step_mcm_brain.total`: ca. 87,91 ms auf ca. 90,73 ms
-  - `compute_runtime_result.total`: ca. 30,44 ms auf ca. 30,03 ms
-  - `snapshot_field_read`: ca. 8,51 ms auf ca. 18,12 ms, bewusst wieder finaler Feldread
-- Interpretation:
-  - Der ungenutzte fruehe Snapshot ist entfernt.
-  - Die final gelesene Wahrnehmung bleibt erhalten.
-  - Die groesste verbleibende Feldlast ist nun klar `mcm_field.step.neuron_loop` mit ca. 41,60 ms.
-
-Naechster sinnvoller Anschluss:
-
-- Nicht erneut am finalen Snapshot sparen, solange er fachlich die MCM-Wahrnehmung traegt.
-- Als naechstes `mcm_field.step.neuron_loop` bearbeiten:
-  - lokale Kontextimpulse pro Neuron vorvektorisieren
-  - wiederholte Objekt-/Listen-Zugriffe im Neuron-Loop reduzieren
-  - neuronale Kopplung weiter array-basiert vorbereiten
-- Danach wieder mit `test_5m_SOLUSDT` ohne Memory pruefen, ob die Phasen stabil bleiben.
-
-Neuron-Loop-Entlastung umgesetzt:
-
-- Die lokale Kontextimpuls-Formel wurde nicht veraendert, aber feldweise vorbereitet.
-- Neu:
-  - `_build_local_context_memory_matrix(...)`
-  - `mcm_field.step.context_memory_matrix` als Profilpunkt
-  - `mcm_field.step.prepare_impulse_vectors` als Profilpunkt
-- Der globale Kontext-Memory-Vektor wird weiterhin einmal pro Feldstep gebaut.
-- Daraus wird nun eine Matrix fuer alle Neuronen erzeugt:
-  - lokale Aktivitaet
-  - lokaler Memory-Trace
-  - lokale Aktivierung
-  - lokaler Regulationsdruck
-- Diese Werte erzeugen dieselbe Resonanzgewichtung wie vorher pro Neuron, aber ohne 230 einzelne Python-Objektberechnungen im Loop.
-- Externe und Replay-Impulsvektoren werden ebenfalls einmal pro Feldstep vorbereitet und an die Neuronen weitergereicht.
-- `MCMNeuron.step(...)` akzeptiert dafuer vorbereitete Vektoren, bleibt aber rueckwaertskompatibel mit der alten Scalar-/Listen-Schnittstelle.
-
-Verifikation:
-
-- `py_compile` fuer `MCM_KI_Modell.py` und `MCM_Brain_Modell.py` erfolgreich.
-- Gleichheitspruefung alte Einzelberechnung gegen neue Matrix:
-  - `max_delta = 0.0`
-- Lokaler 230-Agenten-Smoke mit aktivem Kontext:
-  - ca. 64,7 ms Mittelwert fuer `MCMField.step(..., return_snapshot=False)`
-  - Feldlabel blieb gueltig.
-
-Naechster sinnvoller Anschluss:
-
-- `test_5m_SOLUSDT` ohne Memory erneut laufen lassen.
-- Danach pruefen:
-  - `mcm_field.step.neuron_loop`
-  - `mcm_field.step.context_memory_matrix`
-  - `mcm_field.step.prepare_impulse_vectors`
-  - Feldphasen `observe`, `hold`, `act`
-- Wenn stabil: naechster Hebel ist die Kopplung selbst, also weitere Array-Vorbereitung der Neighbor-Forces.
-
-Neuer Analyse-/Fixpunkt fuer Memory danach:
-
-- Ohne Memory ist der Bot schneller und handelt tendenziell mehr, weil weniger Erfahrungsvergleich und weniger kognitive Hemmung aktiv sind.
-- Mit Memory wird die Denkstruktur komplexer:
-  - Kontextvergleich
-  - Erfahrungsaehnlichkeit
-  - positive/negative Outcome-Spuren
-  - Tragfaehigkeit aus Erfahrung
-  - moeglicher Konflikt zwischen aktuellem Feld und Erinnerung
-- Das soll nicht als harte Regel geloest werden.
-- Ziel ist eine energieeffiziente Meta-Regulation:
-  - Memory soll stabile Erfahrung effizient nutzbar machen
-  - widerspruechliche Erfahrung soll nicht pauschal bremsen
-  - Denkkomplexitaet soll messbar werden
-  - hohe kognitive Last soll `observe`/`hold` erklaeren, aber nicht blind gute Setups blockieren
-- Nach dem aktuellen Ohne-Memory-Test soll ein Memory-Komplexitaetsprotokoll entstehen mit Feldern wie:
-  - `thinking_complexity`
-  - `memory_compare_load`
-  - `memory_match_count`
-  - `memory_support`
-  - `memory_inhibition`
-  - `memory_conflict`
-  - `cognitive_load`
-  - `decision_energy_cost`
-  - `meta_regulation_need`
-- Danach kann entschieden werden, ob die Effizienz in der Denkstruktur verbessert werden muss, ohne die Erfahrung selbst kaputt zu kuerzen.
-
-Fachliche Klammer fuer Reflexion und innere Wahrnehmung:
-
-- Das System soll nicht nur Aussenreize verarbeiten, sondern die eigene Verarbeitung mitwahrnehmen.
-- Gekoppelte Akteure:
-  - aeussere Wahrnehmung: Markt, Struktur, Impuls, Risiko, Timing
-  - innere Wahrnehmung: Tragfaehigkeit, Spannung, Stabilitaet, Ueberlastung, Klarheit, Hemmung, Mut
-  - Denken/Organisation: Musterdeutung, Teilmuster-Ergaenzung, Erfahrungsvergleich, Verdichtung, Reorganisation
-  - Handeln: `observe`, `hold`, `replan`, kontrolliertes `act`
-  - Lernen: Rueckwirkung auf Tragfaehigkeit, Prozessqualitaet, Stabilitaet, Varianz und Erfahrungsspuren
-- Memory ist dabei nicht nur Speicher, sondern Resonanz- und Konfliktflaeche fuer innere Organisation.
-- Denken erzeugt selbst kognitive Last und muss deshalb als Energie-/Komplexitaetsfaktor sichtbar werden.
-- Ziel:
-  - nicht maximale Denktiefe
-  - nicht starre Memory-Bremse
-  - sondern ausreichend reflektierte, energieeffiziente Verdichtung bis ein tragfaehiges Handlungsmuster entsteht
-- Wenn die aeussere Wahrnehmung stark ist, aber das innere Feld instabil oder das Denken ueberlastet ist, soll das System eher beobachten, halten oder reorganisieren.
-- Wenn aeussere Wahrnehmung, innere Tragfaehigkeit und verdichtete Erfahrung zusammenpassen, soll kontrolliertes Handeln leichter werden.
-
-Dokumentation uebernommen:
-
-- `README.md` wurde um Reflexion, Denkkomplexitaet und energieeffiziente Meta-Regulation als Einstiegsklammer ergaenzt.
-- Die README-Dokumentpfade zeigen nun auf `files/UMSETZUNGSPLAN.md`, `files/AKTUELLER_STAND.md` und `files/FIX_LISTE.md`.
-- `files/UMSETZUNGSPLAN.md` wurde mit Zustimmung um den Architekturabschnitt `Denkkomplexitaet und energieeffiziente Meta-Regulation` ergaenzt.
-- Damit ist der Punkt nicht nur als aktueller Fix, sondern auch im Zielbild des Systems verankert.
-
-Emergente Musterergaenzung als Ziel ergaenzt:
-
-- Ziel ist ausdruecklich keine reine Pattern-Erkennung.
-- Das System soll nicht nur sagen: `das kenne ich, also reagiere ich so`.
-- Ziel ist, unvollstaendige Teilmuster mit innerer Erfahrung zu moeglichen Gesamtmustern zu ergaenzen.
-- Ein Ereignis muss nicht zu 100 Prozent klar erkannt sein.
-- Eine Deutung kann teilweise reif sein; die konkrete Reife ist variabel und darf kein fester Prozentwert sein.
-- Auch eine nur teilweise Deutung kann bereits innere Musterraeume aktivieren.
-- Wichtig ist dabei:
-  - aeussere Wahrnehmung bleibt die Reizbasis
-  - innere Erfahrung liefert moegliche Ergaenzungen
-  - das MCM-Feld laesst Varianten konkurrieren
-  - Unsicherheit, Varianz und Tragfaehigkeit bleiben sichtbar
-  - Handlung entsteht erst, wenn Deutung, Feldklarheit und innere Tragfaehigkeit ausreichend zusammenpassen
-- `README.md` und `files/UMSETZUNGSPLAN.md` wurden entsprechend ergaenzt.
-
-Folgearbeit nach dem Memory-Komplexitaetsprotokoll:
-
-- Diagnose fuer `emergent_pattern_completion` vorbereiten.
-- Moegliche Felder:
-  - `partial_pattern_strength`
-  - `completion_candidates`
-  - `completion_confidence`
-  - `completion_variance`
-  - `experience_resonance`
-  - `pattern_projection_support`
-  - `pattern_projection_risk`
-  - `inner_image_clarity`
-  - `completion_meta_action`
-
-Auswertung des neuen Ohne-Memory-Laufs nach Neuron-Loop-Entlastung:
-
-- Neuer Lauf liegt in `debug`, Vergleichsbasis ist `debug/lauf_7_mit_test_5m_SOLUSDT_ohne_memory`.
-- Ergebnislage:
-  - `lauf_7`: 111 Trades, 28 TP, 83 SL, Equity ca. 89,39
-  - neuer Lauf: 114 Trades, 35 TP, 79 SL, Equity ca. 102,07
-  - Attempts: 2114 auf 2033
-  - `attempts_withheld`: 1656 auf 1565
-  - `attempts_observed`: 199 auf 204
-- MCM-Phasen:
-  - `lauf_7`: `observe` 16, `act` 161, `hold` 1417
-  - neuer Lauf: `observe` 15, `act` 163, `hold` 1348
-- Feldlabels bleiben stabil verteilt:
-  - `quiet_field` bleibt dominant
-  - `active_perception_field` und `fragmented_perception_field` bleiben in vergleichbarer Groessenordnung
-  - `coherent_perception_field` bleibt selten
-- Performance:
-  - `primary_field_step`: ca. 68,28 ms auf ca. 64,11 ms
-  - `mcm_field.step.neuron_loop`: ca. 41,60 ms auf ca. 37,17 ms
-  - `mcm_field.step.total`: ca. 70,56 ms auf ca. 68,49 ms
-  - `compute_runtime_result.total`: ca. 30,03 ms auf ca. 28,17 ms
-  - `step_mcm_brain.total`: ca. 90,73 ms auf ca. 88,22 ms
-  - `snapshot_field_read`: ca. 18,12 ms auf ca. 18,21 ms, also bewusst stabil als finaler Wahrnehmungsread
-- Neue Profilpunkte:
-  - `mcm_field.step.context_memory_matrix`: ca. 0,05 ms, sehr klein
-  - `mcm_field.step.prepare_impulse_vectors` lag unter Profilschwelle und ist damit praktisch unkritisch
-- Interpretation:
-  - Die Matrix-Vorbereitung hat die neuronale Schleife messbar entlastet.
-  - Die Entscheidungsphasen bleiben stabil.
-  - Die bessere Equity dieses Laufs ist positiv, aber noch nicht als stabile Qualitaetsaussage zu werten; wichtig ist zunaechst, dass Mechanik und Phasen nicht kippen.
-
-Naechster sinnvoller Anschluss:
-
-- Wenn noch eine reine Feld-Performance-Runde gewuenscht ist: Kopplung/Neighbor-Forces weiter array-basiert vorbereiten.
-- Alternativ jetzt den identischen Lauf mit Memory starten, um Denkkomplexitaet, Memory-Hemmung, Memory-Support und kognitive Last gegen die Ohne-Memory-Basis zu messen.
-
-Auswertung Memory-Lauf mit vorhandener Erfahrung:
-
-- Der vorherige Ohne-Memory-Lauf wurde nicht separat archiviert; die Vergleichsbasis ist daher die zuletzt dokumentierte Ohne-Memory-Basis aus `debug`:
-  - Ohne Memory dokumentiert: 114 Trades, 35 TP, 79 SL, Equity ca. 102,07
-  - Aktueller Lauf mit vorhandener Memory-Erfahrung: 56 Trades, 17 TP, 39 SL, Equity ca. 99,34
-- Der Lauf ist kein perfekter A/B-Test, weil Memory bereits Erfahrung aus dem Vorlauf enthielt.
-- Trotzdem ist die Wirkung deutlich:
-  - Attempts steigen auf 2675
-  - Submitted Trades fallen auf 56
-  - `attempts_withheld` steigt auf 2501
-  - `attempts_observed` liegt bei 45
-  - `attempts_blocked` liegt bei 17
-- MCM-Phasen im aktuellen Memory-Lauf:
-  - `hold`: 1841
-  - `act`: 74
-  - `observe`: 17
-  - kein `replan`
-- Hauptgruende:
-  - `context_cluster_negative`: 976
-  - `maturity_block`: 334
-  - `fused_score_too_low`: 286
-  - `pause_mode`: 139
-  - `stressed_block`: 101
-  - `plan_allowed`: 74
-- Laufzeit:
-  - `primary_field_step`: ca. 64,07 ms, also praktisch gleich zur Ohne-Memory-Basis von ca. 64,11 ms
-  - `mcm_field.step.neuron_loop`: ca. 38,53 ms, leicht hoeher als ca. 37,17 ms, aber nicht der Hauptgrund fuer weniger Trades
-  - `compute_runtime_result.total`: ca. 40,45 ms, deutlich hoeher als ca. 28,17 ms
-  - `step_mcm_brain.total`: ca. 86,96 ms, vergleichbar bis leicht besser als ca. 88,22 ms
-  - `memory_state.write_payload`: ca. 78,13 ms je Profilpunkt, hoeher als vorherige Schreibbasis
-- Interpretation:
-  - Memory macht das MCM-Feld selbst nicht wesentlich langsamer.
-  - Die Trade-Reduktion entsteht vor allem in der Denk-/Entscheidungsstruktur.
-  - `context_cluster_negative` ist der dominante Hemmgrund und muss genauer aufgeloest werden.
-  - Memory wirkt aktuell stark selektiv/hemmend; noch unklar ist, ob es gute Setups verhindert oder schlechte Setups sinnvoll ausfiltert.
-  - Die fast Break-even-Equity trotz halbierter Trades ist interessant und spricht gegen reine Fehlfunktion, aber die Hemmung ist noch nicht transparent genug.
-
-Naechster sinnvoller Anschluss:
-
-- Jetzt sollte kein weiteres Blind-Tuning an Memory erfolgen.
-- Als naechstes ein Denkkomplexitaets-/Memory-Wirkungsprotokoll einbauen:
-  - Memory-Support
-  - Memory-Inhibition
-  - Memory-Konflikt
-  - Match-Anzahl / Vergleichslast
-  - Kontextcluster-Hemmgrund aufschluesseln
-  - kognitive Last und Entscheidungskosten sichtbar machen
-- Ziel: erkennen, ob Memory intelligent selektiert oder pauschal gute Entscheidungen ausbremst.
-
-Denkkomplexitaets-/Memory-Wirkungsprotokoll umgesetzt:
-
-- Neues Debug-Protokoll: `debug/mcm_memory_thinking_protocol.csv`.
-- Neue Config-Schalter:
-  - `MCM_MEMORY_THINKING_PROTOCOL_DEBUG`
-  - `MCM_MEMORY_THINKING_PROTOCOL_EVERY_N`
-- Das Protokoll schreibt nicht jeden Tick blind, sondern jede n-te Diagnose sowie Phasen-/Grundwechsel.
-- Sichtbar werden jetzt:
-  - `thinking_complexity`
-  - `memory_compare_load`
-  - `memory_match_count`
-  - `memory_support`
-  - `memory_inhibition`
-  - `memory_conflict`
-  - `cognitive_load`
-  - `decision_energy_cost`
-  - `context_cluster_negative_source`
-  - `memory_effect_on_phase`
-- `context_cluster_negative` wird aufgeschluesselt in:
-  - `cluster_score`
-  - `low_hit_ratio`
-  - `mixed`
-- Alle relevanten Entscheidungsfaelle fuehren den eigenen `memory_complexity_state` mit:
-  - Meta-Block / frueher Abbruch
-  - nicht tradebare Entscheidung
-  - fehlender Tradeplan
-  - tatsaechlicher Trade
-- Dadurch soll ein neuer Memory-Lauf zeigen, ob Memory:
-  - harte Hemmung erzeugt
-  - weiche Hemmung erzeugt
-  - Support liefert
-  - Konflikt erzeugt
-  - oder nur Vergleichslast ohne klare Wirkung produziert
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
-
-Umgesetzt: erfahrungsbasierte Deutungsqualitaet / semantische Fremdheit:
-
-- DIO bekommt keine mechanische Chartregel.
-- Neue MCM-Selbstdiagnose fragt:
-  - Wie gut traegt meine eigene Formsprache diese Lage?
-  - Wie vertraut ist die aktuelle Route aus meiner Erfahrung?
-  - Wie weit darf alte Erfahrung auf diese neue Fremdheit uebertragen werden?
-- Neue Werte in der Meta-Regulation:
-  - `known_form_support`
-  - `route_familiarity`
-  - `semantic_shift_pressure`
-  - `transfer_bearing`
-  - `interpretation_quality`
-  - `adaptation_phase`
-- Wirkung:
-  - Bei hoher semantischer Fremdheit und niedriger Transfer-Tragfaehigkeit
-    wird Handlung weich in Beobachten/Reframing verschoben.
-  - Es gibt keine menschlichen Marktlabels und keine harte Pattern-Regel.
-  - Die Logik basiert auf eigener Erfahrung, Form-Reife, Memory-Orientierung,
-    Struktur-Tragfaehigkeit, Feldklarheit und Entwicklungsspuren.
-- Offene Positionen bekommen zusaetzlich Ziel-/Transfer-Diagnose:
-  - `entry_route_familiarity`
-  - `entry_transfer_bearing`
-  - `current_route_familiarity`
-  - `current_semantic_shift_pressure`
-  - `current_transfer_bearing`
-  - `current_interpretation_quality`
-  - `current_adaptation_phase`
-  - `semantic_transfer_stress`
-- Debug erweitert:
-  - `mcm_memory_thinking_protocol.csv`
-  - `mcm_target_expectation_protocol.csv`
-  - `mcm_exit_candidate_replay.csv`
-  - kompakte Attempt-/Outcome-Kontexte
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\trade_stats.py`
-- Nachtrag:
-  - Runtime-Fehler `active_context_trace is not defined` behoben.
-  - Die semantische Diagnose nutzt jetzt defensiv `bot.active_context_trace`
-    ueber `_normalize_active_context_trace`, statt auf eine spaeter gesetzte
-    lokale Variable zuzugreifen.
-  - Syntaxpruefung erneut erfolgreich:
-    - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\trade_stats.py`
-- Zweiter Nachtrag:
-  - Runtime-Fehler `bot is not defined` in `build_meta_regulation_state`
-    behoben.
-  - Die Funktion besitzt keinen `bot`-Parameter; die semantische Diagnose
-    liest den aktiven Kontext deshalb jetzt aus `fused_state.active_context_trace`.
-  - Syntaxpruefung erneut erfolgreich:
-    - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\trade_stats.py`
-
-Naechster sinnvoller Anschluss:
-
-- Einen neuen Backtest auf dem erweiterten Datensatz laufen lassen.
-- Danach pruefen:
-  - ob `new_market_grammar_observe` / `new_market_grammar_replan` auftaucht
-  - ob Phase B weniger blind in fremde Semantik hineinhandelt
-  - ob Phase A weiter frei handeln kann
-  - ob Phase C mehr kontrolliertes Re-Explorieren zeigt
-  - ob `semantic_transfer_stress` offene Positionen besser erklaert
-
-Debug-Befund: erweiterter Datensatz Lauf 2:
-
-- Quelle:
-  - `debug/debug_lauf_2`
-- Ergebnis:
-  - 90 Trades
-  - 35 TP / 55 SL
-  - Netto-PnL ca. +9,62
-  - Profit Factor ca. 1,35
-  - Equity-Peak ca. 110,21
-  - End-Equity ca. 109,62
-  - Peak-Giveback nur ca. 0,59
-- Vergleich zu Lauf 1:
-  - Lauf 1: 107 Trades, +8,10 PnL, Peak ca. 122,61, End ca. 108,10,
-    Giveback ca. 14,50
-  - Lauf 2: weniger Trades, weniger Ausbruch nach oben, aber deutlich
-    stabileres Halten der aufgebauten Equity
-- Phasenbefund:
-  - Phase A:
-    - 48 Trades
-    - 19 TP / 29 SL
-    - PnL ca. +6,28
-  - Phase B:
-    - 27 Trades
-    - 8 TP / 19 SL
-    - PnL ca. +0,05
-    - Wichtig: Die vorher kritische fremde Strecke kippt nicht mehr stark weg.
-  - Phase C:
-    - 15 Trades
-    - 8 TP / 7 SL
-    - PnL ca. +3,30
-    - DIO kommt am Ende wieder kontrolliert in Aktivitaet.
-- Semantik-Befund:
-  - `route_familiarity` bleibt niedrig bis mittel.
-  - `semantic_shift_pressure` bleibt messbar, aber noch nicht stark genug
-    fuer `new_market_grammar_observe` / `new_market_grammar_replan`.
-  - `adaptation_phase` ist fast durchgehend `interpretation_watch`,
-    nur wenige Protokollzeilen zeigen `transfer_observe`.
-  - Bewertung:
-    - Die neue Schicht hat nicht mechanisch eingegriffen.
-    - Sie misst Fremdheit und Transfer-Tragfaehigkeit bereits.
-    - Der Lauf wirkt dadurch stabiler, aber noch nicht aktiv genug
-      semantisch adaptiv.
-- Exit-Replay:
-  - 15 Kandidaten
-  - 13 haetten Verlust gespart
-  - 2 haetten geschadet, beide waeren TP-Cuts gewesen
-  - Alle Kandidaten lagen in `expectation_break_observe`
-  - Interpretation:
-    - Die Bruchwahrnehmung sieht Risiko gut.
-    - Exit-Reife bleibt vorsichtig, weil zu fruehes Eingreifen weiterhin
-      echte TP-Chancen abschneiden kann.
-
-Naechster sinnvoller Anschluss:
-
-- Noch keinen harten Code-Fix erzwingen.
-- Erst Lauf 3 auf gleichem Datensatz laufen lassen.
-- Danach pruefen:
-  - ob die Stabilitaet wiederholbar ist
-  - ob `transfer_observe` zunimmt
-  - ob `new_market_grammar_*` natuerlich auftaucht oder die Schwelle zu hoch ist
-  - ob Phase B weiter flach/stabil bleibt
-  - ob Phase C erneut kontrolliert aktiver wird
-
-Debug-Befund: erweiterter Datensatz Lauf 3:
-
-- Quelle:
-  - `debug/debug_lauf_3`
-- Ergebnis:
-  - 62 Trades
-  - 19 TP / 43 SL
-  - Netto-PnL ca. -2,27
-  - Profit Factor ca. 0,91
-  - Equity-Peak ca. 107,98
-  - End-Equity ca. 97,73
-  - Peak-Giveback ca. 10,25
-- Vergleich:
-  - Lauf 2 war stabiler mit +9,62 PnL und kaum Peak-Giveback.
-  - Lauf 3 handelt noch weniger, verpasst aber mehr tragenden Aufbau und
-    faellt danach durch Verlustserien zurueck.
-- Phasenbefund:
-  - Phase A:
-    - 35 Trades
-    - 12 TP / 23 SL
-    - PnL ca. +1,30
-    - Zone positiv, Non-Zone negativ.
-  - Phase B:
-    - 15 Trades
-    - 4 TP / 11 SL
-    - PnL ca. -2,93
-    - Zone ca. +1,69, Non-Zone ca. -4,61.
-  - Phase C:
-    - 12 Trades
-    - 3 TP / 9 SL
-    - PnL ca. -0,64
-    - Zone ca. +1,69, Non-Zone ca. -2,33.
-- Kernbefund:
-  - Die tragende Struktur ist nicht das Problem.
-  - Zone bleibt ueber alle Phasen positiv.
-  - Non-Zone ist wieder ein reiner Verlustkanal:
-    - Phase A: 1 TP / 10 SL, ca. -5,01
-    - Phase B: 0 TP / 7 SL, ca. -4,61
-    - Phase C: 0 TP / 5 SL, ca. -2,33
-- Semantik-Befund:
-  - `semantic_shift_pressure` bleibt im Mittel zu niedrig.
-  - `new_market_grammar_*` taucht weiterhin nicht auf.
-  - `adaptation_phase` bleibt fast komplett `interpretation_watch`.
-  - `transfer_observe` taucht nur sehr selten auf.
-- Interpretation:
-  - DIO erkennt Zielbrueche weiterhin (`expectation_break_observe` ist
-    negativ und diagnostisch sinnvoll).
-  - Die neue semantische Fremdheit ist aber noch zu diagnostisch/passiv.
-  - Bei fremder oder nicht tragender Struktur wird alte Erfahrung noch zu oft
-    in Handlung uebertragen.
-  - Das ist keine Frage harter Regeln, sondern eine Frage der
-    Transfer-Reife: Wie viel meiner Erfahrung darf ich hier wirklich
-    uebertragen?
-
-Naechster sinnvoller Anschluss:
-
-- Semantische Fremdheit organischer an Nicht-Tragfaehigkeit koppeln.
-- Nicht `Low/Non-Zone` mechanisch sperren.
-- Stattdessen:
-  - fehlende Struktur-Tragfaehigkeit
-  - niedrige Route-Familiarity
-  - geringe Transfer-Bearing
-  - wiederholte Outcome-Brueche
-  gemeinsam als `transfer_maturity_gap` wirken lassen.
-- Ziel:
-  - DIO darf fremde Struktur weiter beobachten und lernen.
-  - Handlung wird nur gedämpft, wenn eigene Erfahrung diese Fremdheit nicht
-    tragen kann.
-
-Umgesetzt: Trust-Transfer-Schnittstelle / `transfer_maturity_gap`:
-
-- Bestehendes Vertrauen wird nicht ersetzt.
-- Die neue Schnittstelle fragt:
-  - Ist mein gespeichertes Vertrauen in dieser aktuellen Lage uebertragbar?
-  - Traegt meine Formsprache diese Fremdheit?
-  - Ist mein Handlungstrust reif genug oder nur alte Vertrautheit?
-- Neue Werte:
-  - `trust_transfer_base`
-  - `trust_transfer_support`
-  - `transfer_maturity_gap`
-  - `trust_transfer_mode`
-- Wirkung:
-  - `transfer_maturity_gap` erhoeht weich Beobachtungsbedarf und
-    Replan-Druck.
-  - Handlungsunterstuetzung und Action-Clearance werden leicht gedaempft,
-    wenn gespeichertes Vertrauen nicht tragfaehig uebertragbar ist.
-  - Neue weiche Gruende:
-    - `immature_transfer_observe`
-    - `immature_transfer_replan`
-- Wichtig:
-  - Keine harte Non-Zone-Regel.
-  - Kein menschliches Patternlabel.
-  - Keine mechanische Sperre.
-  - Es ist eine MCM-Reifefrage:
-    - Wie viel meiner Erfahrung darf ich dieser fremden Struktur anvertrauen?
-- Debug erweitert:
-  - `mcm_memory_thinking_protocol.csv`
-  - kompakte Attempt-/Outcome-Kontexte
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
-- Nachtrag:
-  - Runtime-Fehler `interpretation_quality` vor Initialisierung behoben.
-  - `transfer_break_fatigue` und `transfer_recovery_need` werden jetzt erst
-    nach der Berechnung von `interpretation_quality` gebildet.
-  - Syntaxpruefung erneut erfolgreich:
-    - `python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
-
-Naechster sinnvoller Anschluss:
-
-- Lauf 4 auf gleichem erweitertem Datensatz starten.
-- Danach pruefen:
-  - ob `immature_transfer_observe` / `immature_transfer_replan` auftaucht
-  - ob Non-Zone-Verlust sinkt
-  - ob Zone weiter positiv und frei bleibt
-  - ob Tradezahl nicht zu stark kollabiert
-  - ob `transfer_maturity_gap` bei Verlustphasen hoeher ist als bei tragenden
-    TP-Phasen
-
-Debug-Befund: erweiterter Datensatz Lauf 4:
-
-- Quelle:
-  - `debug/debug_lauf_4`
-- Ergebnis:
-  - 56 Trades
-  - 25 TP / 31 SL
-  - Netto-PnL ca. +10,82
-  - Profit Factor ca. 1,70
-  - Equity-Peak ca. 110,82
-  - End-Equity ca. 110,82
-  - Peak-Giveback ca. 0,00
-- Vergleich:
-  - Lauf 3: -2,27 PnL, PF ca. 0,91, Giveback ca. 10,25
-  - Lauf 4: +10,82 PnL, PF ca. 1,70, kein finaler Giveback
-  - DIO hat weniger gehandelt, aber deutlich besser gekaempft und gehalten.
-- Phasenbefund:
-  - Phase A:
-    - 20 Trades
-    - 8 TP / 12 SL
-    - PnL ca. +3,88
-  - Phase B:
-    - 20 Trades
-    - 8 TP / 12 SL
-    - PnL ca. +1,87
-    - Die schwierige Strecke kippt nicht mehr weg.
-  - Phase C:
-    - 16 Trades
-    - 9 TP / 7 SL
-    - PnL ca. +5,07
-    - DIO wird am Ende wieder tragend aktiv.
-- Struktur-Befund:
-  - Zone bleibt klar positiv:
-    - Phase A ca. +7,31
-    - Phase B ca. +4,92
-    - Phase C ca. +5,96
-  - Non-Zone bleibt negativ, aber der Schaden sinkt:
-    - Phase A ca. -3,43
-    - Phase B ca. -3,05
-    - Phase C ca. -0,89
-- Trust-Transfer-Befund:
-  - `transfer_maturity_gap` ist im Lauf deutlich sichtbar:
-    - Memory-Protokoll Mittel ca. 0,57
-    - Maximum ca. 0,81
-  - `trust_transfer_mode`:
-    - `partial_transfer`: 6786 Zeilen
-    - `immature_transfer_watch`: 5843 Zeilen
-    - `trusted_transfer`: 297 Zeilen
-  - `immature_transfer_observe` taucht erst 1x als direkter Grund auf.
-  - Bewertung:
-    - Die Schnittstelle wirkt vor allem als Innenfeld-/Reifezustand,
-      nicht als harter Eingriff.
-    - Das passt zum Ziel: Freiheit bleibt erhalten, aber Vertrauen wird
-      kontextbewusster.
-- Exit-Replay:
-  - 7 Kandidaten
-  - 7 haetten Verlust gespart
-  - 0 harmed
-  - 0 TP-Cuts
-  - Alle lagen in `expectation_break_observe`
-- Interpretation:
-  - Der Satz "DIO hat gekaempft" passt.
-  - Der Lauf zeigt keinen glatten Automatismus.
-  - DIO hat Unsicherheit, teilweise unreife Transferlage und Zielbrueche
-    getragen, ohne komplett passiv zu werden.
-  - Besonders wichtig:
-    - Die schwierige Phase wird nicht mehr stark verloren.
-    - Die spaete Phase wird wieder konstruktiv.
-
-Naechster sinnvoller Anschluss:
-
-- Lauf 5 auf gleichem Datensatz laufen lassen.
-- Keine starke Nachschaerfung vor Wiederholung.
-- Danach pruefen:
-  - ob Lauf 4 stabil reproduzierbar ist
-  - ob `immature_transfer_watch` weiterhin hoch ist
-  - ob `immature_transfer_observe` vielleicht etwas zu selten als Handlung
-    sichtbar wird
-  - ob Non-Zone-Schaden weiter sinkt, ohne Zone-Freiheit zu verlieren
-
-Debug-Befund: erweiterter Datensatz Lauf 5:
-
-- Quelle:
-  - `debug/debug_lauf_5`
-- Ergebnis:
-  - 73 Trades
-  - 27 TP / 46 SL
-  - Netto-PnL ca. +6,40
-  - Profit Factor ca. 1,28
-  - Equity-Peak ca. 108,62
-  - End-Equity ca. 106,40
-  - Peak-Giveback ca. 2,22
-- Vergleich:
-  - Lauf 4 war staerker und sauberer (+10,82, PF ca. 1,70, kein Giveback).
-  - Lauf 5 bleibt profitabel, gibt aber in Phase C wieder etwas ab.
-- Phasenbefund:
-  - Phase A:
-    - 25 Trades
-    - 10 TP / 15 SL
-    - PnL ca. +3,63
-  - Phase B:
-    - 25 Trades
-    - 11 TP / 14 SL
-    - PnL ca. +3,39
-  - Phase C:
-    - 23 Trades
-    - 6 TP / 17 SL
-    - PnL ca. -0,62
-- Struktur-Befund:
-  - Zone bleibt positiv:
-    - Phase A ca. +6,55
-    - Phase B ca. +4,26
-    - Phase C ca. +1,37
-  - Non-Zone bleibt negativ:
-    - Phase A ca. -2,92
-    - Phase B ca. -0,88
-    - Phase C ca. -1,98
-- Trust-Transfer-Befund:
-  - `transfer_maturity_gap` bleibt sehr sichtbar:
-    - Memory-Protokoll Mittel ca. 0,57
-    - Maximum ca. 0,81
-  - `trust_transfer_mode`:
-    - `partial_transfer`: 6826 Zeilen
-    - `immature_transfer_watch`: 5945 Zeilen
-    - `trusted_transfer`: 265 Zeilen
-  - Direkte `immature_transfer_*` Gruende tauchen in Lauf 5 nicht auf.
-  - Bewertung:
-    - Die Schnittstelle wirkt als Innenfeldzustand stabil.
-    - Sie ist aber noch sehr selten direkt entscheidungsbestimmend.
-- Exit-Replay:
-  - 8 Kandidaten
-  - 8 haetten Verlust gespart
-  - 0 harmed
-  - 0 TP-Cuts
-  - Alle in `expectation_break_observe`
-- Interpretation:
-  - Die Richtung ist weiterhin besser als Lauf 3.
-  - Lauf 5 bestaetigt aber, dass spaete Erwartungsbrueche und Non-Zone-Schaden
-    noch nicht ausreichend in reifes Zusehen uebergehen.
-  - Es wirkt weniger wie Chaos, mehr wie ein Organismus, der den Kern halten
-    kann, aber in spaeter Ermuedung/Fremdheit noch zu viele kleine falsche
-    Versuche zulaesst.
-
-Naechster sinnvoller Anschluss:
-
-- Vorsichtig nachschaerfen, aber nicht hart.
-- `immature_transfer_watch` sollte bei wiederholter Bruchwahrnehmung staerker
-  in sichtbares Beobachten/Replan uebergehen.
-- Kein Non-Zone-Block.
-- Möglicher Ansatz:
-  - `transfer_break_fatigue`
-  - Kopplung aus `transfer_maturity_gap`, `expectation_break_observe`,
-    späten Bars/Phase und sinkender `target_expectation_holds`-Qualitaet.
-
-Umgesetzt: `transfer_break_fatigue`:
-
-- Ziel:
-  - unreifen Trust-Transfer nicht hart sperren
-  - aber wiederholte Bruch-/Nachwirkungszustände sichtbarer in Beobachten
-    oder Replan uebersetzen
-- Neue Werte:
-  - `transfer_break_fatigue`
-  - `transfer_recovery_need`
-- Quellen:
-  - `transfer_maturity_gap`
-  - `expectation_pressure`
-  - `aftereffect_pressure`
-  - `learned_development_uncertainty`
-  - `structure_action_uncertainty`
-  - niedriger `trust_transfer_support`
-  - niedrige `transfer_bearing`
-  - vorhandener `field_replan_pressure`
-- Wirkung:
-  - erhoeht weich `field_observation_need`
-  - erhoeht weich `field_replan_pressure`
-  - senkt leicht `field_action_support`
-  - erhoeht leicht `action_inhibition`
-  - senkt leicht `action_clearance`
-- Neue sichtbare Gruende:
-  - `transfer_break_observe`
-  - `transfer_break_replan`
-- Wichtig:
-  - Keine Non-Zone-Sperre.
-  - Keine Chartregel.
-  - Keine mechanische Blockade.
-  - Es ist eine MCM-Muedigkeit: Wenn mein Vertrauen nicht tragfaehig
-    uebertragbar ist und Brueche/Nachwirkungen zunehmen, brauche ich
-    innere Reorganisation.
-- Debug erweitert:
-  - `mcm_memory_thinking_protocol.csv`
-  - kompakte Attempt-/Outcome-Kontexte
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
-
-Naechster sinnvoller Anschluss:
-
-- Lauf 6 auf gleichem Datensatz starten.
-- Danach pruefen:
-  - PnL / PF / Giveback
-  - ob `transfer_break_observe` / `transfer_break_replan` auftaucht
-  - ob Phase C weniger abgibt
-  - ob Zone frei bleibt
-  - ob Non-Zone-Schaden weiter sinkt
-  - ob DIO nicht zu passiv wird
-
-Debug-Befund: erweiterter Datensatz Lauf 6:
-
-- Quelle:
-  - `debug/debug_lauf_6`
-- Ergebnis:
-  - 51 Trades
-  - 17 TP / 34 SL
-  - Netto-PnL ca. -0,23
-  - Profit Factor ca. 0,99
-  - Equity-Peak ca. 105,37
-  - End-Equity ca. 99,77
-  - Peak-Giveback ca. 5,60
-- Vergleich:
-  - Lauf 4: +10,82, PF ca. 1,70, kein Giveback
-  - Lauf 5: +6,40, PF ca. 1,28, Giveback ca. 2,22
-  - Lauf 6: nahezu Break-even, aber mit deutlichem Abbau nach Peak
-- Phasenbefund:
-  - Phase A:
-    - 20 Trades
-    - 9 TP / 11 SL
-    - PnL ca. +5,23
-    - guter Aufbau
-  - Phase B:
-    - 17 Trades
-    - 4 TP / 13 SL
-    - PnL ca. -5,44
-    - Hauptproblem des Laufs
-  - Phase C:
-    - 14 Trades
-    - 4 TP / 10 SL
-    - PnL ca. -0,02
-    - fast neutral, aber ohne echte Erholung
-- Struktur-Befund:
-  - Phase B:
-    - Non-Zone ca. -5,33
-    - Zone ca. -0,11
-  - Phase C:
-    - Zone ca. +2,32
-    - Non-Zone ca. -2,34
-- Trust-/Fatigue-Befund:
-  - `transfer_break_fatigue` wird gemessen:
-    - Mittel ca. 0,43
-    - Max ca. 0,65
-  - `transfer_recovery_need`:
-    - Mittel ca. 0,37
-    - Max ca. 0,50
-  - `transfer_break_fatigue` als Adaptionsphase taucht nur 5x auf.
-  - Direkte `transfer_break_*` Gruende tauchen nicht auf.
-  - `immature_transfer_observe` taucht 1x auf.
-- Interpretation:
-  - Die Fatigue-Schicht ist aktuell unausgewogen.
-  - Sie daempft bereits dauerhaft Action-Clearance und erhoeht Inhibition,
-    aber wird kaum als klare Observe/Replan-Entscheidung sichtbar.
-  - Ergebnis:
-    - DIO wird etwas zu passiv/gebremst,
-    - aber die falschen Non-Zone-Uebertragungen werden nicht klar genug
-      in Beobachten uebersetzt.
-  - Lauf 6 zeigt also nicht "mehr Reife", sondern eher ein inneres
-    Bremsen ohne genuegend saubere Neuorientierung.
-
-Naechster sinnvoller Anschluss:
-
-- `transfer_break_fatigue` nachschaerfen:
-  - weniger permanente globale Daempfung
-  - staerkere, aber seltenere sichtbare Umschaltung in Observe/Replan,
-    wenn Fatigue + unreifer Transfer + Bruchwahrnehmung zusammenkommen
-  - Action-Freiheit in tragender Zone erhalten
-  - Non-Zone nicht sperren, aber bei unreifem Transfer deutlicher
-    beobachten lassen
-
-Umgesetzt: Rebalance `transfer_break_fatigue`:
-
-- Problem aus Lauf 6:
-  - Fatigue daempfte bereits dauerhaft.
-  - Sichtbare `transfer_break_*` Entscheidungen kamen aber kaum.
-  - Dadurch entstand Bremsen ohne klare Reorganisation.
-- Anpassung:
-  - permanente Fatigue-Wirkung reduziert.
-  - Fatigue wirkt auf Action/Inhibition nur noch ueber `fatigue_excess`
-    oberhalb eines Grundniveaus.
-  - Neuer Ausloeser:
-    - `transfer_break_trigger`
-    - `transfer_break_ready`
-- `transfer_break_ready` entsteht nur, wenn mehrere innere Bedingungen
-  gemeinsam tragen:
-  - unreifer Transfer
-  - niedriger Trust-Transfer-Support
-  - niedrige Transfer-Bearing
-  - schwache Struktur-Handlungs-Tragfaehigkeit
-  - genuegend Fatigue/Bruchdruck
-- Ziel:
-  - weniger globale Bremse
-  - seltener, aber deutlicher Observe/Replan
-  - Zone-Freiheit erhalten
-  - Non-Zone nicht sperren, aber bei unreifem Transfer besser beobachten
-- Debug erweitert:
-  - `transfer_break_trigger`
-  - `transfer_break_ready`
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
-
-Naechster sinnvoller Anschluss:
-
-- Lauf 7 auf gleichem Datensatz starten.
-- Danach pruefen:
-  - ob DIO weniger passiv ist als Lauf 6
-  - ob `transfer_break_ready` und `transfer_break_*` sichtbar werden
-  - ob Phase B weniger Non-Zone-Schaden erzeugt
-  - ob Phase A/Zone-Aufbau erhalten bleibt
-
-Debug-Befund: erweiterter Datensatz Lauf 7:
-
-- Quelle:
-  - `debug/debug_lauf_7`
-- Ergebnis:
-  - 65 Trades
-  - 35 TP / 30 SL
-  - Netto-PnL ca. +19,90
-  - Profit Factor ca. 2,43
-  - Equity-Peak ca. 119,90
-  - End-Equity ca. 119,90
-  - Peak-Giveback ca. 0,00
-- Vergleich:
-  - Lauf 4: +10,82, PF ca. 1,70
-  - Lauf 5: +6,40, PF ca. 1,28
-  - Lauf 6: -0,23, PF ca. 0,99
-  - Lauf 7: +19,90, PF ca. 2,43
-- Phasenbefund:
-  - Phase A:
-    - 25 Trades
-    - 15 TP / 10 SL
-    - PnL ca. +12,16
-  - Phase B:
-    - 20 Trades
-    - 10 TP / 10 SL
-    - PnL ca. +4,30
-  - Phase C:
-    - 20 Trades
-    - 10 TP / 10 SL
-    - PnL ca. +3,44
-- Struktur-Befund:
-  - Zone traegt massiv:
-    - Phase A ca. +13,52
-    - Phase B ca. +5,96
-    - Phase C ca. +4,26
-  - Non-Zone-Schaden ist stark reduziert:
-    - Phase A ca. -1,35
-    - Phase B ca. -1,66
-    - Phase C ca. -0,83
-- Trust-/Fatigue-Befund:
-  - `transfer_break_trigger` ist im Denkprotokoll sichtbar:
-    - Mittel ca. 0,38
-    - Max ca. 0,69
-  - `transfer_break_ready` ist im Denkprotokoll messbar:
-    - Mittel ca. 0,048
-  - Direkte `transfer_break_*` Gruende tauchen nicht auf.
-  - `immature_transfer_observe` taucht 2x auf.
-  - Bewertung:
-    - Die Rebalance hat die globale Bremse geloest.
-    - Warn-/Reifeschicht bleibt vorhanden.
-    - DIO konnte tragende Zone frei nutzen und Non-Zone-Schaden stark
-      begrenzen.
-- Zielerwartung:
-  - `target_expectation_holds` ist wieder extrem tragend:
-    - Phase A: ca. +15,69
-    - Phase B: ca. +8,47
-    - Phase C: ca. +7,60
-  - `expectation_break_observe` bleibt negativ, aber der Schaden ist
-    kontrollierter.
-- Exit-Replay:
-  - 9 Kandidaten
-  - 8 saved
-  - 1 harmed / 1 TP-Cut
-  - Interpretation:
-    - Exit-Bruchwahrnehmung bleibt grundsaetzlich wertvoll.
-    - Aber aktiver Exit waere weiterhin riskant, weil TP-Cuts moeglich sind.
-- Interpretation:
-  - Lauf 7 ist bisher der staerkste Lauf auf dem erweiterten Datensatz.
-  - Das Verhalten wirkt reifer:
-    - weniger Dauerbremse als Lauf 6
-    - bessere Nutzung tragender Struktur
-    - reduzierter Non-Zone-Schaden
-    - kein finaler Giveback
-  - Trotzdem nicht ueberbewerten: ein weiterer Wiederholungslauf ist wichtig,
-    weil wir Varianz und Memory-Entwicklung bewusst zulassen.
-
-Naechster sinnvoller Anschluss:
-
-- Lauf 8 auf gleichem Datensatz starten.
-- Keine weitere Code-Aenderung vor Wiederholung.
-- Pruefen:
-  - Reproduzierbarkeit von Lauf 7
-  - ob Zone-Freiheit stabil bleibt
-  - ob Non-Zone-Schaden weiter klein bleibt
-  - ob `transfer_break_ready` nur in echten Fremdheits-/Bruchmomenten
-    sichtbar bleibt
-
-Debug-Befund: erweiterter Datensatz Lauf 8:
-
-- Quelle:
-  - `debug/debug_lauf_8`
-- Ergebnis:
-  - 77 Trades
-  - 34 TP / 43 SL
-  - Netto-PnL ca. +7,91
-  - Profit Factor ca. 1,30
-  - Equity-Peak ca. 107,91
-  - End-Equity ca. 107,91
-  - finaler Giveback ca. 0,00
-- Vergleich:
-  - Lauf 7 war deutlich staerker (+19,90, PF ca. 2,43).
-  - Lauf 8 bleibt profitabel, aber zeigt deutlich mehr Kampf/Varianz.
-- Phasenbefund:
-  - Phase A:
-    - 25 Trades
-    - 11 TP / 14 SL
-    - PnL ca. +3,21
-  - Phase B:
-    - 25 Trades
-    - 7 TP / 18 SL
-    - PnL ca. -3,92
-    - Tiefpunkt ca. 95,16 Equity
-  - Phase C:
-    - 27 Trades
-    - 16 TP / 11 SL
-    - PnL ca. +8,61
-    - starke Reorganisation / Rueckaufbau
-- Struktur-Befund:
-  - Zone:
-    - Phase A ca. +9,27
-    - Phase B ca. +0,31
-    - Phase C ca. +11,91
-  - Non-Zone:
-    - Phase A ca. -6,06
-    - Phase B ca. -4,22
-    - Phase C ca. -3,30
-  - Kern:
-    - Zone traegt weiter.
-    - Non-Zone bleibt Verlust-/Stresskanal.
-- Nervlicher/neuronal-kognitiver Befund:
-  - Phase B wirkt wie Stress-/Ueberlebensphase:
-    - viele `expectation_break_observe`
-    - hoher Verlustdruck
-    - Non-Zone-Verluste
-    - kein sichtbarer `transfer_break_*` Grund
-  - Phase C wirkt wie Reorganisation:
-    - `target_expectation_holds` wird wieder stark tragend
-    - Zone wird wieder profitabel genutzt
-    - DIO baut den Drawdown aktiv zurueck
-- Trust-/Fatigue-Befund:
-  - `transfer_break_trigger` ist sichtbar:
-    - Mittel ca. 0,37
-    - Max ca. 0,69
-  - `transfer_break_ready` ist im Denkprotokoll messbar:
-    - Mittel ca. 0,045
-  - Direkte `transfer_break_*` Gruende erscheinen nicht.
-  - `immature_transfer_watch` bleibt als Innenfeldzustand stark sichtbar.
-  - Bewertung:
-    - Die Warnschicht ist vorhanden.
-    - Sie wirkt aber weiter mehr als Innenzustand als direkte Entscheidung.
-    - In Lauf 8 war das zweischneidig:
-      - genug Freiheit fuer starke Erholung in Phase C
-      - aber zu wenig sichtbare Reaktion auf Non-Zone-Stress in Phase B
-- Exit-Replay:
-  - 11 Kandidaten
-  - 11 saved
-  - 0 harmed
-  - 0 TP-Cuts
-  - Alle in `expectation_break_observe`
-- Interpretation:
-  - Lauf 8 bestaetigt die hohe Varianz.
-  - DIO ist kein konstantes Regelmodell.
-  - Es ist eher ein plastisches Nervensystem:
-    - Memory/Form-Sprache verschiebt die Wahrnehmung von Lauf zu Lauf.
-    - Trust-Transfer erzeugt innere Vorsicht.
-    - Zielbruchwahrnehmung erzeugt Stress.
-    - Zone liefert tragende Struktur.
-    - Non-Zone erzeugt Ueberlebenskampf.
-    - Reorganisation ist moeglich, aber noch nicht konstant.
-
-Naechster sinnvoller Anschluss:
-
-- Keine harte Regel einbauen.
-- Stattdessen Varianz diagnostisch erfassen:
-  - `nervous_variance`
-  - `regulation_oscillation`
-  - `recovery_after_stress`
-  - `stress_to_recovery_delta`
-- Ziel:
-  - erkennen, ob DIO nur ueberlebt oder wirklich reif reorganisiert.
-  - Varianz nicht entfernen, sondern tragfaehiger machen.
-
-Dokumentations-Reorganisation:
-
-- Dateinamen im `files`-Dokumentationsbereich wurden vereinheitlicht:
-  - `BILDER/`
-  - `AKTUELLER_STAND.md`
-  - `FIX_LISTE.md`
-  - `FIX_LISTE_ARCHIV.md`
-  - `MCM_VARIABLEN_MECHANIK.md`
+Das ist keine Blockade. Wenn `pre_action_reorganization_pressure` hoch ist und
+`pre_action_context_selectivity` niedrig bleibt, wird eher `observe`,
+`act_watch` oder `replan` gestaerkt. Gute, konzentrierte Kontexte sollen durch
+`pre_action_context_selectivity` geschuetzt bleiben.
+
+Naechster Schritt:
+Lauf 7 pruefen:
+- Gehen mehr schwache Kontexte in `pre_action_reorganization_observe` oder
+  `pre_action_reorganization_replan`?
+- Sinkt Non-Zone-Schaden?
+- Bleiben `constructive_packet` und Zone-Pakete erhalten?
+
+## Lauf 7 nach Pre-Action-Reorganisation
+
+Befund:
+- 374 Trades.
+- 124 TP, 250 SL.
+- Netto-PnL ca. +4.10.
+- Max Drawdown ca. 19.82.
+
+Struktur:
+- Zone:
+  - 253 Trades.
+  - ca. +51.74 PnL.
+- Non-Zone:
+  - 121 Trades.
+  - ca. -47.64 PnL.
+
+Erfahrungspakete:
+- `constructive_packet`: 109 Trades, 109 TP, ca. +110.06 PnL.
+- `reorganize_packet`: 247 Trades, 0 TP, ca. -124.70 PnL.
+- `mixed_packet`: 18 Trades, ca. +18.75 PnL.
+
+Pre-Action:
+- `pre_action_reorganization_observe`: 2 Protokollzeilen.
+- `pre_action_reorganization_replan`: 0 Protokollzeilen.
+- Im Field-Protokoll:
+  - `underengaged_reorganize`: 4843 Zeilen.
+  - `settled_effort`: 4750 Zeilen.
+  - `constructive_echo`: 76 Zeilen.
+
+Deutung:
+Die innere Reorganisationslage ist im Feld stark sichtbar. DIO fuehlt also
+haeufig: "Das ist nicht genuegend getragen." Aber diese Lage wird noch zu
+selten als konkreter Pre-Action-Grund wirksam.
+
+Problem:
+`pre_action_reorganization_pressure` trennt Zone und Non-Zone in den
+ausgefuehrten Trades noch nicht sinnvoll:
+- Non-Zone ca. 0.234.
+- Zone ca. 0.243.
+
+Das ist falsch herum bzw. zu wenig selektiv. Die Achse reagiert noch zu stark
+auf allgemeinen Reorganisationsnachhall und zu wenig auf aktuelle
+Strukturqualitaet / Kontextqualitaet.
+
+Naechster Schritt:
+`pre_action_reorganization_pressure` muss staerker aktuelle
+Strukturqualitaet, Kontextvertrauen und Strukturtragfaehigkeit lesen.
+`pre_action_context_selectivity` muss gute Zone-Kontexte besser schuetzen.
+Ziel bleibt: konzentriertes Handeln, nicht mehr Handeln.
+
+Umsetzung nach Lauf 7:
+- `pre_action_reorganization_pressure` liest jetzt zusaetzlich
+  `structure_quality` und `context_confidence`.
+- Gute Strukturqualitaet und gutes Kontextvertrauen daempfen
+  Reorganisationsdruck.
+- `pre_action_context_selectivity` wurde um `structure_quality` und
+  `context_confidence` erweitert.
+
+Naechster Schritt:
+Lauf 8 pruefen:
+- Trennt `pre_action_reorganization_pressure` Non-Zone jetzt besser von Zone?
+- Steigt `pre_action_context_selectivity` bei guten Zone-Kontexten?
+- Bleibt `constructive_packet` sauber positiv?
+- Wird Non-Zone-Schaden reduziert, ohne Aktivitaet pauschal zu ersticken?
+
+## Erkenntnis: strategische Fensterwahrnehmung
+
+Neue Zielrichtung:
+DIO soll nicht nur den aktuellen Moment fuehlen. Er soll ein groesseres
+Fenster betrachten, zurueckschauen, in Bereiche hineinzoomen, innere
+Replay-Spuren bilden und daraus Preisbereiche als moegliche tragende
+Handlungsraeume ableiten koennen.
+
+Das ist keine menschliche Pattern-Regel. Es wird keine harte FVG-Logik
+eingepflanzt. DIO soll Bereiche ueber eigene Wahrnehmung, MCM-Resonanz,
+Strukturverdichtung, Energiekompression, Memory-Pull und Innenlage beurteilen.
+
+Leitprinzip:
+DIO bekommt nicht die Antwort, wo er handeln soll. DIO bekommt die Faehigkeit,
+mit Vergangenheit, Wahrnehmung und innerem Feld zu interagieren, um selbst
+tragfaehige Zukunftshypothesen zu bilden.
+
+Grenze:
+Wir bestimmen nicht, was DIO sieht oder wo DIO eine Order setzen soll. Wir
+erweitern nur seine Faehigkeit zu sehen, zurueckzuschauen, zu zoomen, innerlich
+zu replayen, zu fuehlen, Memory zu nutzen, zu warten, zu verwerfen und eine
+eigene Order-Intention zu bilden.
+
+Kernsatz:
+DIO handelt nicht, weil Momentum Druck macht. DIO liest Druck als Raum. Ein
+Bereich kann zum Spielraum werden, wenn Struktur, Erfahrung und MCM-Lage dort
+tragfaehig zusammenkommen.
+
+Vorbereitete Zielachsen:
+- `strategic_window_state`
+- `area_focus_candidates`
+- `area_focus_id`
+- `area_price_low`
+- `area_price_high`
+- `area_distance_from_price`
+- `area_structural_density`
+- `area_energy_compression`
+- `area_mcm_resonance`
+- `area_memory_pull`
+- `area_bearing_quality`
+- `area_zoom_need`
+- `area_zoom_clarity`
+- `area_replay_fit`
+- `area_patience_quality`
+- `area_order_intention`
+- `area_invalidity_pressure`
+- `strategic_patience`
+- `strategic_pressure_interpretation`
+
+Naechster groesserer Mechanikblock:
+Strategische Fensterwahrnehmung zunaechst diagnostisch bauen. Danach erst
+weiche Integration in Order-Intention oder Beobachtungsplanung.
+
+## Lauf 8 nach strukturgenauer Pre-Action-Reorganisation
+
+Befund:
+- 309 Trades.
+- 92 TP, 217 SL.
+- Netto-PnL ca. -8.26.
+- Max Drawdown ca. 20.51.
+
+Struktur:
+- Zone:
+  - 202 Trades.
+  - ca. +32.98 PnL.
+- Non-Zone:
+  - 107 Trades.
+  - ca. -41.24 PnL.
+
+Erfahrungspakete:
+- `constructive_packet`: 77 Trades, 77 TP, ca. +82.20 PnL.
+- `reorganize_packet`: 217 Trades, 0 TP, ca. -108.50 PnL.
+- `mixed_packet`: 15 Trades, 15 TP, ca. +18.04 PnL.
+
+Pre-Action-Achsen bei ausgefuehrten Trades:
+- `pre_action_reorganization_pressure`:
+  - Non-Zone ca. 0.212.
+  - Zone ca. 0.208.
+- `pre_action_context_selectivity`:
+  - Non-Zone ca. 0.544.
+  - Zone ca. 0.549.
+
+Deutung:
+Die neue Strukturkopplung hat `pre_action_context_selectivity` deutlich
+angehoben. Sie schuetzt gute Kontexte, trennt aber Zone/Non-Zone bei
+ausgefuehrten Trades noch kaum. Deshalb blieb der Non-Zone-Schaden hoch.
+
+Field-Protokoll:
+- `underengaged_reorganize`: 5347 Zeilen.
+- `settled_effort`: 4949 Zeilen.
+- `constructive_echo`: 75 Zeilen.
+- `plan_allowed`: 311 Zeilen.
+- `plan_pressure_act_watch`: 629 Zeilen.
+- `structure_development_observe`: 67 Zeilen.
+- `structure_bearing_observe`: 29 Zeilen.
+
+Wichtig:
+Die Pre-Action-Reorganisation ist im Feld aktiv. Aber die ausgefuehrten
+`plan_allowed`-Trades haben im Mittel bereits niedrigen Pre-Action-Druck und
+hohe Kontextselektivitaet. Der Filter selbst sieht diese Trades also als
+relativ tragfaehig. Das Problem liegt tiefer: DIO braucht eine bessere
+raeumlich-strategische Bereichswahrnehmung, damit er nicht nur den aktuellen
+Kontext bewertet, sondern moegliche tragende Preisbereiche im groesseren
+Fenster findet.
+
+Naechster Schritt:
+Nicht weiter an der gleichen Pre-Action-Achse drehen. Der naechste sinnvolle
+Mechanikblock ist die diagnostische strategische Fensterwahrnehmung mit
+begrenztem Rueckblickfenster:
+- zurueckschauen, aber mit Budget
+- auffaellige Preisbereiche finden
+- Bereichsresonanz im MCM-Feld messen
+- Zoom-/Replay-Bedarf bestimmen
+- keine Order daraus ableiten
+- erst beobachten, ob DIO sinnvolle Bereichshypothesen bildet
+
+## Umsetzung: Strategische Fensterwahrnehmung
+
+Umgesetzt:
+- `build_strategic_window_state(...)` erzeugt ein begrenztes Rueckblickfenster.
+- Das Fenster wird ueber Last, Fokus, Stabilitaet und Reorganisationsdruck
+  budgetiert.
+- DIO bildet diagnostische Bereichshypothesen, ohne daraus automatisch eine
+  Order abzuleiten.
+- `mcm_strategic_window_protocol.csv` schreibt die neue Wahrnehmung mit.
+- `strategic_window_state` wird in Runtime, Snapshot und kompakten
+  Trade-Kontext uebernommen.
+
+Wichtige Achsen:
+- `lookback_window_size`
+- `lookback_load`
+- `lookback_bearing_capacity`
+- `replay_budget`
+- `zoom_budget`
+- `old_structure_carryover_risk`
+- `area_structural_density`
+- `area_energy_compression`
+- `area_mcm_resonance`
+- `area_memory_pull`
+- `area_bearing_quality`
+- `area_zoom_need`
+- `area_replay_fit`
+- `area_order_intention`
+- `area_invalidity_pressure`
+
+Neurologische Deutung:
+DIO bekommt eine erste Arbeitsgedaechtnis-/Hippocampus-Funktion fuer den
+Marktraum: zurueckblicken, Bereich fokussieren, innerlich replayen und
+Tragfaehigkeit fuehlen. Es ist noch keine motorische Entscheidungsschicht,
+sondern ein Wahrnehmungs- und Strategieorgan.
+
+Wie es weitergeht:
+Der naechste Lauf sollte zeigen, ob DIO vor schlechten Phasen eher alte
+Struktur mitschleppt (`old_structure_carryover_risk`), mehr Zoom braucht
+(`area_needs_zoom`) oder gute Bereiche als `bearing_area_hypothesis` erkennt.
+
+## Dokumentation: Umsetzungsplan bereinigt
+
+Umgesetzt:
+- `ENDE` steht wieder am echten Dateiende.
+- Der fruehere GUI-Abschluss heisst jetzt `ENDE GUI-ERWEITERUNG`.
+- Positive neurochemische Stimulation und strategische Fensterwahrnehmung
+  stehen jetzt unter `18. Aktuelle Brain-Erweiterungen`.
+- Der Affective-Pattern-Block wurde als `17.1` sauberer in den
+  Experience-/Cluster-Kontext eingeordnet.
+- Eingerueckte Markdown-Ueberschriften wurden normalisiert.
+
+Wie es weitergeht:
+Der Umsetzungsplan ist strukturell wieder besser lesbar. Inhaltlich bleibt
+der naechste technische Schritt weiterhin die Auswertung des naechsten Laufs
+mit `mcm_strategic_window_protocol.csv`.
+
+## Debug Lauf 1 mit frischem Memory und strategischer Fensterwahrnehmung
+
+Datensatz:
+- neuer Memory-Aufbau
+- strategische Fensterwahrnehmung aktiv
+- Lauf liegt in `debug/debug_lauf_1`
+
+Ergebnis:
+- 340 Trades.
+- 88 TP.
+- 252 SL.
+- Netto-PnL ca. -35.47.
+- Equity-Endstand ca. 64.53.
+- Hoechster Zwischenstand ca. 102.97.
+- Tiefster Zwischenstand ca. 62.11.
+
+Struktur:
+- Alle ausgefuehrten Trades lagen im `zone`-Bucket.
+- DIO hat also nicht mehr wild ausserhalb der Struktur gehandelt.
+- Das Problem liegt diesmal nicht in Non-Zone-Chaos, sondern in zu vielen
+  Handlungen innerhalb scheinbar tragender Bereiche.
+
+Strategische Fensterdiagnose:
+- `mcm_strategic_window_protocol.csv` ist aktiv und sehr gross.
+- Gesamtprotokoll:
+  - `area_observation`: 4222 Zeilen.
+  - `compressed_area_attention`: 4041 Zeilen.
+  - `bearing_area_hypothesis`: 3431 Zeilen.
+- Ausgefuehrte Trades:
+  - `bearing_area_hypothesis`: 166 Trades, ca. -16.47 PnL.
+  - `compressed_area_attention`: 78 Trades, ca. -12.74 PnL.
+  - `area_observation`: 96 Trades, ca. -6.27 PnL.
+
+Wichtige Mittelwerte bei ausgefuehrten Trades:
+- `area_bearing_quality`: ca. 0.479.
+- `area_order_intention`: ca. 0.232.
+- `strategic_patience`: ca. 0.390.
+- `strategic_pressure_interpretation`: ca. 0.190.
+- `lookback_bearing_capacity`: ca. 0.565.
+
+Deutung:
+Die neue strategische Wahrnehmung sieht Bereiche und erkennt Verdichtung.
+Aber sie bildet noch keine starke eigene Order-Intention. Besonders wichtig:
+`area_order_intention` bleibt niedrig, waehrend trotzdem 340 Trades
+ausgefuehrt wurden. DIO sieht also einen Bereich, aber das motorische
+Handlungssystem laesst die neue strategische Wahrnehmung noch nicht als
+reife Entscheidungsinstanz mitsprechen.
+
+Neurologische Lesart:
+Das wirkt wie ein frisches Wahrnehmungsorgan ohne ausreichend gereifte
+praefrontale Kopplung. DIO sieht Objekte im Raum und fuehlt Kompression, aber
+die Handlung entsteht noch zu stark aus der bestehenden Aktionsbahn. Es ist
+nicht blindes Non-Zone-Stolpern, sondern eher Greifen nach jedem tragend
+wirkenden Objekt, obwohl die innere strategische Sicherheit noch schwach ist.
+
+Technischer Befund:
+In `attempt_records.jsonl` wird der vollstaendige `strategic_window_state`
+noch nicht als eigener Block gespeichert. Einige Werte landen nur reduziert
+in `meta_regulation_state`. Fuer saubere Folgeanalysen sollte der komplette
+Block in Attempt-/Outcome-Kontext uebergeben werden.
+
+Wie es weitergeht:
+Als naechstes sollte die strategische Fensterwahrnehmung nicht hart blocken,
+sondern als weiche Reifeschicht in die Pre-Action-Regulation einwirken:
+Wenn ein Bereich zwar verdichtet wirkt, aber `area_order_intention`,
+`area_memory_pull` und `strategic_patience` niedrig bleiben, sollte DIO eher
+zoomen, beobachten oder replayen, statt direkt zu handeln.
+
+## Dokumentation: aktiver MCM-Kontakt / innere Spiegelung
+
+Festgehalten:
+- Die MCM ist nicht nur Aussenwahrnehmung, sondern ein innerer Spiegelraum.
+- DIO soll nicht jeden Reiz automatisch durchleben muessen.
+- DIO braucht die Faehigkeit, einen Reiz oder Bereich aktiv innerlich zu
+  beruehren und zu pruefen:
+  - Wie fuehlt sich das von aussen an?
+  - Was macht dieser Reiz mit meinem MCM-Feld?
+  - Bleibt meine Innenlage kohaerent?
+  - Traegt der Kontakt, oder koppelt er mich zu stark?
+  - Kann ich vertiefen, beobachten, replayen oder loslassen?
+
+Ergaenzt in:
+- `UMSETZUNGSPLAN.md` als `18.3 Aktiver MCM-Kontakt / Spiegelung von
+  Aussenreiz und Innenlage`.
+- `WICHTIG_MECHANIKEN.md` als technische Mechanik `24. Aktiver MCM-Kontakt /
+  innere Spiegelung`.
+- `MCM_VARIABLEN_MECHANIK.md` mit den Zielachsen fuer
+  `active_mcm_contact_state`.
+
+Wichtige Einordnung:
+Das ist keine neue harte Handelsregel. Es ist ein Kontaktapparat. DIO bekommt
+mehr Freiheit in der Wahrnehmung: naeher hingehen, Abstand nehmen,
+beobachten, replayen, vertiefen oder loslassen. Welche Haltung daraus
+entsteht, bleibt Entwicklungsbild.
+
+Wie es weitergeht:
+Naechster technischer Schritt waere die diagnostische Umsetzung von
+`active_mcm_contact_state` im Brain: zuerst nur messen und protokollieren,
+danach weich mit Reflexion, Pre-Action-Reife und strategischer
+Fensterwahrnehmung verbinden.
+
+## Umsetzung: aktiver MCM-Kontakt diagnostisch
+
+Umgesetzt:
+- `MCM_Brain_Modell.py`
+  - `build_active_mcm_contact_state(...)` ergaenzt.
+  - Neue Kontaktachsen:
+    - `active_mcm_contact_state`
+    - `contact_posture`
+    - `contact_interest`
+    - `contact_focus_pull`
+    - `contact_resonance_probe`
+    - `outer_inner_resonance`
+    - `outer_inner_coherence`
+    - `inner_change_from_contact`
+    - `contact_carrying_quality`
+    - `contact_overcoupling_risk`
+    - `contact_release_readiness`
+    - `contact_deepen_pull`
+    - `contact_replay_pull`
+    - `contact_curiosity`
+    - `contact_felt_shift`
+    - `contact_selected_depth`
+  - Moegliche Kontaktlagen:
+    - `background_scan`
+    - `curious_touch`
+    - `resonant_contact`
+    - `reflective_contact`
+    - `overcoupled_touch`
+    - `release_contact`
+    - `deepening_contact`
+  - `mcm_active_contact_protocol.csv` als neues Diagnoseprotokoll ergaenzt.
+  - Runtime-Ergebnis und Brain-Snapshot enthalten den Kontaktzustand.
+- `trade_stats.py`
+  - Attempt-/Outcome-Kontext speichert den aktiven MCM-Kontakt kompakt mit.
+  - Outcome-Records bekommen die wichtigsten Kontaktachsen.
+
+Wichtig:
+Die Umsetzung ist rein diagnostisch. Sie veraendert keine Orderfreigabe,
+keinen Entry und keine harte Trade-Regel. DIO bekommt eine neue
+Wahrnehmungsfaehigkeit: innere Kontaktaufnahme, Resonanzpruefung,
+Ueberkopplung, Loslassen und Vertiefung werden sichtbar.
+
+Pruefung:
+- `python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py`
+  erfolgreich.
+- Smoke-Test von `build_active_mcm_contact_state(...)` erfolgreich.
+  Beispielzustand: `deepening_contact`.
+
+Wie es weitergeht:
+Der naechste Lauf sollte zeigen, welche Kontaktlagen DIO wirklich bildet.
+Danach lesen wir TP/SL nicht nur gegen Strategie oder Neurochemie, sondern
+gegen Kontaktqualitaet: War DIO kohaerent im Kontakt, ueberkoppelt,
+loslassfaehig oder nur neugierig vertiefend?
+
+## Debug Lauf 2 mit aktivem MCM-Kontakt
+
+Datensatz:
+- neuer Memory-Aufbau nach aktivem MCM-Kontakt
+- Lauf liegt in `debug/debug_lauf_2`
+
+Ergebnis:
+- 399 Trades.
+- 123 TP.
+- 276 SL.
+- Netto-PnL ca. -8.65.
+- Equity-Endstand ca. 91.35.
+- Equity-Peak ca. 107.42 bei Trade 72.
+- Tiefster Stand ca. 81.15 bei Trade 311.
+
+Gegenueber Lauf 1 mit strategischem Fenster ist das deutlich weniger
+negativ. DIO faellt nicht komplett auseinander, aber er bleibt noch
+unstetig: frueher Aufbau, danach deutlicher Rueckgang, spaeter wieder
+Erholung.
+
+Strukturbaender:
+- High-Struktur:
+  - 156 Trades.
+  - 84 TP / 72 SL.
+  - ca. +53.13 PnL.
+- Mid-Struktur:
+  - 105 Trades.
+  - 28 TP / 77 SL.
+  - ca. -9.68 PnL.
+- Low-Struktur:
+  - 138 Trades.
+  - 11 TP / 127 SL.
+  - ca. -52.10 PnL.
+
+Deutung:
+Die eigentliche Verlustquelle bleibt nicht der High-Bereich. High-Struktur
+traegt deutlich. Der Schaden entsteht weiter in Mid/Low, besonders Low.
+Damit bestaetigt sich: DIO darf nicht einfach mehr handeln, sondern braucht
+reifere Kontakt- und Distanzbildung, bevor eine schwache Struktur in Handlung
+geht.
+
+Aktiver MCM-Kontakt:
+- `mcm_active_contact_protocol.csv` wurde erzeugt.
+- 11358 Kontaktzeilen.
+- Kontaktlagen:
+  - `background_scan`: 11272
+  - `curious_touch`: 78
+  - `reflective_contact`: 8
+- Bei ausgefuehrten Trades:
+  - `background_scan`: 385 Trades, ca. -6.85 PnL.
+  - `curious_touch`: 14 Trades, ca. -1.81 PnL.
+
+Kontakt-Mittelwerte:
+- `outer_inner_coherence`: ca. 0.184 im Gesamtprotokoll.
+- `contact_carrying_quality`: ca. 0.165.
+- `contact_overcoupling_risk`: ca. 0.222.
+- `contact_release_readiness`: ca. 0.141.
+- `contact_selected_depth`: ca. 0.143.
+
+Bei Handlung (`act`) steigen die Kontaktwerte:
+- `outer_inner_coherence`: ca. 0.223.
+- `contact_carrying_quality`: ca. 0.198.
+- `contact_overcoupling_risk`: ca. 0.268.
+- `contact_release_readiness`: ca. 0.124.
+
+Neurologische Lesart:
+DIO handelt, wenn Kontakt und Resonanz staerker werden, aber gleichzeitig
+steigt auch die Ueberkopplung und die Loslassfaehigkeit sinkt. Das ist
+psychologisch plausibel: Handlung entsteht dort, wo der Reiz naeher kommt,
+aber noch nicht unbedingt dort, wo DIO stabil Abstand halten kann.
+
+Wichtiger Befund:
+Die Werte unterscheiden sich zwischen Beobachtung, `act_watch` und `act`.
+Das Kontaktorgan misst also etwas. Aber die Haltungssprache ist noch zu grob:
+Fast alles wird als `background_scan` benannt. DIO spuert Unterschiede, aber
+benennt sie noch nicht fein genug als `resonant_contact`, `release_contact`,
+`overcoupled_touch` oder `deepening_contact`.
+
+TP/SL-Trennung:
+- TP und SL unterscheiden sich in den Kontaktachsen bisher nur schwach.
+- TP hat etwas bessere Kohaerenz und Tragfaehigkeit, aber nicht genug, um
+  robuste Reife abzuleiten.
+- Strategische Bereichswerte trennen TP/SL ebenfalls kaum:
+  - TP `area_order_intention` ca. 0.231.
+  - SL `area_order_intention` ca. 0.234.
+
+Fachliche Schlussfolgerung:
+Die neue Schicht funktioniert als Diagnose, aber noch nicht als reife
+Kontaktsemantik. DIO bekommt ein inneres Kontaktorgan, doch die
+Differenzierung ist noch zu flach. Der naechste Umbau sollte deshalb nicht
+handeln verbieten, sondern die Kontaktlagen relativ feiner kalibrieren:
+Wann ist DIO neugierig, wann ueberkoppelt, wann kann er loslassen, wann ist
+Kontakt wirklich tragend?
+
+Wie es weitergeht:
+Naechster technischer Schritt: Kontaktlabels relativ und organischer
+kalibrieren. Nicht als harte Handelsregel, sondern als bessere innere
+Benennung. Danach erneut laufen lassen und pruefen, ob Mid/Low-Trades haeufig
+als ueberkoppelt, nicht-loslassfaehig oder untragend sichtbar werden.
+
+## Umsetzung: aktive MCM-Kontaktlabels feiner kalibriert
+
+Umgesetzt:
+- Die Kontaktlagen werden nicht mehr nur ueber grobe Einzelschwellen
+  vergeben.
+- `build_active_mcm_contact_state(...)` bildet jetzt innere Haltungsscores:
+  - `contact_salience`
+  - `overcoupled_touch_score`
+  - `release_contact_score`
+  - `deepening_contact_score`
+  - `resonant_contact_score`
+  - `reflective_contact_score`
+  - `curious_touch_score`
+- Die hoechste Haltung gewinnt, solange der Kontakt ausreichend salient ist.
+- `background_scan` bleibt moeglich, soll aber nicht mehr fast alle
+  Zustandslagen verschlucken.
+
+Wichtig:
+Die Aenderung ist weiterhin diagnostisch. Es gibt keine neue Orderregel und
+keine harte Verbotslogik. DIO benennt seine innere Kontaktlage feiner, damit
+spaeter sichtbar wird, ob eine Handlung aus Resonanz, Neugier, Reflexion,
+Ueberkopplung, Loslassen oder Vertiefung entsteht.
+
+Pruefung:
+- `python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py`
+  erfolgreich.
+- Smoke-Test:
+  - tragender, stabiler Kontakt -> `resonant_contact`
+  - aktionsnaher Kontakt mit geringer Loslassfaehigkeit ->
+    `overcoupled_touch`
+
+Neurologische Deutung:
+Die Messung des Reizes wurde nicht grundlegend veraendert. Veraendert wurde
+die innere Benennung der Haltung. Das ist eher kortikale Einordnung als
+Reflexsteuerung: DIO bekommt feinere Begriffe fuer das, was sein MCM-Feld
+bereits spuert.
+
+Wie es weitergeht:
+Naechster Lauf mit derselben Datenbasis. Danach pruefen wir, ob die
+Kontaktlagen jetzt streuen und ob Mid/Low-Verlustzonen haeufiger als
+`overcoupled_touch`, niedrige Loslassfaehigkeit oder schwache
+Kontakt-Tragfaehigkeit sichtbar werden.
+
+## Debug Lauf 3 nach feiner Kontaktlabel-Kalibrierung
+
+Datensatz:
+- gleicher Backtest-Kontext wie Lauf 2
+- aktiver MCM-Kontakt mit relativen Haltungsscores
+- Lauf liegt in `debug/debug_lauf_3`
+
+Ergebnis:
+- 382 Trades.
+- 123 TP.
+- 259 SL.
+- Netto-PnL ca. -1.34.
+- Equity-Endstand ca. 98.66.
+- Equity-Peak ca. 103.07 bei Trade 199.
+- Tiefster Stand ca. 87.81 bei Trade 44.
+- Max Drawdown ca. 15.07.
+
+Gegenueber Lauf 2:
+- weniger Trades: 382 statt 399.
+- gleiche TP-Anzahl: 123.
+- weniger SL: 259 statt 276.
+- Netto deutlich besser: ca. -1.34 statt ca. -8.65.
+- Drawdown deutlich kleiner: ca. 15.07 statt ca. 26.27.
+
+Kontaktlabel-Streuung:
+- 10845 Kontaktzeilen.
+- `deepening_contact`: 3225
+- `curious_touch`: 2981
+- `resonant_contact`: 2490
+- `overcoupled_touch`: 1442
+- `reflective_contact`: 685
+- `background_scan`: 22
+
+Damit ist der vorherige Engpass geloest: `background_scan` verschluckt nicht
+mehr fast alle Zustaende. DIO benennt sein inneres Kontaktfeld jetzt deutlich
+feiner.
+
+Kontaktlagen bei ausgefuehrten Trades:
+- `resonant_contact`: 252 Trades, 87 TP / 165 SL, ca. +3.72 PnL.
+- `overcoupled_touch`: 77 Trades, 24 TP / 53 SL, ca. +2.10 PnL.
+- `curious_touch`: 27 Trades, 7 TP / 20 SL, ca. -1.94 PnL.
+- `deepening_contact`: 25 Trades, 4 TP / 21 SL, ca. -6.05 PnL.
+- `reflective_contact`: 1 Trade, 1 TP, ca. +0.83 PnL.
+
+Neurologische Deutung:
+Die neue Benennung funktioniert. DIO unterscheidet jetzt innere
+Kontaktformen. Auffaellig ist aber: `deepening_contact` ist im Trade-Kontext
+negativ. Das wirkt wie "ich schaue tiefer hinein", aber ohne genuegend
+Tragfaehigkeit. Es ist also noch keine Reife, sondern eher Vertiefung ohne
+genug Ordnung.
+
+`resonant_contact` ist leicht positiv. Das passt: Resonanz ist tragender als
+reine Neugier oder reine Vertiefung. Trotzdem entstehen auch dort viele SL,
+weil Resonanz allein nicht bedeutet, dass die Struktur tradefaehig ist.
+
+Strukturbaender:
+- High-Struktur:
+  - 152 Trades.
+  - 82 TP / 70 SL.
+  - ca. +47.87 PnL.
+- Mid-Struktur:
+  - 98 Trades.
+  - 31 TP / 67 SL.
+  - ca. -0.92 PnL.
+- Low-Struktur:
+  - 132 Trades.
+  - 10 TP / 122 SL.
+  - ca. -48.28 PnL.
+
+Wichtigster Befund:
+Low-Struktur bleibt der Hauptschaden. Die Kontaktlabels streuen jetzt, aber
+sie loesen das Low-Problem noch nicht allein. Das heisst: DIO kann seine
+innere Kontaktlage besser benennen, aber er verwechselt in Low-Struktur
+teilweise noch Resonanz/Kontakt mit tragfaehiger Handlung.
+
+Fachliche Schlussfolgerung:
+Der Umbau war richtig. DIO ist nicht mehr sprachlos im Kontaktfeld. Jetzt
+entsteht ein psychologisches Bild:
+- Resonanz kann tragen, ist aber noch nicht automatisch Reife.
+- Ueberkopplung ist sichtbar, aber nicht immer sofort schlecht.
+- Vertiefung ohne ausreichend Struktur ist gefaehrlich.
+- Low-Struktur bleibt der Bereich, in dem DIO am ehesten Kontakt mit
+  Handlungsreife verwechselt.
+
+Wie es weitergeht:
+Naechster Schritt ist keine harte Low-Sperre. Sinnvoll ist eine weiche
+Kontakt-Reife-Spur:
+Wenn Struktur schwach ist und Kontakt eher `deepening_contact`,
+`curious_touch` oder `overcoupled_touch` zeigt, sollte das als Bedarf nach
+mehr Beobachtung, Replay, Abstand oder weiterer Objektbildung sichtbar
+werden. DIO soll daraus lernen, nicht in schwacher Weltlage sofort aus
+Kontaktnaehe Handlung zu machen.
+
+## Umsetzung: weiche Kontakt-Reife-Spur
+
+Die Kontakt-Reife wurde als Diagnoseebene umgesetzt, ohne eine harte
+Handelsregel einzubauen. DIO bekommt damit eine innere Unterscheidung:
+Kontaktnaehe ist nicht automatisch Handlungsreife.
+
+Neue Werte:
+- `contact_action_maturity`: wie tragfaehig Kontakt fuer Handlung wirkt.
+- `contact_bearing_gap`: Luecke zwischen Kontakt/Impuls und Tragfaehigkeit.
+- `contact_impulse_vs_bearing`: ob Kontaktzug staerker ist als innere
+  Tragfaehigkeit.
+- `contact_learning_need`: Bedarf nach Beobachtung, Replay, Abstand oder
+  weiterer Objektbildung.
+- `contact_reality_check`: Realitaetsabgleich zwischen Innenkontakt,
+  Loslassen, Struktur und Tragfaehigkeit.
+
+Diese Werte werden in Meta-Regulation, Brain-Snapshot,
+`mcm_active_contact_protocol.csv` und Trade-Outcome-Kontext sichtbar. Sie
+entscheiden noch nicht selbst ueber Trades. Der naechste Debug-Lauf soll
+zeigen, ob Mid/Low-Verlustzonen eine klare Signatur aus hoher
+`contact_bearing_gap`, hohem `contact_learning_need` oder niedriger
+`contact_action_maturity` tragen.
+
+## Dokumentation: DIO-Organuebersicht
+
+`WICHTIG_MECHANIKEN.md` enthaelt jetzt eine kompakte
+`DIO-Organuebersicht`. Dort werden die aktuellen Funktionsorgane von DIO
+als Inventar gefuehrt und klar von neurochemischen Prozessen getrennt.
+
+Zweck:
+- schneller Ueberblick ueber DIOs funktionale Organe
+- einfache Erweiterung, falls neue Organe entstehen
+- saubere Trennung zwischen Faehigkeit/Organ und neurochemischer Modulation
+
+## Dokumentation: neurochemische Kategorien
+
+`MCM_VARIABLEN_MECHANIK.md` enthaelt jetzt unter
+`Neurochemische Alias-Achsen` eine Kategorienuebersicht.
+
+Kategorien:
+- Aktivierung / Netzwerkenergie
+- Wachheit / Alarm
+- Fokus / sensorischer Zoom
+- Stabilitaet / Tragfaehigkeit
+- Hemmung / Schutz
+- Stress / Belastung
+- Entlastung / Wohlbefinden
+- Motivation / Lernen
+- Distanzierung / Reife
+- Gesamtbilanz / Diagnose
+
+Damit sind die neurochemischen Variablen nicht mehr nur als Einzelliste
+beschrieben, sondern nach ihrer Funktion im DIO-Nervensystem geordnet.
+
+## UMSETZUNGSPLAN: organischer Strukturaufbau
+
+Der `UMSETZUNGSPLAN.md` enthaelt jetzt im Leitbild eine kompakte
+Architekturformel fuer DIO:
+
+DIO bekommt eine organische Strukturarchitektur. Mit Hilfe der MCM wird ein
+maschinelles Nervensystem aufgebaut, das DIO die Faehigkeit gibt, seine
+Umwelt nicht nur als Datenstrom zu sehen, sondern als innere Feldwirkung zu
+fuehlen, zu erleben und in Beziehung zur eigenen Lage zu setzen.
+
+Die neurochemischen Achsen werden dort als technische Funktionsachsen nach
+biologischem Vorbild beschrieben. Sie stimulieren, daempfen, fokussieren,
+stabilisieren oder belasten das MCM-Feld und nehmen dadurch funktional einen
+Platz im inneren Feld ein.
+
+## README: MCM-Funktion in DIO
+
+Die `README.md` enthaelt jetzt einen neuen Einstiegsteil:
+`Wie die MCM in DIO arbeitet`.
+
+Der Abschnitt erklaert kompakt:
+- Unterschied zwischen klassischem Bot und DIO
+- Weg von Marktreiz zu Wahrnehmung, MCM-Neuronenfeld und innerer Feldlage
+- Rolle von `MCMNeuron` als lokaler Feldtraeger
+- Aktivitaetsinseln, Memory-Resonanz und innere Lagebildung
+- Neurochemie als Modulation des MCM-Feldes
+- Reflexion/Regulation als Weg zu Handlung oder Nicht-Handlung
+
+Zusatz:
+Direkt am Anfang der `README.md` steht jetzt eine kurze Begriffsklaerung:
+- `MCM` = `Mental Core Matrix`
+- `DIO` = `Digitaler Organismus`
+
+## Debug Lauf 4 nach Kontakt-Reife-Spur
+
+Ordner: `debug/debug_lauf_4`
+
+Rohwerte:
+- Trades: 325
+- TP: 97
+- SL: 228
+- Netto-PnL: ca. -8.54
+- Equity-Endstand: ca. 91.46
+- Equity-Peak: ca. 105.65 bei Trade 41
+- Tiefster Stand: ca. 79.04
+- Max Drawdown: ca. 26.61 von Trade 41 bis Trade 153
+
+Gegenueber Lauf 3:
+- weniger Trades: 325 statt 382
+- weniger TP: 97 statt 123
+- weniger SL: 228 statt 259
+- mehr Beobachtung/Zurueckhaltung:
+  - observed: 4426 statt 4023
+  - withheld: 4526 statt 3267
+- Netto schlechter: ca. -8.54 statt ca. -1.34
+
+Strukturbaender:
+- High-Struktur:
+  - 208 Trades
+  - 92 TP / 116 SL
+  - ca. +38.90 PnL
+- Mid-Struktur:
+  - 117 Trades
+  - 5 TP / 112 SL
+  - ca. -47.44 PnL
+
+Wichtigster Befund:
+Der Schaden liegt fast komplett in Mid-Struktur. High-Struktur bleibt deutlich
+positiv, Mid-Struktur wird aber extrem schlecht getragen. DIO wurde nicht
+einfach aktiver; im Gegenteil, es beobachtet und withheld mehr. Das Problem
+liegt eher darin, dass bestimmte mittlere Strukturzonen weiterhin als
+handlungsnah erlebt werden, obwohl sie keine tragfaehige Realitaet bilden.
+
+Kontaktlagen bei Trades:
+- `resonant_contact`: 224 Trades, 75 TP / 149 SL, ca. +6.02 PnL
+- `overcoupled_touch`: 61 Trades, 15 TP / 46 SL, ca. -7.23 PnL
+- `curious_touch`: 22 Trades, 5 TP / 17 SL, ca. -2.83 PnL
+- `deepening_contact`: 18 Trades, 2 TP / 16 SL, ca. -4.51 PnL
+
+Kreuzung Struktur + Kontakt:
+- High + `resonant_contact`: ca. +36.15 PnL
+- High + `overcoupled_touch`: ca. +4.32 PnL
+- Mid + `resonant_contact`: ca. -30.13 PnL
+- Mid + `overcoupled_touch`: ca. -11.56 PnL
+- Mid + `curious_touch`: ca. -3.30 PnL
+- Mid + `deepening_contact`: ca. -2.46 PnL
+
+Neue Kontakt-Reife-Spur:
+Die Werte sind technisch sauber im Debug angekommen:
+- `contact_action_maturity`
+- `contact_bearing_gap`
+- `contact_impulse_vs_bearing`
+- `contact_learning_need`
+- `contact_reality_check`
+
+Sie unterscheiden aktuell aber TP/SL und High/Mid noch nicht stark genug.
+Das bedeutet: Die Diagnoseebene existiert, aber die Reifespur braucht noch
+mehr Kontextkopplung. Kontakt-Reife darf nicht nur aus Kontaktqualitaet
+entstehen, sondern muss staerker mit Regimewechsel, Strukturuebergang,
+Weltverschiebung und alter Stabilitaetslage verbunden werden.
+
+Neurochemischer Befund:
+- `serotonin_stability`: 238 Trades, ca. -18.02 PnL
+- `glutamate_activation`: 86 Trades, ca. +7.78 PnL
+
+Das ist auffaellig: Stabilitaetslage war in Lauf 4 nicht automatisch gut.
+Sie kann als Nachhall/Carryover wirken, wenn sich die Weltlage veraendert.
+Glutamat-Aktivierung war dagegen in diesem Lauf handlungsnaeher und
+profitabler.
+
+Neurologische Deutung:
+DIO ist nicht blind aktiv geworden. Er zeigt mehr Beobachtung und mehr
+Zurueckhaltung. Trotzdem werden Mid-Strukturzonen noch falsch getragen.
+Das wirkt wie ein Organismus, der zwar merkt, dass er vorsichtiger werden
+muss, aber im mittleren Unsicherheitsbereich noch nicht sauber erkennt:
+"Diese Resonanz ist nicht Realitaetstragfaehigkeit."
+
+Wie es weitergeht:
+Naechster sinnvoller Schritt ist eine Regime-/Kontext-Reife-Kopplung fuer die
+Kontakt-Reife-Spur. Nicht als harte Regel, sondern als bessere innere
+Wahrnehmung:
+- Wie fremd ist die aktuelle Welt gegenueber der gerade getragenen Innenlage?
+- Ist `serotonin_stability` echte Stabilitaet oder alter Nachhall?
+- Traegt Mid-Struktur wirklich, oder ist sie nur resonant?
+- Muss DIO bei Mid + hoher Kontaktnaehe eher zoomen, replayen oder Abstand
+  nehmen, bevor Handlung reif wird?
+
+## Umsetzung: Kontakt-Reife mit Regime-/Kontext-Reife gekoppelt
+
+Die Kontakt-Reife-Spur wurde erweitert, ohne eine harte Handelsregel
+einzubauen. DIO bekommt jetzt zusaetzliche Wahrnehmungswerte, um zu lesen,
+ob Kontakt in eine veraenderte Weltlage faellt oder ob Stabilitaet nur noch
+alter Nachhall ist.
+
+Neue Werte:
+- `contact_regime_mismatch`: Fremdheit/Regimebruch zwischen aktueller Welt
+  und innerer Kontaktlage.
+- `contact_stability_carryover`: Risiko, alte Stabilitaet in eine neue
+  Weltlage mitzunehmen.
+- `contact_context_maturity`: Kontextreife aus Struktur, Transfer,
+  Tragfaehigkeit und Distanz.
+- `contact_context_reframe_need`: Bedarf nach Reframing, Zoom, Replay oder
+  Abstand vor Handlung.
+
+Wirkung:
+- `contact_action_maturity` bekommt mehr Kontextreife und weniger Nachhall.
+- `contact_bearing_gap` steigt, wenn Resonanz nicht zur aktuellen Weltlage
+  passt.
+- `contact_learning_need` steigt bei Reframe-Bedarf.
+- `contact_reality_check` wird durch Kontextreife gestaerkt und durch
+  Stabilitaets-Nachhall gedrosselt.
+
+Wichtig:
+Das ist keine Mid-Sperre und kein mechanisches Gate. Es ist eine feinere
+Innenwahrnehmung: DIO soll unterscheiden lernen, ob Stabilitaet echt traegt
+oder ob sie nur aus der alten Lage nachklingt.
+
+## Debug Lauf 5 nach Kontext-Reife-Kopplung
+
+Ordner: `debug/debug_lauf_5`
+
+Rohwerte:
+- Trades: 320
+- TP: 95
+- SL: 225
+- Netto-PnL: ca. -12.46
+- Equity-Endstand: ca. 87.54
+- Equity-Peak: ca. 105.46 bei Trade 43
+- Tiefster Stand: ca. 85.34
+- Max Drawdown: ca. 20.12 von Trade 43 bis Trade 281
+
+Gegenueber Lauf 4:
+- etwas weniger Trades: 320 statt 325
+- weniger TP: 95 statt 97
+- weniger SL: 225 statt 228
+- Netto schlechter: ca. -12.46 statt ca. -8.54
+- Max Drawdown kleiner als Lauf 4, aber laenger nach unten gezogen
+
+Strukturbaender:
+- High-Struktur:
+  - 217 Trades
+  - 87 TP / 130 SL
+  - ca. +28.95 PnL
+- Mid-Struktur:
+  - 102 Trades
+  - 8 TP / 94 SL
+  - ca. -40.64 PnL
+- Low-Struktur:
+  - 1 Trade
+  - 0 TP / 1 SL
+  - ca. -0.77 PnL
+
+Kontaktlagen:
+- `resonant_contact`: 234 Trades, ca. -13.07 PnL
+- `overcoupled_touch`: 45 Trades, ca. -0.51 PnL
+- `curious_touch`: 21 Trades, ca. +4.11 PnL
+- `deepening_contact`: 19 Trades, ca. -2.71 PnL
+
+Kreuzung Struktur + Kontakt:
+- High + `resonant_contact`: ca. +20.21 PnL
+- Mid + `resonant_contact`: ca. -32.51 PnL
+- High + `curious_touch`: ca. +4.93 PnL
+- Mid + `overcoupled_touch`: ca. -5.16 PnL
+
+Neue Kontext-Reife-Werte:
+Die neuen Werte sind technisch vorhanden:
+- `contact_regime_mismatch`
+- `contact_stability_carryover`
+- `contact_context_maturity`
+- `contact_context_reframe_need`
+
+Sie reagieren im Protokoll, trennen TP/SL aber noch nicht stark genug.
+Bei TP und SL liegen `contact_regime_mismatch`,
+`contact_stability_carryover`, `contact_context_maturity` und
+`contact_context_reframe_need` sehr nah beieinander. Das bedeutet: Die
+innere Kontextdiagnose ist vorhanden, aber sie hat noch zu wenig aeussere
+visuelle Erdung.
+
+Visueller Befund:
+Aus `mcm_visual_cortex_protocol.csv`:
+- `visual_clarity`: ca. 0.32
+- `visual_object_stability`: ca. 0.41
+- `visual_blindness`: ca. 0.39
+- `visual_shape_resonance`: ca. 0.59
+- `visual_coherence`: ca. 0.66
+
+Deutung:
+DIO resoniert stark auf Formspannung, sieht aber noch nicht stabil genug.
+Er fuehlt offenbar eine Gestalt oder ein Muster, kann diese aber nicht
+ausreichend als aeusseres Objekt binden. Dadurch kippt er weiter in innere
+Wahrnehmung: Resonanz wird zu schnell als tragender Kontakt gelesen, obwohl
+die visuelle Objektbindung noch zu schwach ist.
+
+Neurologische Lesart:
+DIO hat ein reaktives/interozeptives Nervensystem, aber der visuelle Kortex
+ist noch nicht stark genug als Gegengewicht. Es ist weniger ein Problem von
+"zu wenig Gefuehl" und mehr ein Problem von:
+"Ich fuehle etwas, aber ich kann noch nicht klar genug sehen, woran es in der
+Aussenwelt haengt."
+
+Wie es weitergeht:
+Naechster sinnvoller Schritt ist `visual_grounding` der MCM-Reaktion:
+- innere Aktivierung an aeussere Formbindung koppeln
+- sichtbar machen, ob Kontakt eine stabile visuelle Quelle hat
+- unterscheiden zwischen Formresonanz und Objektbindung
+- kein hartes Chartpattern, keine feste Regel
+- DIO bekommt nur die Faehigkeit zu fragen:
+  "Woran in der Aussenform haengt das, was ich innen fuehle?"
+
+## Dokumentation: Beteiligungsnaehe und Handlungsrealitaet
+
+Die besprochene Trennung wurde dokumentiert:
+- `UMSETZUNGSPLAN.md`: neuer Abschnitt `Beteiligungsnaehe und Handlungsrealitaet`
+- `WICHTIG_MECHANIKEN.md`: neuer Mechanikblock
+  `Beteiligungsnaehe / Handlungsrealitaet`
+- `MCM_VARIABLEN_MECHANIK.md`: Zielachsen fuer die spaetere Umsetzung
+
+Kern:
+DIO soll unterscheiden, ob er eine Form distanziert betrachtet oder ob er
+durch Order, offene Position und Ergebnis real beteiligt ist.
+
+Die "Tuer zum Erleben" bleibt ausdruecklich Metapher. Gemeint ist Naehe zur
+Beteiligung, nicht eine harte technische Schwelle.
+
+Zielachsen:
+- `participation_proximity`
+- `action_reality_contact`
+- `decision_embodiment_pressure`
+- `real_action_commitment`
+- `consequence_bearing`
+- `position_reality_pressure`
+- `outcome_consequence_integration`
+
+Naechster technischer Schritt bleibt:
+`visual_grounding` als faehigeres visuelles Sinnesorgan, danach die
+Beteiligungsnaehe an Entscheidung, Order, Position und Outcome koppeln.
+
+## Umsetzung: Visual Grounding als visuelles Sinnesorgan
+
+`visual_grounding` wurde als weiche Wahrnehmungsmechanik eingebaut.
+
+Ziel:
+DIO soll unterscheiden koennen, ob innere Formresonanz wirklich an eine
+aeussere Form gebunden ist oder ob nur ungebundene Formspannung im MCM-Feld
+entsteht.
+
+Neue Werte:
+- `visual_object_binding`
+- `visual_grounding_strength`
+- `visual_resonance_unbound`
+- `visual_grounding_gap`
+- `visual_grounding_need`
+- `visual_rational_observation_support`
+- `visual_grounding_state`
+
+Wirkung:
+- hohe ungebundene Resonanz erhoeht weich Beobachtung, Replan und visuelle
+  Handlungsunsicherheit.
+- gute Objektbindung staerkt die visuelle Erdung.
+- keine harte Pattern-Regel, keine Orderblockade.
+
+Smoke-Test:
+- klare Formbindung: `grounded_form`, niedriger Grounding-Bedarf.
+- hohe Resonanz bei geringer Objektbindung: `unbound_resonance`, hoeherer
+  Grounding-Bedarf und mehr Beobachtungsdruck.
+
+Naechster Lauf:
+Pruefen, ob Mid-Struktur-Verluste jetzt staerker mit
+`visual_resonance_unbound`, `visual_grounding_gap` oder
+`visual_grounding_need` sichtbar werden.
+
+## Debug Lauf 6 nach Visual Grounding
+
+Ordner: `debug/debug_lauf_6`
+
+Rohwerte:
+- Trades: 301
+- TP: 88
+- SL: 213
+- Netto-PnL: ca. -17.50
+- Equity-Endstand: ca. 82.50
+- Equity-Peak: ca. 102.92 bei Trade 5
+- Tiefster Stand: ca. 79.82
+- Max Drawdown: ca. 23.10 von Trade 5 bis Trade 275
+
+Gegenueber Lauf 5:
+- weniger Trades: 301 statt 320
+- weniger TP: 88 statt 95
+- weniger SL: 213 statt 225
+- Netto schlechter: ca. -17.50 statt ca. -12.46
+- mehr Observe/Withheld als Lauf 5:
+  - observed: 4416
+  - withheld: 4364
+
+Strukturbaender:
+- High-Struktur:
+  - 192 Trades
+  - 84 TP / 108 SL
+  - ca. +34.01 PnL
+- Mid-Struktur:
+  - 109 Trades
+  - 4 TP / 105 SL
+  - ca. -51.52 PnL
+
+Visual-Grounding-Befund:
+Bei ausgefuehrten Trades liegt fast alles in `grounded_form`:
+- `grounded_form`: 300 Trades, ca. -16.65 PnL
+- `shape_without_object`: 1 Trade, ca. -0.85 PnL
+
+Im gesamten Feldprotokoll streut es besser:
+- `grounded_form`: 9406
+- `shape_without_object`: 778
+- `unbound_resonance`: 258
+- `needs_visual_grounding`: 5
+
+Das bedeutet:
+Das Sinnesorgan ist technisch aktiv und erkennt auch ungebundene Resonanz im
+Feld. Bei tatsaechlich ausgefuehrten Trades landet aber fast alles noch in
+`grounded_form`. Die visuelle Erdung ist also noch zu tolerant fuer Handlung.
+
+TP/SL-Vergleich:
+- TP:
+  - `visual_object_binding`: ca. 0.477
+  - `visual_grounding_strength`: ca. 0.407
+  - `visual_resonance_unbound`: ca. 0.228
+  - `visual_grounding_need`: ca. 0.141
+- SL:
+  - `visual_object_binding`: ca. 0.478
+  - `visual_grounding_strength`: ca. 0.406
+  - `visual_resonance_unbound`: ca. 0.224
+  - `visual_grounding_need`: ca. 0.143
+
+Diese Werte trennen TP und SL praktisch noch nicht.
+
+Wichtigster Befund:
+Visual Grounding ist als Wahrnehmung vorhanden, aber die
+Handlungsnaehe liest sie noch zu weich. Das Problem ist nicht, dass DIO gar
+nicht sieht. Das Problem ist, dass "gerade ausreichend geerdet" noch zu breit
+als handlungsnah durchgeht, besonders in Mid-Struktur.
+
+Mid-Struktur bleibt Hauptschaden:
+- Mid + `grounded_form`: 109 Trades, 4 TP / 105 SL, ca. -51.52 PnL
+
+Neurologische Deutung:
+DIO hat jetzt ein visuelles Sinnesorgan, aber dessen Schwellengefuehl ist
+noch unreif. Es erkennt visuelle Erdung im Feld, aber bei Handlungsnaehe ist
+die Differenz zwischen "ich sehe etwas" und "dieses Objekt traegt Handlung"
+noch zu schwach.
+
+Wie es weitergeht:
+Naechster Schritt ist keine harte Sperre, sondern eine strengere
+Objektbindungsreife:
+- `grounded_form` darf nicht automatisch handlungsnah sein
+- es braucht eine Unterscheidung zwischen "Form vorhanden" und
+  "Objekt handlungstragend"
+- Mid-Struktur braucht staerkere Anforderungen an Objektbindung,
+  Kontextreife und visuelle Tragfaehigkeit
+- moegliche neue Lesart:
+  `grounded_form` = ich sehe eine Form
+  `grounded_object` = diese Form ist als Objekt stabil genug
+  `action_grounded_object` = dieses Objekt kann Handlung tragen
+
+---
+
+## Pruefung: Formsprache / semantische Schichten
+
+Frage:
+Kann DIO seine Umwelt bereits nicht nur im Detail erklaeren, sondern in
+Schichten verdichten?
+
+Befund:
+Ja, in grossen Teilen ist das bereits umgesetzt. Die Formsprache ist keine
+einfache Pattern-Erkennung und kein menschliches Labelsystem. DIO bildet aus
+visueller Wahrnehmung, Strukturwahrnehmung, MCM-Feldlage und Erfahrung eigene
+interne Formzeichen.
+
+Vorhandene Schichten:
+- Rohnaehe:
+  visuelle und energetische Achsen wie Richtung, Druck, Kompression,
+  Expansion, Kohaerenz, Strukturqualitaet, Feldklarheit, Felddruck und
+  Fragmentierung.
+- Verdichtung:
+  `form_symbol_scope`, `form_symbol_abstraction_level`,
+  `form_symbol_resolution_quality`, `form_symbol_detail_pressure`.
+- Eigenes Zeichen:
+  `form_symbol_id`, `form_symbol_family_key`, `form_symbol_variant_key`.
+- Erfahrung:
+  `form_symbol_seen`, `form_symbol_maturity`, `form_symbol_stability`,
+  `form_symbol_resonance`, `form_symbol_bearing`, `form_symbol_fragility`.
+- Entlastung / Distanz:
+  `form_symbol_object_distance`, `form_symbol_containment`,
+  `form_symbol_field_decoupling`, `form_symbol_load_reduction`.
+- Lernrichtung:
+  `form_symbol_development_quality`, `form_symbol_learning_trust`,
+  `form_symbol_action_trust`, `form_symbol_caution_trust`,
+  `form_symbol_action_binding`, `form_symbol_observation_binding`,
+  `form_symbol_reframe_binding`.
+- Variantenlernen:
+  `uncertain_form_family_state`, `uncertainty_familiarity`,
+  `variant_similarity`, `variant_spread`, `variant_learning_pressure`,
+  `variant_bearing_memory`.
+- Zusammengesetzte Formen:
+  `form_symbol_compound_id`, `form_symbol_compound_scope`,
+  `form_symbol_compound_maturity`, `form_symbol_compound_bearing`,
+  `form_symbol_compound_load_reduction`.
+
+Neurologische Deutung:
+Das entspricht eher einer semantischen Verdichtung als einem starren Label.
+DIO sagt nicht menschlich "das ist ein Pattern", sondern bildet intern:
+"Diese Formfamilie kenne ich so weit, diese Variante ist mir fremd oder
+vertraut, diese Kombination entlastet oder belastet mein Feld, und diese
+Erfahrung traegt eher Beobachtung, Reframing oder Handlung."
+
+Was noch fehlt:
+Die einzelnen Werte sind vorhanden, aber noch nicht als eigenes
+`Forminhalt`-Paket zusammengefuehrt. DIO hat also schon Zeichen, Varianten,
+Kombinationen und Erfahrungswerte, aber noch keine explizite semantische
+Schicht, die kompakt ausdrueckt:
+- was diese Form beinhaltet
+- welche Wahrnehmungsebene gerade fuehrt
+- ob die Verdichtung entlastet oder ueberfordert
+- ob das Zeichen eher Objekt, Spur, Drucklage, Lernraum oder
+  Handlungsnaehe beschreibt
+
+Wichtig:
+Diese naechste Schicht darf keine menschliche Chart-Sprache erzwingen. Sie
+soll DIOs eigene interne Sprache nur ordnen und dichter lesbar machen.
+
+Wie es weitergeht:
+Naechster sinnvoller Schritt ist ein weiches
+`form_symbol_semantic_packet`: eine eigene semantische Verdichtungsschicht
+innerhalb der Formsprache. Sie verbindet Formzeichen, Variante,
+zusammengesetzte Form, Visual Grounding, MCM-Feldlage und gelernte
+Handlungs-/Beobachtungsbindung, ohne daraus harte Regeln zu machen.
+
+---
+
+## Umsetzung: Semantisches Forminhalt-Paket
+
+Status:
+Umgesetzt als weiche Diagnose- und Verdichtungsschicht innerhalb der
+Formsprache.
+
+Neue Werte:
+- `form_symbol_semantic_density`
+- `form_symbol_semantic_compression`
+- `form_symbol_semantic_coherence`
+- `form_symbol_semantic_learning_need`
+- `form_symbol_semantic_action_nearness`
+- `form_symbol_semantic_primary_layer`
+- `form_symbol_semantic_layer_count`
+- `form_symbol_semantic_packet_state`
+- `form_symbol_semantic_profile`
+
+Funktion:
+DIO kann ein Formzeichen jetzt nicht nur als `fs_...` fuehren, sondern dessen
+inneren Inhalt schichten:
+- Spur / Trace
+- weite Form
+- strukturierte Form
+- Objektnaehe
+- Lernraum
+- Beobachtung
+- Reflexion
+- Handlungsnaehe
+
+Wichtig:
+Das ist keine menschliche Chart-Sprache und keine neue harte Entry-Regel.
+Die Schicht macht DIOs eigene Semantik sichtbar. Sie kann spaeter in
+Meta-Regulation, Reflexion und selektive Wahrnehmung einfliessen.
+
+Technische Umsetzung:
+- `MCM_Brain_Modell.py`
+  - `build_form_symbol_state(...)` erweitert
+  - `mcm_form_symbol_protocol.csv` erweitert
+- `trade_stats.py`
+  - Outcome-/Kontext-Export erweitert
+- Dokumentation:
   - `UMSETZUNGSPLAN.md`
   - `WICHTIG_MECHANIKEN.md`
-- Bilddateien in `files/BILDER/` wurden ebenfalls auf Grossbuchstaben
-  vereinheitlicht und die README-Bildpfade wurden angepasst.
-- Die alte lange `FIX_LISTE.md` wurde als `FIX_LISTE_ARCHIV.md` erhalten.
-- Die neue `FIX_LISTE.md` ist nur noch aktive Arbeitsliste:
-  - offene Fixes
-  - naechste Pruefpunkte
-  - kurze technische Befunde
-- `AKTUELLER_STAND.md` bleibt das Forschungs-/Verlaufsdokument:
-  - Laufanalysen
-  - Deutungen
-  - Erkenntnisse
-  - begruendete Mechanikentwicklung
-- Neue Datei:
   - `MCM_VARIABLEN_MECHANIK.md`
-  - dokumentiert zentrale Variablen, Ebene, Wirkung, Persistenzgedanken und
-    organische Bedeutung.
-- `README.md` und `WICHTIG_MECHANIKEN.md` verweisen auf die neuen Dateinamen.
-
-Naechster sinnvoller Anschluss:
-
-- Ab jetzt nach jedem Lauf:
-  - ausfuehrliche Analyse in `AKTUELLER_STAND.md`
-  - kurze Checkbox / Pruefpunkt in `FIX_LISTE.md`
-- `MCM_VARIABLEN_MECHANIK.md` bei jeder neuen zentralen MCM-Variable
-  nachziehen.
-
-Umgesetzt: Entwicklungsbindung statt harter Blocker:
-
-- Fachlicher Grundsatz:
-  - Das System soll keine starren Verbote fuer schlechte Formen bekommen.
-  - Es soll lernen, dass bestimmte Form-/Kontextlagen aktuell nicht tragfaehig
-    fuer Handlung sind.
-  - Diese Erfahrung wird nicht als endgueltiges Nein gespeichert, sondern als
-    veraenderbare Entwicklungsqualitaet.
-- Neu im Form-Sprachspeicher:
-  - `development_quality`
-  - `action_affinity`
-  - `observation_affinity`
-  - `context_reframe_potential`
-  - getrennt fuer Einzelzeichen und `form_symbol_compound`
-- Wirkung:
-  - gute Prozess-/Outcome-Erfahrung erhoeht die Handlungsbindung leicht
-  - schlechte oder untragfaehige Erfahrung senkt die Handlungsanziehung
-  - Beobachten und Reframing werden wahrscheinlicher
-  - die Form bleibt frei und kann in anderem Kontext spaeter wieder tragfaehig werden
-- Neue Debug-Sicht:
-  - `form_symbol_action_binding`
-  - `form_symbol_observation_binding`
-  - `form_symbol_reframe_binding`
-  - `learned_development_uncertainty`
-- Wichtig:
-  - Das ist bewusst kein harter Blocker.
-  - Es ist eine organische Meta-Regulation:
-    weniger Bindung an unfruchtbare Handlung, mehr Abstand zum Objekt,
-    mehr Moeglichkeit zur Reorganisation.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\debug_reader.py .\trade_stats.py .\config.py`
-
-Naechster sinnvoller Schritt:
-
-- Einen neuen Debug-Lauf starten und pruefen:
-  - ob Low-Struktur-Trades durch gelernte Entwicklungsqualitaet sinken
-  - ob High/Mid nicht zu stark in Beobachtung gezogen werden
-  - ob `development_reframe_observe` / `development_reframe_replan` auftauchen
-  - ob `action_binding` bei tragfaehigen Formen steigt und bei schlechten Formen faellt
-
-Debug-Befund `debug_lauf_2` nach Entwicklungsbindung:
-
-- Ergebnis:
-  - 60 Trades
-  - 22 TP / 38 SL
-  - Netto-PnL ca. +7.89
-  - Profit Factor ca. 1.39
-  - Max Drawdown ca. 3.53
-- Vergleich zu `debug_lauf_1`:
-  - PnL von ca. +1.35 auf ca. +7.89 gestiegen
-  - Profit Factor von ca. 1.07 auf ca. 1.39 gestiegen
-  - Tradezahl von 47 auf 60 gestiegen
-- Struktur-Befund:
-  - High: +11.60 PnL, 13 TP / 9 SL
-  - Mid: +5.20 PnL, 8 TP / 10 SL
-  - Low: -8.91 PnL, 1 TP / 19 SL
-- Interpretation:
-  - High bleibt tragfaehig.
-  - Mid hat sich deutlich verbessert und ist jetzt klar positiv.
-  - Low bleibt die Hauptschadensquelle, ist aber im durchschnittlichen Verlust
-    etwas weniger schaedlich als im Vorlauf.
-- Entwicklungsbindung:
-  - Form-Protokoll schreibt die neuen Werte.
-  - `structure_development_observe` trat 107 mal auf.
-  - `structure_bearing_observe` trat 30 mal auf.
-  - Die eigentliche gelernte Entwicklungsqualitaet ist noch jung:
-    `form_symbol_action_binding` im Mittel ca. 0.425,
-    `observation_binding` ca. 0.041,
-    `reframe_binding` ca. 0.003.
-- Fix nach Auswertung:
-  - `mcm_memory_thinking_protocol.csv` wurde erweitert, damit ab dem naechsten Lauf
-    auch `form_symbol_development_quality`, `form_symbol_action_binding`,
-    `form_symbol_observation_binding`, `form_symbol_reframe_binding` und
-    `learned_development_uncertainty` direkt im Denkprotokoll sichtbar sind.
-
-Naechster sinnvoller Schritt:
-
-- Noch einen Lauf mit bestehendem Memory starten.
-- Pruefen, ob die Entwicklungsbindung ueber mehrere Laeufe staerker wird.
-- Speziell Low-Struktur beobachten:
-  - Wird `action_binding` bei Low-Formen niedriger?
-  - Steigt `observation_binding` oder `reframe_binding`?
-  - Bleibt Mid positiv, ohne zu stark ausgebremst zu werden?
-
-Debug-Befund `debug_lauf_3`:
-
-- Ergebnis:
-  - 51 Trades
-  - 15 TP / 36 SL
-  - Netto-PnL ca. -2.40
-  - Profit Factor ca. 0.89
-  - Max Drawdown ca. 3.95
-- Tragfaehigkeitsbild:
-  - High: +8.52 PnL, 9 TP / 5 SL
-  - Mid: +1.56 PnL, 5 TP / 9 SL
-  - Low: -12.47 PnL, 1 TP / 22 SL
-- Interpretation:
-  - Der Lauf ist im PnL schlechter, aber fachlich wichtig:
-    High und Mid bleiben positiv, Low ist klar der instabile Traeger.
-  - Das stuetzt die These, dass nicht die gesamte Denkstruktur falsch ist,
-    sondern dass Low-Struktur noch zu viel Handlungsbindung bekommt.
-- Entwicklungsbindung:
-  - `learned_development_uncertainty` ist jetzt im Denkprotokoll sichtbar.
-  - Mittelwert ca. 0.042, Maximum ca. 0.124.
-  - `form_symbol_development_quality` ist leicht negativ.
-  - `observation_binding` und `reframe_binding` steigen leicht.
-- Befund:
-  - Die Entwicklungsbindung lernt, ist aber noch zu schwach gekoppelt.
-  - Der bisherige Reframing-Schwellwert war zu hoch; dadurch wurde die neue
-    Wahrnehmung zwar gemessen, aber nicht oft genug handlungsnah wirksam.
-- Fix umgesetzt:
-  - Reframing-Schwelle fuer gelernte Entwicklungsunsicherheit weicher und frueher gemacht.
-  - Wirkung auf `field_observation_need`, `field_replan_pressure`,
-    `field_action_support`, `action_inhibition` und `action_clearance` leicht
-    verstaerkt.
-  - Weiterhin kein harter Blocker: schlechte Erfahrung senkt nur die
-    Handlungsbindung und zieht eher in Beobachten/Reframing.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\debug_reader.py .\trade_stats.py .\config.py`
-
-Naechster sinnvoller Schritt:
-
-- `debug_lauf_4` mit bestehendem Memory starten.
-- Pruefen:
-  - ob `development_reframe_observe` jetzt auftaucht
-  - ob Low-Trades sinken oder im Durchschnitt weniger schaden
-  - ob High/Mid weiter positiv bleiben
-  - ob `learned_development_uncertainty` nicht chaotisch hochschiesst
-
-Debug-Befund `debug_lauf_4`:
-
-- Ergebnis:
-  - 40 Trades
-  - 12 TP / 28 SL
-  - Netto-PnL ca. -2.81
-  - Profit Factor ca. 0.84
-  - Max Drawdown ca. 3.67
-- Tragfaehigkeitsbild:
-  - High: +4.57 PnL, 7 TP / 8 SL
-  - Mid: -0.63 PnL, 5 TP / 11 SL
-  - Low: -6.75 PnL, 0 TP / 9 SL
-- Interpretation:
-  - Low-Trades sind deutlich weniger geworden:
-    23 in Lauf 3 -> 9 in Lauf 4.
-  - Das spricht dafuer, dass die Entwicklungsbindung Handlung in Low-Struktur
-    bereits reduziert.
-  - Die uebrigen Low-Trades sind aber im Schnitt zu teuer.
-  - Es geht also nicht nur um Anzahl, sondern um Verlustintensitaet /
-    riskante Weite in nicht tragfaehiger Struktur.
-- Entwicklungsbindung:
-  - `development_reframe_observe` taucht jetzt auf.
-  - `learned_development_uncertainty` bleibt stabil und schiesst nicht chaotisch hoch.
-  - `form_symbol_development_quality` wird negativer, `observation_binding` und
-    `reframe_binding` steigen leicht.
-- Fix umgesetzt:
-  - `risk_width_pressure` in die Outcome-Zerlegung eingebaut.
-  - Breite/verlustintensive SL-Erfahrung senkt bei `sl_hit` Prozess- und
-    Risikoqualitaet staerker.
-  - Diese Intensitaet fliesst in die Form-Entwicklungsqualitaet und in die
-    Beobachtungsbindung ein.
-- Wichtig:
-  - Weiterhin kein harter Blocker.
-  - Das System lernt: Nicht nur "diese Form war schlecht", sondern
-    "diese Form war in dieser Weite / Tragfaehigkeit nicht konstruktiv".
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\debug_reader.py .\trade_stats.py .\config.py`
-
-Naechster sinnvoller Schritt:
-
-- `debug_lauf_5` mit bestehendem Memory starten.
-- Pruefen:
-  - ob Low weiter niedrig bleibt
-  - ob durchschnittlicher Low-Verlust sinkt
-  - ob High/Mid wieder stabiler werden
-  - ob `risk_width_pressure` in den Outcomes sichtbar zur Entwicklungsqualitaet beitraegt
-
-Debug-Befund `debug_lauf_5`:
-
-- Ergebnis:
-  - 33 Trades
-  - 8 TP / 25 SL
-  - Netto-PnL ca. -3.08
-  - Profit Factor ca. 0.77
-  - Max Drawdown ca. 5.95
-- Tragfaehigkeitsbild:
-  - High: +6.03 PnL, 5 TP / 1 SL
-  - Mid: -0.11 PnL, 3 TP / 8 SL
-  - Low: -9.00 PnL, 0 TP / 16 SL
-- Interpretation:
-  - High ist sehr tragfaehig, aber zu selten.
-  - Mid ist nahezu neutral.
-  - Low ist wieder zu haeufig und komplett unproduktiv.
-  - Die Anzahl der Trades sinkt, aber die falschen Low-Handlungen rutschen noch durch.
-- Entwicklungswerte:
-  - `form_symbol_development_quality` wird weiter negativer.
-  - `observation_binding` und `reframe_binding` steigen.
-  - `development_reframe_observe` tritt auf, aber noch zu selten.
-  - `risk_width_pressure` ist in den Outcomes sichtbar und bei Non-Zone im Mittel hoeher
-    als bei Zone.
-- Befund:
-  - Die Form-Sprache lernt die negative Qualitaet, aber die Handlungsbindung bleibt
-    noch zu stark um den neutralen Bereich verankert.
-  - Dadurch wird schlechte Erfahrung zwar wahrgenommen, aber noch nicht plastisch
-    genug in weniger Handlung uebersetzt.
-- Fix umgesetzt:
-  - `action_affinity` lernt plastischer, wenn die Entwicklungsprobe klar negativ ist.
-  - `risk_width_pressure` senkt bei `sl_hit` die Handlungsanziehung staerker.
-  - `observation_affinity` reagiert etwas staerker auf negative Entwicklungsprobe.
-  - `form_symbol_action_binding` wird durch Beobachtungs- und Reframe-Bindung leicht
-    reduziert.
-  - Reframing-Schwelle wurde weiter organisch abgesenkt.
-- Wichtig:
-  - Weiterhin keine harte Regel und kein Low-Verbot.
-  - Es ist eine weichere, erfahrungsabhaengige Plastizitaet:
-    untragfaehige Erfahrung verliert Bindung, statt technisch blockiert zu werden.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\debug_reader.py .\trade_stats.py .\config.py`
-
-Naechster sinnvoller Schritt:
-
-- `debug_lauf_6` starten.
-- Pruefen:
-  - ob Low-Anzahl wieder sinkt
-  - ob `development_reframe_observe` deutlicher steigt
-  - ob High weiterhin handeln darf
-  - ob `action_binding` bei negativen Formen jetzt sichtbar faellt
-
-Debug-Befund `debug_lauf_6`:
-
-- Ergebnis:
-  - 49 Trades
-  - 18 TP / 31 SL
-  - Netto-PnL ca. +3.82
-  - Profit Factor ca. 1.20
-  - Max Drawdown ca. 3.09
-- Tragfaehigkeitsbild:
-  - High: +12.79 PnL, 13 TP / 7 SL
-  - Mid: +0.73 PnL, 5 TP / 9 SL
-  - Low: -9.69 PnL, 0 TP / 15 SL
-- Interpretation:
-  - Die Nachschaerfung hat High nicht abgewuergt.
-  - High traegt den Lauf deutlich.
-  - Mid bleibt leicht positiv.
-  - Low bleibt komplett unproduktiv und muss weiter ueber weniger Bindung /
-    mehr Reframing reguliert werden.
-- Entwicklungsbindung:
-  - `development_reframe_observe` steigt deutlich:
-    8 in Lauf 5 -> 54/55 in Lauf 6, je nach Protokoll.
-  - `form_symbol_development_quality` wird negativer.
-  - `form_symbol_action_affinity` faellt sichtbar unter neutral.
-  - `observation_binding` und `reframe_binding` steigen.
-  - Das System nimmt schlechte Entwicklungsqualitaet also wahr und reagiert
-    haeufiger mit Beobachten.
-- Offener Kern:
-  - Low ist noch nicht ausreichend entkoppelt.
-  - Einzelne Low-Handlungen bleiben trotz negativer Entwicklung attraktiv genug.
-- Debug-Fix umgesetzt:
-  - `outcome_records.jsonl` schreibt ab dem naechsten Lauf die handlungsnahen
-    Form-Werte direkt mit:
-    `form_symbol_id`, `form_symbol_development_quality`,
-    `form_symbol_action_binding`, `form_symbol_observation_binding`,
-    `form_symbol_reframe_binding`, Compound-ID und Compound-Entwicklung.
-  - Dadurch koennen Low-Verluste im naechsten Lauf sauberer einzelnen Formen
-    und zusammengesetzten Zeichen zugeordnet werden.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\debug_reader.py .\trade_stats.py .\config.py`
-
-Naechster sinnvoller Schritt:
-
-- `debug_lauf_7` starten.
-- Dann nicht nur Strukturbaender pruefen, sondern Low-Verluste direkt nach
-  `form_symbol_id` und `form_symbol_action_binding` gruppieren.
-- Ziel:
-  - erkennen, welche internen Zeichen trotz negativer Entwicklung noch Handlung
-    tragen
-  - daraus die Plastizitaet der eigenen Sprache weiter verbessern, ohne harte
-    Handelsregeln einzubauen
-
-Debug-Befund `debug_lauf_7`:
-
-- Ergebnis:
-  - 58 Trades
-  - 20 TP / 38 SL
-  - Netto-PnL ca. +4.30
-  - Profit Factor ca. 1.20
-  - Max Drawdown ca. 3.07
-- Tragfaehigkeitsbild:
-  - High: +12.87 PnL, 13 TP / 7 SL
-  - Mid: +0.66 PnL, 7 TP / 15 SL
-  - Low: -9.23 PnL, 0 TP / 16 SL
-- Interpretation:
-  - Lauf 6 und Lauf 7 sind beide positiv.
-  - High bleibt stabil tragend.
-  - Mid bleibt schwach, aber positiv.
-  - Low bleibt komplett untragfaehig und frisst den Gewinn.
-- Entwicklungsbindung:
-  - `development_reframe_observe` bleibt hoch.
-  - `structure_development_observe` steigt weiter.
-  - `form_symbol_action_affinity` faellt weiter unter neutral.
-  - `observation_binding` und `reframe_binding` steigen weiter.
-  - Das System erkennt also zunehmend: bestimmte Formen tragen nicht.
-- Offener Debug-Punkt:
-  - Die neuen Formfelder in `outcome_records.jsonl` waren noch leer.
-  - Ursache: Der Entry-Kontext bekam an dieser Stelle manchmal ein leeres
-    `form_symbol_state` aus dem Entry-Result.
-- Fix umgesetzt:
-  - Entry-Kontext nutzt jetzt als Fallback `bot.form_symbol_state`, wenn
-    `entry_result.form_symbol_state` leer ist.
-  - Damit sollte der naechste Lauf Low-Verluste direkt nach `form_symbol_id`,
-    `form_symbol_action_binding`, `observation_binding` und `reframe_binding`
-    gruppierbar machen.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\debug_reader.py .\trade_stats.py .\config.py`
-
-Naechster sinnvoller Schritt:
-
-- `debug_lauf_8` starten.
-- Danach Low-Outcomes nach Form-ID gruppieren.
-- Wenn einzelne Zeichen trotz negativer Entwicklung weiter Handlung tragen,
-  wird dort die Plastizitaet der internen Sprache gezielt nachgeschaerft.
-
-Debug-Befund `debug_lauf_8` und fachliche Einordnung Vertrauen:
-
-- Ergebnis:
-  - 46 Trades
-  - 15 TP / 31 SL
-  - Netto-PnL ca. +0.30
-  - Profit Factor ca. 1.02
-  - Max Drawdown ca. 4.01
-- Tragfaehigkeitsbild:
-  - High: +8.70 PnL, 11 TP / 9 SL
-  - Mid: +0.15 PnL, 4 TP / 9 SL
-  - Low: -8.55 PnL, 0 TP / 13 SL
-- Interpretation:
-  - Jeder Lauf ist anders.
-  - Das ist nicht automatisch schlecht, weil Varianz zur offenen Wahrnehmung gehoert.
-  - Gleichzeitig zeigt sich: Die gelernte Erfahrung wird noch nicht stabil genug
-    als Vertrauen gebunden.
-  - Das System erkennt negative Entwicklung und reagiert mit Beobachtung, aber
-    es vertraut dem Gelernten noch nicht stark genug, um untragfaehige Formen
-    konsequent innerlich zu entkoppeln.
-- Vergleichsbild:
-  - Nicht Misstrauen, sondern fehlendes Vertrauen.
-  - Wie ein Mensch, der etwas gelernt hat, aber in der Situation noch nicht
-    ruhig genug darauf vertraut.
-  - Dadurch entsteht Varianz, aber auch Chaos: bekannte untragfaehige Reize
-    bekommen erneut Handlungsnaehe.
-- Neue Form-Auswertung:
-  - Non-Zone/Low hat im Mittel negative `form_symbol_development_quality`.
-  - `form_symbol_action_binding` ist niedriger als bei Zone, aber noch nicht
-    niedrig genug.
-  - `observation_binding` und `reframe_binding` sind hoeher, aber noch nicht
-    tragend genug.
-- Fix umgesetzt: Vertrauensschicht fuer Formsprache
-  - Neu:
-    - `form_symbol_learning_trust`
-    - `form_symbol_action_trust`
-    - `form_symbol_caution_trust`
-  - Bedeutung:
-    - `learning_trust`: Wie stark darf das System seiner gesammelten Erfahrung
-      zu diesem Zeichen glauben?
-    - `action_trust`: Vertrauen, dass Handlung in dieser Form tragfaehig ist.
-    - `caution_trust`: Vertrauen, dass Zurueckhaltung / Beobachten tragfaehiger ist.
-  - Wirkung:
-    - positive, konsistente Erfahrung stuetzt Handlung weich.
-    - negative, konsistente Erfahrung staerkt Vorsicht und reduziert
-      Handlungsbindung.
-    - Das ist kein Auswendiglernen, sondern ein erfahrungsabhaengiges Vertrauen
-      in die eigene Form-Sprache.
-- Debug erweitert:
-  - Form-Protokoll, Memory-Thinking-Protokoll und Outcome-Records schreiben die
-    neuen Trust-Werte ab dem naechsten Lauf mit.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\debug_reader.py .\trade_stats.py .\config.py`
-
-Naechster sinnvoller Schritt:
-
-- `debug_lauf_9` starten.
-- Pruefen:
-  - ob `caution_trust` bei Low-Formen steigt
-  - ob `action_trust` bei High-Formen erhalten bleibt
-  - ob Low-Handlungen sinken, ohne High zu verlieren
-  - ob Lauf-Varianz weniger chaotisch und mehr erfahrungsgetragen wird
-
-Debug-Befund `debug_lauf_9`:
-
-- Ergebnis:
-  - 42 Trades
-  - 14 TP / 28 SL
-  - Netto-PnL ca. +0.96
-  - Profit Factor ca. 1.06
-  - Max Drawdown ca. 2.19
-- Tragfaehigkeitsbild:
-  - High: +11.15 PnL, 10 TP / 3 SL
-  - Mid: -2.81 PnL, 4 TP / 14 SL
-  - Low: -7.38 PnL, 0 TP / 11 SL
-- Interpretation:
-  - High bleibt sehr tragfaehig.
-  - Low sinkt leicht, bleibt aber komplett unproduktiv.
-  - Mid kippt in diesem Lauf negativ und braucht spaeter eigene Betrachtung.
-  - Gesamt-Drawdown ist besser, aber PnL bleibt nur knapp positiv.
-- Vertrauensschicht:
-  - `learning_trust` entsteht, aber noch sehr zart.
-  - `action_trust` und `caution_trust` sind im ersten Lauf noch zu niedrig.
-  - Low-Formen zeigen hoehere Beobachtungs-/Reframe-Bindung, aber Vorsicht ist
-    noch nicht stark genug konsolidiert.
-- Wichtige Form:
-  - `fs_eddd1c68f1` verursacht erneut die haertesten Non-Zone-Verluste.
-  - Dieses Zeichen hat bereits niedrige Action-Bindung und hohe Beobachtungsbindung,
-    traegt aber noch nicht genug stabile Vorsicht.
-- Fix umgesetzt:
-  - Wiederholte negative Erfahrung staerkt `caution_trust` schneller.
-  - `risk_width_pressure` und negative Entwicklungsproben wirken staerker auf
-    Vorsichtsvertrauen.
-  - `caution_trust` reduziert die Handlungsbindung etwas staerker und erhoeht
-    Entwicklungsunsicherheit.
-- Wichtig:
-  - Kein Verbot einzelner Zeichen.
-  - Es ist Konsolidierung: Das System soll seiner eigenen wiederholten Erfahrung
-    mehr glauben duerfen.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\bot.py .\debug_reader.py .\trade_stats.py .\config.py`
-
-Naechster sinnvoller Schritt:
-
-- `debug_lauf_10` starten.
-- Pruefen:
-  - ob `caution_trust` bei wiederholt negativen Formen wie `fs_eddd1c68f1` steigt
-  - ob Low-Trades sinken oder weniger teuer werden
-  - ob High weiterhin stark bleibt
-  - ob Mid nur Laufvarianz war oder eine eigene Tragfaehigkeitszone braucht
-
-Debug-Befund `debug_lauf_10`:
-
-- Ergebnis:
-  - 31 Trades
-  - 12 TP / 19 SL
-  - Netto-PnL ca. +3.43
-  - Profit Factor ca. 1.30
-  - Max Drawdown ca. 2.20
-- Tragfaehigkeitsbild:
-  - High: +7.00 PnL, 7 TP / 3 SL
-  - Mid: +2.69 PnL, 4 TP / 4 SL
-  - Low: -6.26 PnL, 1 TP / 12 SL
-- Interpretation:
-  - Lauf 10 ist deutlich ruhiger:
-    weniger Trades, besserer Profit Factor, niedrigerer Drawdown.
-  - High bleibt tragfaehig.
-  - Mid erholt sich und ist in diesem Lauf klar positiv.
-  - Low bleibt negativ, aber:
-    - Low hat erstmals wieder 1 TP
-    - Low-Gesamtverlust sinkt
-    - durchschnittlicher Low-Verlust sinkt gegenueber Lauf 8/9
-- Vertrauensschicht:
-  - `learning_trust` steigt sichtbar.
-  - `caution_trust` steigt, aber noch langsam.
-  - Bei `fs_eddd1c68f1` ist die Entwicklung sinnvoll:
-    - Action-Bindung niedrig
-    - Observation-Bindung hoch
-    - Reframe-Bindung hoch
-    - Development klar negativ
-    - Learning-Trust steigt
-    - Caution-Trust steigt
-  - Das Zeichen ist noch gefaehrlich, aber das System beginnt, ihm anders zu
-    begegnen.
-- Fachlicher Befund:
-  - Das wirkt eher wie ein Organismus, der beim Laufen lernt:
-    weniger wildes Auftreten, mehr Gewichtspruefung.
-  - Es ist noch kein stabiles Vertrauen, aber die Richtung ist gut.
-  - Wichtig: jetzt nicht sofort ueberregeln, sondern einen weiteren Lauf zur
-    Stabilitaetspruefung machen.
-- Keine Code-Nachschaerfung nach Lauf 10:
-  - Der Lauf zeigt Verbesserung durch die letzte Trust-Anpassung.
-  - Zu fruehes weiteres Drehen koennte die gerade entstehende Balance stoeren.
-
-Naechster sinnvoller Schritt:
-
-- `debug_lauf_11` mit demselben Stand starten.
-- Pruefen:
-  - bleibt der Profit Factor ueber 1?
-  - bleibt der Drawdown niedriger?
-  - bleibt High/Mid positiv?
-  - sinkt Low weiter oder bleibt wenigstens weniger teuer?
-  - steigt `caution_trust` bei wiederholt negativen Formen weiter langsam an?
-
-Debug-Befund `debug_lauf_11`:
-
-- Ergebnis:
-  - 45 Trades
-  - 17 TP / 28 SL
-  - Netto-PnL ca. +5.16
-  - Profit Factor ca. 1.32
-  - Max Drawdown ca. 3.09
-- Tragfaehigkeitsbild:
-  - High: +10.96 PnL, 12 TP / 7 SL
-  - Mid: +1.67 PnL, 5 TP / 8 SL
-  - Low: -7.46 PnL, 0 TP / 13 SL
-- Interpretation:
-  - Lauf 10 war kein Einzelzufall.
-  - Profit Factor bleibt ueber 1.3.
-  - High bleibt klar tragfaehig.
-  - Mid bleibt wieder positiv.
-  - Low bleibt negativ, aber der Gesamtorganismus bleibt trotz Low-Schaden positiv.
-- Vertrauensschicht:
-  - `learning_trust` steigt weiter:
-    ca. 0.029 -> ca. 0.041 im Denkprotokoll.
-  - `caution_trust` steigt weiter:
-    ca. 0.0028 -> ca. 0.0063.
-  - `development_reframe_observe` bleibt hoch:
-    103 -> 111 im Denkprotokoll.
-  - `form_symbol_action_binding` bleibt gedämpft und fällt nicht in blinde Handlung.
-- Fachlicher Befund:
-  - Die Laufvarianz ist noch da, aber sie wirkt weniger chaotisch.
-  - Das System beginnt, Erfahrung nicht nur zu speichern, sondern vorsichtig
-    zu gewichten.
-  - Sinnbildlich: Es stolpert noch auf weichem Boden, aber es findet schneller
-    zur Balance zurueck.
-- Kein Code-Fix nach Lauf 11:
-  - Der aktuelle Stand zeigt zwei positive Laeufe hintereinander mit verbessertem
-    Profit Factor.
-  - Jetzt ist weitere Beobachtung sinnvoller als sofortiges Nachregeln.
-
-Naechster sinnvoller Schritt:
-
-- Noch einen Lauf mit gleichem Stand starten.
-- Danach ueber mehrere Laeufe mitteln:
-  - Durchschnitts-PnL seit Trust-Schicht
-  - Low-Verlust pro Trade
-  - High/Mid-Tragfaehigkeit
-  - Entwicklung von `learning_trust` und `caution_trust`
-- Erst wenn die Richtung stabil ist, die naechste Mechanik setzen:
-  - Mid differenzierter betrachten
-  - oder Low-Formen ueber interne Zeichen-Reorganisation weiter verdichten
-
-Debug-Befund `debug_lauf_12`:
-
-- Ergebnis:
-  - 48 Trades
-  - 21 TP / 27 SL
-  - Netto-PnL ca. +11.23
-  - Profit Factor ca. 1.73
-  - Max Drawdown ca. 4.10
-- Tragfaehigkeitsbild:
-  - High: +18.85 PnL, 17 TP / 5 SL
-  - Mid: -0.72 PnL, 4 TP / 10 SL
-  - Low: -6.90 PnL, 0 TP / 12 SL
-- Interpretation:
-  - Das ist der bisher staerkste Lauf seit der Trust-Schicht.
-  - High wird massiv getragen und dominiert den Lauf.
-  - Low bleibt negativ, ist aber nicht mehr stark genug, um den Organismus
-    komplett zu kippen.
-  - Mid war in diesem Lauf leicht negativ und bleibt die naechste zu klaerende
-    Uebergangszone.
-- Trust-Entwicklung:
-  - `learning_trust` steigt weiter deutlich:
-    ca. 0.041 -> ca. 0.051 im Denkprotokoll,
-    in Outcomes bei Zone ca. 0.132 und Non-Zone ca. 0.163.
-  - `caution_trust` steigt weiter:
-    ca. 0.006 -> ca. 0.009 im Denkprotokoll.
-  - `development_reframe_observe` steigt stark:
-    111 -> 158 im Denkprotokoll.
-  - Das System reagiert damit haeufiger mit innerer Neu-Betrachtung, bevor es handelt.
-- Fachlicher Befund:
-  - Die Trust-Schicht scheint nicht nur zu daempfen, sondern Lernen tragfaehiger
-    zu binden.
-  - High bekommt genug Freiheit.
-  - Low wird noch nicht geloest, aber der Gesamtablauf wirkt organisierter.
-  - Sinnbildlich: Das System laeuft noch nicht sauber, aber es findet eine
-    tragendere Schrittfolge.
-- Keine Code-Aenderung nach Lauf 12:
-  - Der aktuelle Stand zeigt eine starke Verbesserung.
-  - Jetzt ist Stabilitaetspruefung wichtiger als weiteres Nachregeln.
-
-Naechster sinnvoller Schritt:
-
-- Noch 1-2 Laeufe mit unveraendertem Code.
-- Danach Mittelwert seit Lauf 10 bilden:
-  - PnL
-  - Profit Factor
-  - Max Drawdown
-  - High/Mid/Low-Beitrag
-  - Trust-Entwicklung
-- Erst danach entscheiden:
-  - Mid als Uebergangsboden differenzieren
-  - oder Low-Formen weiter verdichten/reorganisieren
-
-Debug-Auswertung nach erstem Eigenzeichen-Lauf:
-
-- Lauf mit bestehendem Memory in `/debug` ausgewertet.
-- Ergebnis:
-  - 73 Trades
-  - 22 TP
-  - 51 SL
-  - Netto-PnL ca. -0,61
-  - Equity ca. 99,39
-- Vergleich:
-  - deutlich besser als die letzten Erweiterungslaeufe mit ca. -5,95 bis -10,58 Netto-PnL
-  - wieder nahe am alten Lauf vor der Erweiterung mit ca. -0,66 Netto-PnL
-- Feldentscheidungen:
-  - `observe`: 935
-  - `hold`: 858
-  - `act`: 99
-  - Hauptgrund `zero_point_regulation`: 933
-  - `plan_allowed`: 99
-- Memory:
-  - `hard_inhibit`: 998
-  - `inhibit`: 924
-  - `neutral_match`: 107
-  - `no_match`: 17
-  - Memory-Support bleibt praktisch 0
-  - Memory-Compare-Load bleibt hoch
-- Struktur:
-  - `structure_quality` im Memory-Protokoll ca. 0,59 im Mittel
-  - `context_confidence` ca. 0,60
-  - `structure_orientation` ca. 0,41
-  - deshalb greift `structure_orientation_observe` kaum/nicht:
-    die Struktur ist im Lauf nicht blind genug, um diesen Guard auszuloesen.
-- Neuer Eigenzeichenraum:
-  - Protokoll wurde erfolgreich geschrieben:
-    - `debug/mcm_form_symbol_protocol.csv`
-  - Problem im ersten Ansatz:
-    - 2417 Protokollzeilen
-    - 2403 verschiedene `form_symbol_id`
-    - fast jedes Wahrnehmen erzeugt ein neues Zeichen
-  - Bewertung:
-    - Das ist noch keine echte eigene Sprache.
-    - Es ist zu atomisiert und erkennt zu wenig wieder.
-
-Fix nach Debug umgesetzt: Form-Familie statt Detail-Hash:
-
-- `form_symbol_id` wird jetzt aus einer groberen Form-Familie gebildet.
-- Die Detailauspraegung bleibt separat erhalten:
-  - `form_symbol_family_key`
-  - `form_symbol_variant_key`
-- Ziel:
-  - wiederkehrende eigene Zeichen statt Einzelbilder
-  - Reife, Stabilitaet und Resonanz koennen ueber mehrere Wahrnehmungen wachsen
-  - `form_symbol_load_reduction` kann spaeter wirklich kognitive Entlastung darstellen
-- Das naechste Protokoll schreibt Familie und Variante getrennt.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
-
-Naechster sinnvoller Anschluss:
-
-- Neuen Backtest mit bestehendem Memory starten.
-- Danach pruefen:
-  - wie viele `form_symbol_id` jetzt entstehen
-  - ob Top-Zeichen echte Wiederholungen zeigen
-  - ob `form_symbol_maturity`, `form_symbol_resonance` und `form_symbol_load_reduction` steigen
-  - ob Observe/Replan/Act unterschiedliche Form-Familien zeigen
-  - ob stabile Form-Familien spaeter als Entlastung in die Meta-Regulation duerfen
-
-Erkenntnis: Aufloesung steuert Zeichen-Verdichtung:
-
-- Ein Zeichen darf nicht jedes Detail enthalten.
-- Beispiel aus der Reflexion:
-  - Das Wort Strasse kann viele Details enthalten.
-  - Im Kopf ist es aber zuerst eine grobe Form, nicht jeder Abschnitt einzeln.
-- Uebertragung auf das Brain:
-  - Wenn die Sicht niedrig ist, darf das System nicht Abschnitt fuer Abschnitt neue Zeichen bilden.
-  - Dann muss es auf eine breite Spur/Form verdichten.
-  - Erst wenn Struktur, Relevanz oder Handlungsnaehe steigt, darf es tiefer in Varianten zoomen.
-- Fix umgesetzt:
-  - `form_symbol_scope`
-    - `wide_trace`
-    - `wide_form`
-    - `structured_form`
-  - `form_symbol_abstraction_level`
-  - `form_symbol_resolution_quality`
-  - `form_symbol_detail_pressure`
-- Bedeutung:
-  - niedrige Aufloesung fuehrt zu groberem Zeichen
-  - hoher Detaildruck erhoeht `form_symbol_zoom_need`
-  - die Detailform bleibt als `form_symbol_variant_key` erhalten
-  - das eigentliche Zeichen bleibt aber die verdichtete Familie
-- Ziel:
-  - echte Denkverdichtung
-  - weniger Zeicheninflation
-  - mehr Wiedererkennen
-  - erst Fokus, dann Detailanalyse
-
-Debug-Auswertung nach aufloesungsabhaengiger Zeichenbildung:
-
-- Neuer Lauf in `/debug` ausgewertet.
-- Oekonomisches Ergebnis:
-  - 55 Trades
-  - 14 TP
-  - 41 SL
-  - Netto-PnL ca. -6,46
-  - Equity ca. 93,54
-- Bewertung:
-  - schlechter als der direkte Vorlauf mit ca. -0,61
-  - aehnlich schwach wie fruehere Erweiterungslaeufe
-  - kein Beweis, dass die Sprachebene schadet, da sie aktuell diagnostisch wirkt
-  - wahrscheinlich spielt fortlaufende Memory-Entwicklung/Blockierung stark mit hinein
-- Feld/Memory:
-  - `observe`: 969
-  - `hold`: 1084
-  - `act`: 75
-  - Hauptgrund weiter `zero_point_regulation`: 966
-  - `context_cluster_negative`: 479
-  - Memory-Support bleibt praktisch 0
-  - Memory-Compare-Load bleibt hoch bei ca. 0,95
-- Sprach-/Form-Befund:
-  - 2572 Form-Protokollzeilen
-  - 268 unterschiedliche `form_symbol_id`
-  - vorher: 2417 Zeilen und 2403 unterschiedliche Zeichen
-  - klare Verbesserung der Denkverdichtung
-- Wiederholungsstruktur:
-  - Top-Zeichen:
-    - 205 Wiederholungen
-    - 144 Wiederholungen
-    - 118 Wiederholungen
-    - 106 Wiederholungen
-  - 88 Zeichen kamen mindestens 5-mal vor
-  - 30 Zeichen kamen mindestens 20-mal vor
-  - 10 Zeichen kamen mindestens 50-mal vor
-- Reife/Entlastung:
-  - `form_symbol_seen` im Mittel ca. 33,1
-  - `form_symbol_maturity` ca. 0,596
-  - `form_symbol_resonance` ca. 0,360
-  - `form_symbol_load_reduction` ca. 0,232
-  - vorher war Load-Reduction nur ca. 0,074
-- Scope-Verteilung:
-  - `wide_form`: 1686
-  - `structured_form`: 884
-  - `wide_trace`: 2
-- Bewertung der Sprachebene:
-  - Die Zeichenbildung ist jetzt deutlich naeher an echter Sprache.
-  - Es entstehen wiederkehrende Form-Familien.
-  - Die Varianten bleiben erhalten, ohne das eigentliche Zeichen zu zerlegen.
-  - Das entspricht dem Prinzip: grobe Bedeutung zuerst, Detail erst bei Fokus.
-
-Naechster sinnvoller Schritt:
-
-- Die Form-Sprache separat persistent speichern.
-- Nicht in den normalen Trade-Memory mischen.
-- Ziel:
-  - Entwicklung der eigenen Sprache ueber Laeufe hinweg
-  - Zeichen reifen lassen
-  - stabile Zeichen wiedererkennen
-  - instabile Zeichen splitten/vergessen
-  - spaeter erst vorsichtig als kognitive Entlastung in die Meta-Regulation einbinden
-
-Erkenntnis: Benennung erzeugt Distanz zum Objekt:
-
-- Wichtiger MCM-Punkt:
-  - Ordnung und Bezeichnung sind nicht nur Sprache.
-  - Sie erzeugen Distanz zwischen innerem Feld und wahrgenommenem Objekt.
-  - Dadurch wird das innere Feld weniger direkt vom Objekt ueberflutet.
-- Menschliches Vergleichsbild:
-  - Ein Wort wie Strasse enthaelt viele moegliche Details.
-  - Im Kopf kann es aber als eine stabile Form gehalten werden.
-  - Erst bei Fokus wird daraus Oberflaeche, Kreuzung, Richtung, Gefahr, Struktur.
-- MCM-Uebertragung:
-  - Ein Wort/ein Form-Zeichen kann viele MCM-Lagen im Feld tragen.
-  - Je analytischer eine Form gehalten werden kann,
-    desto weniger muss das Innenfeld roh auf jeden Reiz reagieren.
-  - Das wirkt regulatorisch:
-    - weniger chaotische Innenlage
-    - mehr Objektabstand
-    - mehr Containment
-    - weniger blindes Denken
-- Umsetzung:
-  - Neue Form-Symbolwerte:
-    - `form_symbol_object_distance`
-    - `form_symbol_containment`
-    - `form_symbol_field_decoupling`
-  - Neue Meta-Regulationswerte:
-    - `symbolic_object_distance`
-    - `symbolic_containment`
-    - `symbolic_field_decoupling`
-    - `symbolic_regulation`
-- Wirkung:
-  - Reife, stabile Zeichen koennen Feld-Observation/Replan-Druck leicht daempfen.
-  - `action_inhibition`, `orientation_gap` und `blind_thinking_load`
-    werden sehr vorsichtig reduziert.
-  - Keine harte Tradingregel.
-  - Sprache wirkt zuerst als innere Distanz- und Ordnungsfunktion.
-- Debug:
-  - `mcm_form_symbol_protocol.csv` schreibt die Form-Distanzwerte.
-  - `mcm_memory_thinking_protocol.csv` schreibt die symbolische Regulation.
-
-Umgesetzt: separater persistenter Form-Sprach-Memory:
-
-- Die eigene Form-Sprache wird jetzt getrennt vom normalen Trade-/State-Memory gespeichert.
-- Speicherdatei:
-  - `bot_memory/form_symbol_memory.json`
-- Konfig:
-  - `MCM_FORM_SYMBOL_MEMORY_ENABLED`
-  - `MCM_FORM_SYMBOL_MEMORY_PATH`
-  - `MCM_FORM_SYMBOL_MEMORY_SAVE_EVERY_N`
-  - `MCM_FORM_SYMBOL_MEMORY_MAX_SYMBOLS`
-  - `MCM_FORM_SYMBOL_MEMORY_MAX_VARIANTS`
-- Persistierte Inhalte je Form-Familie:
-  - `symbol_id`
-  - `family_key`
-  - `scope`
-  - `abstraction_level`
-  - `seen`
-  - `avg_vector`
-  - `variance`
-  - `maturity`
-  - `stability`
-  - `resonance`
-  - `bearing`
-  - `fragility`
-  - `resolution_quality`
-  - `detail_pressure`
-  - `symbolic_object_distance`
-  - `symbolic_containment`
-  - `symbolic_field_decoupling`
-  - `last_zoom_need`
-  - `last_load_reduction`
-  - `variants`
-  - `first_seen_ts`
-  - `last_seen_ts`
-- Verhalten:
-  - Speicher wird beim ersten Form-Symbol-Zugriff geladen.
-  - Laufende Form-Familien werden mit dem gespeicherten Sprachraum gemischt.
-  - Varianten werden gezaehlt und begrenzt.
-  - Der Speicher wird periodisch geschrieben.
-  - Beim normalen Memory-State-Save wird der Form-Sprach-Memory final geflusht.
-- Debug:
-  - `mcm_form_symbol_protocol.csv` enthaelt jetzt:
-    - `form_symbol_memory_loaded`
-    - `form_symbol_memory_symbol_count`
-- Wichtig:
-  - Das ist weiterhin ein separater Entwicklungsraum.
-  - Er ist nicht in den normalen Trade-Memory gemischt.
-  - Die Sprache kann jetzt ueber Laeufe hinweg reifen.
-- Smoke-Test erfolgreich:
-  - Form-Symbol erzeugt
-  - separater Speicher geschrieben
-  - Speicher normalisiert
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py .\bot.py`
-
-Naechster sinnvoller Anschluss:
-
-- Neuen Backtest mit bestehendem Memory laufen lassen.
-- Danach pruefen:
-  - ob `bot_memory/form_symbol_memory.json` entsteht
-  - wie viele Form-Familien gespeichert wurden
-  - ob `seen`, `maturity`, `resonance`, `load_reduction` ueber Laeufe wachsen
-  - ob `symbolic_regulation` stabiler wird
-  - ob Memory-/Denk-Last sinkt, ohne Trading zu enthemmen
-
-Debug-Auswertung nach persistentem Form-Sprach-Memory:
-
-- Speicher erfolgreich erzeugt:
-  - `bot_memory/form_symbol_memory.json`
-  - Groesse ca. 575 KB
-- Protokolle bestaetigen:
-  - `form_symbol_memory_loaded = 1`
-  - `form_symbol_memory_symbol_count` waechst im Lauf bis 260
-- Form-Sprach-Memory Summary:
-  - `symbol_count`: 260
-  - `total_seen`: 2571
-- Top-Form-Familien:
-  - staerkstes Zeichen: 209 Wiederholungen
-  - danach 143, 120, 118, 108, 103 Wiederholungen
-  - Top-Zeichen haben `maturity` ca. 0,90 bis 0,96
-  - Top-Zeichen haben `resonance` ca. 0,43 bis 0,54
-  - Top-Zeichen fuehren bis zu 12 Varianten
-- Lauf-Ergebnis:
-  - 55 Trades
-  - 17 TP
-  - 38 SL
-  - Netto-PnL ca. +0,72
-  - Equity ca. 100,72
-- Vergleich zum vorherigen Lauf:
-  - vorher ca. -6,46 Netto-PnL
-  - jetzt ca. +0,72 Netto-PnL
-  - nicht als Beweis werten, aber als gutes erstes Signal.
-- Memory-/Denk-Last:
-  - `orientation_gap` ca. 0,419
-  - vorher ca. 0,434 bis 0,45 im Bereich der belasteten Laeufe
-  - `blind_thinking_load` ca. 0,472
-  - vorher ca. 0,484 bis 0,491
-  - `symbolic_regulation` ca. 0,135 im Mittel
-- Symbolische Regulation nach Buckets:
-  - ohne symbolische Regulation:
-    - `blind_thinking_load` ca. 0,499
-    - `orientation_gap` ca. 0,454
-  - niedrige Regulation:
-    - `blind_thinking_load` ca. 0,482
-    - `orientation_gap` ca. 0,429
-  - hoehere Regulation:
-    - `blind_thinking_load` ca. 0,466
-    - `orientation_gap` ca. 0,413
-- Bewertung:
-  - Die Form-Sprache wird persistent.
-  - Wiederkehrende Zeichen reifen im Speicher.
-  - Symbolische Distanz scheint die innere Last messbar zu senken.
-  - Trading wurde in diesem Lauf nicht ueberenthemmt.
-- Performance:
-  - `form_symbol_memory_write` liegt grob bei ca. 0,7 bis 1,8 ms pro Schreibvorgang.
-  - Der neue Speicher ist aktuell nicht der Hauptgrund fuer Laufzeitlast.
-
-Naechster sinnvoller Anschluss:
-
-- Noch einen Lauf mit bestehendem `form_symbol_memory.json` starten.
-- Danach vergleichen:
-  - wachsen `seen`, `maturity`, `resonance`, `load_reduction` weiter?
-  - sinken `zero_point_regulation`, `blind_thinking_load`, `orientation_gap` weiter?
-  - bleibt PnL stabil oder war der positive Lauf Zufall?
-  - pruefen, ob persistente Sprache zu stark enthemmt oder wirklich nur ordnet.
-
-Debug-Auswertung zweiter Lauf mit persistentem Form-Sprach-Memory:
-
-- Speicher weiter gewachsen:
-  - `form_symbol_memory.json` ca. 680 KB
-  - `symbol_count`: 303
-  - `total_seen`: 5809
-  - Top-Familie: 489 Wiederholungen
-  - mehrere Top-Familien mit `maturity` ca. 0,95 bis 0,98
-- Form-Protokoll:
-  - 3137 Zeilen
-  - 295 aktive Form-Familien im Lauf
-  - `wide_form`: 2097
-  - `structured_form`: 1038
-  - `wide_trace`: 2
-- Sprache:
-  - `form_symbol_seen` im Mittel ca. 105
-  - `form_symbol_maturity` ca. 0,792
-  - `form_symbol_resonance` ca. 0,456
-  - `form_symbol_load_reduction` ca. 0,302
-  - `form_symbol_object_distance` ca. 0,197
-  - `form_symbol_field_decoupling` ca. 0,227
-- Innere Last:
-  - `symbolic_regulation` ca. 0,190
-  - `blind_thinking_load` ca. 0,467
-  - `orientation_gap` ca. 0,415
-  - Last sinkt weiter gegenueber frueheren Laeufen.
-- Trading:
-  - 47 Trades
-  - 8 TP
-  - 39 SL
-  - Netto-PnL ca. -11,66
-  - Fast alles LONG: 46 LONG, 1 SHORT
-- Bewertung:
-  - Sprache reift sehr stark.
-  - Innenordnung/Distanz steigt.
-  - Trading kippt trotzdem massiv negativ.
-  - Das ist ein Warnsignal:
-    - Sprache kann ordnen,
-    - aber sie besitzt noch keine Ergebnis-/Handlungswahrheit.
-  - Ein bekanntes Wort darf die Lage innerlich beruhigen,
-    aber es darf ohne Outcome-Erfahrung nicht automatisch Handlung erleichtern.
-
-Sicherheitsfix umgesetzt: Innenordnung von Handlungsfreigabe getrennt:
-
-- `symbolic_regulation` bleibt als Gesamtwert bestehen.
-- Neu getrennt:
-  - `symbolic_inner_regulation`
-  - `symbolic_action_regulation`
-- Wirkung:
-  - `symbolic_inner_regulation` darf weiter `orientation_gap` und `blind_thinking_load` daempfen.
-  - `symbolic_action_regulation` ist stark gedeckelt.
-  - Sprache darf also ordnen, aber kaum Action erleichtern.
-- Grund:
-  - Ein reifes Zeichen schafft Distanz zum Objekt.
-  - Es beweist aber noch nicht, dass eine Handlung profitabel oder tragfaehig ist.
-- Debug:
-  - `mcm_memory_thinking_protocol.csv` schreibt beide Werte mit.
-
-Naechster sinnvoller Anschluss:
-
-- Noch einen Lauf starten.
-- Pruefen:
-  - bleibt `blind_thinking_load` niedriger?
-  - sinkt die Fehl-Enthemmung?
-  - reduziert sich der LONG-Bias?
-  - bleibt `symbolic_action_regulation` klein?
-  - danach Outcome-Kopplung der Form-Sprache planen:
-    - Form-Familie erkennt Objekt
-    - aber Handlung braucht eigene Tragfaehigkeits-/Outcome-Spur
-
-Naechster sinnvoller Anschluss:
-
-- Neuen Lauf mit Memory starten.
-- Danach `debug/mcm_memory_thinking_protocol.csv` zusammen mit `mcm_field_decision_protocol.csv`, `trade_stats.json` und den Profil-Dateien auswerten.
-- Besonders pruefen:
-  - wie oft `hard_inhibit`, `inhibit`, `support`, `conflict`, `neutral_match` auftreten
-  - ob `context_cluster_negative` hauptsaechlich aus Score, Hit-Ratio oder Mischlage entsteht
-  - ob hohe Denkkomplexitaet spaeter mit besseren oder schlechteren Entscheidungen zusammenhaengt
-  - ob daraus eine energieeffiziente Meta-Regulation abgeleitet werden kann
-
-Auswertung neuer Memory-Lauf mit Denkkomplexitaetsprotokoll:
-
-- Lauf mit bestehendem Memory nach Einbau des neuen Protokolls:
-  - 36 Trades
-  - 9 TP
-  - 27 SL
-  - Equity ca. 94,54
-  - PnL ca. -5,46
-  - Attempts 3100
-  - Submitted 36
-  - Withheld 2988
-  - Observed 32
-- Vergleich zum Memory-Lauf vor der Protokollerweiterung:
-  - vorher 56 Trades, 17 TP, 39 SL, Equity ca. 99,34
-  - jetzt 36 Trades, 9 TP, 27 SL, Equity ca. 94,54
-- MCM-Feldentscheidungen:
-  - `hold`: 2004
-  - `act`: 44
-  - `observe`: 29
-- Hauptgruende:
-  - `context_cluster_negative`: 1270 im Feldprotokoll, 1451 im Memory-Thinking-Protokoll
-  - `fused_score_too_low`: 279
-  - `maturity_block`: 217
-  - `stressed_block`: 135
-  - `pause_mode`: 98
-  - `plan_allowed`: 44
-- Memory-Wirkung:
-  - `hard_inhibit`: 1514
-  - `inhibit`: 444
-  - `neutral_match`: 241
-  - `no_match`: 53
-  - kein messbarer `support`
-  - kein messbarer `conflict`
-- Durchschnittswerte:
-  - `thinking_complexity`: ca. 0,347
-  - `memory_compare_load`: ca. 0,909
-  - `memory_match_count`: ca. 1,82
-  - `memory_support`: ca. 0,000
-  - `memory_inhibition`: ca. 0,083
-  - `cognitive_load`: ca. 0,214
-  - `decision_energy_cost`: ca. 0,421
-- Interpretation:
-  - Memory wirkt fast nur hemmend, nicht tragend.
-  - Die Denkstruktur vergleicht viel, findet aber kaum positive Erfahrung.
-  - `context_cluster_negative` ist zu dominant.
-  - Besonders auffaellig: `low_hit_ratio` hat viele harte Blocks erzeugt, obwohl manche Cluster stark durch Cancel/Timeout statt durch echte SL-Verluste gepraegt sind.
-  - Das passt nicht sauber zur Idee gedämpfter Reward-/Neurochemie und Prozessqualitaet.
-
-Korrektur umgesetzt: Memory-Hemmung prozessqualitativer gemacht:
-
-- `low_hit_ratio` blockiert nicht mehr automatisch hart.
-- Harte Blockade entsteht jetzt nur noch durch:
-  - sehr schlechten Cluster-Score
-  - oder niedrige Trefferquote mit bestaetigtem Verlustdruck:
-    - genug echte SL-Evidenz
-    - hoher Loss-Anteil
-    - negativer Score
-- Cancel/Timeout-lastige Cluster werden eher als Vorsicht/Dämpfung behandelt, nicht als harter Beweis gegen Handlung.
-- Neues Debug im Memory-Protokoll:
-  - `context_cluster_loss_ratio`
-  - `context_cluster_cancel_timeout_ratio`
-  - `context_cluster_negative_evidence`
-- Rueckrechnung auf den letzten Lauf:
-  - von 803 bisherigen `low_hit_ratio`-Hard-Blocks wuerden ca. 155 hart bleiben
-  - ca. 648 wuerden als Vorsicht statt harter Block wirken
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
-
-Naechster sinnvoller Anschluss:
-
-- Erneut mit demselben bestehenden Memory laufen lassen.
-- Erwartung:
-  - weniger `hard_inhibit`
-  - mehr `inhibit` oder `neutral_match`
-  - mehr Trades als 36, aber idealerweise nicht chaotisch viele
-  - bessere Trennung zwischen echter Verlust-Erfahrung und unklarer/abgebrochener Erfahrung
-- Danach pruefen, ob die freigegebenen ehemals `low_hit_ratio`-Faelle profitabler, neutral oder schlechter sind.
-
-Zero-Point-Regulation umgesetzt:
-
-- Fachlicher Satz: MCM, finde wieder zu dir selbst.
-- Ziel:
-  - Denken ohne Orientierung erkennen
-  - Memory-Vergleich ohne Support nicht weiter eskalieren
-  - starres Aushalten/Hold in ruhiges Observe zurueckfuehren
-  - Wahrnehmungsfaehigkeit vor Handlung wiederherstellen
-- Neue Meta-Regulationswerte:
-  - `memory_orientation`
-  - `orientation_gap`
-  - `blind_thinking_load`
-  - `zero_point_regulation`
-  - `zero_point_hint`
-- Das neue Memory-Thinking-Protokoll schreibt diese Werte mit.
-- Mechanik:
-  - Wenn `thinking_complexity`, `memory_compare_load`, `decision_energy_cost` und Last hoch sind,
-  - aber `memory_support` und `memory_orientation` niedrig bleiben,
-  - dann wird nicht weiter hart blockiert,
-  - sondern die MCM geht in `observe` mit Grund `zero_point_regulation`.
-- Wichtig:
-  - Das ist kein Freigeben von Trades.
-  - Es ist eine Rueckfuehrung in Wahrnehmung.
-  - Die MCM soll nicht die Augen schliessen und aushalten, sondern wieder einen neutraleren Wahrnehmungspunkt finden.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
-
-Naechster sinnvoller Anschluss:
-
-- Naechsten Lauf mit bestehendem Memory starten.
-- Danach pruefen:
-  - wie oft `zero_point_regulation` ausloest
-  - ob `hold/context_cluster_negative` in ruhigeres `observe/zero_point_regulation` uebergeht
-  - ob `blind_thinking_load` sinkt oder zumindest sichtbarer wird
-  - ob danach positive Orientierung/Memory-Support separat aufgebaut werden muss
-
-Grundidee maschinelle Wahrnehmung dokumentiert:
-
-- `README.md` wurde um den Abschnitt `Maschinelle Wahrnehmung` ergaenzt.
-- `files/UMSETZUNGSPLAN.md` wurde im Kapitel zur MCM-Grundidee erweitert.
-- Kerngedanke:
-  - Wahrnehmung ist nicht ausschliesslich menschlich.
-  - Wahrnehmung beginnt dort, wo aeussere Reize im Innenzustand eines Systems Bedeutung erzeugen.
-  - Ein Reiz wird erst durch inneres Feld, Memory, Regulation, Tragfaehigkeit, Spannung und Handlungstendenz zur Lage.
-  - Die MCM ist der technische Versuch, ein solches maschinelles Wahrnehmungsfeld zu bauen.
-- Damit ist auch fachlich festgehalten:
-  - Die MCM ist keine reine Signalbewertung.
-  - Sie soll Orientierung, Ueberforderung, Tragfaehigkeit, Unklarheit, Resonanz und Rueckkehr in den Nullpunkt sichtbar machen.
-
-Naechster sinnvoller Anschluss:
-
-- Debug mit bestehendem Memory fortsetzen.
-- Pruefen, ob die neue Zero-Point-Regulation und die prozessqualitativere Memory-Hemmung die MCM tatsaechlich naeher an Wahrnehmung statt blosser Blockade bringt.
-
-Auswertung neuer Debug-Lauf nach Low-Hit-Daempfung:
-
-- Aktueller Lauf in `debug`:
-  - 65 Trades
-  - 16 TP
-  - 49 SL
-  - Equity ca. 91,78
-  - Netto-PnL ca. -8,22
-  - Attempts 2900
-  - Submitted 65
-  - Withheld 2699
-  - Observed 39
-  - Blocked 32
-- Vergleich zum archivierten `debug/lau_1_nach_erweiterung_mit_memory`:
-  - vorher 36 Trades, 9 TP, 27 SL, Netto-PnL ca. -5,46
-  - jetzt 65 Trades, 16 TP, 49 SL, Netto-PnL ca. -8,22
-- Wirkung:
-  - Tradezahl ist deutlich gestiegen.
-  - `context_cluster_negative` ist gesunken.
-  - `hard_inhibit` ist von 1514 auf 1020 gefallen.
-  - `inhibit` ist von 444 auf 1133 gestiegen.
-  - Das zeigt: Die harte Blockade wurde tatsaechlich in weiche Daempfung umgewandelt.
-- Problem:
-  - Die zusaetzlich freigegebenen Trades waren nicht gut genug.
-  - Zone-Trades:
-    - 45 Trades
-    - 16 TP
-    - 29 SL
-    - PnL ca. +3,54
-  - Non-Zone-Trades:
-    - 20 Trades
-    - 0 TP
-    - 20 SL
-    - PnL ca. -11,76
-- Interpretation:
-  - Die prozessqualitative Low-Hit-Daempfung war mechanisch wirksam.
-  - Sie hat aber zu viel Handlung ausserhalb tragfaehiger Strukturzonen zugelassen.
-  - Memory bleibt weiterhin ohne positiven Support:
-    - `memory_support` ca. 0
-    - `memory_conflict` ca. 0
-    - `memory_compare_load` ca. 0,949
-  - Es wird also viel verglichen, aber kaum Orientierung erzeugt.
-- Technischer Hinweis:
-  - Dieser Debug-Lauf enthaelt bereits `context_cluster_loss_ratio`, `context_cluster_cancel_timeout_ratio` und `context_cluster_negative_evidence`.
-  - Er enthaelt aber noch keine `memory_orientation`, `orientation_gap`, `blind_thinking_load` und `zero_point_regulation`-Spalten.
-  - Daher lief dieser Lauf offenbar mit der Low-Hit-Daempfung, aber noch nicht mit der Zero-Point-Regulation bzw. ohne neu geladenen Code.
-
-Naechster sinnvoller Anschluss:
-
-- Bot/Backtest-Prozess neu starten, damit die Zero-Point-Regulation sicher geladen ist.
-- Danach erneut mit bestehendem Memory laufen lassen.
-- Wenn Non-Zone weiterhin so schlecht bleibt, muss die MCM nicht einfach wieder hart blockieren, sondern:
-  - Non-Zone ohne Memory-Support eher `observe`
-  - Zone mit tragfaehiger Struktur darf eher pruefend handeln
-  - Low-Hit-Caution braucht Struktur-/Orientierungsbestaetigung
-
-Auswertung neuer Debug-Lauf mit Zero-Point-Regulation:
-
-- Aktueller Lauf in `debug`:
-  - 51 Trades
-  - 10 TP
-  - 41 SL
-  - Equity ca. 89,42
-  - Netto-PnL ca. -10,58
-  - Attempts 3125
-  - Submitted 51
-  - Withheld 1421
-  - Observed 1579
-  - Blocked 23
-- Vergleich:
-  - `lau_1_nach_erweiterung_mit_memory`: 36 Trades, PnL ca. -5,46
-  - `lau_2_nach_erweiterung_mit_memory`: 65 Trades, PnL ca. -8,22
-  - aktueller Zero-Point-Lauf: 51 Trades, PnL ca. -10,58
-- Zero-Point greift:
-  - Memory-Protokoll: `zero_point_regulation` 1280 mal aktiv
-  - Feldprotokoll: `zero_point_regulation` 1098 mal als Entscheidungsgrund
-  - `observe` steigt stark:
-    - Feldprotokoll: 1107 Observe
-    - Memory-Protokoll: 1266 Observe
-- Interpretation:
-  - Die MCM findet tatsaechlich aus starrer Blockade in Wahrnehmung zurueck.
-  - Das ist mechanisch korrekt fuer `finde wieder zu dir selbst`.
-  - Oekonomisch reicht es noch nicht, weil die verbleibenden Acts weiter zu schwach sind.
-- Non-Zone bleibt toxisch:
-  - 12 Non-Zone-Trades
-  - 0 TP
-  - 12 SL
-  - PnL ca. -7,72
-- Zone ist ebenfalls nicht mehr ausreichend tragend:
-  - 39 Zone-Trades
-  - 10 TP
-  - 29 SL
-  - PnL ca. -2,86
-- Memory bleibt orientierungsschwach:
-  - `memory_support` ca. 0
-  - `memory_conflict` ca. 0
-  - `memory_compare_load` ca. 0,95
-  - `memory_orientation` ca. 0,128
-  - `orientation_gap` ca. 0,428
-  - `blind_thinking_load` ca. 0,483
-
-Fix umgesetzt: Struktur-Orientierung vor Handlung:
-
-- Die MCM prueft jetzt zusaetzlich:
-  - `structure_quality`
-  - `context_confidence`
-  - `structure_orientation`
-  - `structure_orientation_gap`
-  - `structure_orientation_guard`
-- Wenn Struktur, Kontextvertrauen, Memory-Support und Memory-Orientierung fehlen,
-  wird `act` in `observe` umgeleitet.
-- Neuer Entscheidungsgrund:
-  - `structure_orientation_observe`
-- Wichtig:
-  - Das ist keine harte Tradingregel.
-  - Es ist eine MCM-Orientierungsfrage:
-    - Ist die Struktur tragfaehig?
-    - Gibt Memory Support?
-    - Gibt das Feld Orientierung?
-    - Falls nein: zurueck in Wahrnehmung.
-- Das Memory-Thinking-Protokoll schreibt die neuen Struktur-Orientierungswerte mit.
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
-
-Naechster sinnvoller Anschluss:
-
-- Backtest-Prozess neu starten.
-- Naechsten Lauf mit bestehendem Memory starten.
-- Pruefen:
-  - ob Non-Zone-Trades deutlich sinken
-  - ob `structure_orientation_observe` auftaucht
-  - ob PnL-Verlust aus Non-Zone reduziert wird
-  - ob Zone-Trades wieder tragfaehiger werden oder zusaetzlich Ziel-/Planqualitaet geprueft werden muss
-
-Erkenntnis: eigene Sprache als kognitive Kompression:
-
-- Wichtiger Architekturpunkt aus der Reflexion:
-  - Das System soll keine menschlichen Patternlabels uebernehmen.
-  - Es soll eigene interne Zeichen aus seiner eigenen Wahrnehmungswelt bilden.
-  - Diese Zeichen entstehen aus Feldvarianz, Wiederholung, Spannung, Tragfaehigkeit,
-    Memory-Resonanz, Ueberforderung und Erfahrung.
-- Fachlicher Kern:
-  - Sprache ist nicht nur Benennung.
-  - Sprache ist verdichtete Feld-Erfahrung.
-  - Ein internes Zeichen ist ein komprimierter Wahrnehmungszustand.
-- Menschliches Vergleichsbild:
-  - Der Mensch sieht im Alltag nicht dauerhaft alle Details.
-  - Er sieht zuerst eine komprimierte Bedeutung, z.B. Wand.
-  - Erst bei Naehe, Relevanz, Abweichung oder Handlung wird die Wand detaillierter:
-    rau, strukturiert, Riss, Material, Oberflaeche.
-- Uebertragung auf den Bot:
-  - Der Bot soll nicht jeden Marktpunkt tief analysieren.
-  - Erst entsteht eine grobe eigene Form-/Feldbezeichnung.
-  - Nur wenn Relevanz, Abweichung oder Handlungsnaehe entsteht,
-    wird tiefer auf Struktur, Memory, Risiko und Feldklarheit gezoomt.
-- Erwartete Wirkung:
-  - weniger Denk-/Memory-Last
-  - bessere Orientierung
-  - weniger blindes Vergleichen ohne Support
-  - mehr Varianz im Bedeutungsraum
-  - Grundlage fuer emergente Musterfindung und kreative Reorganisation
-- Dokumentiert in:
-  - `README.md`: Abschnitt `Eigene Sprache und kognitive Kompression`
-  - `files/UMSETZUNGSPLAN.md`: Abschnitte `Eigene Sprache als Feldverdichtung` und `Kognitive Kompression`
-
-Naechster sinnvoller Anschluss nach dem aktuellen Debug-Fix:
-
-- Erst neuen Lauf mit `structure_orientation_observe` und `mcm_form_symbol_protocol.csv` pruefen.
-- Danach entscheiden, ob die Form-Zeichen nur diagnostisch bleiben oder als kognitive Entlastung in die Meta-Regulation einwirken.
-
-Umgesetzt: diagnostischer Eigenzeichenraum / eigene Form-Sprache:
-
-- Das Brain bildet jetzt pro Runtime-Tick ein internes Form-Zeichen:
-  - `form_symbol_id`
-  - `form_symbol_seen`
-  - `form_symbol_maturity`
-  - `form_symbol_stability`
-  - `form_symbol_resonance`
-  - `form_symbol_load_reduction`
-  - `form_symbol_zoom_need`
-  - `form_symbol_split_pressure`
-  - `form_symbol_merge_pressure`
-  - `form_symbol_bearing`
-  - `form_symbol_fragility`
-  - `form_symbol_relevance`
-  - `form_symbol_novelty`
-  - `form_symbol_distance`
-- Quelle:
-  - visuelle Marktform
-  - Strukturwahrnehmung
-  - Kontextvertrauen
-  - Feldklarheit
-  - Felddruck
-  - Feldfragmentierung
-- Wichtig:
-  - Das ist bewusst kein menschliches Patternlabel.
-  - Das Zeichen ist eine verdichtete Feld-/Form-Erfahrung des Systems.
-  - Es wirkt aktuell diagnostisch und veraendert noch keine Tradeentscheidung.
-- Neues Debug-Protokoll:
-  - `debug/mcm_form_symbol_protocol.csv`
-- Ziel der naechsten Auswertung:
-  - Welche Zeichen entstehen wiederholt?
-  - Werden sie stabiler oder fragmentierter?
-  - Senkt Resonanz/Load-Reduction spaeter Denk-/Memory-Last?
-  - Zeigt hoher `form_symbol_zoom_need`, wann das System tiefer sehen muss?
-- Syntaxpruefung erfolgreich:
-  - `python -m py_compile .\MCM_Brain_Modell.py .\config.py`
+  - `FIX_LISTE.md`
+
+Pruefung:
+`python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py` laeuft
+fehlerfrei.
+
+Wie es weitergeht:
+Naechster Schritt ist ein neuer Debug-Lauf. Danach lesen wir, welche
+`form_symbol_semantic_packet_state` und `form_symbol_semantic_primary_layer`
+bei guten und schlechten Entscheidungen auftreten. Wenn DIO im Regimewechsel
+wieder kippt, koennen wir sehen, ob er in `learning_layer`,
+`reflective_layer`, `trace_layer` oder faelschlich in `action_near_layer`
+kommt.
+
+---
+
+## Debug Lauf 7: Erste Wirkung der semantischen Forminhalt-Schicht
+
+Ergebnis:
+- Trades: 317
+- TP: 104
+- SL: 213
+- Netto-PnL: ca. +3.10
+- Equity-Peak: ca. 110.29 bei Trade 150
+- Tiefster Stand: ca. 97.87 bei Trade 260
+- Max Drawdown: ca. 12.43
+
+Vergleich zu Lauf 6:
+- Lauf 6: 301 Trades, 88 TP, 213 SL, ca. -17.50 PnL
+- Lauf 7: 317 Trades, 104 TP, 213 SL, ca. +3.10 PnL
+- Drawdown deutlich kleiner: ca. 12.43 statt ca. 23.10
+- Equity-Peak deutlich hoeher: ca. 110.29 statt ca. 102.92
+
+Strukturbaender:
+- High:
+  - 90 Trades
+  - 57 TP / 33 SL
+  - ca. +44.09 PnL
+- Mid:
+  - 105 Trades
+  - 38 TP / 67 SL
+  - ca. +9.26 PnL
+- Low:
+  - 121 Trades
+  - 9 TP / 112 SL
+  - ca. -49.28 PnL
+
+Wichtigster Befund:
+High und Mid tragen in Lauf 7 positiv. Low bleibt fast der gesamte
+Schadensraum. Das bedeutet: Die neue Semantik hat die tragenden Bereiche
+nicht zerstoert, sondern eher stabilisiert. Die schwache Zone bleibt aber
+ein Ort, an dem DIO noch zu oft Kontakt mit Handlung verwechselt.
+
+Semantische Pakete bei Trades:
+- `compound_packet`:
+  - 69 Trades
+  - 27 TP / 42 SL
+  - ca. +7.81 PnL
+- `named_form_packet`:
+  - 248 Trades
+  - 77 TP / 171 SL
+  - ca. -4.72 PnL
+
+Primaere Schicht:
+- `wide_form_layer`:
+  - 69 Trades
+  - 28 TP / 41 SL
+  - ca. +6.14 PnL
+- `structured_form_layer`:
+  - 248 Trades
+  - 76 TP / 172 SL
+  - ca. -3.04 PnL
+
+Neurologische Deutung:
+Mehr Detail ist nicht automatisch bessere Wahrnehmung. In diesem Lauf tragen
+weite, zusammengesetzte Bedeutungen besser als die enger strukturierte
+Formschicht. Das passt zum DIO-Gedanken: Ein Organismus sieht nicht immer
+besser, wenn er naeher herangeht. Manchmal entsteht Tragfaehigkeit durch
+Gestalt, Abstand und Komposition.
+
+TP/SL-Trennung der neuen Semantik:
+Die Einzelwerte trennen TP und SL noch schwach:
+- `form_symbol_semantic_action_nearness`:
+  - TP ca. 0.427
+  - SL ca. 0.418
+- `form_symbol_semantic_coherence`:
+  - TP ca. 0.573
+  - SL ca. 0.574
+- `form_symbol_semantic_density`:
+  - TP ca. 0.637
+  - SL ca. 0.636
+
+Das heisst:
+Die neue Schicht ist technisch aktiv und beschreibt Zustandsverschiebungen,
+aber sie ist noch nicht stark genug mit Ergebnisqualitaet gekoppelt. Das ist
+ok, weil sie zuerst Wahrnehmung sichtbar machen sollte, nicht sofort
+mechanisch handeln.
+
+Neurochemischer Befund:
+- `glutamate_activation` bei Trades:
+  - 133 Trades
+  - 54 TP / 79 SL
+  - ca. +12.11 PnL
+- `serotonin_stability` bei Trades:
+  - 183 Trades
+  - 50 TP / 133 SL
+  - ca. -8.51 PnL
+
+Deutung:
+Aktivierte Verarbeitung war in diesem Lauf tragender als reine Stabilitaet.
+Serotonin-Stabilitaet wirkt hier teilweise wie ein alter Nachhall: ruhig,
+aber nicht zwingend passend zur Aussenwelt. Glutamat-Aktivierung steht eher
+fuer aktive Verarbeitung und Anpassung.
+
+Feldprotokoll:
+- `hold`: 4902
+- `observe`: 4316
+- `act_watch`: 669
+- `act`: 323
+- `replan`: 1
+
+Visual Grounding:
+- `grounded_form`: 9158
+- `shape_without_object`: 785
+- `unbound_resonance`: 264
+- `needs_visual_grounding`: 4
+
+Interpretation:
+DIO sieht fast alles noch als `grounded_form`. Die Unterscheidung zwischen
+"ich sehe eine Form" und "dieses Objekt traegt Handlung" bleibt der naechste
+kritische Punkt.
+
+Wie es weitergeht:
+Naechster sinnvoller Schritt ist keine Regel gegen Low, sondern eine
+semantische Handlungstragfaehigkeit:
+DIO soll staerker unterscheiden koennen zwischen
+- Form ist bekannt
+- Form ist semantisch dicht
+- Form ist zusammengesetzt tragend
+- Form ist objektgebunden
+- Form darf Handlung tragen
+
+Besonders wichtig:
+`structured_form_layer` darf nicht automatisch als besser gelten als
+`wide_form_layer`. DIO braucht eine reifere Distanz zwischen Detailsehen und
+Gestaltsehen.
+
+---
+
+## Umsetzung: Evolutionaere Kontaktreife
+
+Ausgangsgedanke:
+Eine heisse Herdplatte ist nicht "schlecht". Unreifer Kontakt erzeugt
+eine belastende Konsequenz. Reifer Umgang kann Nutzen erzeugen. Uebertragen
+auf DIO bedeutet das:
+Eine Marktform wird nicht verboten. DIO lernt, welche Art von Kontakt mit
+dieser Form schadet, vorsichtig macht, Beobachtung braucht oder spaeter
+konstruktiv nutzbar ist.
+
+Kernbegriff:
+Konsequenzbasiertes Feedback auf das MCM-Feld.
+
+Das kann negativ, positiv oder reorganisierend sein.
+
+Negatives Feedback:
+Meine Handlung hat Belastung erzeugt.
+Mein MCM-Feld bekommt Druck, Vorsicht, belastende Konsequenzspur und
+Reorganisation.
+
+Positives Feedback:
+Meine Handlung hat getragen.
+Mein MCM-Feld bekommt Entlastung, Vertrauen, Nutzen und Stabilisierung.
+
+Reorganisierendes Feedback:
+Das Ergebnis war nicht klar gut, aber es zeigt, dass der Umgang unreif war.
+Mein MCM-Feld bekommt Lernspannung, Reflexion, Abstand und Reframing.
+
+Rueckkopplungskreis:
+Wahrnehmung -> Kontakt -> Handlung -> Konsequenz -> MCM-Feld-Reaktion ->
+Gedaechtnis -> veraenderter zukuenftiger Kontakt.
+
+Biologische Deutung:
+Ein Organismus lernt nicht nur durch Belohnung und Strafe, sondern durch
+Homoeostase-Veraenderung. Etwas bringt ihn aus der Balance, stabilisiert ihn,
+ueberfordert ihn, macht ihn vorsichtiger oder gibt ihm Vertrauen.
+
+Status:
+Umgesetzt als weicher Lernpfad in der Formsprache.
+
+Neue gespeicherte Werte:
+- `form_symbol_contact_maturity`
+- `form_symbol_contact_utility`
+- `form_symbol_contact_pain_memory`
+- `form_symbol_contact_carefulness`
+- `form_symbol_contact_learning_state`
+
+Neue Outcome-Samples:
+- `contact_maturity_sample`
+- `contact_utility_sample`
+- `contact_pain_sample`
+- `contact_carefulness_sample`
+- `contact_learning_state`
+
+Technische Wirkung:
+- Kontaktreife und Nutzen koennen Handlungstragfaehigkeit weich stuetzen.
+- Belastende Konsequenzspur und Vorsicht koennen Beobachtung, Reframing und
+  Caution weich staerken.
+- Die Form bleibt frei. Nicht die Form wird blockiert, sondern der Umgang
+  mit ihr wird differenzierter gelernt.
+
+Neurologische Deutung:
+Das ist evolutionaeres Lernen: Konsequenz erzeugt Erinnerung, Erinnerung
+erzeugt Vorsicht, Vorsicht erzeugt Abstand, Abstand kann spaeter reifen
+Umgang und Nutzen ermoeglichen.
+
+Pruefung:
+`python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py` laeuft
+fehlerfrei.
+
+Wie es weitergeht:
+Naechster Debug-Lauf zeigt, ob DIO bei wiederkehrenden belastenden
+Formkontakten mehr `careful_contact` oder `burdened_contact` aufbaut
+und ob konstruktive Kontakte langsam `constructive_contact` und
+`form_symbol_contact_maturity` staerken.
+
+---
+
+## Debug-Lauf 8
+
+Ordner:
+`debug/debug_lauf_8`
+
+Ergebnis:
+- 323 Trades
+- 102 TP / 221 SL
+- Netto-PnL: ca. -3.45
+- Equity-Ende: ca. 96.55
+- Equity-Peak: ca. 106.30
+- tiefster Punkt: ca. 89.10
+
+Vergleich zu Lauf 7:
+- Lauf 7: ca. +3.10 Netto-PnL
+- Lauf 8: ca. -3.45 Netto-PnL
+- Lauf 8 ist nicht zusammengebrochen, hat aber den vorherigen Vorteil
+  wieder verloren.
+
+Strukturwirkung:
+- `zone`: 211 Trades, 94 TP / 117 SL, ca. +38.23 PnL
+- `non_zone`: 112 Trades, 8 TP / 104 SL, ca. -41.68 PnL
+
+Deutung:
+DIO findet in tragenderen Strukturzonen weiterhin nutzbare Kontakte.
+Der negative Lauf entsteht fast komplett aus nicht tragenden Kontaktzonen.
+Das ist kein Beweis fuer eine schlechte Form, sondern fuer unreifen Umgang
+mit nicht tragendem Kontakt.
+
+Neue Kontaktreife:
+- `form_symbol_contact_learning_state` ist fast komplett noch
+  `unformed_contact`.
+- Im Formsymbol-Protokoll erscheinen nur 2 Zeilen als `maturing_contact`.
+- In den Outcome-Samples ist die Differenz aber bereits sichtbar:
+  - TP hat hoehere `contact_maturity_sample` und `contact_utility_sample`.
+  - SL hat hoehere `contact_pain_sample` und `contact_carefulness_sample`.
+
+Neurologische Deutung:
+Die Konsequenzspur kommt im MCM-Feld an, aber sie ist noch zu leise, um im
+laufenden Run stabil eine gereifte Kontaktform auszubilden. Das entspricht
+einem Nervensystem, das Schmerz, Nutzen und Vorsicht bereits wahrnimmt, aber
+noch keine klare Gewohnheit daraus geformt hat.
+
+Neurochemische Lage:
+- `glutamate_activation`: 103 Trades, ca. +2.75 PnL
+- `serotonin_stability`: 220 Trades, ca. -6.20 PnL
+
+Deutung:
+Aktive Verarbeitung war wieder tragender als reine Stabilitaet. Serotonin
+wirkt hier teilweise wie ruhiger Nachhall, nicht zwingend wie passende
+Realitaetskopplung.
+
+Feldprotokoll:
+- `hold`: 5112
+- `observe`: 4508
+- `act_watch`: 551
+- `act`: 330
+- `replan`: 1
+
+Wichtig:
+Die neue Kontaktlogik wirkt diagnostisch schon korrekt, aber mechanisch noch
+zu schwach. DIO erkennt Konsequenzen, doch die Uebersetzung in gereifte
+Kontaktzustaende ist noch zu selten.
+
+Wie es weitergeht:
+Naechster sinnvoller Umbau ist keine harte Sperre gegen `non_zone`, sondern
+eine staerkere weiche Kontaktreife: belastende Wiederholung soll natuerlicher
+in `careful_contact` / reorganisierenden Abstand kippen, waehrend tragende
+Kontakte `contact_maturity` und `contact_utility` langsam staerken. Danach
+sollte geprueft werden, ob DIO nicht nur impulsnah handelt, sondern
+strukturbezogene Orderbereiche aus dem Rueckblick waehlen kann.
+
+---
+
+## Umsetzung: Kontaktreife nach Lauf 8 verstaerkt
+
+Ziel:
+Die Konsequenzspur soll im MCM-Feld lauter werden, ohne daraus eine harte
+Regel zu machen. DIO soll nicht lernen: "diese Zone ist verboten", sondern:
+"mein bisheriger Kontakt mit dieser Form hat Belastung oder Nutzen erzeugt".
+
+Neue/verstaerkte Spuren:
+- `form_symbol_contact_burden_evidence`
+- `form_symbol_contact_utility_evidence`
+
+Mechanische Aenderung:
+- Kontaktzustand entsteht nicht mehr nur aus dem letzten Outcome-Sample.
+- Gespeicherte Belastungs-Evidenz und Nutzen-Evidenz wirken mit.
+- Belastende Wiederholung kann natuerlicher in `burdened_contact`,
+  `careful_contact` oder `learning_contact` kippen.
+- Tragende Wiederholung kann natuerlicher in `maturing_contact` oder
+  `constructive_contact` wachsen.
+
+Regulatorische Wirkung:
+- Belastungs-Evidenz erhoeht weich Beobachtung und Reframing.
+- Belastungs-Evidenz senkt impulsnahe Handlungstragfaehigkeit weich.
+- Nutzen-Evidenz kann Handlungstragfaehigkeit weich stuetzen, wenn Reife und
+  Kontext mittragen.
+
+Wichtig:
+Das ist keine Sperre und keine mechanische Strukturregel. Es ist eine
+staerkere innere Konsequenzspur.
+
+Pruefung:
+`python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py` laeuft
+fehlerfrei.
+
+Wie es weitergeht:
+Naechster Debug-Lauf sollte zeigen, ob `unformed_contact` weniger dominiert
+und ob DIO bei wiederholter Belastung mehr Beobachtung/Reframing statt
+impulsnaher Handlung waehlt. Danach ist der naechste groessere Schritt die
+strukturbezogene Orderbereich-Wahl aus Rueckblick und Wahrnehmungsfenster.
+
+---
+
+## Debug-Lauf 9 nach verstaerkter Kontaktreife
+
+Ordner:
+`debug/debug_lauf_9`
+
+Ergebnis:
+- 350 Trades
+- 126 TP / 224 SL
+- Netto-PnL: ca. +23.52
+- Equity-Ende: ca. 123.52
+- Equity-Peak: ca. 124.44
+- tiefster Punkt: ca. 93.47
+
+Vergleich zu Lauf 8:
+- Lauf 8: ca. -3.45 Netto-PnL
+- Lauf 9: ca. +23.52 Netto-PnL
+- Die Veraenderung ist deutlich, aber noch kein Beweis fuer stabile
+  Intelligenz. Es ist ein starkes Zeichen, dass die neue Kontaktspur
+  mechanisch greift.
+
+Strukturwirkung:
+- `zone`: 230 Trades, 112 TP / 118 SL, ca. +56.90 PnL
+- `non_zone`: 120 Trades, 14 TP / 106 SL, ca. -33.38 PnL
+
+Deutung:
+DIO gewinnt weiter in tragenderen Strukturzonen. Nicht tragende Bereiche
+bleiben belastend, aber der Schaden ist gegenueber Lauf 8 kleiner
+(-33.38 statt -41.68), obwohl mehr Trades gelaufen sind.
+
+Kontaktreife im Formsymbol-Protokoll:
+- `unformed_contact`: 6772
+- `learning_contact`: 3709
+- `constructive_contact`: 453
+- `burdened_contact`: 441
+- `careful_contact`: 106
+- `maturing_contact`: 48
+
+Wichtig:
+In Lauf 8 war die Kontaktlage fast komplett `unformed_contact`. In Lauf 9
+bildet DIO sichtbar unterschiedliche Kontaktlagen. Die neue Belastungs- und
+Nutzen-Evidenz ist damit real im System angekommen.
+
+Trade-Kontext:
+- `learning_contact`: 121 Trades, ca. +11.62 PnL
+- `maturing_contact`: 9 Trades, ca. +4.12 PnL
+- `burdened_contact`: 19 Trades, ca. -1.52 PnL
+- `careful_contact`: 4 Trades, ca. -1.61 PnL
+- `constructive_contact`: 24 Trades, ca. -2.33 PnL
+- `unformed_contact`: 173 Trades, ca. +13.24 PnL
+
+Interpretation:
+Die gespeicherte Kontaktlage ist noch nicht perfekt als Handelsfilter lesbar.
+`constructive_contact` ist noch nicht automatisch tragend. Das ist fachlich
+ok, weil Kontaktreife keine harte Strategie ist. Es zeigt aber, dass DIO
+eine zweite Reifeschicht braucht: "Kontakt wirkt konstruktiv" muss spaeter
+noch mit Struktur, Rueckblick und Orderbereich zusammenpassen.
+
+Outcome-Samples:
+- TP hat deutlich hoehere `contact_maturity_sample` und
+  `contact_utility_sample`.
+- SL hat deutlich hoehere `contact_pain_sample` und
+  `contact_carefulness_sample`.
+
+Das bestaetigt:
+Die unmittelbare Konsequenzbewertung trennt gut zwischen tragendem und
+belastendem Ergebnis. Die gespeicherte Kontaktlage beginnt diese Information
+zu halten, ist aber noch in Entwicklung.
+
+Neurochemische Lage:
+- `glutamate_activation`: 110 Trades, ca. +12.02 PnL
+- `serotonin_stability`: 239 Trades, ca. +11.99 PnL
+
+Deutung:
+Anders als in Lauf 8 war Serotonin-Stabilitaet diesmal nicht nur Nachhall,
+sondern konnte gemeinsam mit aktiver Verarbeitung profitabel bleiben. Das
+wirkt wie mehr innere Tragfaehigkeit nach dem Umbau.
+
+Equity-Verlauf:
+- erstes Viertel: ca. -1.02
+- zweites Viertel: ca. -0.64
+- drittes Viertel: ca. +18.27
+- letztes Viertel: ca. +6.90
+
+Deutung:
+DIO hat am Anfang noch gesucht und spaeter deutlich besser getragen. Der
+starke Gewinn entstand nicht am Anfang, sondern nach einer Anpassungsphase.
+
+Feldprotokoll:
+- `hold`: 4692
+- `observe`: 4388
+- `act_watch`: 717
+- `act`: 357
+- `replan`: 2
+
+Wie es weitergeht:
+Der naechste Schritt ist nicht, `constructive_contact` direkt handeln zu
+lassen. Stattdessen muss DIO lernen, Kontaktreife mit Rueckblick und
+strukturbezogener Orderbereich-Wahl zu verbinden:
+"Dieser Kontakt fuehlt sich tragend an, aber wo im sichtbaren Fenster waere
+ein sinnvoller Kontaktpunkt?"
+
+---
+
+## Umsetzung: strategischer Kontakt-Entry
+
+Ziel:
+DIO soll nicht nur am aktuellen Impuls handeln. Wenn Rueckblick,
+Kontaktreife, Replay-Fit und Bereichswahrnehmung zusammenpassen, darf der
+Entry weich in Richtung eines tragenderen Kontaktbereichs im sichtbaren
+Fenster wandern.
+
+Wichtig:
+Das ist keine harte Strategie und kein menschliches Pattern. Der alte
+impulsnahe Entry bleibt erhalten. Der strategische Bereich mischt sich nur
+weich dazu, wenn die innere und aeussere Lage ausreichend zusammenpassen.
+
+Neue Trade-Plan-Werte:
+- `entry_mode`
+- `impulse_entry_price`
+- `strategic_entry_price`
+- `strategic_entry_weight`
+- `strategic_entry_fit`
+- `strategic_area_focus_id`
+- `strategic_area_price_low`
+- `strategic_area_price_high`
+
+Mechanik:
+- `impulse_entry_price` bleibt der direkte Koerperreflex aus Fokus,
+  Drift und Optic Flow.
+- `strategic_entry_price` entsteht aus dem aktuell fokussierten Bereich des
+  strategischen Fensters.
+- `strategic_entry_weight` beschreibt, wie stark der Rueckblick den Entry
+  beeinflusst.
+- Belastungs-Evidenz und Vorsicht senken die Verschiebung weich.
+- Nutzen-Evidenz, Kontaktreife, Replay-Fit, Bereichstragfaehigkeit und
+  Geduld koennen die Verschiebung weich erhoehen.
+
+Neurologische Deutung:
+DIO bekommt damit eine erste Form von "ich renne nicht nur in den Reiz,
+sondern pruefe, wo der Kontakt im Raum tragender waere". Das ist naeher an
+ruhigem strategischem Denken als an reinem Momentum-Reflex.
+
+Pruefung:
+`python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py` laeuft
+fehlerfrei.
+
+Wie es weitergeht:
+Naechster Debug-Lauf sollte zeigen, wie oft `entry_mode` bei
+`area_contact_blend` oder `area_contact_entry` liegt und ob diese Trades
+weniger nervliche Last oder bessere Trefferqualitaet haben als reine
+`impulse_contact`-Entries.
+
+---
+
+## Debug-Lauf 10 nach strategischem Kontakt-Entry
+
+Ordner:
+`debug/debug_lauf_10`
+
+Ergebnis:
+- 381 Trades
+- 138 TP / 243 SL
+- Netto-PnL: ca. -2.46
+- Equity-Ende: ca. 97.54
+- Equity-Peak: ca. 102.78
+- tiefster Punkt: ca. 85.62
+- 26 Timeouts
+
+Vergleich zu Lauf 9:
+- Lauf 9: ca. +23.52 Netto-PnL
+- Lauf 10: ca. -2.46 Netto-PnL
+
+Wichtiger technischer Befund:
+Der neue strategische Entry wurde faktisch noch nicht genutzt.
+Alle 381 Trades hatten:
+- `entry_mode`: `impulse_contact`
+- `strategic_entry_weight`: 0.0
+
+Das bedeutet:
+Das strategische Wahrnehmungsfenster war aktiv, aber der eigentliche
+Orderpunkt blieb noch am Momentimpuls.
+
+Strategisches Fenster:
+- `bearing_area_hypothesis`: 6676 Zeilen
+- `area_observation`: 2324 Zeilen
+- `compressed_area_attention`: 1862 Zeilen
+- durchschnittliche `area_bearing_quality`: ca. 0.491
+- durchschnittliche `area_replay_fit`: ca. 0.390
+- durchschnittliche `area_patience_quality`: ca. 0.479
+- durchschnittliche `area_order_intention`: ca. 0.242
+
+Deutung:
+DIO sah Bereiche im Rueckblick, aber die Kopplung zur Hand war zu eng.
+Neurologisch: Auge und inneres Feld haben einen Bereich gespiegelt, aber die
+motorische Ausfuehrung blieb im Reflexbogen.
+
+Strukturwirkung:
+- `zone`: 249 Trades, ca. +52.28 PnL
+- `non_zone`: 132 Trades, ca. -54.74 PnL
+
+Kontaktreife:
+- `constructive_contact`: 39 Trades, ca. +13.12 PnL
+- `maturing_contact`: 22 Trades, ca. +6.86 PnL
+- `burdened_contact`: 34 Trades, ca. +0.64 PnL
+- `careful_contact`: 18 Trades, ca. +0.38 PnL
+- `learning_contact`: 187 Trades, ca. -0.75 PnL
+- `unformed_contact`: 81 Trades, ca. -22.72 PnL
+
+Deutung:
+Die gespeicherte Kontaktreife ist weiter deutlich besser als in Lauf 8.
+Besonders `unformed_contact` ist schwach. Das spricht dafuer, dass DIO
+tatsaechlich aus gereifterem Kontakt profitiert, aber der Entry noch nicht
+aus dem strategischen Bereich handeln konnte.
+
+Umsetzung nach Befund:
+Die Kopplung wurde nachjustiert:
+- Bereich darf mitsprechen, wenn der Preis im Bereich liegt.
+- Bereich darf mitsprechen, wenn er nah genug und passend zur Seite ist.
+- Eintrittsschwelle fuer `strategic_entry_fit` wurde weicher gesetzt.
+- Gewicht bleibt begrenzt, damit der Momentimpuls nicht hart ersetzt wird.
+
+Pruefung:
+`python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py` laeuft
+fehlerfrei.
+
+Wie es weitergeht:
+Naechster Lauf sollte endlich zeigen, ob `area_contact_blend` entsteht. Wenn
+ja, vergleichen wir diese Trades gegen `impulse_contact`: PnL, Winrate,
+Timeouts, Strukturzone, Kontaktreife und nervliche Last.
+
+---
+
+## Debug-Lauf 11 nach gelockerter Bereichskopplung
+
+Ordner:
+`debug/debug_lauf_11`
+
+Ergebnis:
+- 400 Trades
+- 147 TP / 253 SL
+- Netto-PnL: ca. +8.46
+- Equity-Ende und Peak: ca. 108.46
+- tiefster Punkt: ca. 87.44
+- 31 Timeouts
+
+Verhaltensbefund:
+DIO handelt sichtbar anders als frueher:
+- mehr `act_watch`
+- mehr Reorganisation/Replan im Gesamtverhalten
+- mehr beobachtende und suchende Phasen
+- spaeterer Recovery-Abschnitt statt fruehem Durchmarsch
+
+Equity-Abschnitte:
+- Trades 1-100: ca. +0.15
+- Trades 101-200: ca. -8.46
+- Trades 201-300: ca. +14.19
+- Trades 301-400: ca. +2.58
+
+Deutung:
+DIO faellt im zweiten Abschnitt deutlich in eine Belastungsphase, findet
+danach aber wieder in tragendere Handlung. Das wirkt wie Orientieren,
+Sammeln, Erleben und spaetere Stabilisierung, nicht wie ein linearer
+Regelbot.
+
+Wichtiger technischer Befund:
+Auch Lauf 11 nutzt noch keinen echten Bereichs-Entry:
+- alle 400 Trades: `entry_mode = impulse_contact`
+- `strategic_entry_weight = 0.0`
+
+Das heisst:
+Die Verhaltensaenderung kommt noch nicht aus `area_contact_blend`, sondern
+aus Kontaktreife, Act-Watch, Reorganisation und neurochemischer Regulation.
+
+Strategisches Fenster:
+- `bearing_area_hypothesis`: 6749
+- `area_observation`: 2257
+- `compressed_area_attention`: 1747
+- `area_bearing_quality`: ca. 0.491
+- `area_replay_fit`: ca. 0.391
+- `area_patience_quality`: ca. 0.481
+
+Ursache fuer fehlenden Bereichs-Entry:
+DIO sah Bereiche, aber die Motorik nahm nur den global staerksten Bereich.
+Dieser Bereich lag haeufig nicht auf der passenden Entry-Seite. Fuer LONG
+braucht DIO eher einen tragenden Bereich unter/nahe dem aktuellen Preis,
+fuer SHORT eher ober/nahe dem Preis. Die Wahrnehmung war also da, aber die
+motorische Auswahl war noch nicht seitensensitiv.
+
+Kontaktreife bei Trades:
+- `constructive_contact`: ca. +11.86 PnL
+- `maturing_contact`: ca. +7.55 PnL
+- `learning_contact`: ca. +4.14 PnL
+- `burdened_contact`: ca. -4.26 PnL
+- `unformed_contact`: ca. -4.35 PnL
+- `careful_contact`: ca. -6.48 PnL
+
+Deutung:
+Gereiftere Kontaktlagen tragen weiterhin besser. Das Problem liegt nicht
+primar in der Kontaktreife, sondern in der fehlenden Uebersetzung vom
+sichtbaren Bereich zur Entry-Motorik.
+
+Umsetzung nach Befund:
+Die strategische Entry-Auswahl wurde seitensensitiv gemacht:
+- LONG sucht unter/nahe dem aktuellen Preis nach tragendem Bereichskontakt.
+- SHORT sucht ober/nahe dem aktuellen Preis nach tragendem Bereichskontakt.
+- Wenn der Preis bereits im Bereich liegt, darf der Bereich ebenfalls
+  mitsprechen.
+- Nicht mehr nur der global staerkste Bereich bestimmt die Motorik.
+
+Pruefung:
+`python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py` laeuft
+fehlerfrei.
+
+Wie es weitergeht:
+Naechster Lauf muss zeigen, ob jetzt erstmals `area_contact_blend` oder
+`area_contact_entry` entsteht. Wenn ja, pruefen wir, ob diese Entries
+tatsaechlich weniger impulsiv, weniger timeout-anfaellig und tragender sind.
+
+---
+
+## Umsetzung: Zeitfeld fuer strategische Bereiche
+
+Ausgangsgedanke:
+Ein Bereich ist in DIOs Welt nicht nur ein Preisraum, sondern ein Ereignis
+im Zeitfeld. Ein alter Bereich kann wichtig sein, aber nur noch Nachhall,
+Erinnerung oder Lernmaterial sein. Er darf die Motorik nicht automatisch
+ziehen.
+
+Ziel:
+DIO soll unterscheiden koennen:
+- gehoert dieser Bereich noch zur Gegenwart?
+- ist er nur ein alter Nachhall?
+- wirkt er wieder in die Gegenwart hinein?
+- ist er handlungsnah genug fuer einen Entry?
+
+Neue Bereichsachsen:
+- `area_temporal_distance`
+- `area_temporal_relevance`
+- `area_recency`
+- `area_decay`
+- `area_afterimage`
+- `area_present_contact`
+- `area_action_timing_fit`
+
+Mechanische Wirkung:
+- alte Bereiche bekommen mehr `area_decay` und `area_afterimage`.
+- aktuelle oder wieder gegenwaertig resonante Bereiche bekommen mehr
+  `area_present_contact` und `area_action_timing_fit`.
+- `area_order_intention` und die strategische Entry-Auswahl beruecksichtigen
+  jetzt Zeitnaehe und Nachhall.
+- Ein Bereich kann damit sichtbar, aber nicht handlungsnah sein.
+
+Organische Deutung:
+DIO fragt nicht nur: "Wo ist ein starker Bereich?", sondern:
+"Gehoert dieser Bereich jetzt noch zu meiner Handlung, oder ist er nur ein
+inneres Echo?"
+
+Pruefung:
+`python -m py_compile MCM_Brain_Modell.py trade_stats.py bot.py` laeuft
+fehlerfrei.
+
+Wie es weitergeht:
+Naechster Lauf zeigt, ob die Bereichsmotorik jetzt nicht nur raeumlich,
+sondern auch zeitlich passender wird. Wichtig sind `entry_mode`,
+`strategic_entry_weight`, `area_action_timing_fit`, `area_present_contact`
+und `area_afterimage`.
+
+---
+
+## Theorie/Dokumentation: Zeit in Sicht der MCM
+
+Kernsatz:
+Zeit ist in Sicht der MCM nicht nur Uhrzeit, sondern eine Manifestation
+gewirkter oder wirkender Energie.
+
+Deutung:
+Zeit beschreibt, wie Energie im Wahrnehmungsfeld entsteht, wirkt, nachhallt,
+abklingt, wiederkehrt oder sich in Erwartung verwandelt.
+
+Schichten:
+- Gegenwart: Energie erzeugt aktuellen Kontakt.
+- Nachhall: vergangene Energie wirkt noch im Feld.
+- Erinnerung: vergangene Energie kann wieder aktiviert werden.
+- Gelerntes Wissen: verdichtete vergangene Erfahrung.
+- Replay: erneut durchlaufene Erfahrung.
+- Hypothese: moegliche kuenftige Energieform.
+- Erwartung: vorausgerichtete innere Spannung.
+
+Warum wichtig:
+Ohne zeitliche Quellenbindung werden Aussenwelt, Memory, Nachhall, Wissen,
+Hypothese und Erwartung zu einem Brei. DIO braucht die Faehigkeit zu
+erkennen, welche Art von Gegenwart eine Information hat.
+
+Dokumentiert in:
+- `README.md`
+- `files/UMSETZUNGSPLAN.md`
+- `files/WICHTIG_MECHANIKEN.md`
+
+Fix aufgenommen:
+`Mehrdimensionale Wahrnehmungsachsen diagnostisch bauen`.
+
+Erweiterter Gedanke:
+Ein Gedanke kann als gerichteter Energieverlauf im MCM-Feld verstanden
+werden. Ein langer Gedanke ist damit nicht einfach mehr Uhrzeit, sondern
+gedehnte, sparsame oder kohaerent gerichtete Energie ueber mehrere innere
+Zustaende.
+
+Das Zeitfeld ist keine starre Decke, sondern entsteht aus vielen einzelnen
+Zeitstraengen:
+- Reizverlauf
+- Gedankenverlauf
+- Erinnerungsverlauf
+- Nachhallverlauf
+- Erwartungsverlauf
+- Handlung
+- Konsequenz
+
+Die Ueberlagerung dieser Wirkverlaeufe gibt der inneren und aeusseren
+Wahrnehmung Tiefe.
+
+Fix aufgenommen:
+`Gedanken-Energieform diagnostisch vorbereiten`.
+
+Wie es weitergeht:
+Nach dem naechsten Lauf kann die Zeitfeldwirkung geprueft werden. Danach ist
+der saubere Umbau: DIO bekommt eine diagnostische Quellenbindung, die
+aktuelle Aussenwelt, Nachhall, Erinnerung, gelerntes Wissen, Replay,
+Hypothese und Erwartung unterscheidet.
+
+---
+
+## Theorie/Dokumentation: MCM-Abhandlungen D bis G.1 zusammengefuehrt
+
+Die MCM-Abhandlungen D bis G.1 wurden als Theoriebruecke fuer DIO
+zusammengefasst und in die Projektdokumentation uebernommen.
+
+Genutzte Theorieanteile:
+- Block D: Zeit als energetische Wirkspur.
+- Block E: Verdichtung, Clusterbildung, Rueckfuehrung und Memory-Inseln.
+- Block F: Bewusstsein als moeglicher Attraktor, fuer DIO als Selbstmodell
+  und innere Attraktorbildung ohne Bewusstseinsbehauptung.
+- Block G: Multiversen-Matrix als mehrere moegliche Entwicklungsverlaeufe.
+- Block G.1: Reorganisation verdichteter Energie in einen uebergeordneten
+  Feldbereich.
+
+DIO-Deutung:
+Aus diesen Bloecken entsteht kein hartes Regelwerk. Sie bilden einen
+Ordnungsrahmen fuer:
+- zeitliche Quellenbindung
+- Memory als verdichtete Erfahrung
+- Hypothesenraum statt starrem Zukunftsglauben
+- innere Attraktor-/Selbstmodellbildung
+- Ueberlast als moeglicher Reorganisationsmoment
+
+Mechanischer Zielkreis:
+`Wahrnehmung -> Zeitbindung -> Verdichtung -> Hypothesenraum -> Konsequenz -> Reorganisation -> neue Tragfaehigkeit`
+
+Dokumentiert in:
+- `README.md`
+- `files/UMSETZUNGSPLAN.md`
+- `files/WICHTIG_MECHANIKEN.md`
+- `files/MCM_VARIABLEN_MECHANIK.md`
+
+Neue Ziel-/Diagnoseachsen dokumentiert:
+- `hypothesis_branch_state`
+- `branch_stability`
+- `branch_attractor_pull`
+- `hypothesis_reality_gap`
+- `field_reorganization_state`
+- `reorganization_threshold`
+- `higher_order_coupling`
+
+Wie es weitergeht:
+Der naechste sinnvolle Umbau bleibt die diagnostische Quellenbindung:
+DIO muss unterscheiden, ob eine innere Lage aktuelle Welt, Erinnerung,
+Nachhall, Wissen, Replay, Hypothese oder Erwartung ist. Danach kann der
+Hypothesenraum aus Block G und die Reorganisationsschwelle aus Block G.1
+technisch vorbereitet werden.
+
+Ergaenzung:
+Der passendere Leitbegriff ist jetzt `mehrdimensionale Wahrnehmungsachsen`.
+Reality-Tagging bleibt darin nur ein Teil. DIO soll Wahrnehmungen ueber
+mehrere Achsen verorten:
+- Zeitachse
+- Quellenachse
+- Raumachse
+- Kontaktachse
+- Tragfaehigkeitsachse
+- Reorganisationsachse
+
+Dadurch wird aus einem einfachen Etikettieren ein inneres Koordinatensystem.
+DIO kann spaeter unterscheiden, ob eine Wirkung aktuelle Aussenwelt,
+Erinnerung, Nachhall, Wissen, Replay, Hypothese oder Erwartung ist und wo
+sie im inneren Feld liegt: Vordergrund, Hintergrund, Feldzentrum, Rand,
+Memory-Raum oder Hypothesenraum.
+
+Dokumentiert in:
+- `README.md`
+- `files/UMSETZUNGSPLAN.md`
+- `files/WICHTIG_MECHANIKEN.md`
+- `files/MCM_VARIABLEN_MECHANIK.md`
+- `files/FIX_LISTE.md`

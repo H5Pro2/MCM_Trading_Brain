@@ -1,4 +1,5 @@
 import math
+import hashlib
 
 
 # --------------------------------------------------
@@ -34,6 +35,136 @@ def _candle_coherence(candle: dict) -> float:
     close_price = float((candle or {}).get("close", open_price) or open_price)
     span = _candle_span(candle)
     return _clip((close_price - open_price) / span, -1.0, 1.0)
+
+
+# --------------------------------------------------
+def _empty_visual_market_state() -> dict:
+    return {
+        "spatial_bias": 0.0,
+        "directional_bias": 0.0,
+        "range_position": 0.0,
+        "range_width": 0.0,
+        "short_impulse": 0.0,
+        "mid_impulse": 0.0,
+        "compression": 0.0,
+        "expansion": 0.0,
+        "body_pressure": 0.0,
+        "wick_pressure": 0.0,
+        "volume_bias": 0.0,
+        "market_balance": 0.0,
+        "breakout_tension": 0.0,
+        "visual_coherence": 0.0,
+        "visual_form_state": {},
+        "visual_clarity": 0.0,
+        "visual_object_stability": 0.0,
+        "visual_form_novelty": 0.0,
+        "visual_blindness": 0.0,
+        "visual_form_pressure": 0.0,
+        "visual_shape_resonance": 0.0,
+        "visual_shape_fragility": 0.0,
+        "sensory_reality_pressure": 0.0,
+        "sensory_load": 0.0,
+        "sensory_redundancy": 0.0,
+        "sensory_habituation": 0.0,
+        "sensory_gate": 1.0,
+        "sensory_active_axis_count": 0,
+        "sensory_primary_pressure": 0.0,
+        "sensory_reality_label": "quiet_outer_reality",
+    }
+
+
+# --------------------------------------------------
+def _quantize_visual_axis(value: float, step: float = 0.25, low: float = -1.0, high: float = 1.0) -> int:
+    clipped = _clip(float(value or 0.0), low, high)
+    return int(round(clipped / max(float(step), 1e-9)))
+
+
+# --------------------------------------------------
+def _build_visual_form_id(*values) -> str:
+    raw = "|".join(str(item) for item in values)
+    return "vf_" + hashlib.sha1(raw.encode("utf-8")).hexdigest()[:10]
+
+
+# --------------------------------------------------
+def _build_sensory_reality_state(
+    expansion: float,
+    body_pressure: float,
+    wick_pressure: float,
+    volume_bias: float,
+    range_position: float,
+    short_impulse: float,
+    mid_impulse: float,
+    breakout_tension: float,
+    edge_strength: float,
+    fracture: float,
+    visual_form_novelty: float,
+) -> dict:
+    """Verdichtet verwandte Aussenreize zu einer gemeinsamen Realitaetslage."""
+
+    raw_values = [
+        max(0.0, float(expansion or 0.0)),
+        max(0.0, float(body_pressure or 0.0)),
+        abs(float(volume_bias or 0.0)),
+        abs(float(range_position or 0.0)),
+        max(0.0, float(breakout_tension or 0.0)),
+        max(0.0, float(edge_strength or 0.0)),
+        max(0.0, float(fracture or 0.0)),
+        max(0.0, float(visual_form_novelty or 0.0)),
+    ]
+    active_values = [value for value in raw_values if value >= 0.38]
+    active_count = len(active_values)
+    active_mean = sum(active_values) / max(1, active_count)
+    primary_pressure = max(raw_values) if raw_values else 0.0
+
+    sensory_redundancy = _clip(
+        (max(0, active_count - 1) / 6.0) * active_mean,
+        0.0,
+        1.0,
+    )
+    sensory_gate = _clip(1.0 - (sensory_redundancy * 0.34), 0.58, 1.0)
+    sensory_load = _clip(
+        (primary_pressure * 0.50)
+        + (active_mean * 0.22)
+        + (abs(float(short_impulse or 0.0) - float(mid_impulse or 0.0)) * 0.10)
+        + (max(0.0, float(wick_pressure or 0.0) - 0.50) * 0.08)
+        - (sensory_redundancy * 0.14),
+        0.0,
+        1.0,
+    )
+    sensory_habituation = _clip(
+        (sensory_redundancy * 0.56)
+        + (active_mean * 0.18)
+        + (max(0.0, primary_pressure - sensory_load) * 0.18),
+        0.0,
+        1.0,
+    )
+    sensory_reality_pressure = _clip(
+        (primary_pressure * 0.62)
+        + (sensory_load * 0.30)
+        - (sensory_redundancy * 0.18),
+        0.0,
+        1.0,
+    )
+
+    if sensory_redundancy >= 0.42:
+        label = "redundant_outer_reality"
+    elif sensory_reality_pressure >= 0.58:
+        label = "intense_outer_reality"
+    elif sensory_load <= 0.24:
+        label = "quiet_outer_reality"
+    else:
+        label = "clear_outer_reality"
+
+    return {
+        "sensory_reality_pressure": float(sensory_reality_pressure),
+        "sensory_load": float(sensory_load),
+        "sensory_redundancy": float(sensory_redundancy),
+        "sensory_habituation": float(sensory_habituation),
+        "sensory_gate": float(sensory_gate),
+        "sensory_active_axis_count": int(active_count),
+        "sensory_primary_pressure": float(primary_pressure),
+        "sensory_reality_label": str(label),
+    }
 
 
 # --------------------------------------------------
@@ -191,41 +322,11 @@ def build_tension_state_from_window(window: list[dict]) -> dict:
 def build_visual_market_state(window: list[dict]) -> dict:
 
     if not window:
-        return {
-            "spatial_bias": 0.0,
-            "directional_bias": 0.0,
-            "range_position": 0.0,
-            "range_width": 0.0,
-            "short_impulse": 0.0,
-            "mid_impulse": 0.0,
-            "compression": 0.0,
-            "expansion": 0.0,
-            "body_pressure": 0.0,
-            "wick_pressure": 0.0,
-            "volume_bias": 0.0,
-            "market_balance": 0.0,
-            "breakout_tension": 0.0,
-            "visual_coherence": 0.0,
-        }
+        return _empty_visual_market_state()
 
     candles = [dict(c or {}) for c in list(window or []) if isinstance(c, dict)]
     if not candles:
-        return {
-            "spatial_bias": 0.0,
-            "directional_bias": 0.0,
-            "range_position": 0.0,
-            "range_width": 0.0,
-            "short_impulse": 0.0,
-            "mid_impulse": 0.0,
-            "compression": 0.0,
-            "expansion": 0.0,
-            "body_pressure": 0.0,
-            "wick_pressure": 0.0,
-            "volume_bias": 0.0,
-            "market_balance": 0.0,
-            "breakout_tension": 0.0,
-            "visual_coherence": 0.0,
-        }
+        return _empty_visual_market_state()
 
     tail_short = candles[-8:]
     tail_mid = candles[-21:]
@@ -306,6 +407,215 @@ def build_visual_market_state(window: list[dict]) -> dict:
         1.0,
     )
 
+    closes = [float((candle or {}).get("close", last_close) or last_close) for candle in tail_mid]
+    highs = [float((candle or {}).get("high", last_close) or last_close) for candle in tail_mid]
+    lows = [float((candle or {}).get("low", last_close) or last_close) for candle in tail_mid]
+    bodies = [
+        abs(float((candle or {}).get("close", 0.0) or 0.0) - float((candle or {}).get("open", 0.0) or 0.0))
+        for candle in tail_mid
+    ]
+    spans = [max(float(highs[index] - lows[index]), 1e-9) for index in range(len(tail_mid))]
+    deltas = [closes[index] - closes[index - 1] for index in range(1, len(closes))]
+    abs_delta_sum = sum(abs(value) for value in deltas)
+    signed_delta_sum = sum(deltas)
+    direction_consistency = _clip(abs(signed_delta_sum) / max(abs_delta_sum, 1e-9), 0.0, 1.0)
+
+    second_deltas = [deltas[index] - deltas[index - 1] for index in range(1, len(deltas))]
+    curvature_raw = (
+        sum(abs(value) for value in second_deltas)
+        / max(1, len(second_deltas))
+        / max(mid_span_mean, last_close * 0.0012, 1e-9)
+    )
+    curvature = _clip(curvature_raw / 1.8, 0.0, 1.0)
+
+    direction_flips = 0
+    for index in range(1, len(deltas)):
+        if (deltas[index] > 0 and deltas[index - 1] < 0) or (deltas[index] < 0 and deltas[index - 1] > 0):
+            direction_flips += 1
+    flip_pressure = _clip(direction_flips / max(1.0, float(len(deltas) - 1)), 0.0, 1.0)
+
+    span_ratios = [span / max(mid_span_mean, 1e-9) for span in spans]
+    range_rhythm = _clip(
+        1.0 - (sum(abs(value - 1.0) for value in span_ratios) / max(1, len(span_ratios))),
+        0.0,
+        1.0,
+    )
+    body_mean = sum(bodies) / max(1, len(bodies))
+    body_to_range = _clip(body_mean / max(mid_span_mean, 1e-9), 0.0, 1.0)
+
+    edge_strength = _clip(
+        (abs(range_position) * 0.22)
+        + (abs(short_impulse - mid_impulse) * 0.22)
+        + (breakout_tension * 0.26)
+        + (expansion * 0.18)
+        + (abs(volume_bias) * 0.12),
+        0.0,
+        1.0,
+    )
+    form_density = _clip(
+        (body_to_range * 0.30)
+        + (direction_consistency * 0.24)
+        + (visual_coherence * 0.22)
+        + ((1.0 - wick_pressure) * 0.14)
+        + ((1.0 - compression) * 0.10),
+        0.0,
+        1.0,
+    )
+    fracture = _clip(
+        (flip_pressure * 0.30)
+        + (curvature * 0.24)
+        + (wick_pressure * 0.18)
+        + (expansion * 0.14)
+        + (max(0.0, 1.0 - market_balance) * 0.14),
+        0.0,
+        1.0,
+    )
+    flow = _clip(
+        (direction_consistency * 0.42)
+        + (abs(directional_bias) * 0.26)
+        + (market_balance * 0.18)
+        + (max(0.0, 1.0 - curvature) * 0.14),
+        0.0,
+        1.0,
+    )
+    void = _clip(
+        (compression * 0.26)
+        + ((1.0 - body_to_range) * 0.24)
+        + ((1.0 - abs(volume_bias)) * 0.14)
+        + ((1.0 - abs(short_impulse)) * 0.16)
+        + ((1.0 - abs(mid_impulse)) * 0.20),
+        0.0,
+        1.0,
+    )
+    visual_object_stability = _clip(
+        (direction_consistency * 0.28)
+        + (range_rhythm * 0.22)
+        + (visual_coherence * 0.24)
+        + (market_balance * 0.18)
+        - (fracture * 0.22),
+        0.0,
+        1.0,
+    )
+    raw_visual_form_pressure = _clip(
+        (breakout_tension * 0.28)
+        + (edge_strength * 0.22)
+        + (fracture * 0.18)
+        + (abs(directional_bias) * 0.16)
+        + (abs(volume_bias) * 0.10)
+        + (max(0.0, 1.0 - visual_object_stability) * 0.06),
+        0.0,
+        1.0,
+    )
+    visual_clarity = _clip(
+        (visual_object_stability * 0.30)
+        + (flow * 0.22)
+        + (form_density * 0.20)
+        + (visual_coherence * 0.18)
+        - (fracture * 0.18)
+        - (void * 0.08),
+        0.0,
+        1.0,
+    )
+    raw_visual_form_novelty = _clip(
+        (curvature * 0.22)
+        + (edge_strength * 0.18)
+        + (fracture * 0.22)
+        + (abs(volume_bias) * 0.16)
+        + (max(0.0, expansion - compression) * 0.12)
+        + (max(0.0, 0.45 - visual_coherence) * 0.10),
+        0.0,
+        1.0,
+    )
+
+    sensory_reality_state = _build_sensory_reality_state(
+        expansion=expansion,
+        body_pressure=body_pressure,
+        wick_pressure=wick_pressure,
+        volume_bias=volume_bias,
+        range_position=range_position,
+        short_impulse=short_impulse,
+        mid_impulse=mid_impulse,
+        breakout_tension=breakout_tension,
+        edge_strength=edge_strength,
+        fracture=fracture,
+        visual_form_novelty=raw_visual_form_novelty,
+    )
+    sensory_gate = float(sensory_reality_state.get("sensory_gate", 1.0) or 1.0)
+    sensory_habituation = float(sensory_reality_state.get("sensory_habituation", 0.0) or 0.0)
+    sensory_reality_pressure = float(sensory_reality_state.get("sensory_reality_pressure", 0.0) or 0.0)
+
+    visual_form_pressure = _clip(
+        (raw_visual_form_pressure * sensory_gate)
+        + (sensory_reality_pressure * 0.08),
+        0.0,
+        1.0,
+    )
+    visual_form_novelty = _clip(
+        (raw_visual_form_novelty * (0.88 + sensory_gate * 0.12))
+        - (sensory_habituation * 0.10),
+        0.0,
+        1.0,
+    )
+    visual_blindness = _clip(
+        (visual_form_pressure * 0.42)
+        + (max(0.0, 1.0 - visual_clarity) * 0.34)
+        + (visual_form_novelty * 0.12)
+        + (fracture * 0.12)
+        - (visual_object_stability * 0.18),
+        0.0,
+        1.0,
+    )
+    visual_shape_resonance = _clip(
+        (visual_coherence * 0.34)
+        + (market_balance * 0.22)
+        + (visual_object_stability * 0.24)
+        + (form_density * 0.20),
+        0.0,
+        1.0,
+    )
+    visual_shape_fragility = _clip(
+        (fracture * 0.34)
+        + (visual_form_novelty * 0.20)
+        + (wick_pressure * 0.16)
+        + (curvature * 0.14)
+        + (max(0.0, 1.0 - visual_object_stability) * 0.16),
+        0.0,
+        1.0,
+    )
+
+    form_axes = {
+        "edge_strength": float(edge_strength),
+        "curvature": float(curvature),
+        "density": float(form_density),
+        "fracture": float(fracture),
+        "flow": float(flow),
+        "void": float(void),
+        "range_rhythm": float(range_rhythm),
+        "direction_consistency": float(direction_consistency),
+    }
+    visual_form_id = _build_visual_form_id(
+        _quantize_visual_axis(edge_strength, low=0.0, high=1.0),
+        _quantize_visual_axis(curvature, low=0.0, high=1.0),
+        _quantize_visual_axis(form_density, low=0.0, high=1.0),
+        _quantize_visual_axis(fracture, low=0.0, high=1.0),
+        _quantize_visual_axis(flow, low=0.0, high=1.0),
+        _quantize_visual_axis(void, low=0.0, high=1.0),
+        _quantize_visual_axis(visual_clarity, low=0.0, high=1.0),
+        _quantize_visual_axis(visual_blindness, low=0.0, high=1.0),
+    )
+    visual_form_state = {
+        "visual_form_id": str(visual_form_id),
+        "axes": dict(form_axes),
+        "clarity": float(visual_clarity),
+        "object_stability": float(visual_object_stability),
+        "novelty": float(visual_form_novelty),
+        "blindness": float(visual_blindness),
+        "pressure": float(visual_form_pressure),
+        "resonance": float(visual_shape_resonance),
+        "fragility": float(visual_shape_fragility),
+        "sensory_reality": dict(sensory_reality_state),
+    }
+
     return {
         "spatial_bias": float(spatial_bias),
         "directional_bias": float(directional_bias),
@@ -321,6 +631,22 @@ def build_visual_market_state(window: list[dict]) -> dict:
         "market_balance": float(market_balance),
         "breakout_tension": float(breakout_tension),
         "visual_coherence": float(visual_coherence),
+        "visual_form_state": dict(visual_form_state),
+        "visual_clarity": float(visual_clarity),
+        "visual_object_stability": float(visual_object_stability),
+        "visual_form_novelty": float(visual_form_novelty),
+        "visual_blindness": float(visual_blindness),
+        "visual_form_pressure": float(visual_form_pressure),
+        "visual_shape_resonance": float(visual_shape_resonance),
+        "visual_shape_fragility": float(visual_shape_fragility),
+        "sensory_reality_pressure": float(sensory_reality_state.get("sensory_reality_pressure", 0.0) or 0.0),
+        "sensory_load": float(sensory_reality_state.get("sensory_load", 0.0) or 0.0),
+        "sensory_redundancy": float(sensory_reality_state.get("sensory_redundancy", 0.0) or 0.0),
+        "sensory_habituation": float(sensory_reality_state.get("sensory_habituation", 0.0) or 0.0),
+        "sensory_gate": float(sensory_reality_state.get("sensory_gate", 1.0) or 1.0),
+        "sensory_active_axis_count": int(sensory_reality_state.get("sensory_active_axis_count", 0) or 0),
+        "sensory_primary_pressure": float(sensory_reality_state.get("sensory_primary_pressure", 0.0) or 0.0),
+        "sensory_reality_label": str(sensory_reality_state.get("sensory_reality_label", "clear_outer_reality") or "clear_outer_reality"),
     }
 
 

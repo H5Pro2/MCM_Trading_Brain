@@ -1969,6 +1969,7 @@ class RegulationLayer:
     def regulate(self, field):
 
         mean_energy = float(np.mean(field.energy[:,0]))
+        mean_risk = float(np.mean(field.energy[:,2])) if getattr(field, "D", 0) > 2 else 0.0
 
         # Energie zu hoch → Exploration bremsen
         if mean_energy > 1.6:
@@ -1983,6 +1984,15 @@ class RegulationLayer:
         # Energie nahe Gleichgewicht stabilisieren
         if -0.4 < mean_energy < 0.4:
             field.velocity *= 0.95
+
+        # Risikoachse entlasten, damit Wahrnehmung nicht dauerhaft Alarm bleibt
+        if getattr(field, "D", 0) > 2:
+            if mean_risk < -1.35:
+                field.velocity[:,2] *= 0.72
+                field.energy[:,2] += min(0.18, abs(mean_risk + 1.35) * 0.20)
+            elif mean_risk > 1.35:
+                field.velocity[:,2] *= 0.72
+                field.energy[:,2] -= min(0.18, abs(mean_risk - 1.35) * 0.20)
 
 # --------------------------------------------------
 # Beispiel

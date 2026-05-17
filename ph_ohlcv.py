@@ -212,23 +212,83 @@ def get_open_orders(exchange,PH_SYMBOL):
 # ---------------------------------------------------
 
 # ---------------------------------------------------
+def _safe_float(value, default=0.0):
+    try:
+        if value is None:
+            return float(default)
+        return float(value)
+    except Exception:
+        return float(default)
+
+
+def _extract_quote_balance(balance, quote):
+    """
+    Holt bevorzugt die direkt geparste Quote-Equity.
+    Bei Futures liefert ccxt je nach Exchange-Version unterschiedliche Formen:
+    balance["total"][quote], balance[quote]["total"] oder nur free/used.
+    """
+    quote = str(quote or "USDT").upper()
+    candidates = []
+
+    if isinstance(balance, dict):
+        for bucket in ("total", "free"):
+            payload = balance.get(bucket)
+            if isinstance(payload, dict):
+                candidates.append(payload.get(quote))
+                candidates.append(payload.get(quote.lower()))
+
+        direct = balance.get(quote) or balance.get(quote.lower())
+        if isinstance(direct, dict):
+            candidates.append(direct.get("total"))
+            free_value = _safe_float(direct.get("free"), 0.0)
+            used_value = _safe_float(direct.get("used"), 0.0)
+            if free_value > 0.0 or used_value > 0.0:
+                candidates.append(free_value + used_value)
+
+    for item in candidates:
+        value = _safe_float(item, 0.0)
+        if value > 0.0:
+            return value
+
+    return 0.0
+
+
 def get_account_value(exchange, quote):
     """
-    Berechne gesamten Account-Wert in quote (z.B. USDT)
+    Berechne den Account-Wert in quote (z.B. USDT).
+    Fuer Futures wird zuerst die direkt geparste Quote-Equity verwendet.
     """
-    balance = exchange.fetch_balance()
-    total_value = 0.0
+    params = {}
+    mechanik = str(getattr(Config, "MECHANIK", "") or "").strip().lower()
+    if mechanik in ("swap", "future", "futures"):
+        params = {"type": mechanik}
 
-    for asset, info in balance['total'].items():
-        if info > 0:
-            if asset == quote:
-                total_value += info
+    try:
+        balance = exchange.fetch_balance(params)
+    except TypeError:
+        balance = exchange.fetch_balance()
+
+    quote_value = _extract_quote_balance(balance, quote)
+    if quote_value > 0.0:
+        return quote_value
+
+    total_value = 0.0
+    totals = balance.get("total", {}) if isinstance(balance, dict) else {}
+    if not isinstance(totals, dict):
+        totals = {}
+
+    for asset, info in totals.items():
+        value = _safe_float(info, 0.0)
+        if value > 0:
+            if str(asset).upper() == str(quote).upper():
+                total_value += value
             else:
                 try:
                     ticker = exchange.fetch_ticker(f"{asset}/{quote}")
-                    price = ticker['last']
-                    total_value += info * price
-                except:
+                    price = _safe_float(ticker.get("last"), 0.0)
+                    if price > 0.0:
+                        total_value += value * price
+                except Exception:
                     pass  # coin evtl. nicht handelbar gegen USDT
 
     return total_value

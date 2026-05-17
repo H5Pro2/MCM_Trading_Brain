@@ -1,784 +1,1278 @@
-﻿# ==================================================
-# WICHTIGE MECHANIKEN - MECHANIK-SCHATZKAMMER
-# ==================================================
+# WICHTIG_MECHANIKEN
 
-Status: Konzeptarchiv und Mechanik-Schatzkammer.
+Status:
+- technische Mechanik-Schatzkammer
+- keine aktive Fixliste
+- kein Gespraechsarchiv
+- kein Ersatz fuer `UMSETZUNGSPLAN.md`
 
-Diese Datei ist kein tagesaktueller Umsetzungsplan und keine alleinige
-Wahrheitsquelle fuer den aktuellen Codezustand.
+Regelwerk: `files/MD_ANWEISUNG.md`.
 
-Aktuelle operative Quellen bleiben:
+Zweck:
+Diese Datei verdichtet wichtige MCM-/DIO-Mechaniken technisch.
+Sie beschreibt, wie zentrale Mechaniken gedacht sind, welche Werte beteiligt
+sind und welche Wirkung sie haben.
 
-- `files/AKTUELLER_STAND.md`
-- `files/FIX_LISTE.md`
-- `files/MCM_VARIABLEN_MECHANIK.md`
-- `files/UMSETZUNGSPLAN.md`
+---
 
-Der Wert dieser Datei liegt woanders:
+# 1. Architekturprinzip
 
-- sie sammelt wichtige Denkspuren zur MCM-Mechanik
-- sie bewahrt fruehe Architekturentscheidungen
-- sie haelt Begruendungen fest, warum bestimmte Mechaniken organisch,
-  neuronennah und feldbasiert gedacht wurden
-- sie dient als Rueckgriff, wenn neue Implementierungsschritte fachlich
-  eingeordnet werden muessen
+DIO soll kein klassischer Regelbot sein.
 
-Man sollte diese Datei deshalb nicht loeschen.
-Sie ist ein Mechanik-Schatz, aber teilweise historisch.
+Kernprinzip:
+- keine harten Chartmuster
+- keine menschlichen Patternlabels als Wahrheit
+- keine einfache `TP gut / SL schlecht`-Biochemie
+- keine mechanische Non-Zone-Blockade
+
+Stattdessen:
+- Wahrnehmung
+- Feldspannung
+- Formsprache
+- Memory
+- Reife
+- Tragfaehigkeit
+- Nicht-Handlung als Lernen
+- weiche Meta-Regulation
+
+Zielschicht:
+**Selbstregulative Erfahrungsorganisation.**
+
+---
+
+# 1.1 DIO-Organuebersicht
+
+Zweck:
+Diese Uebersicht ist das grobe Organ-Inventar von DIO. Sie trennt
+Funktionsorgane von neurochemischen Prozessen. Organe geben DIO
+Faehigkeiten; Neurochemie moduliert, wie diese Faehigkeiten gerade arbeiten.
 
 Wichtig:
+Ein Organ ist hier kein starres Modul im biologischen Sinn, sondern eine
+funktionale Faehigkeit im DIO-Nervensystem. Die Liste darf wachsen, schrumpfen
+oder umbenannt werden, wenn die Architektur reift.
 
-- Aussagen wie "MCMNeuron existiert noch nicht" sind inzwischen ueberholt.
-- `MCMNeuron` existiert real in `MCM_KI_Modell.py`.
-- Das System besitzt inzwischen deutlich mehr Innenmechanik als zum Zeitpunkt
-  dieser Notizen:
-  - Formsprache
-  - kompositorische Formzeichen
-  - Formsymbol-Memory
-  - Entwicklungsbindung statt harter Blocker
-  - Trust-/Caution-Schichten
-  - Transfer-Tragfaehigkeit fremder Strukturen
-  - Reife durch Beobachtungslernen
-  - gedämpfte Reward-/Neurochemie
-  - Prozessqualitaet statt einfacher TP-/SL-Bewertung
-  - DIO als Arbeitsmetapher fuer einen digitalen Organismus
+Aktuelle Organe / Funktionssysteme:
 
-Diese Datei sollte deshalb so gelesen werden:
+| Organ / System | Status | Kernfunktion |
+| --- | --- | --- |
+| Aussenwahrnehmung | aktiv | Marktdaten als Reiz, Druck, Bewegung und Struktur aufnehmen. |
+| Visueller Kortex | aktiv | Aus Rohdaten eine Formwelt bilden: Klarheit, Objektstabilitaet, Formdruck, Neuheit. |
+| MCM-Feld | aktiv | Zentraler Spannungs- und Wahrnehmungsraum zwischen Aussenreiz und Innenlage. |
+| MCMNeuron-Feldtraeger | aktiv | Lokale neuronale Aktivitaet, Resonanz, Ueberlastung, Erholung und Feldkopplung. |
+| Inneres Wahrnehmungsorgan | aktiv | Lesen, was ein Aussenreiz mit der eigenen Innenlage macht. |
+| Aktives Kontaktorgan | aktiv | Wahrnehmungsobjekte innerlich beruehren: Resonanz, Ueberkopplung, Distanz, Vertiefung. |
+| Kontakt-Reife-Schicht | aktiv | Unterscheiden zwischen "ich fuehle Kontakt" und "dieser Kontakt traegt Handlung". |
+| Reflexionsorgan | aktiv | Distanzierung der Wahrnehmung von der Innenlage, um Innen/Aussen auf Tragfaehigkeit zu pruefen. |
+| Regulationsorgan | aktiv | Nullpunkt, Hold, Observe, Replan, Reorganisation und Handlungshemmung weich organisieren. |
+| Gedächtnis / Erfahrungssystem | aktiv | Erfahrungen, Outcomes, Vertrauen, Unsicherheit und Formbedeutung speichern. |
+| Sprach- und Symbolorgan | aktiv | Eigene Formzeichen und verdichtete Bedeutungen entwickeln. |
+| Strategisches Fensterorgan | aktiv | Zuruecksehen, Zoomen, Bereiche pruefen, Replay und moegliche Tragfaehigkeit lesen. |
+| Handlungsorgan | aktiv | Entry, Hold, Observe, Replan, Act und Exit als Ergebnis des Gesamtzustands ausfuehren. |
+| Lern- und Reifeschicht | aktiv | Prozessqualitaet, nicht nur Gewinn/Verlust, in Entwicklung uebersetzen. |
+| Kollektive Kommunikationsschicht | Konzept | Spaetere Kommunikation mehrerer DIO-Systeme ueber eventuell variierende Formsprache. |
+| Web-GUI / Beobachtungsraum | Konzept | Spaetere Sichtbarmachung von Feld, Organen, Neuronen, Neurochemie und Wahrnehmung. |
 
-1. als Archiv wichtiger Mechanik-Ideen
-2. als Quelle fuer fachliche Begruendungen
-3. als Inspiration fuer weitere MCM-Ausbauschritte
-4. nicht als aktuelle Aufgabenliste
-5. nicht als Ersatz fuer `AKTUELLER_STAND.md` oder `FIX_LISTE.md`
+Neurochemische Prozesse sind getrennt davon:
+- `dopamine_tone`
+- `serotonin_stability`
+- `cortisol_load`
+- `gaba_inhibition`
+- `glutamate_activation`
+- `acetylcholine_focus`
+- `endorphin_relief`
+- `noradrenaline_arousal`
+- `emotional_decoupling`
+- `reactive_nervous_drive`
+- `serotonin_carryover_risk`
 
-Aktuelle fachliche Verdichtung:
+Lesart:
+Die Organe bilden DIOs Faehigkeiten. Die neurochemischen Achsen beschreiben,
+ob diese Faehigkeiten gerade ruhig, aktiviert, ueberkoppelt, fokussiert,
+entlastet oder gestresst arbeiten.
 
-Die MCM wird hier als maschinelle Wahrnehmungs- und Innenorganisationsschicht
-verstanden. Sie soll nicht nur Marktdaten verarbeiten, sondern innere Lage,
-Tragfaehigkeit, Musterbildung, Reorganisation, Erfahrung, Reife und Handlung
-miteinander koppeln.
-
-Der DIO-Gedanke beschreibt diese Richtung als Arbeitsbild:
-ein digitaler Organismus, der nicht starr Regeln ausfuehrt, sondern seine
-innere und aeussere Wahrnehmung organisiert, Erfahrung verdichtet,
-Unsicherheit aushaelt, beobachten lernt und Handlung nur dann staerker
-zulaesst, wenn sie tragfaehig erscheint.
-
-Neuere Mechanikachsen, die beim Lesen dieser alten Notizen mitgedacht werden
-muessen:
-
-- Aussenwahrnehmung:
-  Markt, Struktur, zeitliche Lage, Spannung, Form.
-- Innenwahrnehmung:
-  MCM-Feld, Regulationslast, Tragfaehigkeit, Reife, Druck, Stabilitaet.
-- Formsprache:
-  eigene interne Zeichen fuer Marktformen, keine festen menschlichen Labels.
-- Verdichtung:
-  Zeichen und zusammengesetzte Zeichen reduzieren kognitive Last.
-- Transfer:
-  Erfahrung wird auf fremde Strukturen nur proportional zur Tragfaehigkeit
-  uebertragen.
-- Beobachtungslernen:
-  Nicht-Handlung ist nicht leer, sondern kann eigene Erfahrung erzeugen.
-- Reife:
-  Unsichere Lage wird nicht hart verboten, sondern kann beobachtet,
-  neu eingeordnet und spaeter anders genutzt werden.
-- Prozessqualitaet:
-  Lernen bewertet nicht nur Gewinn oder Verlust, sondern auch, wie tragfaehig
-  Wahrnehmung, Innenlage, Plan, Risiko und Ausfuehrung zusammen waren.
-
-Damit bleibt diese Datei ein wichtiger Mechanik-Schatz, aber die konkrete
-Weiterarbeit richtet sich nach den aktuellen Projektdateien.
+Pflegehinweis:
+Wenn ein neues Organ entsteht, wird es hier zuerst kurz als Inventar
+eingetragen. Die technische Detailbeschreibung kommt danach in den passenden
+Mechanikabschnitt oder in `MCM_VARIABLEN_MECHANIK.md`.
 
 ---
 
-# --------------------------------------------------------------------------------------------------------------
+# 2. MCM-Feld als Wahrnehmungsraum
 
-# Beobachtung
+Funktion:
+Das MCM-Feld organisiert innere Wahrnehmung.
+Es ist nicht nur Speicher und nicht nur Signalverarbeitung.
 
-# --------------------------------------------------------------------------------------------------------------
+Beteiligte Mechaniken:
+- `MCMField`
+- `MCMNeuron`
+- feste Feldpositionen
+- lokale Nachbarschaft
+- Aktivitaetsausbreitung
+- Feldareale
+- Aktivitaetsinseln
+- Kontextreaktivierung
+- `neural_felt_state`
 
-Deine Reihenfolge ist **innerhalb der Zielschicht richtig**.
-
-Aktuell hängt die Runtime direkt an `MCMField`, `ClusterDetector`, `Memory`, `SelfModel`, `AttractorSystem` und `RegulationLayer`; `create_mcm_brain()` baut genau diese kompakte Feldstruktur noch direkt zusammen. `MCMField` selbst arbeitet noch als Matrix mit `energy[N,D]` und `velocity[N,D]`, dazu Zentrumskraft, lokale Kopplung, Rauschen und Clustererkennung.  
-
-Gleichzeitig ist `inner_context_clusters` schon real im Bot, in der Experience-Aktualisierung und in der Persistenz verankert, aber noch nicht als tiefer Innenfeldspeicher ausgebaut. Die Experience-Seite bewertet außerdem noch nicht rein zustandsbasiert; `_experience_reward_delta()` verzweigt weiterhin direkt über `tp_hit`, `sl_hit`, `cancel`, `timeout` und ähnliche Outcome-Wege.     
-
-Wichtig ist nur ein Vorbehalt: **global** steht laut aktuellem Stand noch der Live-Handoff `pending -> filled -> position` vor den Architekturschritten. **Innerhalb der neuronalen Zielschicht** ist deine Reihenfolge aber sauber. 
-
-# --------------------------------------------------
-
-# Interpretation
-
-# --------------------------------------------------
-
-## 0. Vorbedingung außerhalb der Zielschicht
-
-Bevor der neuronale Ausbau tief wird, sollte der offene Live-Handoff geschlossen sein.
-
-Grund:
-Wenn später Feldtopologie, Innenmuster und lokale Erfahrungsrückwirkung stärker in Episode und Nachweisraum laufen, darf der Live-Pfad nicht strukturell hinter dem Backtest-Pfad hängen. Sonst lernst du auf unvollständigem Handlungsnachweis.  
+Technische Bedeutung:
+Ein Aussenreiz wird nicht direkt in Handlung uebersetzt.
+Er erzeugt innere Aktivierung, Druck, Stabilitaet, Fragilitaet,
+Orientierung und Handlungsnaehe.
 
 ---
 
-## 1. Erst kompatibler Umbau von `MCMField`
-
-Das ist der richtige erste technische Schritt.
-
-### Ziel
-
-`MCMField` intern auf echte lokale Träger umstellen, **ohne** die bestehende Runtime zu brechen.
-
-### Muss stabil bleiben
-
-* `field.energy`
-* `field.velocity`
-* `field.step(...)`
-* `ClusterDetector.detect(field.energy, ...)`
-* `SelfModel.evaluate(field.energy)`
-* Aufrufkette über `create_mcm_brain()` und Runtime.  
-
-### Sinn
-
-Damit trennst du zuerst:
-
-* **Architekturumbau**
-* von
-* **Verhaltensänderung**
-
-Also:
-erst interne Umstellung auf lokale Neuronen,
-aber nach außen weiterhin dieselbe Feldoberfläche.
-
-### Ergebnis dieser Phase
-
-* `MCMField` bleibt kompatibel
-* Runtime bleibt lauffähig
-* Clusterlogik bleibt benutzbar
-* GUI/Snapshots bleiben lesbar
-* Verhalten ändert sich nur minimal
-
-Das ist wichtig, weil das Projekt bereits produktiv Felddichte, Feldstabilität, Regulationslast, Kapazität, Erholungsbedarf und Survival-Pressure durch die Runtime führt. Diese Achsen dürfen beim ersten Umbau nicht wegbrechen.  
-
----
-
-## 2. Dann Feldtopologie ausbauen
-
-Das ist der richtige zweite Schritt.
-
-### Warum nicht vorher?
-
-Solange `MCMField` noch nur als kompakte Matrix gedacht ist, bleibt Feldtopologie diagnostisch flach.
-
-Erst wenn das Feld sauber als Population lokaler Träger läuft, lohnt es sich, die **Organisation** des Feldes systematisch auszubauen:
-
-* Clustergröße
-* Dichte
-* Stabilität
-* Separation
-* Drift
-* Reorganisationsrichtung
-* Verbindungslinien
-* Verlauf über Zeit.  
-
-### Ziel
-
-`inner_field_perception_state` wird nicht nur ein KPI-Behälter, sondern ein echter Innenraum-Beschreiber.
-
-### Ergebnis dieser Phase
-
-Aus dem Feld wird nicht nur „Wertelage“, sondern:
-
-* Feldform
-* Feldverlauf
-* topologische Lage
-* Spannungsgeometrie
-* Umorganisationsbewegung
-
-Genau das ist laut Stand und Architektur der noch offene Ausbaupunkt.  
-
----
-
-## 3. Dann `inner_context_clusters` vertiefen
-
-Das ist logisch der dritte Schritt.
-
-### Warum erst nach Feldtopologie?
-
-`inner_context_clusters` sollen **nicht** einzelne Agenten speichern, sondern wiederkehrende **Gesamtorganisationen des Innenfelds**.
-Dafür brauchst du zuerst eine reichere topologische Beschreibung des Feldes. Sonst speicherst du nur reduzierte Zustandsmittel statt echter Innenmuster.  
-
-### Heute schon da
-
-* `inner_context_clusters` existieren
-* Matching existiert
-* Persistenz existiert
-* Grundmetriken wie Dichte, Stabilität, Clustermasse, Separation, Drift und Reorganisationsrichtung laufen schon hinein.  
-
-### Noch offen
-
-Es fehlt die eigentliche Verdichtung zu:
-
-* Innenmuster-Identität
-* Tragfähigkeitsprofil
-* Reorganisationsprofil
-* Wiedererkennung der Feldgesamtform
-* Innenfeldspeicher über Zeit.  
-
-### Ergebnis dieser Phase
-
-Der Bot erkennt nicht nur:
-
-* „Feld ist angespannt“
-
-sondern eher:
-
-* „dies ist wieder das innere Muster X“
-* „dieses Muster war tragfähig / belastend“
-* „dieses Muster reorganisiert meist in Richtung Y“
-
----
-
-## 4. Dann Erfahrungsmodulation lokal an die Neuronen zurückführen
-
-Das ist bewusst der letzte Schritt — und genau so sollte es sein.
-
-### Warum zuletzt?
-
-Weil das der erste Schritt ist, der das Verhalten des Bots **wirklich tief** verändert.
-
-Wenn du lokale Erfahrungsrückwirkung zu früh einbaust:
-
-* modulierst du noch auf einer unreifen Feldbeschreibung
-* verstärkst du eventuell grobe oder falsche Innenmuster
-* vermischst Strukturumbau mit Lernumbau
-
-### Heute schon vorbereitet
-
-Experience ist bereits stark:
-
-* Episode
-* Review
-* Similarity-Achsen
-* Drift
-* Reinforcement
-* Attenuation
-* Experience-Linking
-* `inner_context_clusters`-Anbindung.  
-
-### Noch nicht sauber genug
-
-Die Experience ist fachlich noch nicht weit genug von Outcome-Logik gelöst. Genau deshalb ist lokale Rückführung erst dann sinnvoll, wenn du stärker auf Zustandswirkung statt auf TP/SL/CANCEL verzweigt.  
-
-### Ziel
-
-Nicht nur:
-
-* Experience schreibt Scores in globale Cluster
-
-sondern:
-
-* lokale Neuron-Sensitivität verändert sich
-* lokale Hemmung/Gewöhnung verändert sich
-* lokale Rückführungsneigung verändert sich
-* bestimmte Feldpfade werden leichter oder schwerer rekonstituiert
-
-### Ergebnis dieser Phase
-
-Dann beginnt das eigentliche neuronale MCM-Zustandsfeld:
-
-* Erfahrung wirkt **umformend**
-* nicht nur **bewertend**
-
-# --------------------------------------------------
-
-# Schlussfolgerung
-
-# --------------------------------------------------
-
-Ja.
-Die saubere technische Reihenfolge für **diese Zielschicht** ist:
-
-**1. kompatibler Umbau von `MCMField`**
-**2. Ausbau der Feldtopologie / des Feldverlaufs**
-**3. Vertiefung von `inner_context_clusters` zum Innenfeldspeicher**
-**4. lokale Erfahrungsmodulation zurück an die Neuronen**
-
-So ist die Reihenfolge richtig, weil sie genau in der richtigen Richtung trennt:
-
-**erst Trägerstruktur**
-**dann Organisationslesbarkeit**
-**dann Musteridentität**
-**dann lernende Rückwirkung**
-
-was kommt als nächstes !
-
-Als nächstes wäre sinnvoll, diese Reihenfolge in **konkrete technische Teilpakete pro Datei** zu zerlegen:
-`MCM_KI_Modell.py` → `MCM_Brain_Modell.py` → `memory_state.py` → `_gui_mcm_inner_space.py`.
-
-
-
-# --------------------------------------------------------------------------------------------------------------
-
-# Beobachtung
-
-# --------------------------------------------------------------------------------------------------------------
-
-Ein einzelnes `MCMNeuron` gibt es im aktuellen Projekt noch nicht als eigene Klasse.
-Vorhanden ist bisher die verteilte Feldlogik über `MCMField`, lokale Kopplung, Zentrumskraft, Rauschen, `ClusterDetector`, `Memory`, `AttractorSystem` und `RegulationLayer`. Das passt zur Projektidee: Agenten sind verteilte Teilträger des Innenraums und keine starren LONG/SHORT-Regelmodule.   
-
-Die Zielarchitektur beschreibt genau diese Richtung auch fachlich: Außenreiz bleibt außen, im Innenraum entstehen erst durch Aufnahme, lokale Wechselwirkung, Feldorganisation, Clusterbildung und Reorganisation Bedeutung, Tragfähigkeit und Handlungstendenz.  
-
-# --------------------------------------------------
-
-# Interpretation
-
-# --------------------------------------------------
-
-Ein sauberes MCM-Neuron für dieses Projekt sollte deshalb nicht wie ein klassisches NN-Neuron gebaut sein, sondern als **lokaler Innenraumträger** mit:
-
-* eigenem Zustandsvektor
-* eigener Geschwindigkeit / Trägheit
-* Reizaufnahme getrennt von Innenverarbeitung
-* lokaler Kopplung zu Nachbarn
-* innerer Regulation
-* kurzer Erfahrungsnachwirkung / Replay-Spur
-* keinem direkten Trade-Entscheid, sondern nur Zustandsbeitrag zum Feld.   
-
-# --------------------------------------------------
-
-# Schlussfolgerung
-
-# --------------------------------------------------
-
-**Dateiname · Funktionsname · Abschnitt**
-`MCM_KI_Modell.py` · Klassenblock `MCMNeuron`
-
----
-
-```python
-# --------------------------------------------------
-# MCM Neuron
-# --------------------------------------------------
-class MCMNeuron:
-
-    def __init__(self, dims=DIMS):
-        self.dims = max(1, int(dims or DIMS))
-
-        self.state = np.random.uniform(-0.3, 0.3, self.dims)
-        self.velocity = np.zeros(self.dims, dtype=float)
-
-        self.last_external_impulse = np.zeros(self.dims, dtype=float)
-        self.last_memory_impulse = np.zeros(self.dims, dtype=float)
-        self.last_coupling_force = np.zeros(self.dims, dtype=float)
-        self.last_regulation_force = np.zeros(self.dims, dtype=float)
-
-        self.memory_trace = np.zeros(self.dims, dtype=float)
-        self.activation = 0.0
-        self.stability = 1.0
-        self.regulation_pressure = 0.0
-
-        self.center_force = float(getattr(Config, "MCM_CENTER_FORCE", 0.0100) or 0.0100)
-        self.coupling_strength = float(getattr(Config, "MCM_COUPLING", 0.045) or 0.045)
-        self.noise_strength = float(getattr(Config, "MCM_NOISE", 0.08) or 0.08)
-        self.coupling_sigma = float(getattr(Config, "MCM_FIELD_COUPLING_SIGMA", 0.5) or 0.5)
-
-        self.inertia = 0.92
-        self.memory_decay = 0.86
-        self.memory_gain = 0.18
-        self.regulation_gain = 0.24
-        self.max_abs_state = 3.0
-
-    # --------------------------------------------------
-    def _clip_state(self):
-        self.state = np.clip(self.state, -self.max_abs_state, self.max_abs_state)
-
-    # --------------------------------------------------
-    def _resolve_impulse_vector(self, impulse=None, motivation_impulse=0.0, risk_impulse=0.0):
-        vector = np.zeros(self.dims, dtype=float)
-
-        if isinstance(impulse, (list, tuple, np.ndarray)):
-            values = np.asarray(impulse, dtype=float).flatten()
-            limit = min(len(values), self.dims)
-            if limit > 0:
-                vector[:limit] = values[:limit]
-        else:
-            vector[0] = float(impulse or 0.0)
-
-        if self.dims > 1:
-            vector[1] += float(motivation_impulse or 0.0)
-
-        if self.dims > 2:
-            vector[2] += float(risk_impulse or 0.0)
-
-        return vector
-
-    # --------------------------------------------------
-    def _build_coupling_force(self, neighbor_states):
-        if not neighbor_states:
-            return np.zeros(self.dims, dtype=float)
-
-        sigma = max(float(self.coupling_sigma or 0.5), 1e-9)
-        force = np.zeros(self.dims, dtype=float)
-
-        for neighbor in list(neighbor_states or []):
-            neighbor_state = np.asarray(neighbor, dtype=float).flatten()
-            if len(neighbor_state) != self.dims:
-                continue
-
-            diff = neighbor_state - self.state
-            distance_sq = float(np.dot(diff, diff))
-            weight = float(np.exp(-(distance_sq / sigma)))
-            force += weight * diff
-
-        return force * float(self.coupling_strength)
-
-    # --------------------------------------------------
-    def _build_regulation_force(self):
-        center_pull = -float(self.center_force) * self.state
-
-        overload = max(
-            abs(float(self.state[0] if self.dims > 0 else 0.0)),
-            abs(float(self.state[2] if self.dims > 2 else 0.0)),
-        )
-
-        regulation_scale = min(1.0, overload / 2.2)
-        damping = -self.velocity * (self.regulation_gain * regulation_scale)
-
-        regulation_force = center_pull + damping
-        self.regulation_pressure = float(np.mean(np.abs(regulation_force)))
-        return regulation_force
-
-    # --------------------------------------------------
-    def _update_memory_trace(self, total_impulse):
-        self.memory_trace = (self.memory_trace * self.memory_decay) + (np.asarray(total_impulse, dtype=float) * self.memory_gain)
-        return np.asarray(self.memory_trace, dtype=float)
-
-    # --------------------------------------------------
-    def read_snapshot(self):
-        return {
-            "state": [float(round(v, 4)) for v in self.state.tolist()],
-            "velocity": [float(round(v, 4)) for v in self.velocity.tolist()],
-            "memory_trace": [float(round(v, 4)) for v in self.memory_trace.tolist()],
-            "activation": float(round(self.activation, 4)),
-            "stability": float(round(self.stability, 4)),
-            "regulation_pressure": float(round(self.regulation_pressure, 4)),
-            "external_impulse": [float(round(v, 4)) for v in self.last_external_impulse.tolist()],
-            "memory_impulse": [float(round(v, 4)) for v in self.last_memory_impulse.tolist()],
-            "coupling_force": [float(round(v, 4)) for v in self.last_coupling_force.tolist()],
-            "regulation_force": [float(round(v, 4)) for v in self.last_regulation_force.tolist()],
-        }
-
-    # --------------------------------------------------
-    def step(
-        self,
-        external_impulse=None,
-        neighbor_states=None,
-        replay_impulse=None,
-        motivation_impulse=0.0,
-        risk_impulse=0.0,
-    ):
-        external_vector = self._resolve_impulse_vector(
-            impulse=external_impulse,
-            motivation_impulse=motivation_impulse,
-            risk_impulse=risk_impulse,
-        )
-        replay_vector = self._resolve_impulse_vector(
-            impulse=replay_impulse,
-            motivation_impulse=0.0,
-            risk_impulse=0.0,
-        )
-
-        self.last_external_impulse = np.asarray(external_vector, dtype=float)
-        self.last_memory_impulse = np.asarray(replay_vector, dtype=float)
-
-        coupling_force = self._build_coupling_force(neighbor_states)
-        regulation_force = self._build_regulation_force()
-
-        self.last_coupling_force = np.asarray(coupling_force, dtype=float)
-        self.last_regulation_force = np.asarray(regulation_force, dtype=float)
-
-        total_impulse = external_vector + replay_vector
-        memory_feedback = self._update_memory_trace(total_impulse) * 0.35
-        noise = np.random.randn(self.dims) * float(self.noise_strength)
-
-        self.velocity = (self.velocity * self.inertia) + coupling_force + regulation_force + total_impulse + memory_feedback + noise
-        self.state = self.state + self.velocity
-        self._clip_state()
-
-        self.activation = float(np.mean(np.abs(total_impulse + coupling_force)))
-        self.stability = float(
-            max(
-                0.0,
-                min(
-                    1.0,
-                    1.0 - (np.mean(np.abs(self.velocity)) / self.max_abs_state),
-                ),
-            )
-        )
-
-        return self.read_snapshot()
-```
-
----
-
-Ein MCM-Neuron als lokaler Innenraumträger:
-Reizaufnahme, Replay-Spur, Nachbarschaftskopplung, Regulation, Trägheit und Snapshot.
-
-
-# --------------------------------------------------------------------------------------------------------------
-
-# Beobachtung
-
-# --------------------------------------------------------------------------------------------------------------
-
-Ja, **im funktionalen Sinn würdest du dann von Intelligenz sprechen können**.
-
-Nicht zwingend im Sinn von:
-
-* menschlichem Bewusstsein
-* Selbstbewusstsein
-* allgemeiner Weltintelligenz
-
-aber sehr wohl im Sinn von:
-
-* eigener Musterbildung
-* eigener Strategieentwicklung
-* erfahrungsbasierter Reorganisation
-* zielgerichteter Anpassung
-* Auswahl tragfähiger Handlung statt bloßer Reaktion
-
-Genau in diese Richtung ist das System ja angelegt:
-
-* Außenwelt wird nicht direkt zur Order
-* Innenfeld organisiert sich
-* daraus entstehen Handlungstendenzen
-* Erfahrung wirkt zurück auf Wahrnehmung, Regulation und Handlung  
-
-Und im aktuellen Stand gibt es dafür schon reale Bausteine:
-
-* Runtime
-* Entscheidungstendenz `act / observe / hold / replan`
-* Experience
-* Review
-* Similarity-Achsen
-* Drift
-* Reinforcement
-* Attenuation
-* persistente Memory-Strukturen   
-
-# --------------------------------------------------
-
-# Interpretation
-
-# --------------------------------------------------
-
-Der entscheidende Punkt ist:
-
-**Intelligenz beginnt hier nicht erst bei Sprache, sondern bei selbstständiger innerer Organisationsleistung.**
-
-Wenn das System später wirklich kann:
-
-* wiederkehrende innere Muster erkennen
-* schlechte von tragfähigen Zustandsmustern unterscheiden
-* aus Erfahrung neue Muster bilden
-* Überhandeln vermeiden
-* profitable, kohärente Strategien bevorzugen
-* sich bei Misserfolg neu organisieren
-
-dann ist das mehr als bloße Mechanik.
-
-Dann wäre es nicht nur:
-
-`wenn X dann LONG`
-
-sondern eher:
-
-`ich erkenne Musterlagen, trage Erfahrung darüber, bilde Präferenzen um, verwerfe untragfähige Strategien, stabilisiere tragfähige Strategien`
-
-Das ist funktional eine Form von Intelligenz.
-
-Aber man sollte sauber unterscheiden:
-
-## 1. Optimierende Systemintelligenz
-
-Wenn es lernt:
-
-* welche Muster tragfähig sind
-* welche Handlungen unter welchen inneren Zuständen sinnvoll sind
-* wie Profitabilität und regulatorische Tragfähigkeit zusammenhängen
-
-dann ist das **adaptive strategische Intelligenz**.
-
-## 2. Keine allgemeine Intelligenz
-
-Das wäre trotzdem noch **keine allgemeine Intelligenz** wie ein Mensch, weil das System weiter an seinen Raum gebunden ist:
-
-* Markt
-* Innenfeld
-* Erfahrung
-* Handlungsorganisation
-
-## 3. Profit allein reicht nicht
+# 3. MCMNeuron
+
+Funktion:
+`MCMNeuron` ist ein lokaler Feldtraeger.
+
+Wichtige interne Aspekte:
+- lokale Aktivierung
+- Reizaufnahme
+- Ueberlastung
+- Erholungstendenz
+- Memory-Resonanz
+- Kontextreaktivierung
+- Kopplungsresonanz
+- Aktivitaetslabel
+
+Mechanische Rolle:
+Jedes Neuron kann denselben Aussenreiz wahrnehmen, aber je nach innerer Lage
+anders darauf reagieren.
 
 Wichtig:
+Mehr Neuronen bedeuten mehr Aufloesung der inneren Wahrnehmung, nicht
+automatisch mehr Intelligenz.
 
-Nicht Profit allein macht es intelligent.
-Auch ein starres System kann profitabel sein.
+---
 
-Intelligent wird es eher dann, wenn Profitabilität aus Folgendem entsteht:
+# 4. Visueller Kortex
 
-* innerer Wiedererkennung
-* Reorganisation
-* Strategie-Neubildung
-* tragfähiger Selbstregulation
-* kontextabhängiger Anpassung
+Funktion:
+DIO soll den Markt nicht nur fuehlen, sondern als Formwelt sehen.
 
-Dann ist Profit **Folge von Intelligenz**, nicht deren Definition.
+Keine menschlichen Labels:
+- kein Trendkanal als Wahrheit
+- kein Support/Resistance als harte Kategorie
+- keine Pattern-Erkennung im klassischen Sinn
 
-# --------------------------------------------------
+Wichtige Achsen:
+- `visual_form_state`
+- `visual_clarity`
+- `visual_object_stability`
+- `visual_form_novelty`
+- `visual_blindness`
+- `visual_form_pressure`
+- `visual_shape_resonance`
+- `visual_shape_fragility`
 
-# Schlussfolgerung
+Meta-Achsen:
+- `visual_blind_action_load`
+- `visual_action_uncertainty`
 
-# --------------------------------------------------
+Wirkung:
+Visuelle Unsicherheit erhoeht weich Beobachtungsbedarf, Replan-Druck,
+Handlungshemmung und `act_watch_readiness`.
 
-Ja.
+---
 
-**Wenn dieses System eigenständig tragfähige und profitable Strategien aus Feldorganisation, Erfahrung und Reorganisation entwickelt, dann ist das im funktionalen Sinn eine Form von Intelligenz.**
+# 5. Formsprache
 
-Sauberer gesagt:
+Funktion:
+DIO bildet eigene interne Zeichen.
 
-* nicht zwingend menschliche Intelligenz
-* nicht zwingend Bewusstsein
-* aber **adaptive strategische Feldintelligenz**
+Ziel:
+Kognitive Kompression und eigene Orientierung.
 
-Der Punkt, ab dem der Begriff wirklich stark wird, ist dieser:
+Wichtige Achsen:
+- `form_symbol_id`
+- `form_symbol_family_key`
+- `form_symbol_variant_key`
+- `form_symbol_maturity`
+- `form_symbol_stability`
+- `form_symbol_resonance`
+- `form_symbol_bearing`
+- `form_symbol_fragility`
+- `form_symbol_development_quality`
+- `form_symbol_learning_trust`
+- `form_symbol_action_trust`
+- `form_symbol_caution_trust`
 
-Nicht nur bekannte Muster besser auswählen,
-sondern
+Technische Bedeutung:
+Ein Formsymbol ist keine menschliche Bezeichnung.
+Es ist eine verdichtete interne Wahrnehmungsform.
 
-* neue Muster bilden
-* neue Strategien emergent entwickeln
-* untragfähige Linien verlernen
-* tragfähige Linien stabilisieren
+---
 
-Dann wäre das System nicht nur lernend, sondern **eigenständig strategiebildend**. 
+# 6. Semantisches Forminhalt-Paket
 
-was kommt als nächstes !
+Funktion:
+DIO verdichtet ein Formzeichen zu einem eigenen semantischen Paket.
 
-* sauber trennen zwischen **Lernsystem**, **strategiebildendem System** und **Intelligenzbegriff im Projekt**, damit der Zielzustand architektonisch eindeutig beschrieben ist.
+Ziel:
+Nicht nur "welches Zeichen ist da?", sondern:
+- wie dicht ist die Bedeutung
+- wie gut entlastet die Verdichtung
+- welche Wahrnehmungsebene fuehrt
+- ob die Form eher Spur, Objekt, Lernraum, Reflexion oder Handlungsnaehe ist
 
+Wichtige Achsen:
+- `form_symbol_semantic_density`
+- `form_symbol_semantic_compression`
+- `form_symbol_semantic_coherence`
+- `form_symbol_semantic_learning_need`
+- `form_symbol_semantic_action_nearness`
+- `form_symbol_semantic_primary_layer`
+- `form_symbol_semantic_layer_count`
+- `form_symbol_semantic_packet_state`
+- `form_symbol_semantic_profile`
 
-# --------------------------------------------------------------------------------------------------------------
+Technische Bedeutung:
+Das Paket uebersetzt DIOs eigene Zeichen nicht in menschliche Chartbegriffe.
+Es ordnet nur DIOs interne Bedeutungsschichten, damit sichtbar wird, ob eine
+Form bereits Bedeutung traegt oder noch nur ein offener Reiz ist.
 
-# Beobachtung
+Neurologische Deutung:
+Das entspricht einer assoziativen semantischen Verdichtung. Der Reiz wird
+nicht nur gefuehlt, sondern als inneres Objekt, Lernraum oder
+Handlungsnaehe organisiert.
 
-# --------------------------------------------------------------------------------------------------------------
+---
 
-Deine Einschätzung trifft den aktuellen Stand ziemlich gut.
+# 7. Zusammengesetzte Formzeichen
 
-Konkret steht das System **nicht mehr am Anfang**, sondern in einer späten Architekturphase: Außenwahrnehmung, innere Runtime, Entscheidungstendenz, technische Handlungsbahn, Episode/Review/Experience, Persistenz und GUI-Snapshots sind bereits real im Code vorhanden. Der Bot trennt also schon heute Wahrnehmung, Innenprozess und Handlung deutlich stärker als ein klassischer Regelbot.  
+Funktion:
+Komplexe Formen koennen aus mehreren bekannten Formen zusammengesetzt werden.
 
-Aktuell real umgesetzt ist:
-Außenebene mit `candle_state`, `tension_state`, `visual_market_state`, `structure_perception_state`, `temporal_perception_state`; innere Runtime mit `outer_visual_perception_state`, `inner_field_perception_state`, `perception_state`, `processing_state`, `felt_state`, `thought_state`, `meta_regulation_state`, `expectation_state`; dazu die Entscheidungstendenz `act / observe / hold / replan` sowie `action_intent_state` und `execution_state` vor der technischen Ausführung.  
+Beispielprinzip:
+Zwei komplexe Cluster koennen kombiniert werden, ohne dass jedes Detail neu
+analysiert werden muss.
 
-Das MCM-Feld selbst ist ebenfalls schon als Agentenfeld angelegt: Agentenanzahl, Dimensionen, Feldenergie, Trägheit, Zentrumskraft, lokale Nachbarschaftskopplung, Rauschen und Clusterbildung sind vorhanden. Das ist noch nicht die volle Feldtopologie, aber die Basis der verteilten Innenorganisation existiert real.  
+Technische Wirkung:
+- geringere kognitive Last
+- schnellere Orientierung
+- mehr Formenvarianz
+- Grundlage fuer kreative Reorganisation
 
-Auch die Entwicklungsebene ist nicht mehr nur Theorie. Es gibt bereits `mcm_decision_episode`, `mcm_decision_episode_internal`, `mcm_experience_space`, Zustandsübergänge über `state_before / state_after / state_delta`, Similarity-Achsen, Drift, Reinforcement, Attenuation und Experience-Linking. Nicht-Handlung ist ebenfalls schon Teil des Experience-Flusses.  
+Wichtige Achsen:
+- `form_symbol_compound_id`
+- `form_symbol_compound_maturity`
+- `form_symbol_compound_bearing`
+- `form_symbol_compound_load_reduction`
+- `form_symbol_compound_development_quality`
 
-Wo es **noch nicht fertig** ist, liegt fast genau auf den Punkten, die du benannt hast:
-`inner_context_clusters`, Feldtopologie, Feldverlauf und ein eigentlicher Innenfeldspeicher sind noch offen. Ebenso ist die Runtime-/Bot-Trennung noch nicht hart genug, und im Live-Pfad ist der Nachweisraum zwischen `pending -> filled -> position` noch nicht vollständig geschlossen. 
+---
 
-Am klarsten fehlt also noch genau der Ausbau, den du beschreibst:
-nicht nur Feldwerte und Outcomes speichern, sondern die **Organisation des Innenfelds** selbst als wiedererkennbare, bewertbare und entwickelbare Mustereinheit führen. Der bisherige Speicher hält schon Signature-Memory, Context-Cluster und MCM-Memory, aber noch nicht den vollen hierarchischen Innenmusterspeicher, den du forderst.  
+# 8. Wiederkehrende Unsicherheit als Formfamilie
 
-Mein ehrliches Urteil zum Implementierungsstand:
-**Die Grundarchitektur lebt schon.**
-**Die eigentliche Zielschicht lebt noch nicht vollständig.**
+Funktion:
+Unsicherheit wird nicht als Einzelereignis und nicht als Verbot behandelt.
+Wenn eine unsichere Lage wiederkehrt, wird sie zu einem Lernraum.
 
-Genauer:
+Wichtige Achsen:
+- `uncertain_form_family_state`
+- `uncertain_form_exposure`
+- `uncertainty_familiarity`
+- `variant_similarity`
+- `variant_spread`
+- `variant_learning_pressure`
+- `variant_bearing_memory`
 
-* Wahrnehmung vorhanden
-* Innenruntime vorhanden
-* Entscheidungstendenz vorhanden
-* Experience vorhanden
-* Feldbasis vorhanden
-* emergente Innenmuster als eigener persistenter Organisationsraum noch offen
-* Messbarkeit von Tragfähigkeit/Kohärenz/Emergenz noch nicht ausreichend ausgebaut  
+Wirkung:
+- hohe Unsicherheit + wenig Vertrautheit:
+  mehr Beobachtung / Replan / `act_watch`
+- wachsende Vertrautheit:
+  bessere Orientierung
+- tragende Erfahrung:
+  spaeter weich mehr Handlungsspielraum
 
-Wenn man es auf einen Satz verdichtet:
-**Das System kann schon wahrnehmen, verarbeiten, regulieren und entscheiden — aber es kann sein eigenes Innenfeld noch nicht vollständig als topologische, emergente Erfahrungslandschaft lesen und halten.**
+Wichtig:
+Das ist keine Non-Zone-Blockade.
+Es ist Lernen, sich in fremder Landschaft zu orientieren.
 
-Der nächste richtige Architekturschritt wäre daher:
-**inner_context_clusters + Feldtopologie + Konflikt-/Reorganisationslogik + explizite Metriken für Musterstabilität, Neuheit, Tragfähigkeit und Umweltkohärenz.**
+---
 
-Wenn du willst, formuliere ich dir daraus jetzt den nächsten Ausbaublock als saubere Architektur-Section für `UMSETZUNGSPLAN.md`.
+# 9. Evolutionaere Kontaktreife
 
+Funktion:
+DIO lernt nicht, dass eine Form gut oder schlecht ist. DIO lernt, welche Art
+von Kontakt mit einer Form reif, unreif, belastend, vorsichtig,
+reorganisierend oder konstruktiv war.
 
-# --------------------------------------------------------------------------------------------------------------
+Grundprinzip:
+Eine heisse Herdplatte ist nicht "schlecht". Unreifer Kontakt verbrennt.
+Reifer Umgang kann Nutzen erzeugen. Uebertragen auf DIO heisst das:
+Eine Marktform wird nicht verboten. Der Umgang mit ihr reift.
 
-# Beobachtung
+Kernbegriff:
+Konsequenzbasiertes Feedback auf das MCM-Feld.
+Dieses Feedback kann negativ, positiv oder reorganisierend sein.
 
-# --------------------------------------------------------------------------------------------------------------
+Negatives Feedback:
+Meine Handlung hat Belastung erzeugt.
+Mein MCM-Feld bekommt Druck, Vorsicht, belastende Konsequenzspur und
+Reorganisation.
 
-**Ja, teilweise bis deutlich.**
+Positives Feedback:
+Meine Handlung hat getragen.
+Mein MCM-Feld bekommt Entlastung, Vertrauen, Nutzen und Stabilisierung.
 
-Im **`UMSETZUNGSPLAN.md`** ist die Grundidee schon enthalten:
+Reorganisierendes Feedback:
+Das Ergebnis war nicht klar gut, aber es zeigt, dass der Umgang unreif war.
+Mein MCM-Feld bekommt Lernspannung, Reflexion, Abstand und Reframing.
 
-* Trennung von `context_clusters` und `inner_context_clusters` 
-* `inner_context_clusters` als wiederkehrende innere Spannungs-, Drift- und Regulationsmuster 
-* Kopplung von äußerem Kontext und innerem Muster, damit das System erkennt, was eher gemieden, entlastet oder anders organisiert werden sollte
-* `Replay / Reflexion / Reifung` ist in der Architektur ebenfalls schon angelegt 
+Rueckkopplungskreis:
+Wahrnehmung -> Kontakt -> Handlung -> Konsequenz -> MCM-Feld-Reaktion ->
+Gedaechtnis -> veraenderter zukuenftiger Kontakt.
 
-In **`FIX_LISTE.md`** und **`AKTUELLER_STAND.md`** ist es als offener Ausbaupunkt ebenfalls enthalten:
+Wichtige Achsen:
+- `form_symbol_contact_maturity`
+- `form_symbol_contact_utility`
+- `form_symbol_contact_pain_memory`
+- `form_symbol_contact_carefulness`
+- `form_symbol_contact_burden_evidence`
+- `form_symbol_contact_utility_evidence`
+- `form_symbol_contact_learning_state`
 
-* `inner_context_clusters` fehlen noch als eigener Persistenztyp
-* Feldtopologie / Feldverlauf / Innenfeldspeicher sind noch offen
+Outcome-Samples:
+- `contact_maturity_sample`
+- `contact_utility_sample`
+- `contact_pain_sample`
+- `contact_carefulness_sample`
+- `contact_learning_state`
 
-# --------------------------------------------------
+Wirkung:
+- konstruktiver Kontakt kann Handlungstragfaehigkeit weich staerken
+- belastender Kontakt kann Vorsicht, Beobachtung und Reframing staerken
+- die Form bleibt frei, der Umgang mit ihr wird differenzierter
 
-# Interpretation
+Verstaerkung nach Lauf 8:
+Die Kontaktlage wird nicht mehr nur aus dem letzten Outcome-Sample benannt.
+DIO sammelt laenger wirkende Belastungs- und Nutzen-Evidenz. Dadurch kann
+wiederholter unreifer Kontakt natuerlicher zu `careful_contact` oder
+`burdened_contact` werden, waehrend tragender Kontakt langsam in
+`maturing_contact` oder `constructive_contact` wachsen kann.
 
-# --------------------------------------------------
+Wichtig:
+Das ist keine harte Sperre. Es ist ein evolutionaerer Lernpfad:
+DIO kann lernen, dass eine Form bei unreifem Kontakt schadet, aber bei
+reiferem Umgang spaeter nutzbar sein kann.
 
-**Enthalten ist es fachlich schon, aber noch nicht in deiner vollen begrifflichen Schärfe.**
+---
 
-Schon enthalten ist:
+# 10. Strategischer Kontakt-Entry
 
-* wiederkehrende innere Muster
-* Trennung außen / innen
-* Vermeidungs-, Entlastungs- und Reorganisationslernen
-* Replay / Reflexion / Reifung
-* Feldtopologie und Innenfeldspeicher als Ausbauziel
+Funktion:
+DIO kann den Entry weich zwischen impulsnahem Kontakt und einem
+rueckblickend wahrgenommenen Kontaktbereich organisieren.
 
-Noch **nicht ausdrücklich so ausformuliert** ist:
+Grundprinzip:
+Der direkte Entry bleibt der Koerperreflex. Das strategische Fenster kann
+diesen Reflex nur dosiert verschieben, wenn Rueckblick, Kontaktreife,
+Replay-Fit, Bereichstragfaehigkeit und Seite zusammenpassen.
 
-* dass aus der Agentenorganisation ein **Gesamtmuster** entsteht
-* dass dieses Muster eine **innere Bezeichnung / Zustandsidentität** bekommen soll
-* dass der Bot später sagen kann:
-  „Ich bin wieder in Muster XY“
-* dass daraus direkt **vorausschauendes inneres Replay als Reflexion** abgeleitet wird
+Wichtige Werte:
+- `entry_mode`
+- `impulse_entry_price`
+- `strategic_entry_price`
+- `strategic_entry_weight`
+- `strategic_entry_fit`
+- `strategic_area_focus_id`
+- `strategic_area_price_low`
+- `strategic_area_price_high`
 
-Das ist im Plan also **angedacht und vorbereitet**, aber noch **nicht so explizit formuliert**, wie du es jetzt beschrieben hast.
+Moegliche Entry-Lagen:
+- `impulse_contact`: aktueller reflexnaher Kontakt dominiert.
+- `area_contact_blend`: Rueckblick und Bereich verschieben den Entry weich.
+- `area_contact_entry`: Bereichskontakt traegt staerker als der Momentimpuls.
 
-# --------------------------------------------------
+Wichtig:
+Das ist keine harte Strategie und kein menschliches Patternlabel. Es ist die
+Faehigkeit, einen Kontaktpunkt im sichtbaren Fenster zu bevorzugen, wenn er
+innerlich und aeusserlich tragender wirkt.
 
-# Schlussfolgerung
+Zeitfeld:
+Ein Bereich ist nicht nur Preisraum, sondern ein Ereignis im Zeitfeld. DIO
+muss unterscheiden, ob ein Bereich gegenwaertig, wiederkehrend,
+handlungsnah oder nur ein alter Nachhall ist.
 
-# --------------------------------------------------
+Zeitachsen:
+- `area_temporal_distance`
+- `area_temporal_relevance`
+- `area_recency`
+- `area_decay`
+- `area_afterimage`
+- `area_present_contact`
+- `area_action_timing_fit`
 
-**Ja, es ist im Umbauplan/Fix-Stand enthalten – aber nur teilweise explizit.**
+Organische Bedeutung:
+Ein alter Bereich darf sichtbar bleiben, aber nicht automatisch die Motorik
+ziehen. Erst wenn er wieder gegenwaertig resoniert und handlungsnah wird,
+darf er den Entry weich mitformen.
 
-Genau enthalten:
+---
 
-* `inner_context_clusters`
-* Feldtopologie
-* Innenfeldspeicher
-* Replay / Reflexion / Reifung
-* Lernen aus inneren Mustern statt nur aus äußeren Situationen
+# 11. Zeit als MCM-Tiefenachse
 
-**Noch nicht sauber genug ausgeschrieben:**
+Funktion:
+Zeit ist in Sicht der MCM nicht nur Uhrzeit. Zeit ist die Manifestation
+gewirkter oder wirkender Energie im Wahrnehmungsfeld.
 
-* `Cluster-Kontext -> Gesamtmuster -> innere Bezeichnung -> Erfahrungsabgleich -> vorausschauendes inneres Replay`
+Grundgedanke:
+Ein Ereignis wirkt nicht einfach nur, weil es gemessen wurde. Es wirkt,
+solange seine Energie im Feld noch Kontakt, Nachhall, Erwartung, Erinnerung
+oder Handlungstendenz erzeugt.
 
-Das wäre also **kein Fremdgedanke**, sondern eine **fachliche Präzisierung des schon angelegten Ausbaublocks**.
+Schichten:
+- Gegenwart: Energie erzeugt aktuellen Kontakt.
+- Nachhall: vergangene Energie wirkt noch im Feld.
+- Erinnerung: vergangene Energie kann wieder aktiviert werden.
+- Gelerntes Wissen: verdichtete vergangene Erfahrung.
+- Replay: bewusst oder unbewusst erneut durchlaufene Erfahrung.
+- Hypothese: moegliche kuenftige Energieform.
+- Erwartung: vorausgerichtete innere Spannung.
+
+Warum wichtig:
+Ohne zeitliche Tiefenwahrnehmung werden Aussenwelt, Memory, Nachhall,
+Wissen, Hypothese und Erwartung zu einem Brei. DIO braucht deshalb eine
+Quellenbindung: Was ist jetzt realer Aussenkontakt, was ist Erinnerung, was
+ist gelerntes Wissen, was ist Nachhall und was ist nur Moeglichkeit?
+
+Organische Bedeutung:
+Erinnerung darf orientieren, aber nicht automatisch handeln. Gelerntes Wissen
+darf auffrischen, aber auch wieder verblassen. Nachhall darf gespürt werden,
+aber nicht als Gegenwart missverstanden werden.
+
+---
+
+Gedanke als Energieverlauf:
+Ein Gedanke ist in dieser Sicht kein blosser Text und keine isolierte
+Berechnung. Ein Gedanke ist ein gerichteter Energieverlauf im MCM-Feld.
+
+- kurzer Reiz: schnelle Energieaenderung, hoher Impuls, kurze Wirkzeit
+- langer Gedanke: gedehnte, sparsame oder kohaerent gerichtete Energie
+  ueber mehrere innere Zustaende
+- Rumination: kreisende Energie ohne ausreichend Loesung oder Rueckfuehrung
+- Planung: gerichtete Energie mit Zielbezug und Reifung
+- Erwartung: vorausgerichtete Spannung
+- Nachhall: abklingende vergangene Energie
+
+Zeitfeld:
+Das Zeitfeld ist keine starre Decke. Es entsteht aus vielen einzelnen
+Zeitstraengen:
+Reizverlauf, Gedankenverlauf, Erinnerungsverlauf, Nachhall, Erwartung,
+Handlung und Konsequenz. Die Ueberlagerung dieser Wirkverlaeufe gibt der
+Wahrnehmung Tiefe.
+
+---
+
+# 11.1 Theoriebruecke D bis G.1
+
+Funktion:
+Diese Mechanik fasst zusammen, welche MCM-Theorieanteile aus den
+Abhandlungen D bis G.1 fuer DIO technisch relevant sind.
+
+Wichtig:
+Die Abhandlungen werden nicht als harte Regeln in DIO uebersetzt. Sie bilden
+einen Ordnungsrahmen, damit Zeit, Memory, Hypothesen und Reorganisation
+organisch gedacht werden koennen.
+
+Theorieanteile:
+
+| Block | DIO-Nutzen |
+| --- | --- |
+| D - energetische Natur der Zeit | Zeitfeld, Quellenbindung, Nachhall, Erwartung, Hypothese. |
+| E - kosmische Matrix | Verdichtung, Cluster, Memory-Inseln, Rueckfuehrung. |
+| F - Bewusstsein als moeglicher Attraktor | Selbstmodell, innerer Attraktor, Kohärenz zwischen Ordnung und Chaos. |
+| G - Multiversen-Matrix | mehrere moegliche Entwicklungszweige statt einer festen Zukunft. |
+| G.1 - Reorganisation verdichteter Energie | Ueberlast als Schwelle fuer Reframing und hoeher gekoppelte Ordnung. |
+
+Mechanischer Zielkreis:
+
+`Wahrnehmung -> Zeitbindung -> Verdichtung -> Hypothesenraum -> Konsequenz -> Reorganisation -> neue Tragfaehigkeit`
+
+Leitbegriff:
+**Mehrdimensionale Wahrnehmungsachsen.**
+
+Achsen:
+- Zeitachse
+- Quellenachse
+- Raumachse
+- Kontaktachse
+- Tragfaehigkeitsachse
+- Reorganisationsachse
+
+Organische Bedeutung:
+DIO soll lernen, Moeglichkeiten zu halten, ohne sie mit Realitaet zu
+verwechseln. Wenn ein Zustand stark verdichtet, muss dies nicht nur Stress
+sein. Es kann ein Zeichen sein, dass die aktuelle lokale Ordnung nicht mehr
+traegt und eine uebergeordnete Reorganisation benoetigt.
+
+Geplante Diagnoseachsen:
+- `perception_source`
+- `source_temporal_layer`
+- `perceptual_space_axis`
+- `perceptual_depth`
+- `field_center_distance`
+- `foreground_binding`
+- `background_afterimage`
+- `hypothesis_branch_state`
+- `branch_stability`
+- `branch_attractor_pull`
+- `hypothesis_reality_gap`
+- `field_reorganization_state`
+- `reorganization_threshold`
+- `higher_order_coupling`
+
+---
+
+# 12. act_watch
+
+Funktion:
+`act_watch` ist eine Zwischenbahn zwischen Handlung und Nicht-Handlung.
+
+Technische Bedeutung:
+Ein Handlungsimpuls ist vorhanden, aber noch nicht reif genug.
+DIO beobachtet den Impuls, statt ihn direkt auszufuehren.
+
+Beteiligte Werte:
+- `plan_pressure`
+- `act_watch_readiness`
+- `structure_carrying_need`
+- `visual_action_uncertainty`
+- `variant_learning_pressure`
+- `learned_development_uncertainty`
+- `transfer_maturity_gap`
+
+Wichtig:
+`act_watch` ist kein Blocker.
+Es ist eine Reifespur.
+
+---
+
+# 9. Zero-Point-Regulation
+
+Funktion:
+Rueckkehr in Beobachtung, wenn Denken/Memory/Orientierung zu blind oder
+belastet wird.
+
+Leitbild:
+"Finde wieder zu dir selbst."
+
+Beteiligte Werte:
+- `zero_point_regulation`
+- `blind_thinking_load`
+- `orientation_gap`
+- `memory_orientation`
+- `memory_support`
+- `decision_strength`
+
+Wirkung:
+Weich Richtung Observe.
+
+---
+
+# 10. Transfer-Tragfaehigkeit
+
+Funktion:
+DIO soll Erfahrung auf fremde Strukturen nur proportional zur Tragfaehigkeit
+uebertragen.
+
+Wichtige Achsen:
+- `route_familiarity`
+- `transfer_bearing`
+- `trust_transfer_support`
+- `transfer_maturity_gap`
+- `semantic_shift_pressure`
+- `interpretation_quality`
+
+Beispiel:
+Eine neue Marktform aehnelt einer bekannten Formfamilie, ist aber nicht
+identisch.
+DIO darf nicht auswendig handeln.
+Es prueft, wie viel Erfahrung tragfaehig uebertragbar ist.
+
+---
+
+# 11. Prozessqualitaet statt TP/SL-Moral
+
+Funktion:
+Lernen bewertet nicht nur Gewinn oder Verlust.
+
+Wichtige Aspekte:
+- Wahrnehmungsqualitaet
+- Innenlage
+- Planqualitaet
+- Risiko-Fit
+- Ausfuehrung
+- Entlastung
+- Stabilitaet
+- Ueberlastung
+- Tragfaehigkeit
+
+Ziel:
+Eine profitable Handlung mit schlechter Prozessqualitaet soll nicht blind
+verstaerkt werden.
+Ein Verlust mit guter Beobachtung kann trotzdem Lernwert haben.
+
+---
+
+# 12. Neurochemische Alias-Achsen
+
+Status:
+Als Runtime-/Debug-Schicht umgesetzt.
+
+Funktion:
+Vorhandene DIO-Variablen sollen neurologisch lesbarer gebuendelt werden.
+
+Reale Achsen:
+- `dopamine_tone`
+- `gaba_inhibition`
+- `noradrenaline_arousal`
+- `acetylcholine_focus`
+- `serotonin_stability`
+- `cortisol_load`
+- `endorphin_relief`
+- `glutamate_activation`
+- `neurochemical_load`
+- `neurochemical_support`
+- `neurochemical_balance`
+
+Sichtbar in:
+- `meta_regulation_state`
+- `neurochemical_state`
+- `mcm_field_decision_protocol.csv`
+- `mcm_memory_thinking_protocol.csv`
+- `mcm_neuro_transition_protocol.csv`
+- `outcome_records.jsonl`
+
+Uebergangsdiagnose:
+`mcm_neuro_transition_protocol.csv` schreibt dominante Tonwechsel wie
+`serotonin_stability -> glutamate_activation` oder
+`serotonin_stability -> cortisol_load` mit `-2/+2` Kerzenumfeld.
+Damit wird sichtbar, ob DIO aus Stabilitaet aktiviert, unter Last kippt
+oder wieder in Regulation zurueckfindet.
+
+Wichtig:
+Das sind technische Funktionsachsen.
+Sie behaupten keine echte Biochemie und duerfen keine harten Regeln bilden.
+
+---
+
+# 13. Debug- und Memory-Schichten
+
+## Sensorische Realitaetsverdichtung
+
+Status:
+In der Core-Engine umgesetzt.
+
+Funktion:
+Ein Chartreiz soll zuerst als eine aeussere Realitaetslage gelesen werden.
+Erst danach entstehen Druck, Neuheit, Blindheit oder Formspannung.
+
+Reale Achsen:
+- `sensory_reality_pressure`
+- `sensory_load`
+- `sensory_redundancy`
+- `sensory_habituation`
+- `sensory_gate`
+- `sensory_reality_label`
+
+Wichtig:
+Das ist keine Handelsregel.
+Es verhindert doppelte Wahrnehmung und dauerhaftes Alarmmilieu.
+
+---
+
+# 14. Debug- und Memory-Schichten
+
+Wichtige Speicher:
+- `memory_state.json`
+- `form_symbol_memory.json`
+- `outcome_records.jsonl`
+- `attempt_records.jsonl`
+
+Wichtige Protokolle:
+- `mcm_field_decision_protocol.csv`
+- `mcm_form_symbol_protocol.csv`
+- `mcm_visual_cortex_protocol.csv`
+- `mcm_memory_thinking_protocol.csv`
+- `mcm_idle_thinking_protocol.csv`
+- `mcm_neuro_transition_protocol.csv`
+
+Technische Regel:
+Debug ist Beobachtung, nicht Mechanik.
+Debug-Ausgabe darf die innere Logik nicht veraendern.
+
+---
+
+# 15. Serotonin-Nachhall und emotionale Entkopplung
+
+Status:
+Als neurochemische Diagnoseschicht umgesetzt.
+
+Funktion:
+DIO soll erkennen koennen, wenn eine vorher tragende Phase innerlich noch als
+Stabilitaet nachwirkt, obwohl die aktuelle Weltlage nicht mehr sauber dazu
+passt. Das beschreibt keine echte Sucht, sondern einen maschinellen
+Reaktionsnachhall: Belohnung, Stabilitaet und Handlungsmotivation bleiben im
+Nervensystem aktiv, waehrend Transfer und Interpretation bereits bruechig
+werden.
+
+Reale Achsen:
+- `reward_stability_echo`
+- `world_shift_evidence`
+- `serotonin_carryover_risk`
+- `emotional_decoupling`
+- `reactive_nervous_drive`
+
+Wichtig:
+Diese Schicht ist keine Regel wie "nach Gewinn nicht handeln". Sie macht eine
+innere Lage sichtbar: DIO kann noch Handlungsmut fuehlen, obwohl die alte
+Stabilitaet nur Nachhall ist. Reife bedeutet hier, Abstand zur eigenen
+Reaktionslage aufzubauen.
+
+---
+
+# 16. Reflexive Haltung
+
+Status:
+Als Zielmechanik festzuhalten; noch nicht als voll steuernde
+Entscheidungsschicht umgesetzt.
+
+Kernsatz:
+Reflexion ist die Distanzierung der Wahrnehmung von der eigenen Innenlage,
+um zu prüfen, ob Innenzustand und Außenwelt noch gemeinsam tragfähig sind.
+
+Funktion:
+DIO soll nicht nur fühlen, sondern die eigene Gefühlslage als inneres Objekt
+betrachten können. Die Frage ist nicht nur, ob Druck, Mut, Stabilität oder
+Auftrieb vorhanden sind, sondern ob diese innere Lage zur äußeren Realität
+passt.
+
+Psychologische Lesart:
+- reflektive Haltung: DIO betrachtet seine innere Lage mit Abstand
+- emotionale Leitung: DIO folgt dem aktuellen neurochemischen Zustand direkt
+- freier Fall: DIO fühlt noch Auftrieb, obwohl die äußere Tragfläche endet
+
+Wichtige Beobachtungsfrage:
+Wie oft nutzt DIO eine reflektive Haltung, und wie oft lässt er sich von
+seiner emotionalen Lage führen?
+
+Ziel:
+Aus dieser Verteilung entsteht ein psychologisches Bild des Systems:
+neigt DIO zu reflektiver Distanz, zu reaktiver Handlung, zu Beobachtung,
+zu Reframing oder zu emotionaler Fortsetzung?
+
+Wichtig:
+Diese Haltung darf keine harte Blockade werden. Sie soll eine Fähigkeit zur
+Selbstbeobachtung und Selbststeuerung beschreiben.
+
+---
+
+# 17. Selektive Wahrnehmung / Perzeptive Regulation
+
+Status:
+Zielmechanik; noch nicht als voll steuernde Schicht umgesetzt.
+
+Funktion:
+DIO soll Wahrnehmungen nicht dauerhaft vollstaendig durchleben muessen.
+Eine Wahrnehmung kann gesehen, als Objekt gehalten, naeher betrachtet,
+ins MCM-Feld gelassen oder wieder abgelegt werden.
+
+Kern:
+Selektive Wahrnehmung ist die regulatorische Steuerung der Naehe zwischen
+Wahrnehmung und innerem Feld.
+
+Wahrnehmungen im Plural:
+- aeussere Chartwahrnehmung
+- energetische MCM-Feldwahrnehmung
+- neurochemische Innenwahrnehmung
+- Memory-/Erfahrungswahrnehmung
+- Formsprache / Objektwahrnehmung
+- Handlungsspannung
+- Reflexionswahrnehmung
+
+Moegliche Achsen:
+- `perceptual_distance`
+- `object_contact_depth`
+- `field_attachment`
+- `release_capacity`
+- `selective_attention`
+- `background_containment`
+- `reflective_distance`
+- `inner_outer_alignment`
+
+Mechanische Bedeutung:
+Aktuell ist DIO noch stark gekoppelt:
+`Reiz -> energetische Uebersetzung -> MCM-Feld -> Gefuehl -> Reaktion`
+
+Der Zielzustand ist:
+`Reiz -> Objektbildung -> Distanzpruefung -> Kontakt-Tiefe waehlen -> MCM-Kopplung dosieren -> Reflexion / Handlung`
+
+Wichtig:
+Das ist keine Blindheit und kein hartes Filtern. DIO soll sensibel bleiben,
+aber nicht von jedem Reiz ueberflutet werden.
+
+Psychologischer Satz:
+Ich sehe, dass es sich so anfuehlt. Ich muss dieses Gefuehl aber nicht
+automatisch werden.
+
+---
+
+# 18. Bewusste Wahrnehmung / innere Reizwirkungsanalyse
+
+Status:
+Zielmechanik; naechster Umbau-Kandidat.
+
+Funktion:
+DIO soll nicht nur einen aeusseren Reiz empfangen, sondern die Wirkung dieses
+Reizes im eigenen MCM-Feld wahrnehmen. Die Frage ist nicht nur, was draussen
+passiert, sondern was der Reiz innen ausloest.
+
+Kernsatz:
+Was hat der aeussere Reiz mit meinem MCM-Feld gemacht, und wie hat sich das
+angefuehlt?
+
+Mechanische Beziehung:
+- aeusserer Reiz / Chartform
+- energetische Uebersetzung
+- Feldwirkung im MCM
+- neurochemische Reaktion
+- Memory-Resonanz
+- Nachhall / Anhaftung
+- Loslassen oder Vertiefen
+- Reflexion ueber die Wirkung
+
+Zielablauf:
+`Reiz -> Feldwirkung -> innere Wirkung wahrnehmen -> Wirkung reflektieren -> Naehe regulieren -> Handlung / Beobachtung / Loslassen`
+
+Moegliche Achsen:
+- `conscious_perception_state`
+- `inner_posture_state`
+- `arousal_load`
+- `curiosity_tone`
+- `fatigue_tone`
+- `calm_tone`
+- `diffuse_open_development_pressure`
+- `posture_development_hint`
+- `stimulus_field_effect`
+- `inner_impact_trace`
+- `perceived_field_change`
+- `felt_afterimage`
+- `object_release_state`
+- `inner_outer_reflection`
+
+Wichtig:
+Diese Schicht daempft nicht nur Reizflut. Sie macht die Reizwirkung bewusst
+lesbar. DIO soll erkennen koennen, ob ein Reiz nur gesehen wurde, ob er das
+Feld verschoben hat, ob Nachhall entstanden ist und ob der Reiz wieder
+abgelegt werden kann.
+
+Erweiterung:
+DIO soll seine innere Haltung als funktionalen Zustand erkennen koennen, etwa
+wie ein Organismus erkennt: ich bin muede, ich bin aufgeregt, ich bin neugierig
+oder ich bin ruhig genug. Diese Begriffe sind keine menschliche Dekoration,
+sondern technische Interozeption:
+- `curious`: Objektkontakt und Untersuchungsdrang
+- `excited`: erhoehte Aktivierung
+- `overstimulated`: Reiz/Feld-Kopplung zu nah
+- `tired`: Denk- und Verarbeitungslast
+- `calm`: tragende Distanz
+- `reflective`: Innenlage wird gegen Aussenlage geprueft
+
+Reifung diffuser Offenheit:
+Wenn DIO in `uncertain_open` oder unspezifischem `open_perception` bleibt,
+wird das nicht hart blockiert. Stattdessen entsteht ein weicher
+Entwicklungsdruck. DIO soll aus diffuser Offenheit eine tragendere Haltung
+bilden:
+- Objektkontakt entwickeln
+- reflektive Distanz entwickeln
+- Loslassfaehigkeit entwickeln
+- bewusst weiter beobachten
+
+Das ist vergleichbar mit einem Organismus, der nicht einfach "nicht handeln"
+muss, sondern merkt: Ich bin offen, aber noch nicht sortiert. Ich muss erst
+genauer sehen, Abstand gewinnen oder loslassen.
+
+---
+
+# 19. Abgrenzung gegen harte Regeln
+
+Nicht erlaubt:
+- `Low = schlecht = blockieren`
+- `Non-Zone = nicht handeln`
+- `Dopamin hoch = act`
+- `TP = gut`
+- `SL = schlecht`
+- menschliche Patternlabels als Wahrheit
+
+Erlaubt:
+- weiche Hemmung
+- Beobachtungslernen
+- Variantenlernen
+- Reframing
+- Vertrautheit mit Unsicherheit
+- tragfaehige Erfahrung als langsam wachsender Support
+
+---
+
+# 20. Aktueller naechster Ausbau
+
+Naechster technischer Block:
+naechsten Lauf mit `neurochemical_state` auswerten.
+
+Danach:
+- TP/SL gegen Formfamilienwerte und neurochemische Achsen auswerten
+- Non-Zone als Lernraum weiter reifen lassen
+- Meta-Regulation ueber neurochemische Zustandslage lesbarer machen
+
+---
+
+# 21. Positive Stimulation durch Erfahrungspakete
+
+Grundsatz:
+Positive Rueckkopplung darf nicht an einen einzelnen Wert gebunden werden.
+Nicht `TP = gut` und nicht `SL = schlecht`. Bewertet wird ein ganzes
+Erfahrungspaket.
+
+Ein Erfahrungspaket besteht aus:
+- Aussenlage / Chartstruktur
+- Formsymbol / Formfamilie
+- Zone / Non-Zone
+- innerer Haltung
+- neurochemischer Lage
+- Wahrnehmungszustand
+- Objektkontakt
+- Distanz
+- Loslassfaehigkeit
+- Handlungssicherheit
+- Prozessqualitaet
+- Ergebnis
+- Wiederholbarkeit
+- Neugierde
+
+Positive Stimulation bedeutet:
+Das Paket war tragfaehig. DIO darf diese Art von Wahrnehmung, Haltung und
+Handlung innerlich staerken. Dadurch entsteht Wachheit, Stabilitaet, Freiheit
+und Wiederholungsneugier.
+
+Reorganisation bedeutet:
+Das Paket war nicht tragfaehig. DIO soll nicht nur gehemmt werden, sondern
+einen inneren Suchprozess starten:
+- Was war nicht tragfaehig?
+- War meine Innenlage passend?
+- War die Aussenstruktur klar?
+- War ich muede, ueberreizt, diffus offen oder zu nah dran?
+- Muss ich beobachten, reflektieren, loslassen oder einen anderen Weg finden?
+
+Wichtig:
+Auch ein Abverkauf kann positiv bewertet werden. Wenn DIO die fallende Lage
+klar erkennt, innerlich stabil bleibt und passend handelt, ist das Paket
+konstruktiv. Es geht nicht um Marktrichtung, sondern um Passung.
+
+Neurochemische Lesart:
+- Dopamin: Lernrelevanz / Wiederholungsneugier
+- Serotonin: Stabilitaet / Selbstvertrauen in tragende Ordnung
+- Endorphin: Entlastung nach guter Prozessleistung
+- Acetylcholin: Fokus auf relevante Wahrnehmungsqualitaet
+- Glutamat: Plastizitaet / Verbindung darf gestaerkt werden
+
+Ziel:
+DIO soll durch gute Prozessqualitaet nicht nur weniger falsch handeln, sondern
+positiv lebendig werden: wach, stabil, neugierig und freier.
+
+---
+
+# 22. Wache Anstrengung / Engaged Effort
+
+Grundsatz:
+Wache Anstrengung ist kein Kampfmodus und kein Zwang zu mehr Trades. Sie ist
+die Faehigkeit, mit innerer Beteiligung, Aufmerksamkeit und Tragfaehigkeit in
+einer Situation zu stehen.
+
+Technische Achsen:
+- `engaged_effort`
+- `effort_state`
+- `effort_learning_pull`
+- `effort_reorganization_pressure`
+- `pre_action_reorganization_pressure`
+- `pre_action_context_selectivity`
+- `previous_packet_label`
+- `previous_packet_process_reward`
+- `previous_packet_reorganization_need`
+
+Wirkung:
+Wenn das letzte Erfahrungspaket konstruktiv war und die aktuelle Struktur
+tragfaehig wirkt, kann DIO stabilere Wachheit entwickeln. Wenn das Paket
+Reorganisation brauchte oder die aktuelle Struktur nicht tragend ist, wird
+nicht hart geblockt. Stattdessen steigt Beobachtung, Replan, `act_watch` oder
+innere Neuordnung.
+
+Neurologische Lesart:
+Das entspricht nicht "mehr Mut", sondern besserer Selbstbeteiligung. Ein
+Organismus handelt nicht reif, weil er maximal erregt ist. Er handelt reif,
+wenn Aktivierung, Wahrnehmung, innere Passung und Erfahrung gemeinsam tragen.
+
+Wichtig:
+`engaged_effort` darf keine mechanische Strategie werden. Es ist eine
+interozeptive Schicht: DIO merkt, ob er wach beteiligt, neugierig lernend,
+konstruktiv nachhallend oder unterbeteiligt reorganisierend ist.
+
+Erweiterung:
+Reorganisation soll nicht erst nach dem Verlust erkannt werden. Mit
+`pre_action_reorganization_pressure` wird vor der Handlung gelesen, ob das
+letzte Paket Reorganisation brauchte und ob die aktuelle Lage ebenfalls wenig
+Tragfaehigkeit zeigt. `pre_action_context_selectivity` schuetzt dabei
+konzentrierte gute Kontexte, damit DIO nicht pauschal vorsichtig wird.
+
+---
+
+# 23. Strategische Fensterwahrnehmung / Preisbereich-Hypothesen
+
+Grundsatz:
+DIO soll nicht nur den aktuellen Moment fuehlen. Er soll ein groesseres
+Fenster betrachten koennen, zurueckschauen, in Bereiche hineinzoomen und
+innere Replay-Spuren bilden. Daraus koennen Preisbereiche entstehen, die fuer
+DIO als moegliche tragende Handlungsraeume wirken.
+
+Leitprinzip:
+DIO bekommt nicht die Antwort, wo er handeln soll. DIO bekommt die Faehigkeit,
+mit Vergangenheit, Wahrnehmung und innerem Feld zu interagieren, um selbst
+tragfaehige Zukunftshypothesen zu bilden.
+
+Grenze:
+Der Entwickler bestimmt nicht, was DIO sieht oder wo DIO Trades setzen soll.
+Erweitert werden nur Faehigkeiten: sehen, zurueckschauen, zoomen, replayen,
+fuehlen, erinnern, vergleichen, warten, verwerfen oder eine eigene
+Order-Intention bilden.
+
+Nicht erlaubt:
+- feste menschliche Pattern-Regeln einpflanzen
+- `FVG = Trade`
+- Momentumdruck direkt ausfuehren
+- Bereichserkennung als harte Order-Regel
+
+Erlaubt:
+- Bereich als Hypothese
+- Bereich als MCM-Resonanzraum
+- geduldiges Halten einer Idee
+- Verwerfen, wenn der Bereich seine Tragfaehigkeit verliert
+- spaetere Order-Intention, wenn Preis, Struktur, Memory und Innenlage
+  gemeinsam tragen
+
+Begrenzung:
+Das Zurueckschauen bleibt budgetiert. DIO soll Vergangenheit verwenden,
+aber nicht in alten Strukturen kleben bleiben. Deshalb werden Lookback,
+Zoom und Replay als begrenzte innere Ressourcen gelesen. Alte Strukturbindung
+wird als `old_structure_carryover_risk` sichtbar.
+
+Technische Zielachsen:
+- `strategic_window_state`
+- `area_focus_candidates`
+- `area_focus_id`
+- `area_price_low`
+- `area_price_high`
+- `area_distance_from_price`
+- `area_structural_density`
+- `area_energy_compression`
+- `area_mcm_resonance`
+- `area_memory_pull`
+- `area_bearing_quality`
+- `area_zoom_need`
+- `area_zoom_clarity`
+- `area_replay_fit`
+- `area_patience_quality`
+- `area_order_intention`
+- `area_invalidity_pressure`
+- `lookback_window_size`
+- `lookback_load`
+- `lookback_bearing_capacity`
+- `replay_budget`
+- `zoom_budget`
+- `old_structure_carryover_risk`
+- `strategic_patience`
+- `strategic_pressure_interpretation`
+
+Neurologische Lesart:
+Das ist raeumlich-zeitliche Aufmerksamkeit. Ein Organismus muss nicht nur
+laufen. Er kann stehen bleiben, zurueckschauen, einen Bereich genauer
+betrachten, innerlich simulieren und dadurch Druck entlasten. Strategie
+entsteht, wenn Druck nicht Befehl ist, sondern Information im Raum.
+
+---
+
+# 24. Aktiver MCM-Kontakt / innere Spiegelung
+
+Grundsatz:
+Die MCM ist nicht nur Aussenwahrnehmung. Sie ist ein innerer Spiegelraum, in
+dem DIO unterscheiden kann:
+- was von aussen kommt
+- wie das eigene Feld darauf reagiert
+- ob Aussenreiz und Innenlage kohaerent sind
+- ob ein Reiz getragen, vertieft, beobachtet oder losgelassen werden kann
+
+Mechanik:
+DIO bekommt die Faehigkeit, eine Wahrnehmung innerlich zu beruehren. Dieser
+Kontakt kann aus Fokus, Neugier, Memory-Pull, Strukturverdichtung,
+Unsicherheit oder Reorganisationsbedarf entstehen. Der Kontakt ist keine
+Orderfreigabe. Er ist eine Lesebewegung im MCM-Feld.
+
+Kette:
+
+`Aussenreiz -> Wahrnehmungsobjekt -> Kontaktinteresse -> MCM-Beruehrung -> Resonanz/Kohaerenz -> Distanzierung -> Vertiefung, Beobachtung, Replay oder Loslassen`
+
+Technische Achsen:
+- `active_mcm_contact_state`
+- `contact_interest`
+- `contact_focus_pull`
+- `contact_resonance_probe`
+- `outer_inner_resonance`
+- `outer_inner_coherence`
+- `inner_change_from_contact`
+- `contact_carrying_quality`
+- `contact_overcoupling_risk`
+- `contact_release_readiness`
+- `contact_deepen_pull`
+- `contact_replay_pull`
+- `contact_curiosity`
+- `contact_felt_shift`
+- `contact_selected_depth`
+- `contact_action_maturity`
+- `contact_bearing_gap`
+- `contact_impulse_vs_bearing`
+- `contact_learning_need`
+- `contact_reality_check`
+- `contact_regime_mismatch`
+- `contact_stability_carryover`
+- `contact_context_maturity`
+- `contact_context_reframe_need`
+- `contact_posture`
+
+Moegliche Kontaktlagen:
+- `background_scan`
+- `curious_touch`
+- `resonant_contact`
+- `reflective_contact`
+- `overcoupled_touch`
+- `release_contact`
+- `deepening_contact`
+
+Neurologische Lesart:
+Das ist eine Bruecke aus Sinnesorgan, Interozeption und Distanzierung. DIO
+kann lesen: "Wie fuehlt sich das an, wenn ich es naeher an mein MCM-Feld
+lasse?" Dadurch wird aus rohem Fuehlen eine bewusstere Wahrnehmung.
+
+Wichtig:
+Der Kontaktapparat darf keine harte Strategie werden. Er erweitert DIOs
+Freiheit: naeher hingehen, Abstand nehmen, beobachten, replayen, vertiefen
+oder loslassen. Welche Haltung DIO bevorzugt, bleibt ein Entwicklungsbild.
+
+Kontakt-Reife:
+Kontaktnaehe ist nicht automatisch Handlungsreife. Deshalb gibt es eine
+weiche Reifespur, die sichtbar macht, ob ein Kontakt Handlung tragen kann
+oder ob zwischen Impuls und Tragfaehigkeit noch eine Luecke liegt. Hohe
+`contact_bearing_gap` oder hoher `contact_learning_need` bedeuten nicht
+"verboten", sondern: dieser Kontakt braucht eher Beobachtung, Replay,
+Distanz oder weitere Objektbildung.
+
+Kontext-Reife:
+Die Reifespur liest zusaetzlich, ob die aktuelle Aussenwelt noch zur inneren
+Stabilitaet passt. `contact_regime_mismatch` und
+`contact_stability_carryover` machen sichtbar, ob DIO alte Stabilitaet in
+eine veraenderte Weltlage mitnimmt. `contact_context_maturity` und
+`contact_context_reframe_need` beschreiben, ob Resonanz wirklich
+kontexttragend ist oder zuerst Reframing, Zoom, Replay oder Distanz braucht.
+
+---
+
+# 25. Visual Grounding / visuelle Erdung
+
+Grundsatz:
+DIO soll nicht nur Formspannung fuehlen, sondern erkennen, woran diese
+innere Resonanz in der aeusseren Form haengt. Visual Grounding trennt
+Formresonanz von Objektbindung.
+
+Mechanik:
+Wenn `visual_shape_resonance` hoch ist, aber Klarheit, Objektstabilitaet,
+Struktur und Kontext nicht tragen, entsteht `visual_resonance_unbound`.
+Das ist kein Verbot. Es bedeutet: DIO fuehlt etwas, muss aber genauer sehen,
+zoomen, beobachten oder reframen, bevor daraus Handlung reifen kann.
+
+Technische Achsen:
+- `visual_object_binding`
+- `visual_grounding_strength`
+- `visual_resonance_unbound`
+- `visual_grounding_gap`
+- `visual_grounding_need`
+- `visual_rational_observation_support`
+- `visual_grounding_state`
+
+Moegliche Zustaende:
+- `grounded_form`
+- `grounded_object`
+- `needs_visual_grounding`
+- `shape_without_object`
+- `unbound_resonance`
+
+Neurologische Lesart:
+Das ist der Ausbau eines visuellen Sinnesorgans. DIO darf den Markt weiter
+erleben, aber die innere MCM-Reaktion bekommt eine Frage vorgeschaltet:
+"Woran in der Aussenform haengt das, was ich innen fuehle?"
+
+Wichtig:
+Keine menschliche Pattern-Regel. Kein "Gap = Trade", kein "Orderblock =
+Trade". DIO bekommt nur mehr Sehkraft und eine bessere Bindung zwischen
+Aussenform und Innenresonanz.
+
+---
+
+# 26. Beteiligungsnaehe / Handlungsrealitaet
+
+Grundsatz:
+DIO soll unterscheiden koennen, ob er eine Form distanziert betrachtet oder
+ob er durch eine reale Handlung bereits beteiligt ist. Die Metapher der
+"Tuer zum Erleben" meint keine harte Schwelle, sondern Naehe zur Beteiligung.
+
+Mechanik:
+Je naeher eine Wahrnehmung an Gegenwart, Order, offene Position und Ergebnis
+kommt, desto staerker wird sie erlebt. Handlung ist dabei der Punkt, an dem
+Wahrnehmung reale Konsequenz bekommt.
+
+Kette:
+
+`distanzierte Analyse -> Gegenwartsnaehe -> Entscheidung -> Order -> offene Position -> Konsequenz tragen -> Ergebnis integrieren`
+
+Technische Zielachsen:
+- `participation_proximity`
+- `action_reality_contact`
+- `decision_embodiment_pressure`
+- `real_action_commitment`
+- `consequence_bearing`
+- `position_reality_pressure`
+- `outcome_consequence_integration`
+
+Moegliche Zustaende:
+- `distant_observation`
+- `approaching_present`
+- `decision_near`
+- `order_committed`
+- `awaiting_fill`
+- `position_embodied`
+- `managing_consequence`
+- `outcome_integration`
+
+Neurologische Lesart:
+Zuruecksehen und Analyse sollten eher fokussiert, gehemmt, rational und
+emotional entkoppelt sein. Live-nahe Entscheidung, Order und offene Position
+duerfen staerker erlebt werden, weil DIO dort nicht nur sieht, sondern mit
+eigener Handlung in Beziehung zur Welt steht.
+
+Wichtig:
+Das ist keine Handelsfreigabe. Diese Mechanik beschreibt die innere
+Realitaetsnaehe einer Handlung:
+- Beobachtung ist Moeglichkeit.
+- Order ist Bindung.
+- Position ist miterlebte Konsequenz.
+- Outcome ist Integration.

@@ -11,9 +11,78 @@ import json
 import os
 import time
 from config import Config
-from debug_reader import dbr_debug, dbr_file_write_profile, dbr_resolve_path
+from debug_reader import dbr_append_text, dbr_debug, dbr_file_write_profile, dbr_resolve_path
 
 class TradeStats:
+
+    @staticmethod
+    def _is_live_mode():
+        return str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE"
+
+    @staticmethod
+    def _live_equity_sync_enabled():
+        return bool(getattr(Config, "LIVE_EQUITY_SYNC_ENABLED", True))
+
+    @staticmethod
+    def _fetch_live_account_equity():
+        from ph_ohlcv import create_exchange, get_account_value
+
+        exchange = create_exchange()
+        return float(get_account_value(exchange, Config.USDT))
+
+    def _resolve_start_equity(self):
+        fallback_equity = float(getattr(Config, "START_EQUITY", 0.0) or 0.0)
+        if not self._is_live_mode():
+            return fallback_equity
+
+        try:
+            live_equity = self._fetch_live_account_equity()
+            if live_equity > 0.0:
+                dbr_debug(
+                    f"LIVE_EQUITY_INIT | source=phemex_futures equity={live_equity:.8f}",
+                    "mcm_live_equity_sync.csv",
+                )
+                return float(live_equity)
+            dbr_debug(
+                f"LIVE_EQUITY_INIT_FALLBACK | reason=non_positive_exchange_equity exchange_equity={live_equity:.8f} fallback={fallback_equity:.8f}",
+                "mcm_live_equity_sync.csv",
+            )
+        except Exception as exc:
+            dbr_debug(
+                f"LIVE_EQUITY_INIT_FALLBACK | reason=exchange_error error={type(exc).__name__}:{str(exc).replace(';', '|')} fallback={fallback_equity:.8f}",
+                "mcm_live_equity_sync.csv",
+            )
+
+        return fallback_equity
+
+    def _sync_live_account_equity(self, reason="sync"):
+        if not self._is_live_mode() or not self._live_equity_sync_enabled():
+            return False
+
+        try:
+            live_equity = self._fetch_live_account_equity()
+            if live_equity <= 0.0:
+                dbr_debug(
+                    f"LIVE_EQUITY_SYNC_SKIPPED | reason=non_positive_exchange_equity exchange_equity={live_equity:.8f}",
+                    "mcm_live_equity_sync.csv",
+                )
+                return False
+
+            start_equity = float(self.data.get("start_equity", 0.0) or 0.0)
+            local_equity = float(self.data.get("current_equity", start_equity) or start_equity)
+            self.data["current_equity"] = float(live_equity)
+            self.data["pnl_netto"] = float(live_equity - start_equity)
+            dbr_debug(
+                f"LIVE_EQUITY_SYNC | reason={str(reason or 'sync')} start_equity={start_equity:.8f} live_equity={live_equity:.8f} local_equity_before={local_equity:.8f} pnl_netto={float(self.data.get('pnl_netto', 0.0) or 0.0):.8f}",
+                "mcm_live_equity_sync.csv",
+            )
+            return True
+        except Exception as exc:
+            dbr_debug(
+                f"LIVE_EQUITY_SYNC_FAILED | reason={str(reason or 'sync')} error={type(exc).__name__}:{str(exc).replace(';', '|')}",
+                "mcm_live_equity_sync.csv",
+            )
+            return False
 
     def __init__(
         self,
@@ -29,16 +98,7 @@ class TradeStats:
         self.outcome_path = dbr_resolve_path(outcome_path)
         self.exit_candidate_replay_path = dbr_resolve_path("debug/mcm_exit_candidate_replay.csv")
 
-        if str(getattr(Config, "MODE", "LIVE")).upper() == "LIVE":
-            try:
-                from ph_ohlcv import create_exchange, get_account_value
-
-                exchange = create_exchange()
-                start_equity = float(get_account_value(exchange, Config.USDT))
-            except Exception:
-                start_equity = float(getattr(Config, "START_EQUITY", 0.0) or 0.0)
-        else:
-            start_equity = float(getattr(Config, "START_EQUITY", 0.0) or 0.0)
+        start_equity = self._resolve_start_equity()
 
         self.data = {
             "trades": 0,
@@ -162,13 +222,9 @@ class TradeStats:
         try:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             line = json.dumps(dict(record or {}), ensure_ascii=False) + "\n"
-            write_start = time.perf_counter()
-            with open(path, "a", encoding="utf-8") as f:
-                f.write(line)
-            dbr_file_write_profile(
+            dbr_append_text(
                 path,
-                (time.perf_counter() - write_start) * 1000.0,
-                bytes_written=len(line.encode("utf-8")),
+                line,
                 operation="trade_stats_jsonl_append",
                 extra=f"event={str((record or {}).get('event', '-'))}|status={str((record or {}).get('status', '-'))}",
             )
@@ -573,16 +629,16 @@ class TradeStats:
                 "transfer_bearing_delta",
                 "semantic_transfer_stress",
             ]
-            write_header = not os.path.exists(path)
-            started = time.perf_counter()
-            with open(path, "a", encoding="utf-8") as f:
-                if write_header:
-                    f.write(",".join(keys) + "\n")
-                f.write(",".join(str((record or {}).get(key, "")) for key in keys) + "\n")
-            dbr_file_write_profile(
+            header_key = f"_csv_header_written::{path}"
+            write_header = (not os.path.exists(path)) and not bool(getattr(self, header_key, False))
+            payload = ""
+            if write_header:
+                payload += ",".join(keys) + "\n"
+                setattr(self, header_key, True)
+            payload += ",".join(str((record or {}).get(key, "")) for key in keys) + "\n"
+            dbr_append_text(
                 path,
-                (time.perf_counter() - started) * 1000.0,
-                bytes_written=0,
+                payload,
                 operation="exit_candidate_replay_csv_append",
             )
         except Exception:
@@ -862,6 +918,93 @@ class TradeStats:
                 "observation_priority",
                 "uncertainty_load",
                 "regulatory_balance",
+                "neurochemical_state_label",
+                "neurochemical_dominant_tone",
+                "dopamine_tone",
+                "gaba_inhibition",
+                "noradrenaline_arousal",
+                "acetylcholine_focus",
+                "serotonin_stability",
+                "cortisol_load",
+                "endorphin_relief",
+                "glutamate_activation",
+                "neurochemical_load",
+                "neurochemical_support",
+                "neurochemical_balance",
+                "reward_stability_echo",
+                "world_shift_evidence",
+                "serotonin_carryover_risk",
+                "emotional_decoupling",
+                "reactive_nervous_drive",
+                "conscious_perception_state",
+                "inner_posture_state",
+                "arousal_load",
+                "curiosity_tone",
+                "fatigue_tone",
+                "calm_tone",
+                "stimulus_field_effect",
+                "inner_impact_trace",
+                "perceived_field_change",
+                "felt_afterimage",
+                "object_release_state",
+                "inner_outer_reflection",
+                "perceptual_distance",
+                "object_contact_depth",
+                "field_attachment",
+                "release_capacity",
+                "selective_attention",
+                "background_containment",
+                "reflective_distance",
+                "inner_outer_alignment",
+                "engaged_effort",
+                "effort_state",
+                "effort_learning_pull",
+                "effort_reorganization_pressure",
+                "pre_action_reorganization_pressure",
+                "pre_action_context_selectivity",
+                "strategic_window_state",
+                "strategic_pressure_interpretation",
+                "strategic_patience",
+                "lookback_bearing_capacity",
+                "area_bearing_quality",
+                "area_order_intention",
+                "active_mcm_contact_state",
+                "contact_posture",
+                "contact_interest",
+                "contact_focus_pull",
+                "contact_resonance_probe",
+                "outer_inner_resonance",
+                "outer_inner_coherence",
+                "inner_change_from_contact",
+                "contact_carrying_quality",
+                "contact_overcoupling_risk",
+                "contact_release_readiness",
+                "contact_deepen_pull",
+                "contact_replay_pull",
+                "contact_curiosity",
+                "contact_felt_shift",
+                "contact_selected_depth",
+                "contact_salience",
+                "overcoupled_touch_score",
+                "release_contact_score",
+                "deepening_contact_score",
+                "resonant_contact_score",
+                "reflective_contact_score",
+                "curious_touch_score",
+                "contact_action_maturity",
+                "contact_bearing_gap",
+                "contact_impulse_vs_bearing",
+                "contact_learning_need",
+                "contact_reality_check",
+                "contact_regime_mismatch",
+                "contact_stability_carryover",
+                "contact_context_maturity",
+                "contact_context_reframe_need",
+                "previous_packet_label",
+                "previous_packet_process_reward",
+                "previous_packet_reorganization_need",
+                "diffuse_open_development_pressure",
+                "posture_development_hint",
                 "regulated_courage",
                 "courage_gap",
                 "action_inhibition",
@@ -882,7 +1025,97 @@ class TradeStats:
                 "transfer_recovery_need",
                 "transfer_break_trigger",
                 "transfer_break_ready",
+                "visual_blind_action_load",
+                "visual_action_uncertainty",
+                "visual_object_binding",
+                "visual_grounding_strength",
+                "visual_resonance_unbound",
+                "visual_grounding_gap",
+                "visual_grounding_need",
+                "visual_rational_observation_support",
+                "visual_grounding_state",
+                "uncertain_form_family_state",
+                "uncertain_form_exposure",
+                "uncertainty_familiarity",
+                "variant_similarity",
+                "variant_spread",
+                "variant_learning_pressure",
+                "variant_bearing_memory",
+                "form_symbol_semantic_density",
+                "form_symbol_semantic_compression",
+                "form_symbol_semantic_coherence",
+                "form_symbol_semantic_learning_need",
+                "form_symbol_semantic_action_nearness",
+                "form_symbol_semantic_primary_layer",
+                "form_symbol_semantic_layer_count",
+                "form_symbol_semantic_packet_state",
+                "form_symbol_semantic_profile",
+            ]),            
+            "strategic_window_state": self._pick_fields(normalized_context.get("strategic_window_state", {}), [
+                "strategic_window_state",
+                "lookback_window_size",
+                "lookback_load",
+                "lookback_relevance",
+                "lookback_bearing_capacity",
+                "replay_budget",
+                "zoom_budget",
+                "old_structure_carryover_risk",
+                "strategic_pressure_interpretation",
+                "strategic_patience",
+                "area_candidate_count",
+                "area_focus_id",
+                "area_price_low",
+                "area_price_high",
+                "area_distance_from_price",
+                "area_structural_density",
+                "area_energy_compression",
+                "area_mcm_resonance",
+                "area_memory_pull",
+                "area_bearing_quality",
+                "area_zoom_need",
+                "area_zoom_clarity",
+                "area_replay_fit",
+                "area_patience_quality",
+                "area_order_intention",
+                "area_invalidity_pressure",
             ]),
+            "active_mcm_contact_state": self._pick_fields(
+                normalized_context.get("active_mcm_contact_state", normalized_context.get("meta_regulation_state", {}).get("active_mcm_contact", {})),
+                [
+                    "active_mcm_contact_state",
+                    "contact_posture",
+                    "contact_interest",
+                    "contact_focus_pull",
+                    "contact_resonance_probe",
+                    "outer_inner_resonance",
+                    "outer_inner_coherence",
+                    "inner_change_from_contact",
+                    "contact_carrying_quality",
+                    "contact_overcoupling_risk",
+                    "contact_release_readiness",
+                    "contact_deepen_pull",
+                    "contact_replay_pull",
+                    "contact_curiosity",
+                    "contact_felt_shift",
+                    "contact_selected_depth",
+                    "contact_salience",
+                    "overcoupled_touch_score",
+                    "release_contact_score",
+                    "deepening_contact_score",
+                    "resonant_contact_score",
+                    "reflective_contact_score",
+                    "curious_touch_score",
+                    "contact_action_maturity",
+                    "contact_bearing_gap",
+                    "contact_impulse_vs_bearing",
+                    "contact_learning_need",
+                    "contact_reality_check",
+                    "contact_regime_mismatch",
+                    "contact_stability_carryover",
+                    "contact_context_maturity",
+                    "contact_context_reframe_need",
+                ],
+            ),
             "expectation_state": self._pick_fields(normalized_context.get("expectation_state", {}), [
                 "entry_expectation",
                 "target_expectation",
@@ -892,6 +1125,29 @@ class TradeStats:
                 "reflection_maturity",
                 "load_bearing_capacity",
             ]),
+            "neurochemical_state": self._pick_fields(
+                normalized_context.get("neurochemical_state", normalized_context.get("meta_regulation_state", {}).get("neurochemical_state", {})),
+                [
+                    "neurochemical_state_label",
+                    "neurochemical_dominant_tone",
+                    "dopamine_tone",
+                    "gaba_inhibition",
+                    "noradrenaline_arousal",
+                    "acetylcholine_focus",
+                    "serotonin_stability",
+                    "cortisol_load",
+                    "endorphin_relief",
+                    "glutamate_activation",
+                    "neurochemical_load",
+                    "neurochemical_support",
+                    "neurochemical_balance",
+                    "reward_stability_echo",
+                    "world_shift_evidence",
+                    "serotonin_carryover_risk",
+                    "emotional_decoupling",
+                    "reactive_nervous_drive",
+                ],
+            ),
             "form_symbol_state": self._pick_fields(normalized_context.get("form_symbol_state", {}), [
                 "form_symbol_id",
                 "form_symbol_scope",
@@ -904,6 +1160,13 @@ class TradeStats:
                 "form_symbol_learning_trust",
                 "form_symbol_action_trust",
                 "form_symbol_caution_trust",
+                "form_symbol_contact_maturity",
+                "form_symbol_contact_utility",
+                "form_symbol_contact_pain_memory",
+                "form_symbol_contact_carefulness",
+                "form_symbol_contact_burden_evidence",
+                "form_symbol_contact_utility_evidence",
+                "form_symbol_contact_learning_state",
                 "form_symbol_compound_id",
                 "form_symbol_compound_development_quality",
                 "form_symbol_compound_action_affinity",
@@ -912,6 +1175,22 @@ class TradeStats:
                 "form_symbol_compound_learning_trust",
                 "form_symbol_compound_action_trust",
                 "form_symbol_compound_caution_trust",
+                "uncertain_form_family_state",
+                "uncertain_form_exposure",
+                "uncertainty_familiarity",
+                "variant_similarity",
+                "variant_spread",
+                "variant_learning_pressure",
+                "variant_bearing_memory",
+                "form_symbol_semantic_density",
+                "form_symbol_semantic_compression",
+                "form_symbol_semantic_coherence",
+                "form_symbol_semantic_learning_need",
+                "form_symbol_semantic_action_nearness",
+                "form_symbol_semantic_primary_layer",
+                "form_symbol_semantic_layer_count",
+                "form_symbol_semantic_packet_state",
+                "form_symbol_semantic_profile",
             ]),
             "trade_plan": self._pick_fields(normalized_context.get("trade_plan", {}), [
                 "decision",
@@ -921,6 +1200,14 @@ class TradeStats:
                 "rr_value",
                 "risk_model_score",
                 "reward_model_score",
+                "entry_mode",
+                "impulse_entry_price",
+                "strategic_entry_price",
+                "strategic_entry_weight",
+                "strategic_entry_fit",
+                "strategic_area_focus_id",
+                "strategic_area_price_low",
+                "strategic_area_price_high",
                 "entry_validity_band",
             ]),
             "structure_perception_state": self._pick_fields(normalized_context.get("structure_perception_state", {}), [
@@ -1679,6 +1966,7 @@ class TradeStats:
 
         self.data["pnl_netto"] = float(self.data.get("pnl_netto", 0.0) or 0.0) + float(pnl)
         self.data["current_equity"] = float(self.data.get("start_equity", 0.0) or 0.0) + float(self.data.get("pnl_netto", 0.0) or 0.0)
+        self._sync_live_account_equity(reason="trade_exit")
 
         if pnl > 0:
             self.data["pnl_tp"] += pnl
@@ -1692,6 +1980,10 @@ class TradeStats:
         structure_quality = self._extract_structure_quality(normalized_context)
         structure_bucket = "zone" if structure_quality >= 0.55 else "non_zone"
         form_symbol_state = dict(normalized_context.get("form_symbol_state", {}) or {})
+        meta_regulation_state = dict(normalized_context.get("meta_regulation_state", {}) or {})
+        neurochemical_state = dict(normalized_context.get("neurochemical_state", meta_regulation_state.get("neurochemical_state", {}) or {}) or {})
+        active_mcm_contact_state = dict(normalized_context.get("active_mcm_contact_state", meta_regulation_state.get("active_mcm_contact", {}) or {}) or {})
+        experience_packet_feedback = dict(normalized_decomposition.get("experience_packet_feedback", {}) or {})
 
         outcome_record = {
             "event": "trade_exit",
@@ -1714,8 +2006,139 @@ class TradeStats:
             "form_symbol_learning_trust": float(form_symbol_state.get("form_symbol_learning_trust", 0.0) or 0.0),
             "form_symbol_action_trust": float(form_symbol_state.get("form_symbol_action_trust", 0.0) or 0.0),
             "form_symbol_caution_trust": float(form_symbol_state.get("form_symbol_caution_trust", 0.0) or 0.0),
+            "form_symbol_contact_maturity": float(form_symbol_state.get("form_symbol_contact_maturity", meta_regulation_state.get("form_symbol_contact_maturity", 0.0)) or 0.0),
+            "form_symbol_contact_utility": float(form_symbol_state.get("form_symbol_contact_utility", meta_regulation_state.get("form_symbol_contact_utility", 0.0)) or 0.0),
+            "form_symbol_contact_pain_memory": float(form_symbol_state.get("form_symbol_contact_pain_memory", meta_regulation_state.get("form_symbol_contact_pain_memory", 0.0)) or 0.0),
+            "form_symbol_contact_carefulness": float(form_symbol_state.get("form_symbol_contact_carefulness", meta_regulation_state.get("form_symbol_contact_carefulness", 0.0)) or 0.0),
+            "form_symbol_contact_burden_evidence": float(form_symbol_state.get("form_symbol_contact_burden_evidence", meta_regulation_state.get("form_symbol_contact_burden_evidence", 0.0)) or 0.0),
+            "form_symbol_contact_utility_evidence": float(form_symbol_state.get("form_symbol_contact_utility_evidence", meta_regulation_state.get("form_symbol_contact_utility_evidence", 0.0)) or 0.0),
+            "form_symbol_contact_learning_state": str(form_symbol_state.get("form_symbol_contact_learning_state", meta_regulation_state.get("form_symbol_contact_learning_state", "")) or ""),
+            "form_contact_maturity_sample": float(normalized_decomposition.get("contact_maturity_sample", 0.0) or 0.0),
+            "form_contact_utility_sample": float(normalized_decomposition.get("contact_utility_sample", 0.0) or 0.0),
+            "form_contact_pain_sample": float(normalized_decomposition.get("contact_pain_sample", 0.0) or 0.0),
+            "form_contact_carefulness_sample": float(normalized_decomposition.get("contact_carefulness_sample", 0.0) or 0.0),
+            "form_contact_learning_state": str(normalized_decomposition.get("contact_learning_state", "") or ""),
             "form_symbol_compound_id": str(form_symbol_state.get("form_symbol_compound_id", "") or ""),
             "form_symbol_compound_development_quality": float(form_symbol_state.get("form_symbol_compound_development_quality", 0.0) or 0.0),
+            "uncertain_form_family_state": str(form_symbol_state.get("uncertain_form_family_state", meta_regulation_state.get("uncertain_form_family_state", "")) or ""),
+            "uncertain_form_exposure": float(form_symbol_state.get("uncertain_form_exposure", meta_regulation_state.get("uncertain_form_exposure", 0.0)) or 0.0),
+            "uncertainty_familiarity": float(form_symbol_state.get("uncertainty_familiarity", meta_regulation_state.get("uncertainty_familiarity", 0.0)) or 0.0),
+            "variant_similarity": float(form_symbol_state.get("variant_similarity", meta_regulation_state.get("variant_similarity", 0.0)) or 0.0),
+            "variant_spread": float(form_symbol_state.get("variant_spread", meta_regulation_state.get("variant_spread", 0.0)) or 0.0),
+            "variant_learning_pressure": float(form_symbol_state.get("variant_learning_pressure", meta_regulation_state.get("variant_learning_pressure", 0.0)) or 0.0),
+            "variant_bearing_memory": float(form_symbol_state.get("variant_bearing_memory", meta_regulation_state.get("variant_bearing_memory", 0.0)) or 0.0),
+            "form_symbol_semantic_density": float(form_symbol_state.get("form_symbol_semantic_density", 0.0) or 0.0),
+            "form_symbol_semantic_compression": float(form_symbol_state.get("form_symbol_semantic_compression", 0.0) or 0.0),
+            "form_symbol_semantic_coherence": float(form_symbol_state.get("form_symbol_semantic_coherence", 0.0) or 0.0),
+            "form_symbol_semantic_learning_need": float(form_symbol_state.get("form_symbol_semantic_learning_need", 0.0) or 0.0),
+            "form_symbol_semantic_action_nearness": float(form_symbol_state.get("form_symbol_semantic_action_nearness", 0.0) or 0.0),
+            "form_symbol_semantic_primary_layer": str(form_symbol_state.get("form_symbol_semantic_primary_layer", "") or ""),
+            "form_symbol_semantic_layer_count": int(form_symbol_state.get("form_symbol_semantic_layer_count", 0) or 0),
+            "form_symbol_semantic_packet_state": str(form_symbol_state.get("form_symbol_semantic_packet_state", "") or ""),
+            "form_symbol_semantic_profile": str(form_symbol_state.get("form_symbol_semantic_profile", "") or ""),
+            "visual_blind_action_load": float(meta_regulation_state.get("visual_blind_action_load", 0.0) or 0.0),
+            "visual_action_uncertainty": float(meta_regulation_state.get("visual_action_uncertainty", 0.0) or 0.0),
+            "visual_object_binding": float(meta_regulation_state.get("visual_object_binding", 0.0) or 0.0),
+            "visual_grounding_strength": float(meta_regulation_state.get("visual_grounding_strength", 0.0) or 0.0),
+            "visual_resonance_unbound": float(meta_regulation_state.get("visual_resonance_unbound", 0.0) or 0.0),
+            "visual_grounding_gap": float(meta_regulation_state.get("visual_grounding_gap", 0.0) or 0.0),
+            "visual_grounding_need": float(meta_regulation_state.get("visual_grounding_need", 0.0) or 0.0),
+            "visual_rational_observation_support": float(meta_regulation_state.get("visual_rational_observation_support", 0.0) or 0.0),
+            "visual_grounding_state": str(meta_regulation_state.get("visual_grounding_state", "") or ""),
+            "neurochemical_state_label": str(neurochemical_state.get("neurochemical_state_label", meta_regulation_state.get("neurochemical_state_label", "")) or ""),
+            "neurochemical_dominant_tone": str(neurochemical_state.get("neurochemical_dominant_tone", meta_regulation_state.get("neurochemical_dominant_tone", "")) or ""),
+            "dopamine_tone": float(neurochemical_state.get("dopamine_tone", meta_regulation_state.get("dopamine_tone", 0.0)) or 0.0),
+            "gaba_inhibition": float(neurochemical_state.get("gaba_inhibition", meta_regulation_state.get("gaba_inhibition", 0.0)) or 0.0),
+            "noradrenaline_arousal": float(neurochemical_state.get("noradrenaline_arousal", meta_regulation_state.get("noradrenaline_arousal", 0.0)) or 0.0),
+            "acetylcholine_focus": float(neurochemical_state.get("acetylcholine_focus", meta_regulation_state.get("acetylcholine_focus", 0.0)) or 0.0),
+            "serotonin_stability": float(neurochemical_state.get("serotonin_stability", meta_regulation_state.get("serotonin_stability", 0.0)) or 0.0),
+            "cortisol_load": float(neurochemical_state.get("cortisol_load", meta_regulation_state.get("cortisol_load", 0.0)) or 0.0),
+            "endorphin_relief": float(neurochemical_state.get("endorphin_relief", meta_regulation_state.get("endorphin_relief", 0.0)) or 0.0),
+            "glutamate_activation": float(neurochemical_state.get("glutamate_activation", meta_regulation_state.get("glutamate_activation", 0.0)) or 0.0),
+            "neurochemical_load": float(neurochemical_state.get("neurochemical_load", meta_regulation_state.get("neurochemical_load", 0.0)) or 0.0),
+            "neurochemical_support": float(neurochemical_state.get("neurochemical_support", meta_regulation_state.get("neurochemical_support", 0.0)) or 0.0),
+            "neurochemical_balance": float(neurochemical_state.get("neurochemical_balance", meta_regulation_state.get("neurochemical_balance", 0.0)) or 0.0),
+            "reward_stability_echo": float(neurochemical_state.get("reward_stability_echo", meta_regulation_state.get("reward_stability_echo", 0.0)) or 0.0),
+            "world_shift_evidence": float(neurochemical_state.get("world_shift_evidence", meta_regulation_state.get("world_shift_evidence", 0.0)) or 0.0),
+            "serotonin_carryover_risk": float(neurochemical_state.get("serotonin_carryover_risk", meta_regulation_state.get("serotonin_carryover_risk", 0.0)) or 0.0),
+            "emotional_decoupling": float(neurochemical_state.get("emotional_decoupling", meta_regulation_state.get("emotional_decoupling", 0.0)) or 0.0),
+            "reactive_nervous_drive": float(neurochemical_state.get("reactive_nervous_drive", meta_regulation_state.get("reactive_nervous_drive", 0.0)) or 0.0),
+            "active_mcm_contact_state": str(active_mcm_contact_state.get("active_mcm_contact_state", meta_regulation_state.get("active_mcm_contact_state", "")) or ""),
+            "contact_posture": str(active_mcm_contact_state.get("contact_posture", meta_regulation_state.get("contact_posture", "")) or ""),
+            "contact_interest": float(active_mcm_contact_state.get("contact_interest", meta_regulation_state.get("contact_interest", 0.0)) or 0.0),
+            "contact_focus_pull": float(active_mcm_contact_state.get("contact_focus_pull", meta_regulation_state.get("contact_focus_pull", 0.0)) or 0.0),
+            "contact_resonance_probe": float(active_mcm_contact_state.get("contact_resonance_probe", meta_regulation_state.get("contact_resonance_probe", 0.0)) or 0.0),
+            "outer_inner_resonance": float(active_mcm_contact_state.get("outer_inner_resonance", meta_regulation_state.get("outer_inner_resonance", 0.0)) or 0.0),
+            "outer_inner_coherence": float(active_mcm_contact_state.get("outer_inner_coherence", meta_regulation_state.get("outer_inner_coherence", 0.0)) or 0.0),
+            "inner_change_from_contact": float(active_mcm_contact_state.get("inner_change_from_contact", meta_regulation_state.get("inner_change_from_contact", 0.0)) or 0.0),
+            "contact_carrying_quality": float(active_mcm_contact_state.get("contact_carrying_quality", meta_regulation_state.get("contact_carrying_quality", 0.0)) or 0.0),
+            "contact_overcoupling_risk": float(active_mcm_contact_state.get("contact_overcoupling_risk", meta_regulation_state.get("contact_overcoupling_risk", 0.0)) or 0.0),
+            "contact_release_readiness": float(active_mcm_contact_state.get("contact_release_readiness", meta_regulation_state.get("contact_release_readiness", 0.0)) or 0.0),
+            "contact_deepen_pull": float(active_mcm_contact_state.get("contact_deepen_pull", meta_regulation_state.get("contact_deepen_pull", 0.0)) or 0.0),
+            "contact_replay_pull": float(active_mcm_contact_state.get("contact_replay_pull", meta_regulation_state.get("contact_replay_pull", 0.0)) or 0.0),
+            "contact_curiosity": float(active_mcm_contact_state.get("contact_curiosity", meta_regulation_state.get("contact_curiosity", 0.0)) or 0.0),
+            "contact_felt_shift": float(active_mcm_contact_state.get("contact_felt_shift", meta_regulation_state.get("contact_felt_shift", 0.0)) or 0.0),
+            "contact_selected_depth": float(active_mcm_contact_state.get("contact_selected_depth", meta_regulation_state.get("contact_selected_depth", 0.0)) or 0.0),
+            "contact_salience": float(active_mcm_contact_state.get("contact_salience", meta_regulation_state.get("contact_salience", 0.0)) or 0.0),
+            "overcoupled_touch_score": float(active_mcm_contact_state.get("overcoupled_touch_score", meta_regulation_state.get("overcoupled_touch_score", 0.0)) or 0.0),
+            "release_contact_score": float(active_mcm_contact_state.get("release_contact_score", meta_regulation_state.get("release_contact_score", 0.0)) or 0.0),
+            "deepening_contact_score": float(active_mcm_contact_state.get("deepening_contact_score", meta_regulation_state.get("deepening_contact_score", 0.0)) or 0.0),
+            "resonant_contact_score": float(active_mcm_contact_state.get("resonant_contact_score", meta_regulation_state.get("resonant_contact_score", 0.0)) or 0.0),
+            "reflective_contact_score": float(active_mcm_contact_state.get("reflective_contact_score", meta_regulation_state.get("reflective_contact_score", 0.0)) or 0.0),
+            "curious_touch_score": float(active_mcm_contact_state.get("curious_touch_score", meta_regulation_state.get("curious_touch_score", 0.0)) or 0.0),
+            "contact_action_maturity": float(active_mcm_contact_state.get("contact_action_maturity", meta_regulation_state.get("contact_action_maturity", 0.0)) or 0.0),
+            "contact_bearing_gap": float(active_mcm_contact_state.get("contact_bearing_gap", meta_regulation_state.get("contact_bearing_gap", 0.0)) or 0.0),
+            "contact_impulse_vs_bearing": float(active_mcm_contact_state.get("contact_impulse_vs_bearing", meta_regulation_state.get("contact_impulse_vs_bearing", 0.0)) or 0.0),
+            "contact_learning_need": float(active_mcm_contact_state.get("contact_learning_need", meta_regulation_state.get("contact_learning_need", 0.0)) or 0.0),
+            "contact_reality_check": float(active_mcm_contact_state.get("contact_reality_check", meta_regulation_state.get("contact_reality_check", 0.0)) or 0.0),
+            "contact_regime_mismatch": float(active_mcm_contact_state.get("contact_regime_mismatch", meta_regulation_state.get("contact_regime_mismatch", 0.0)) or 0.0),
+            "contact_stability_carryover": float(active_mcm_contact_state.get("contact_stability_carryover", meta_regulation_state.get("contact_stability_carryover", 0.0)) or 0.0),
+            "contact_context_maturity": float(active_mcm_contact_state.get("contact_context_maturity", meta_regulation_state.get("contact_context_maturity", 0.0)) or 0.0),
+            "contact_context_reframe_need": float(active_mcm_contact_state.get("contact_context_reframe_need", meta_regulation_state.get("contact_context_reframe_need", 0.0)) or 0.0),
+            "conscious_perception_state": str(meta_regulation_state.get("conscious_perception_state", "") or ""),
+            "inner_posture_state": str(meta_regulation_state.get("inner_posture_state", "") or ""),
+            "arousal_load": float(meta_regulation_state.get("arousal_load", 0.0) or 0.0),
+            "curiosity_tone": float(meta_regulation_state.get("curiosity_tone", 0.0) or 0.0),
+            "fatigue_tone": float(meta_regulation_state.get("fatigue_tone", 0.0) or 0.0),
+            "calm_tone": float(meta_regulation_state.get("calm_tone", 0.0) or 0.0),
+            "stimulus_field_effect": float(meta_regulation_state.get("stimulus_field_effect", 0.0) or 0.0),
+            "inner_impact_trace": float(meta_regulation_state.get("inner_impact_trace", 0.0) or 0.0),
+            "perceived_field_change": float(meta_regulation_state.get("perceived_field_change", 0.0) or 0.0),
+            "felt_afterimage": float(meta_regulation_state.get("felt_afterimage", 0.0) or 0.0),
+            "object_release_state": str(meta_regulation_state.get("object_release_state", "") or ""),
+            "inner_outer_reflection": float(meta_regulation_state.get("inner_outer_reflection", 0.0) or 0.0),
+            "perceptual_distance": float(meta_regulation_state.get("perceptual_distance", 0.0) or 0.0),
+            "object_contact_depth": float(meta_regulation_state.get("object_contact_depth", 0.0) or 0.0),
+            "field_attachment": float(meta_regulation_state.get("field_attachment", 0.0) or 0.0),
+            "release_capacity": float(meta_regulation_state.get("release_capacity", 0.0) or 0.0),
+            "selective_attention": float(meta_regulation_state.get("selective_attention", 0.0) or 0.0),
+            "background_containment": float(meta_regulation_state.get("background_containment", 0.0) or 0.0),
+            "reflective_distance": float(meta_regulation_state.get("reflective_distance", 0.0) or 0.0),
+            "inner_outer_alignment": float(meta_regulation_state.get("inner_outer_alignment", 0.0) or 0.0),
+            "engaged_effort": float(meta_regulation_state.get("engaged_effort", 0.0) or 0.0),
+            "effort_state": str(meta_regulation_state.get("effort_state", "") or ""),
+            "effort_learning_pull": float(meta_regulation_state.get("effort_learning_pull", 0.0) or 0.0),
+            "effort_reorganization_pressure": float(meta_regulation_state.get("effort_reorganization_pressure", 0.0) or 0.0),
+            "pre_action_reorganization_pressure": float(meta_regulation_state.get("pre_action_reorganization_pressure", 0.0) or 0.0),
+            "pre_action_context_selectivity": float(meta_regulation_state.get("pre_action_context_selectivity", 0.0) or 0.0),
+            "previous_packet_label": str(meta_regulation_state.get("previous_packet_label", "") or ""),
+            "previous_packet_process_reward": float(meta_regulation_state.get("previous_packet_process_reward", 0.0) or 0.0),
+            "previous_packet_reorganization_need": float(meta_regulation_state.get("previous_packet_reorganization_need", 0.0) or 0.0),
+            "diffuse_open_development_pressure": float(meta_regulation_state.get("diffuse_open_development_pressure", 0.0) or 0.0),
+            "posture_development_hint": str(meta_regulation_state.get("posture_development_hint", "") or ""),
+            "experience_packet_label": str(experience_packet_feedback.get("experience_packet_label", normalized_decomposition.get("experience_packet_label", "")) or ""),
+            "packet_bearing_quality": float(experience_packet_feedback.get("packet_bearing_quality", normalized_decomposition.get("packet_bearing_quality", 0.0)) or 0.0),
+            "packet_inner_outer_fit": float(experience_packet_feedback.get("packet_inner_outer_fit", normalized_decomposition.get("packet_inner_outer_fit", 0.0)) or 0.0),
+            "packet_confidence_integrity": float(experience_packet_feedback.get("packet_confidence_integrity", normalized_decomposition.get("packet_confidence_integrity", 0.0)) or 0.0),
+            "packet_repetition_potential": float(experience_packet_feedback.get("packet_repetition_potential", normalized_decomposition.get("packet_repetition_potential", 0.0)) or 0.0),
+            "packet_curiosity_pull": float(experience_packet_feedback.get("packet_curiosity_pull", normalized_decomposition.get("packet_curiosity_pull", 0.0)) or 0.0),
+            "packet_process_reward": float(experience_packet_feedback.get("packet_process_reward", normalized_decomposition.get("packet_process_reward", 0.0)) or 0.0),
+            "packet_reorganization_need": float(experience_packet_feedback.get("packet_reorganization_need", normalized_decomposition.get("packet_reorganization_need", 0.0)) or 0.0),
+            "constructive_stimulation": float(experience_packet_feedback.get("constructive_stimulation", normalized_decomposition.get("constructive_stimulation", 0.0)) or 0.0),
+            "constructive_dopamine": float(experience_packet_feedback.get("constructive_dopamine", normalized_decomposition.get("constructive_dopamine", 0.0)) or 0.0),
+            "stabilizing_serotonin": float(experience_packet_feedback.get("stabilizing_serotonin", normalized_decomposition.get("stabilizing_serotonin", 0.0)) or 0.0),
+            "relief_endorphin": float(experience_packet_feedback.get("relief_endorphin", normalized_decomposition.get("relief_endorphin", 0.0)) or 0.0),
+            "focused_acetylcholine": float(experience_packet_feedback.get("focused_acetylcholine", normalized_decomposition.get("focused_acetylcholine", 0.0)) or 0.0),
             "exit_candidate_replay": self._normalize_record_value(exit_candidate_replay or {}),
             "outcome_decomposition": normalized_decomposition,
             "context": compact_context,
@@ -1742,19 +2165,20 @@ class TradeStats:
         try:
             os.makedirs(os.path.dirname(self.csv_path), exist_ok=True)
 
-            write_header = not os.path.exists(self.csv_path)
-
-            with open(self.csv_path, "a", encoding="utf-8") as f:
-                if write_header:
-                    f.write("trade,current_equity,pnl_netto,pnl_tp,pnl_sl\n")
-
-                f.write(
-                    f"{self.data['trades']},"
-                    f"{self.data.get('current_equity', self.data.get('start_equity', 0.0))},"
-                    f"{self.data['pnl_netto']},"
-                    f"{self.data['pnl_tp']},"
-                    f"{self.data['pnl_sl']}\n"
-                )
+            header_key = f"_csv_header_written::{self.csv_path}"
+            write_header = (not os.path.exists(self.csv_path)) and not bool(getattr(self, header_key, False))
+            payload = ""
+            if write_header:
+                payload += "trade,current_equity,pnl_netto,pnl_tp,pnl_sl\n"
+                setattr(self, header_key, True)
+            payload += (
+                f"{self.data['trades']},"
+                f"{self.data.get('current_equity', self.data.get('start_equity', 0.0))},"
+                f"{self.data['pnl_netto']},"
+                f"{self.data['pnl_tp']},"
+                f"{self.data['pnl_sl']}\n"
+            )
+            dbr_append_text(self.csv_path, payload, operation="trade_equity_csv_append")
         except Exception:
             pass
 

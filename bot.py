@@ -22,7 +22,7 @@ from bot_engine.strukture_engine import StructureEngine
 from bot_gates.trade_value_gate import TradeValueGate
 
 from place_orders import place_order, cancel_order_by_id, consume_cancelled_cause, get_active_order_snapshot, is_order_active
-from debug_reader import dbr_debug
+from debug_reader import dbr_append_text, dbr_debug, dbr_path
 from ph_ohlcv import _build_candle_state
 from bot_gate_funktions import evaluate_entry_decision
 from MCM_Brain_Modell import _flush_form_symbol_memory_if_due, apply_outcome_stimulus, build_runtime_pipeline_snapshot, build_visualization_snapshot_bundle, capture_runtime_regulation_transition, commit_runtime_regulation_snapshot, create_mcm_brain, create_mcm_runtime, mark_runtime_episode_event, prepare_visualization_snapshot_state, step_mcm_runtime, step_mcm_runtime_idle, write_visualization_snapshot_bundle
@@ -367,6 +367,11 @@ class Bot:
         self._snapshot_write_seq = 0
         self._snapshot_last_write_ts = 0.0
         self._snapshot_last_state_key = None
+        self._last_live_market_packet_key = None
+        self._live_duplicate_market_packet_skips = 0
+        self._idle_thinking_protocol_seq = 0
+        self._idle_thinking_last_state_key = None
+        self._idle_thinking_last_depth = 0.0
         return True
     # -------------------------------------------------
     def _runtime_loop(self):
@@ -506,12 +511,242 @@ class Bot:
     # --------------------------------------------------
     def _run_runtime_idle_followup(self):
 
+        idle_result = None
         if self._runtime_seeded:
-            self._step_runtime_idle(
+            idle_result = self._step_runtime_idle(
                 cycles=self._runtime_idle_cycles(),
             )
+            self._write_idle_thinking_protocol(idle_result)
 
         return self._flush_runtime_followup()
+    # --------------------------------------------------
+    @staticmethod
+    def _clip01(value):
+
+        try:
+            return float(max(0.0, min(1.0, float(value or 0.0))))
+        except Exception:
+            return 0.0
+    # --------------------------------------------------
+    @staticmethod
+    def _idle_phase_from_state(reflection_need, replay_need, hypothesis_need, pause_maturity, depth_efficiency, decision_tendency, pre_action_phase="hold", plan_pressure=0.0, act_watch_readiness=0.0):
+
+        phase = str(pre_action_phase or "").strip().lower()
+        pressure = Bot._clip01(plan_pressure)
+        readiness = Bot._clip01(act_watch_readiness)
+        if phase == "act_watch" or (str(decision_tendency or "").lower() == "act" and pressure >= 0.44 and readiness >= 0.38):
+            return "act_watch"
+        if str(decision_tendency or "").lower() == "act" and pressure >= 0.38:
+            return "plan_pressure"
+        if pause_maturity >= 0.62 and pause_maturity >= max(reflection_need, replay_need, hypothesis_need):
+            return "pause"
+        if replay_need >= 0.58 and replay_need >= max(reflection_need, hypothesis_need):
+            return "replay"
+        if hypothesis_need >= 0.56 and hypothesis_need >= reflection_need:
+            return "hypothesize"
+        if reflection_need >= 0.54:
+            return "reflect"
+        if depth_efficiency >= 0.58 and str(decision_tendency or "").lower() in ("hold", "observe"):
+            return "stabilize"
+        return "hold"
+    # --------------------------------------------------
+    def _write_idle_thinking_protocol(self, runtime_result):
+
+        if not bool(getattr(Config, "MCM_IDLE_THINKING_PROTOCOL_DEBUG", False)):
+            return False
+
+        result = dict(runtime_result or {})
+        if not result:
+            return False
+
+        def _num(source, key, default=0.0):
+            try:
+                return float((source or {}).get(key, default) or default)
+            except Exception:
+                return float(default)
+
+        runtime_snapshot = dict(getattr(self, "mcm_runtime_snapshot", {}) or {})
+        timestamp = result.get("timestamp", runtime_snapshot.get("timestamp", getattr(self, "current_timestamp", None)))
+        runtime_tick_seq = int(result.get("runtime_tick_seq", runtime_snapshot.get("runtime_tick_seq", 0)) or 0)
+        market_ticks = int(result.get("market_ticks", runtime_snapshot.get("market_ticks", getattr(self, "mcm_runtime_market_ticks", 0))) or 0)
+        decision_tendency = str(result.get("decision_tendency", runtime_snapshot.get("decision_tendency", "hold")) or "hold").lower()
+        proposed_decision = str(result.get("proposed_decision", runtime_snapshot.get("proposed_decision", "WAIT")) or "WAIT").upper()
+
+        thought_state = dict(result.get("thought_state", getattr(self, "thought_state", {}) or {}) or {})
+        meta_state = dict(result.get("meta_regulation_state", {}) or {})
+        perception_state = dict(result.get("perception_state", {}) or {})
+        form_symbol_state = dict(result.get("form_symbol_state", getattr(self, "form_symbol_state", {}) or {}) or {})
+        memory_state = dict(result.get("memory_complexity_state", {}) or {})
+        if not memory_state:
+            memory_state = dict((meta_state.get("memory_complexity_state", {}) or {}) or {})
+        if not memory_state:
+            memory_state = dict(getattr(self, "last_memory_complexity_state", {}) or {})
+
+        regulatory_load = self._clip01(result.get("regulatory_load", getattr(self, "regulatory_load", 0.0)))
+        action_capacity = self._clip01(result.get("action_capacity", getattr(self, "action_capacity", 0.0)))
+        recovery_need = self._clip01(result.get("recovery_need", getattr(self, "recovery_need", 0.0)))
+        survival_pressure = self._clip01(result.get("survival_pressure", getattr(self, "survival_pressure", 0.0)))
+        rumination_depth = self._clip01(_num(thought_state, "rumination_depth", 0.0))
+        decision_conflict = self._clip01(_num(thought_state, "decision_conflict", 0.0))
+        state_maturity = self._clip01(_num(thought_state, "state_maturity", 0.0))
+        decision_readiness = self._clip01(_num(thought_state, "decision_readiness", 0.0))
+        observe_priority = self._clip01(_num(perception_state, "observe_priority", 0.0))
+        uncertainty_score = self._clip01(_num(perception_state, "uncertainty_score", 0.0))
+        signal_quality = self._clip01(_num(perception_state, "signal_quality", 0.0))
+
+        memory_compare_load = self._clip01(_num(memory_state, "memory_compare_load", 0.0))
+        memory_support = self._clip01(_num(memory_state, "memory_support", 0.0))
+        memory_inhibition = self._clip01(_num(memory_state, "memory_inhibition", 0.0))
+        memory_conflict = self._clip01(_num(memory_state, "memory_conflict", 0.0))
+        thinking_complexity = self._clip01(_num(memory_state, "thinking_complexity", 0.0))
+        cognitive_load = self._clip01(_num(memory_state, "cognitive_load", 0.0))
+        decision_energy_cost = self._clip01(_num(memory_state, "decision_energy_cost", 0.0))
+
+        form_symbol_maturity = self._clip01(_num(form_symbol_state, "form_symbol_maturity", 0.0))
+        form_symbol_zoom_need = self._clip01(_num(form_symbol_state, "form_symbol_zoom_need", 0.0))
+        form_symbol_detail_pressure = self._clip01(_num(form_symbol_state, "form_symbol_detail_pressure", 0.0))
+        form_symbol_containment = self._clip01(_num(form_symbol_state, "form_symbol_containment", 0.0))
+        form_symbol_field_decoupling = self._clip01(_num(form_symbol_state, "form_symbol_field_decoupling", 0.0))
+        pre_action_phase = str(meta_state.get("pre_action_phase", "hold") or "hold").strip().lower()
+        plan_pressure = self._clip01(_num(meta_state, "plan_pressure", 0.0))
+        act_watch_readiness = self._clip01(_num(meta_state, "act_watch_readiness", 0.0))
+        structure_carrying_need = self._clip01(_num(meta_state, "structure_carrying_need", 0.0))
+
+        load_gap = self._clip01(regulatory_load - action_capacity)
+        reflection_need = self._clip01((decision_conflict * 0.30) + (cognitive_load * 0.24) + (load_gap * 0.22) + (rumination_depth * 0.16) + (uncertainty_score * 0.08))
+        replay_need = self._clip01((memory_compare_load * 0.28) + (memory_conflict * 0.24) + (memory_support * 0.18) + (thinking_complexity * 0.16) + (max(0.0, 1.0 - form_symbol_maturity) * 0.08))
+        hypothesis_need = self._clip01((form_symbol_zoom_need * 0.30) + (form_symbol_detail_pressure * 0.22) + (uncertainty_score * 0.18) + (observe_priority * 0.14) + (max(0.0, 1.0 - signal_quality) * 0.10))
+        pause_maturity = self._clip01((load_gap * 0.34) + (observe_priority * 0.24) + (recovery_need * 0.18) + (survival_pressure * 0.14) + (decision_conflict * 0.10) - (decision_readiness * 0.10))
+        action_load_capacity = self._clip01(action_capacity - (regulatory_load * 0.48) - (decision_energy_cost * 0.22) + (state_maturity * 0.18))
+        regulatory_self_control = self._clip01((pause_maturity * 0.32) + (reflection_need * 0.24) + (form_symbol_containment * 0.18) + (form_symbol_field_decoupling * 0.16) + (max(0.0, memory_inhibition - memory_support) * 0.10))
+        parameter_dependency = self._clip01((max(0.0, 1.0 - form_symbol_maturity) * 0.26) + (decision_energy_cost * 0.20) + (cognitive_load * 0.18) + (uncertainty_score * 0.16) + (memory_inhibition * 0.12) - (form_symbol_containment * 0.10))
+        self_regulation_maturity = self._clip01((state_maturity * 0.24) + (action_load_capacity * 0.22) + (form_symbol_containment * 0.18) + (form_symbol_field_decoupling * 0.14) + (memory_support * 0.12) - (load_gap * 0.14))
+        depth_efficiency = self._clip01((state_maturity * 0.24) + (memory_support * 0.18) + (form_symbol_containment * 0.16) + (form_symbol_field_decoupling * 0.16) + (signal_quality * 0.14) - (cognitive_load * 0.18) - (memory_conflict * 0.10))
+        cognitive_overcontrol = self._clip01((cognitive_load * 0.30) + (rumination_depth * 0.24) + (decision_energy_cost * 0.20) + (memory_compare_load * 0.14) - (depth_efficiency * 0.18))
+        thinking_depth = self._clip01(max(rumination_depth, thinking_complexity, reflection_need, replay_need, hypothesis_need))
+        action_depth = self._clip01((decision_energy_cost * 0.26) + (regulatory_load * 0.24) + (decision_conflict * 0.18) + ((1.0 if proposed_decision in ("LONG", "SHORT") else 0.0) * 0.16) + (max(0.0, 1.0 - action_capacity) * 0.16))
+        adaptive_depth_shift = self._clip01(abs(thinking_depth - float(getattr(self, "_idle_thinking_last_depth", 0.0) or 0.0)))
+        self._idle_thinking_last_depth = float(thinking_depth)
+
+        idle_phase = self._idle_phase_from_state(
+            reflection_need,
+            replay_need,
+            hypothesis_need,
+            pause_maturity,
+            depth_efficiency,
+            decision_tendency,
+            pre_action_phase=pre_action_phase,
+            plan_pressure=plan_pressure,
+            act_watch_readiness=act_watch_readiness,
+        )
+        state_key = (
+            timestamp,
+            idle_phase,
+            round(thinking_depth, 2),
+            round(regulatory_self_control, 2),
+            round(parameter_dependency, 2),
+            round(depth_efficiency, 2),
+            round(plan_pressure, 2),
+            round(act_watch_readiness, 2),
+            pre_action_phase,
+            decision_tendency,
+            proposed_decision,
+        )
+        state_changed = state_key != self._idle_thinking_last_state_key
+        self._idle_thinking_protocol_seq = int(getattr(self, "_idle_thinking_protocol_seq", 0) or 0) + 1
+        every_n = max(1, int(getattr(Config, "MCM_IDLE_THINKING_PROTOCOL_EVERY_N", 5) or 5))
+        if not state_changed and (self._idle_thinking_protocol_seq % every_n) != 0:
+            return False
+        self._idle_thinking_last_state_key = state_key
+
+        path = dbr_path("mcm_idle_thinking_protocol.csv")
+        try:
+            header_key = "_idle_thinking_protocol_header_written"
+            write_header = (not os.path.exists(path)) and not bool(getattr(self, header_key, False))
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            payload = ""
+            if write_header:
+                payload += (
+                    "timestamp;market_ticks;runtime_tick_sequence;idle_phase;state_changed;"
+                    "decision_tendency;proposed_decision;pre_action_phase;thinking_depth;action_depth;"
+                    "reflection_need;replay_need;hypothesis_need;pause_maturity;"
+                    "regulatory_self_control;parameter_dependency;self_regulation_maturity;"
+                    "cognitive_overcontrol;adaptive_depth_shift;action_load_capacity;"
+                    "depth_efficiency;plan_pressure;act_watch_readiness;structure_carrying_need;"
+                    "thinking_complexity;memory_compare_load;memory_support;"
+                    "memory_inhibition;memory_conflict;cognitive_load;decision_energy_cost;"
+                    "regulatory_load;action_capacity;recovery_need;survival_pressure;"
+                    "rumination_depth;decision_conflict;state_maturity;decision_readiness;"
+                    "observe_priority;uncertainty_score;signal_quality;form_symbol_id;"
+                    "form_symbol_maturity;form_symbol_zoom_need;form_symbol_containment;"
+                    "form_symbol_field_decoupling\n"
+                )
+                setattr(self, header_key, True)
+
+            form_symbol_id = str(form_symbol_state.get("form_symbol_id", "-") or "-").replace(";", "|")
+            values = [
+                timestamp,
+                market_ticks,
+                runtime_tick_seq,
+                idle_phase,
+                int(bool(state_changed)),
+                decision_tendency,
+                proposed_decision,
+                pre_action_phase,
+                thinking_depth,
+                action_depth,
+                reflection_need,
+                replay_need,
+                hypothesis_need,
+                pause_maturity,
+                regulatory_self_control,
+                parameter_dependency,
+                self_regulation_maturity,
+                cognitive_overcontrol,
+                adaptive_depth_shift,
+                action_load_capacity,
+                depth_efficiency,
+                plan_pressure,
+                act_watch_readiness,
+                structure_carrying_need,
+                thinking_complexity,
+                memory_compare_load,
+                memory_support,
+                memory_inhibition,
+                memory_conflict,
+                cognitive_load,
+                decision_energy_cost,
+                regulatory_load,
+                action_capacity,
+                recovery_need,
+                survival_pressure,
+                rumination_depth,
+                decision_conflict,
+                state_maturity,
+                decision_readiness,
+                observe_priority,
+                uncertainty_score,
+                signal_quality,
+                form_symbol_id,
+                form_symbol_maturity,
+                form_symbol_zoom_need,
+                form_symbol_containment,
+                form_symbol_field_decoupling,
+            ]
+            line = ";".join(
+                f"{item:.4f}" if isinstance(item, float) else str(item)
+                for item in values
+            )
+            payload += line + "\n"
+            dbr_append_text(path, payload, operation="idle_thinking_protocol_append")
+            return True
+        except Exception as exc:
+            if DEBUG:
+                dbr_debug(
+                    f"IDLE_THINKING_PROTOCOL_ERROR | {type(exc).__name__}:{str(exc).replace(';', '|')}",
+                    "mcm_idle_thinking_protocol_error.csv",
+                )
+            return False
     # --------------------------------------------------
     def _run_runtime_market_followup(self):
 
@@ -746,8 +981,67 @@ class Bot:
         if not payload:
             return None
 
+        if self._is_duplicate_live_market_packet(payload):
+            return None
+
         self._market_packet_queue.put(dict(payload))
         return dict(payload)
+    # --------------------------------------------------
+    def _is_duplicate_live_market_packet(self, packet):
+
+        if str(getattr(Config, "MODE", "LIVE")).upper() != "LIVE":
+            return False
+
+        if not bool(getattr(Config, "LIVE_MARKET_PACKET_DEDUPE_ENABLED", True)):
+            return False
+
+        key = self._build_live_market_packet_key(packet)
+        if key is None:
+            return False
+
+        if key != self._last_live_market_packet_key:
+            self._last_live_market_packet_key = key
+            self._live_duplicate_market_packet_skips = 0
+            return False
+
+        self._live_duplicate_market_packet_skips = int(getattr(self, "_live_duplicate_market_packet_skips", 0) or 0) + 1
+        every_n = max(1, int(getattr(Config, "LIVE_MARKET_PACKET_DEDUPE_LOG_EVERY_N", 25) or 25))
+        if self._live_duplicate_market_packet_skips == 1 or (self._live_duplicate_market_packet_skips % every_n) == 0:
+            dbr_debug(
+                f"LIVE_MARKET_PACKET_DEDUPE | skipped={self._live_duplicate_market_packet_skips} timestamp={key[0]} tail={key[1]}",
+                "mcm_live_market_dedupe.csv",
+            )
+        return True
+    # --------------------------------------------------
+    def _build_live_market_packet_key(self, packet):
+
+        window = [dict(item or {}) for item in list((packet or {}).get("window", []) or []) if isinstance(item, dict)]
+        if not window:
+            return None
+
+        first = dict(window[0] or {})
+        last = dict(window[-1] or {})
+        tail = []
+
+        for item in window[-3:]:
+            row = dict(item or {})
+            tail.append(
+                (
+                    int(float(row.get("timestamp", 0) or 0)),
+                    round(float(row.get("open", 0.0) or 0.0), 8),
+                    round(float(row.get("high", 0.0) or 0.0), 8),
+                    round(float(row.get("low", 0.0) or 0.0), 8),
+                    round(float(row.get("close", 0.0) or 0.0), 8),
+                    round(float(row.get("volume", 0.0) or 0.0), 8),
+                )
+            )
+
+        return (
+            int(float(last.get("timestamp", (packet or {}).get("timestamp", 0)) or 0)),
+            int(float(first.get("timestamp", 0) or 0)),
+            len(window),
+            tuple(tail),
+        )
     # --------------------------------------------------
     def _normalize_market_window(self, window):
 
@@ -802,7 +1096,116 @@ class Bot:
         if not local_window:
             return {}
 
-        return dict(build_visual_market_state(local_window) or {})
+        visual_state = dict(build_visual_market_state(local_window) or {})
+        self._record_visual_cortex_protocol(local_window, visual_state)
+        return dict(visual_state or {})
+    # --------------------------------------------------
+    def _record_visual_cortex_protocol(self, window, visual_market_state):
+
+        if not bool(getattr(Config, "MCM_VISUAL_CORTEX_PROTOCOL_DEBUG", True)):
+            return False
+
+        visual = dict(visual_market_state or {})
+        form_state = dict(visual.get("visual_form_state", {}) or {})
+        axes = dict(form_state.get("axes", {}) or {})
+        if not visual:
+            return False
+
+        local_window = self._normalize_market_window(window)
+        timestamp = local_window[-1].get("timestamp") if local_window else getattr(self, "current_timestamp", None)
+        visual_form_id = str(form_state.get("visual_form_id", "-") or "-")
+        clarity_bucket = int(round(float(visual.get("visual_clarity", 0.0) or 0.0) * 10.0))
+        blindness_bucket = int(round(float(visual.get("visual_blindness", 0.0) or 0.0) * 10.0))
+        pressure_bucket = int(round(float(visual.get("visual_form_pressure", 0.0) or 0.0) * 10.0))
+
+        protocol = dict(getattr(self, "mcm_visual_cortex_protocol", {}) or {})
+        sequence = int(protocol.get("sequence", 0) or 0) + 1
+        key = f"{visual_form_id}|c{clarity_bucket}|b{blindness_bucket}|p{pressure_bucket}"
+        changed = bool(str(protocol.get("last_key", "") or "") != key)
+        every_n = max(1, int(getattr(Config, "MCM_VISUAL_CORTEX_PROTOCOL_EVERY_N", 5) or 5))
+
+        protocol.update({
+            "sequence": int(sequence),
+            "last_key": str(key),
+            "last_visual_form_id": str(visual_form_id),
+            "last_timestamp": timestamp,
+        })
+        setattr(self, "mcm_visual_cortex_protocol", dict(protocol))
+
+        if not changed and (sequence % every_n) != 0:
+            return False
+
+        path = dbr_path("mcm_visual_cortex_protocol.csv")
+        header_key = "_visual_cortex_protocol_header_written"
+        write_header = (not os.path.exists(path)) and not bool(getattr(self, header_key, False))
+
+        def _clean(value):
+            return str(value).replace("\n", " ").replace(";", "|")
+
+        def _num(source, key_name, default=0.0):
+            try:
+                return float((source or {}).get(key_name, default) or default)
+            except Exception:
+                return float(default)
+
+        payload = ""
+        if write_header:
+            payload += (
+                "timestamp;sequence;visual_form_id;visual_clarity;visual_object_stability;"
+                "visual_form_novelty;visual_blindness;visual_form_pressure;visual_shape_resonance;"
+                "visual_shape_fragility;edge_strength;curvature;density;fracture;flow;void;"
+                "range_rhythm;direction_consistency;spatial_bias;directional_bias;range_position;"
+                "short_impulse;mid_impulse;compression;expansion;body_pressure;wick_pressure;"
+                "volume_bias;market_balance;breakout_tension;visual_coherence;"
+                "sensory_reality_pressure;sensory_load;sensory_redundancy;sensory_habituation;"
+                "sensory_gate;sensory_active_axis_count;sensory_primary_pressure;sensory_reality_label\n"
+            )
+            setattr(self, header_key, True)
+
+        row = [
+            _clean(timestamp),
+            int(sequence),
+            _clean(visual_form_id),
+            f"{_num(visual, 'visual_clarity'):.4f}",
+            f"{_num(visual, 'visual_object_stability'):.4f}",
+            f"{_num(visual, 'visual_form_novelty'):.4f}",
+            f"{_num(visual, 'visual_blindness'):.4f}",
+            f"{_num(visual, 'visual_form_pressure'):.4f}",
+            f"{_num(visual, 'visual_shape_resonance'):.4f}",
+            f"{_num(visual, 'visual_shape_fragility'):.4f}",
+            f"{_num(axes, 'edge_strength'):.4f}",
+            f"{_num(axes, 'curvature'):.4f}",
+            f"{_num(axes, 'density'):.4f}",
+            f"{_num(axes, 'fracture'):.4f}",
+            f"{_num(axes, 'flow'):.4f}",
+            f"{_num(axes, 'void'):.4f}",
+            f"{_num(axes, 'range_rhythm'):.4f}",
+            f"{_num(axes, 'direction_consistency'):.4f}",
+            f"{_num(visual, 'spatial_bias'):.4f}",
+            f"{_num(visual, 'directional_bias'):.4f}",
+            f"{_num(visual, 'range_position'):.4f}",
+            f"{_num(visual, 'short_impulse'):.4f}",
+            f"{_num(visual, 'mid_impulse'):.4f}",
+            f"{_num(visual, 'compression'):.4f}",
+            f"{_num(visual, 'expansion'):.4f}",
+            f"{_num(visual, 'body_pressure'):.4f}",
+            f"{_num(visual, 'wick_pressure'):.4f}",
+            f"{_num(visual, 'volume_bias'):.4f}",
+            f"{_num(visual, 'market_balance'):.4f}",
+            f"{_num(visual, 'breakout_tension'):.4f}",
+            f"{_num(visual, 'visual_coherence'):.4f}",
+            f"{_num(visual, 'sensory_reality_pressure'):.4f}",
+            f"{_num(visual, 'sensory_load'):.4f}",
+            f"{_num(visual, 'sensory_redundancy'):.4f}",
+            f"{_num(visual, 'sensory_habituation'):.4f}",
+            f"{_num(visual, 'sensory_gate', 1.0):.4f}",
+            int(_num(visual, 'sensory_active_axis_count')),
+            f"{_num(visual, 'sensory_primary_pressure'):.4f}",
+            _clean(visual.get("sensory_reality_label", "quiet_outer_reality")),
+        ]
+        payload += ";".join(str(item) for item in row) + "\n"
+        dbr_append_text(path, payload, operation="visual_cortex_protocol_append")
+        return True
     # --------------------------------------------------     
     def _build_temporal_perception_state(self, window):
 
@@ -3153,6 +3556,14 @@ class Bot:
                 "rr_value": float(result.get("rr_value", 0.0) or 0.0),
                 "risk_model_score": float(result.get("risk_model_score", 0.0) or 0.0),
                 "reward_model_score": float(result.get("reward_model_score", 0.0) or 0.0),
+                "entry_mode": str(result.get("entry_mode", "impulse_contact") or "impulse_contact"),
+                "impulse_entry_price": float(result.get("impulse_entry_price", result.get("entry_price", 0.0)) or 0.0),
+                "strategic_entry_price": float(result.get("strategic_entry_price", result.get("entry_price", 0.0)) or 0.0),
+                "strategic_entry_weight": float(result.get("strategic_entry_weight", 0.0) or 0.0),
+                "strategic_entry_fit": float(result.get("strategic_entry_fit", 0.0) or 0.0),
+                "strategic_area_focus_id": str(result.get("strategic_area_focus_id", "-") or "-"),
+                "strategic_area_price_low": float(result.get("strategic_area_price_low", 0.0) or 0.0),
+                "strategic_area_price_high": float(result.get("strategic_area_price_high", 0.0) or 0.0),
                 "entry_validity_band": dict(result.get("entry_validity_band", {}) or {}),
             },
             "signal": {

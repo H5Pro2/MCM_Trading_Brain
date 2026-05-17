@@ -922,13 +922,17 @@ def write_memory_state_payload(payload: dict | None, path: str | None = None) ->
         return None
 
     filepath = _memory_state_path(path)
+    tmp_filepath = f"{filepath}.tmp"
     profile_start = time.perf_counter() if bool(getattr(Config, "MCM_RUNTIME_PROFILE_DEBUG", False)) else 0.0
 
     try:
         _ensure_dir(filepath)
         write_start = time.perf_counter()
-        with open(filepath, "w", encoding="utf-8") as f:
+        with open(tmp_filepath, "w", encoding="utf-8") as f:
             json.dump(dict(payload or {}), f, indent=2)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_filepath, filepath)
         elapsed_ms = (time.perf_counter() - write_start) * 1000.0
         try:
             bytes_written = int(os.path.getsize(filepath))
@@ -938,10 +942,15 @@ def write_memory_state_payload(payload: dict | None, path: str | None = None) ->
             filepath,
             elapsed_ms,
             bytes_written=bytes_written,
-            operation="memory_state_json_dump",
+            operation="memory_state_json_dump_atomic",
             extra=f"keys={int(len(payload or {}))}",
         )
     except Exception:
+        try:
+            if os.path.exists(tmp_filepath):
+                os.remove(tmp_filepath)
+        except Exception:
+            pass
         return None
 
     if profile_start:

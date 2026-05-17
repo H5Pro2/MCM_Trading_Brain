@@ -8,7 +8,7 @@ import os
 import time
 
 from config import Config
-from debug_reader import dbr_debug, dbr_file_write_profile, dbr_path, dbr_profile, dbr_resolve_path
+from debug_reader import dbr_append_text, dbr_debug, dbr_file_write_profile, dbr_path, dbr_profile, dbr_resolve_path
 from bot_engine.mcm_core_engine import build_tension_state_from_window, build_visual_market_state
 from MCM_KI_Modell import MCMField, ClusterDetector, Memory, SelfModel, AttractorSystem, RegulationLayer
 from bot_engine.strukture_engine import StructureEngine
@@ -17,6 +17,10 @@ import numpy as np
 _FIELD_DECISION_PROTOCOL_HEADER_DONE = set()
 _MEMORY_THINKING_PROTOCOL_HEADER_DONE = set()
 _FORM_SYMBOL_PROTOCOL_HEADER_DONE = set()
+_NEUROCHEMICAL_PROTOCOL_HEADER_DONE = set()
+_NEURO_TRANSITION_PROTOCOL_HEADER_DONE = set()
+_STRATEGIC_WINDOW_PROTOCOL_HEADER_DONE = set()
+_ACTIVE_CONTACT_PROTOCOL_HEADER_DONE = set()
 
 # --------------------------------------------------
 class MCMBrainRuntime:
@@ -187,6 +191,8 @@ class MCMBrainRuntime:
             runtime_tick_seq=self.runtime_tick_seq,
             market_tick_advanced=self._market_tick_pending,
         )
+
+        _record_neuro_transition_protocol(self.bot, result, current_window=window)
 
         self._market_tick_pending = False
         self.pending_impulse = None
@@ -1742,6 +1748,14 @@ def _build_experience_similarity_axes(summary):
     release_delta = float(experience_delta.get("pressure_release", 0.0) or 0.0)
     bearing_delta = float(experience_delta.get("load_bearing_capacity", 0.0) or 0.0)
     bearing_effect = float(_experience_bearing_delta(item) or 0.0)
+    packet_bearing_quality = float(item.get("packet_bearing_quality", 0.0) or 0.0)
+    packet_inner_outer_fit = float(item.get("packet_inner_outer_fit", 0.0) or 0.0)
+    packet_confidence_integrity = float(item.get("packet_confidence_integrity", 0.0) or 0.0)
+    packet_repetition_potential = float(item.get("packet_repetition_potential", 0.0) or 0.0)
+    packet_curiosity_pull = float(item.get("packet_curiosity_pull", 0.0) or 0.0)
+    packet_process_reward = float(item.get("packet_process_reward", 0.0) or 0.0)
+    packet_reorganization_need = float(item.get("packet_reorganization_need", 0.0) or 0.0)
+    constructive_stimulation = float(item.get("constructive_stimulation", 0.0) or 0.0)
 
     field_areal_fragmentation = float(item.get("field_areal_fragmentation", 0.0) or 0.0)
     field_areal_conflict_mean = float(item.get("field_areal_conflict_mean", 0.0) or 0.0)
@@ -1895,6 +1909,14 @@ def _build_experience_similarity_axes(summary):
         "self_confidence_axis": float(item.get("self_confidence_delta", 0.0) or 0.0),
         "process_quality_axis": float(item.get("process_quality", 0.0) or 0.0),
         "bearing_effect_axis": float(bearing_effect),
+        "packet_bearing_quality_axis": float(packet_bearing_quality),
+        "packet_inner_outer_fit_axis": float(packet_inner_outer_fit),
+        "packet_confidence_integrity_axis": float(packet_confidence_integrity),
+        "packet_repetition_potential_axis": float(packet_repetition_potential),
+        "packet_curiosity_pull_axis": float(packet_curiosity_pull),
+        "packet_process_reward_axis": float(packet_process_reward),
+        "packet_reorganization_need_axis": float(packet_reorganization_need),
+        "constructive_stimulation_axis": float(constructive_stimulation),
         "strain_axis": float(pressure_delta + recovery_delta + survival_delta),
         "relief_axis": float(release_delta + bearing_delta),
         "capacity_balance_axis": float(capacity_delta - pressure_delta),
@@ -3668,6 +3690,19 @@ def _build_experience_episode_summary(bot, timestamp=None, decision_tendency=Non
         "plan_quality": float(outcome_decomposition.get("plan_quality", 0.0) or 0.0),
         "execution_quality": float(outcome_decomposition.get("execution_quality", 0.0) or 0.0),
         "risk_fit_quality": float(outcome_decomposition.get("risk_fit_quality", 0.0) or 0.0),
+        "experience_packet_label": str(outcome_decomposition.get("experience_packet_label", "-") or "-"),
+        "packet_bearing_quality": float(outcome_decomposition.get("packet_bearing_quality", 0.0) or 0.0),
+        "packet_inner_outer_fit": float(outcome_decomposition.get("packet_inner_outer_fit", 0.0) or 0.0),
+        "packet_confidence_integrity": float(outcome_decomposition.get("packet_confidence_integrity", 0.0) or 0.0),
+        "packet_repetition_potential": float(outcome_decomposition.get("packet_repetition_potential", 0.0) or 0.0),
+        "packet_curiosity_pull": float(outcome_decomposition.get("packet_curiosity_pull", 0.0) or 0.0),
+        "packet_process_reward": float(outcome_decomposition.get("packet_process_reward", 0.0) or 0.0),
+        "packet_reorganization_need": float(outcome_decomposition.get("packet_reorganization_need", 0.0) or 0.0),
+        "constructive_stimulation": float(outcome_decomposition.get("constructive_stimulation", 0.0) or 0.0),
+        "constructive_dopamine": float(outcome_decomposition.get("constructive_dopamine", 0.0) or 0.0),
+        "stabilizing_serotonin": float(outcome_decomposition.get("stabilizing_serotonin", 0.0) or 0.0),
+        "relief_endorphin": float(outcome_decomposition.get("relief_endorphin", 0.0) or 0.0),
+        "focused_acetylcholine": float(outcome_decomposition.get("focused_acetylcholine", 0.0) or 0.0),
         "review_label": str(review_notes.get("review_label", "-") or "-"),
         "review_score": float(review_notes.get("review_score", 0.0) or 0.0),
         "decision_path_quality": float(review_notes.get("decision_path_quality", 0.0) or 0.0),
@@ -5050,6 +5085,18 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         os.makedirs(os.path.dirname(path), exist_ok=True)
         header_text = (
             "timestamp;runtime_tick;sequence;phase;reason;decision;"
+            "neurochemical_state_label;neurochemical_dominant_tone;dopamine_tone;gaba_inhibition;"
+            "noradrenaline_arousal;acetylcholine_focus;serotonin_stability;cortisol_load;"
+            "endorphin_relief;glutamate_activation;neurochemical_load;neurochemical_support;neurochemical_balance;"
+            "reward_stability_echo;world_shift_evidence;serotonin_carryover_risk;emotional_decoupling;reactive_nervous_drive;"
+            "conscious_perception_state;inner_posture_state;arousal_load;curiosity_tone;fatigue_tone;calm_tone;"
+            "stimulus_field_effect;inner_impact_trace;perceived_field_change;felt_afterimage;"
+            "object_release_state;inner_outer_reflection;perceptual_distance;object_contact_depth;field_attachment;"
+            "release_capacity;selective_attention;background_containment;reflective_distance;inner_outer_alignment;"
+            "engaged_effort;effort_state;effort_learning_pull;effort_reorganization_pressure;"
+            "pre_action_reorganization_pressure;pre_action_context_selectivity;"
+            "previous_packet_label;previous_packet_process_reward;previous_packet_reorganization_need;"
+            "diffuse_open_development_pressure;posture_development_hint;"
             "thinking_complexity;memory_compare_load;memory_match_count;memory_support;memory_inhibition;"
             "memory_conflict;cognitive_load;decision_energy_cost;memory_effect_on_phase;"
             "memory_orientation;orientation_gap;blind_thinking_load;zero_point_regulation;"
@@ -5099,6 +5146,55 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         _clean(phase),
         _clean(reason),
         _clean(proposed_decision),
+        _clean(meta.get("neurochemical_state_label", "mixed_neurochemistry")),
+        _clean(meta.get("neurochemical_dominant_tone", "-")),
+        f"{float(meta.get('dopamine_tone', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('gaba_inhibition', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('noradrenaline_arousal', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('acetylcholine_focus', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('serotonin_stability', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('cortisol_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('endorphin_relief', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('glutamate_activation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('neurochemical_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('neurochemical_support', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('neurochemical_balance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('reward_stability_echo', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('world_shift_evidence', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('serotonin_carryover_risk', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('emotional_decoupling', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('reactive_nervous_drive', 0.0) or 0.0):.4f}",
+        _clean(meta.get("conscious_perception_state", "open_perception")),
+        _clean(meta.get("inner_posture_state", "uncertain_open")),
+        f"{float(meta.get('arousal_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('curiosity_tone', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('fatigue_tone', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('calm_tone', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('stimulus_field_effect', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('inner_impact_trace', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('perceived_field_change', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('felt_afterimage', 0.0) or 0.0):.4f}",
+        _clean(meta.get("object_release_state", "holding")),
+        f"{float(meta.get('inner_outer_reflection', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('perceptual_distance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('object_contact_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('field_attachment', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('release_capacity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('selective_attention', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('background_containment', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('reflective_distance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('inner_outer_alignment', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('engaged_effort', 0.0) or 0.0):.4f}",
+        _clean(meta.get("effort_state", "settled_effort")),
+        f"{float(meta.get('effort_learning_pull', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('effort_reorganization_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('pre_action_reorganization_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('pre_action_context_selectivity', 0.0) or 0.0):.4f}",
+        _clean(meta.get("previous_packet_label", "-")),
+        f"{float(meta.get('previous_packet_process_reward', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('previous_packet_reorganization_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('diffuse_open_development_pressure', 0.0) or 0.0):.4f}",
+        _clean(meta.get("posture_development_hint", "stable_posture")),
         f"{_num('thinking_complexity'):.4f}",
         f"{_num('memory_compare_load'):.4f}",
         int(_num("memory_match_count")),
@@ -5184,13 +5280,9 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
     ]
     os.makedirs(os.path.dirname(path), exist_ok=True)
     line = ";".join(str(item) for item in row) + "\n"
-    write_start = time.perf_counter()
-    with open(path, "a", encoding="utf-8") as handle:
-        handle.write(line)
-    dbr_file_write_profile(
+    dbr_append_text(
         path,
-        (time.perf_counter() - write_start) * 1000.0,
-        bytes_written=len(line.encode("utf-8")),
+        line,
         operation="memory_thinking_protocol_append",
         extra=f"phase={phase}|reason={reason}|effect={memory_state.get('memory_effect_on_phase', 'neutral')}",
     )
@@ -5256,17 +5348,30 @@ def _record_form_symbol_protocol(bot, runtime_result, meta_regulation_state=None
             "form_symbol_development_quality;form_symbol_action_affinity;form_symbol_observation_affinity;"
             "form_symbol_reframe_potential;form_symbol_action_binding;form_symbol_observation_binding;form_symbol_reframe_binding;"
             "form_symbol_learning_trust;form_symbol_action_trust;form_symbol_caution_trust;"
+            "form_symbol_contact_maturity;form_symbol_contact_utility;form_symbol_contact_pain_memory;"
+            "form_symbol_contact_carefulness;form_symbol_contact_burden_evidence;"
+            "form_symbol_contact_utility_evidence;form_symbol_contact_learning_state;"
             "form_symbol_memory_loaded;form_symbol_memory_symbol_count;"
             "form_symbol_seen;form_symbol_maturity;form_symbol_stability;"
             "form_symbol_resonance;form_symbol_load_reduction;form_symbol_zoom_need;"
             "form_symbol_split_pressure;form_symbol_merge_pressure;form_symbol_bearing;"
             "form_symbol_fragility;form_symbol_relevance;form_symbol_novelty;form_symbol_distance;"
+            "uncertain_form_family_state;uncertain_form_exposure;uncertainty_familiarity;"
+            "variant_similarity;variant_spread;variant_learning_pressure;variant_bearing_memory;"
+            "form_symbol_semantic_density;form_symbol_semantic_compression;form_symbol_semantic_coherence;"
+            "form_symbol_semantic_learning_need;form_symbol_semantic_action_nearness;"
+            "form_symbol_semantic_primary_layer;form_symbol_semantic_layer_count;"
+            "form_symbol_semantic_packet_state;form_symbol_semantic_profile;"
             "form_symbol_compound_id;form_symbol_compound_scope;form_symbol_compound_seen;"
             "form_symbol_compound_maturity;form_symbol_compound_stability;form_symbol_compound_resonance;"
             "form_symbol_compound_bearing;form_symbol_compound_load_reduction;form_symbol_compound_novelty;"
             "form_symbol_compound_development_quality;form_symbol_compound_action_affinity;"
             "form_symbol_compound_observation_affinity;form_symbol_compound_reframe_potential;"
             "form_symbol_compound_learning_trust;form_symbol_compound_action_trust;form_symbol_compound_caution_trust;"
+            "form_symbol_compound_contact_maturity;form_symbol_compound_contact_utility;"
+            "form_symbol_compound_contact_pain_memory;form_symbol_compound_contact_carefulness;"
+            "form_symbol_compound_contact_burden_evidence;form_symbol_compound_contact_utility_evidence;"
+            "form_symbol_compound_contact_learning_state;"
             "form_symbol_memory_compound_count;"
             "structure_quality;context_confidence;field_clarity;field_pressure;field_fragmentation\n"
         )
@@ -5317,6 +5422,13 @@ def _record_form_symbol_protocol(bot, runtime_result, meta_regulation_state=None
         f"{_num('form_symbol_learning_trust'):.4f}",
         f"{_num('form_symbol_action_trust'):.4f}",
         f"{_num('form_symbol_caution_trust'):.4f}",
+        f"{_num('form_symbol_contact_maturity'):.4f}",
+        f"{_num('form_symbol_contact_utility'):.4f}",
+        f"{_num('form_symbol_contact_pain_memory'):.4f}",
+        f"{_num('form_symbol_contact_carefulness'):.4f}",
+        f"{_num('form_symbol_contact_burden_evidence'):.4f}",
+        f"{_num('form_symbol_contact_utility_evidence'):.4f}",
+        _clean(form_state.get("form_symbol_contact_learning_state", "unformed_contact")),
         int(bool(form_state.get("form_symbol_memory_loaded", False))),
         int(_num("form_symbol_memory_symbol_count")),
         int(_num("form_symbol_seen")),
@@ -5332,6 +5444,22 @@ def _record_form_symbol_protocol(bot, runtime_result, meta_regulation_state=None
         f"{_num('form_symbol_relevance'):.4f}",
         f"{_num('form_symbol_novelty'):.4f}",
         f"{_num('form_symbol_distance'):.4f}",
+        _clean(form_state.get("uncertain_form_family_state", "quiet_form_family")),
+        f"{_num('uncertain_form_exposure'):.4f}",
+        f"{_num('uncertainty_familiarity'):.4f}",
+        f"{_num('variant_similarity'):.4f}",
+        f"{_num('variant_spread'):.4f}",
+        f"{_num('variant_learning_pressure'):.4f}",
+        f"{_num('variant_bearing_memory'):.4f}",
+        f"{_num('form_symbol_semantic_density'):.4f}",
+        f"{_num('form_symbol_semantic_compression'):.4f}",
+        f"{_num('form_symbol_semantic_coherence'):.4f}",
+        f"{_num('form_symbol_semantic_learning_need'):.4f}",
+        f"{_num('form_symbol_semantic_action_nearness'):.4f}",
+        _clean(form_state.get("form_symbol_semantic_primary_layer", "")),
+        int(_num("form_symbol_semantic_layer_count")),
+        _clean(form_state.get("form_symbol_semantic_packet_state", "")),
+        _clean(form_state.get("form_symbol_semantic_profile", "")),
         _clean(form_state.get("form_symbol_compound_id", "-")),
         _clean(form_state.get("form_symbol_compound_scope", "single")),
         int(_num("form_symbol_compound_seen")),
@@ -5348,6 +5476,13 @@ def _record_form_symbol_protocol(bot, runtime_result, meta_regulation_state=None
         f"{_num('form_symbol_compound_learning_trust'):.4f}",
         f"{_num('form_symbol_compound_action_trust'):.4f}",
         f"{_num('form_symbol_compound_caution_trust'):.4f}",
+        f"{_num('form_symbol_compound_contact_maturity'):.4f}",
+        f"{_num('form_symbol_compound_contact_utility'):.4f}",
+        f"{_num('form_symbol_compound_contact_pain_memory'):.4f}",
+        f"{_num('form_symbol_compound_contact_carefulness'):.4f}",
+        f"{_num('form_symbol_compound_contact_burden_evidence'):.4f}",
+        f"{_num('form_symbol_compound_contact_utility_evidence'):.4f}",
+        _clean(form_state.get("form_symbol_compound_contact_learning_state", "unformed_contact")),
         int(_num("form_symbol_memory_compound_count")),
         f"{float(meta.get('structure_quality', felt.get('structure_quality', 0.0)) or 0.0):.4f}",
         f"{float(meta.get('context_confidence', felt.get('context_confidence', 0.0)) or 0.0):.4f}",
@@ -5357,13 +5492,9 @@ def _record_form_symbol_protocol(bot, runtime_result, meta_regulation_state=None
     ]
     os.makedirs(os.path.dirname(path), exist_ok=True)
     line = ";".join(str(item) for item in row) + "\n"
-    write_start = time.perf_counter()
-    with open(path, "a", encoding="utf-8") as handle:
-        handle.write(line)
-    dbr_file_write_profile(
+    dbr_append_text(
         path,
-        (time.perf_counter() - write_start) * 1000.0,
-        bytes_written=len(line.encode("utf-8")),
+        line,
         operation="form_symbol_protocol_append",
         extra=f"symbol={symbol_id}|phase={phase}|zoom={zoom_bucket}",
     )
@@ -5445,9 +5576,28 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
         os.makedirs(os.path.dirname(path), exist_ok=True)
         header_text = (
             "timestamp;runtime_tick;sequence;phase;reason;decision;field_label;"
+            "neurochemical_state_label;neurochemical_dominant_tone;dopamine_tone;gaba_inhibition;"
+            "noradrenaline_arousal;acetylcholine_focus;serotonin_stability;cortisol_load;"
+            "endorphin_relief;glutamate_activation;neurochemical_load;neurochemical_support;neurochemical_balance;"
+            "reward_stability_echo;world_shift_evidence;serotonin_carryover_risk;emotional_decoupling;reactive_nervous_drive;"
+            "conscious_perception_state;inner_posture_state;arousal_load;curiosity_tone;fatigue_tone;calm_tone;"
+            "stimulus_field_effect;inner_impact_trace;perceived_field_change;felt_afterimage;"
+            "object_release_state;inner_outer_reflection;perceptual_distance;object_contact_depth;field_attachment;"
+            "release_capacity;selective_attention;background_containment;reflective_distance;inner_outer_alignment;"
+            "engaged_effort;effort_state;effort_learning_pull;effort_reorganization_pressure;"
+            "pre_action_reorganization_pressure;pre_action_context_selectivity;"
+            "previous_packet_label;previous_packet_process_reward;previous_packet_reorganization_need;"
+            "diffuse_open_development_pressure;posture_development_hint;"
             "field_focus;field_clarity;field_stability;field_fragmentation;field_strain;"
             "field_pressure;field_support;field_observation_need;field_replan_pressure;field_action_support;"
             "action_clearance;action_inhibition;regulated_courage;decision_strength;state_maturity;decision_readiness;"
+            "plan_pressure;act_watch_readiness;structure_carrying_need;structure_action_uncertainty;"
+            "visual_blind_action_load;visual_action_uncertainty;visual_clarity;visual_object_stability;"
+            "visual_object_binding;visual_grounding_strength;visual_resonance_unbound;visual_grounding_gap;"
+            "visual_grounding_need;visual_rational_observation_support;visual_grounding_state;"
+            "visual_blindness;visual_form_pressure;visual_shape_resonance;visual_shape_fragility;"
+            "uncertain_form_family_state;uncertain_form_exposure;uncertainty_familiarity;"
+            "variant_spread;variant_learning_pressure;variant_bearing_memory;"
             "processing_load;processing_tension;felt_pressure;felt_stability;thought_pressure;thought_support;"
             "context_cluster_id;inner_context_cluster_id\n"
         )
@@ -5473,6 +5623,55 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
         _clean(reason),
         _clean(proposed_decision),
         _clean(field_label),
+        _clean(meta.get("neurochemical_state_label", "mixed_neurochemistry")),
+        _clean(meta.get("neurochemical_dominant_tone", "-")),
+        f"{float(meta.get('dopamine_tone', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('gaba_inhibition', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('noradrenaline_arousal', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('acetylcholine_focus', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('serotonin_stability', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('cortisol_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('endorphin_relief', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('glutamate_activation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('neurochemical_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('neurochemical_support', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('neurochemical_balance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('reward_stability_echo', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('world_shift_evidence', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('serotonin_carryover_risk', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('emotional_decoupling', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('reactive_nervous_drive', 0.0) or 0.0):.4f}",
+        _clean(meta.get("conscious_perception_state", "open_perception")),
+        _clean(meta.get("inner_posture_state", "uncertain_open")),
+        f"{float(meta.get('arousal_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('curiosity_tone', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('fatigue_tone', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('calm_tone', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('stimulus_field_effect', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('inner_impact_trace', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('perceived_field_change', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('felt_afterimage', 0.0) or 0.0):.4f}",
+        _clean(meta.get("object_release_state", "holding")),
+        f"{float(meta.get('inner_outer_reflection', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('perceptual_distance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('object_contact_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('field_attachment', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('release_capacity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('selective_attention', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('background_containment', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('reflective_distance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('inner_outer_alignment', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('engaged_effort', 0.0) or 0.0):.4f}",
+        _clean(meta.get("effort_state", "settled_effort")),
+        f"{float(meta.get('effort_learning_pull', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('effort_reorganization_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('pre_action_reorganization_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('pre_action_context_selectivity', 0.0) or 0.0):.4f}",
+        _clean(meta.get("previous_packet_label", "-")),
+        f"{float(meta.get('previous_packet_process_reward', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('previous_packet_reorganization_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('diffuse_open_development_pressure', 0.0) or 0.0):.4f}",
+        _clean(meta.get("posture_development_hint", "stable_posture")),
         f"{float(meta.get('field_perception_focus', processing.get('field_perception_focus', 0.0)) or 0.0):.4f}",
         f"{float(meta.get('field_perception_clarity', processing.get('field_perception_clarity', 0.0)) or 0.0):.4f}",
         f"{float(meta.get('field_perception_stability', processing.get('field_perception_stability', 0.0)) or 0.0):.4f}",
@@ -5489,6 +5688,31 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
         f"{float(meta.get('decision_strength', 0.0) or 0.0):.4f}",
         f"{float(meta.get('state_maturity', thought.get('state_maturity', 0.0)) or 0.0):.4f}",
         f"{float(meta.get('decision_readiness', thought.get('decision_readiness', 0.0)) or 0.0):.4f}",
+        f"{float(meta.get('plan_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('act_watch_readiness', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('structure_carrying_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('structure_action_uncertainty', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('visual_blind_action_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('visual_action_uncertainty', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('visual_clarity', felt.get('visual_clarity', processing.get('visual_clarity', 0.0))) or 0.0):.4f}",
+        f"{float(meta.get('visual_object_stability', felt.get('visual_object_stability', processing.get('visual_object_stability', 0.0))) or 0.0):.4f}",
+        f"{float(meta.get('visual_object_binding', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('visual_grounding_strength', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('visual_resonance_unbound', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('visual_grounding_gap', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('visual_grounding_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('visual_rational_observation_support', 0.0) or 0.0):.4f}",
+        _clean(meta.get("visual_grounding_state", "-")),
+        f"{float(meta.get('visual_blindness', felt.get('visual_blindness', processing.get('visual_blindness', 0.0))) or 0.0):.4f}",
+        f"{float(meta.get('visual_form_pressure', felt.get('visual_form_pressure', processing.get('visual_form_pressure', 0.0))) or 0.0):.4f}",
+        f"{float(meta.get('visual_shape_resonance', felt.get('visual_shape_resonance', processing.get('visual_shape_resonance', 0.0))) or 0.0):.4f}",
+        f"{float(meta.get('visual_shape_fragility', felt.get('visual_shape_fragility', processing.get('visual_shape_fragility', 0.0))) or 0.0):.4f}",
+        _clean(meta.get('uncertain_form_family_state', 'quiet_form_family')),
+        f"{float(meta.get('uncertain_form_exposure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('uncertainty_familiarity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('variant_spread', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('variant_learning_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('variant_bearing_memory', 0.0) or 0.0):.4f}",
         f"{float(processing.get('processing_load', 0.0) or 0.0):.4f}",
         f"{float(processing.get('processing_tension', 0.0) or 0.0):.4f}",
         f"{float(felt.get('felt_pressure', 0.0) or 0.0):.4f}",
@@ -5500,16 +5724,778 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
     ]
     os.makedirs(os.path.dirname(path), exist_ok=True)
     line = ";".join(str(item) for item in row) + "\n"
-    write_start = time.perf_counter()
-    with open(path, "a", encoding="utf-8") as handle:
-        handle.write(line)
-    dbr_file_write_profile(
+    dbr_append_text(
         path,
-        (time.perf_counter() - write_start) * 1000.0,
-        bytes_written=len(line.encode("utf-8")),
+        line,
         operation="field_decision_protocol_append",
         extra=f"phase={phase}|reason={reason}|field={field_label}",
     )
+    return dict(protocol)
+
+def build_strategic_window_state(
+    window,
+    candle_state=None,
+    visual_market_state=None,
+    structure_perception_state=None,
+    form_symbol_state=None,
+    meta_regulation_state=None,
+    bot=None,
+):
+    candles = [dict(item or {}) for item in list(window or []) if isinstance(item, dict)]
+    if not candles:
+        return {
+            "strategic_window_state": "no_window",
+            "lookback_window_size": 0,
+            "area_candidate_count": 0,
+            "area_focus_candidates": [],
+        }
+
+    candle_state = dict(candle_state or {})
+    visual_market_state = dict(visual_market_state or {})
+    structure_perception_state = dict(structure_perception_state or {})
+    form_symbol_state = dict(form_symbol_state or {})
+    meta = dict(meta_regulation_state or {})
+
+    def _clip(value, lo=0.0, hi=1.0):
+        try:
+            value = float(value)
+        except Exception:
+            value = 0.0
+        if value != value:
+            value = 0.0
+        return max(float(lo), min(float(hi), float(value)))
+
+    def _float(value, default=0.0):
+        try:
+            value = float(value)
+        except Exception:
+            value = float(default)
+        if value != value:
+            value = float(default)
+        return float(value)
+
+    def _price(candle, key, fallback=0.0):
+        item = dict(candle or {})
+        return _float(item.get(key, item.get(key.capitalize(), fallback)), fallback)
+
+    current = dict(candles[-1] or {})
+    current_price = _float(
+        candle_state.get(
+            "close",
+            candle_state.get("price", current.get("close", current.get("Close", 0.0))),
+        ),
+        0.0,
+    )
+    if current_price <= 0.0:
+        current_price = _price(current, "close", _price(current, "Close", 0.0))
+
+    neurochemical_load = _clip(meta.get("neurochemical_load", 0.0))
+    processing_load = _clip(meta.get("processing_load", meta.get("field_perception_pressure", 0.0)))
+    memory_compare_load = _clip(meta.get("memory_compare_load", 0.0))
+    fatigue_tone = _clip(meta.get("fatigue_tone", 0.0))
+    reorg_pressure = _clip(meta.get("effort_reorganization_pressure", meta.get("pre_action_reorganization_pressure", 0.0)))
+    focus_support = _clip(meta.get("acetylcholine_focus", meta.get("selective_attention", 0.0)))
+    serotonin_stability = _clip(meta.get("serotonin_stability", 0.0))
+    dopamine_tone = _clip(meta.get("dopamine_tone", 0.0))
+    gaba_inhibition = _clip(meta.get("gaba_inhibition", 0.0))
+
+    lookback_load = _clip(
+        (neurochemical_load * 0.26)
+        + (processing_load * 0.22)
+        + (memory_compare_load * 0.18)
+        + (fatigue_tone * 0.18)
+        + (reorg_pressure * 0.16)
+    )
+    max_lookback = int(getattr(Config, "MCM_STRATEGIC_LOOKBACK_MAX", 96) or 96)
+    min_lookback = int(getattr(Config, "MCM_STRATEGIC_LOOKBACK_MIN", 24) or 24)
+    max_lookback = max(12, min(240, max_lookback))
+    min_lookback = max(6, min(max_lookback, min_lookback))
+    adaptive_size = int(round(max_lookback - ((max_lookback - min_lookback) * lookback_load)))
+    lookback_window_size = max(min_lookback, min(max_lookback, adaptive_size, len(candles)))
+    tail = candles[-lookback_window_size:]
+
+    highs = [_price(item, "high", _price(item, "close", 0.0)) for item in tail]
+    lows = [_price(item, "low", _price(item, "close", 0.0)) for item in tail]
+    closes = [_price(item, "close", 0.0) for item in tail]
+    volumes = [_price(item, "volume", 0.0) for item in tail]
+    valid_prices = [value for value in highs + lows + closes if value > 0.0]
+    if not valid_prices:
+        return {
+            "strategic_window_state": "no_price_form",
+            "lookback_window_size": int(lookback_window_size),
+            "area_candidate_count": 0,
+            "area_focus_candidates": [],
+        }
+
+    window_high = max(highs) if highs else max(valid_prices)
+    window_low = min(lows) if lows else min(valid_prices)
+    window_span = max(1e-9, float(window_high - window_low))
+    candle_spans = [max(0.0, high - low) for high, low in zip(highs, lows)]
+    avg_span = float(np.mean(candle_spans)) if candle_spans else 0.0
+    avg_volume = float(np.mean(volumes)) if volumes else 0.0
+    close_delta = abs(closes[-1] - closes[0]) if len(closes) > 1 else 0.0
+    drift_pressure = _clip(close_delta / max(window_span, 1e-9))
+
+    structural_quality = _clip(structure_perception_state.get("structure_quality", meta.get("structure_quality", 0.0)))
+    context_confidence = _clip(structure_perception_state.get("context_confidence", meta.get("context_confidence", 0.0)))
+    visual_clarity = _clip(visual_market_state.get("visual_clarity", meta.get("visual_clarity", 0.0)))
+    visual_stability = _clip(visual_market_state.get("visual_object_stability", meta.get("visual_object_stability", 0.0)))
+    form_resonance = _clip(form_symbol_state.get("form_symbol_resonance", 0.0))
+    form_learning_trust = _clip(form_symbol_state.get("form_symbol_learning_trust", 0.0))
+    variant_bearing_memory = _clip(form_symbol_state.get("variant_bearing_memory", meta.get("variant_bearing_memory", 0.0)))
+    packet_reward = _clip(meta.get("previous_packet_process_reward", 0.0))
+    packet_reorg = _clip(meta.get("previous_packet_reorganization_need", 0.0))
+    memory_orientation = _clip(meta.get("inner_pattern_bearing", 0.0))
+    memory_conflict = _clip(meta.get("inner_pattern_conflict", 0.0))
+
+    replay_budget = _clip((focus_support * 0.28) + (serotonin_stability * 0.22) + (context_confidence * 0.18) + (gaba_inhibition * 0.12) - (lookback_load * 0.20) + 0.28)
+    zoom_budget = _clip((visual_clarity * 0.28) + (focus_support * 0.24) + (structural_quality * 0.18) + (dopamine_tone * 0.10) - (fatigue_tone * 0.14) + 0.26)
+    lookback_relevance = _clip((visual_stability * 0.22) + (structural_quality * 0.24) + (context_confidence * 0.20) + (form_resonance * 0.14) - (drift_pressure * 0.10) + 0.20)
+    lookback_bearing_capacity = _clip((lookback_relevance * 0.36) + (replay_budget * 0.22) + (zoom_budget * 0.18) + (memory_orientation * 0.12) - (lookback_load * 0.18) + 0.16)
+    old_structure_carryover_risk = _clip((drift_pressure * 0.30) + (packet_reorg * 0.22) + (memory_conflict * 0.20) + (lookback_load * 0.12) - (visual_stability * 0.10))
+
+    segment_len = max(6, min(18, int(round(lookback_window_size / 6.0))))
+    stride = max(3, int(round(segment_len / 2.0)))
+    candidates = []
+    for start in range(0, max(1, len(tail) - segment_len + 1), stride):
+        segment = tail[start:start + segment_len]
+        if len(segment) < 4:
+            continue
+        seg_highs = [_price(item, "high", _price(item, "close", 0.0)) for item in segment]
+        seg_lows = [_price(item, "low", _price(item, "close", 0.0)) for item in segment]
+        seg_closes = [_price(item, "close", 0.0) for item in segment]
+        seg_volumes = [_price(item, "volume", 0.0) for item in segment]
+        area_high = max(seg_highs)
+        area_low = min(seg_lows)
+        area_mid = (area_high + area_low) / 2.0
+        area_span = max(1e-9, area_high - area_low)
+        area_distance = _clip(abs(current_price - area_mid) / max(window_span, 1e-9))
+        area_center_index = float(start + (len(segment) - 1) * 0.50)
+        area_temporal_distance = _clip((len(tail) - 1 - area_center_index) / max(1.0, len(tail) - 1))
+        area_recency = _clip(1.0 - area_temporal_distance)
+        area_decay = _clip(area_temporal_distance * (0.58 + drift_pressure * 0.24 + old_structure_carryover_risk * 0.18))
+        touch_band = max(avg_span * 0.80, window_span * 0.018, 1e-9)
+        touches = sum(1 for value in seg_closes if abs(value - area_mid) <= touch_band)
+        touch_density = _clip(touches / max(1, len(seg_closes)))
+        compression = _clip(1.0 - (area_span / max(window_span, 1e-9)))
+        close_std = float(np.std(seg_closes)) if len(seg_closes) > 1 else 0.0
+        close_compression = _clip(1.0 - (close_std / max(window_span, 1e-9)))
+        volume_pressure = _clip((float(np.mean(seg_volumes)) / max(avg_volume, 1e-9)) - 0.72) if avg_volume > 0.0 else 0.0
+
+        area_structural_density = _clip((touch_density * 0.30) + (compression * 0.25) + (close_compression * 0.20) + (structural_quality * 0.15) + (volume_pressure * 0.10))
+        field_pressure = _clip(meta.get("field_perception_pressure", 0.0))
+        field_action_support = _clip(meta.get("field_action_support", 0.0))
+        field_focus = _clip(meta.get("field_perception_focus", 0.0))
+        field_fragmentation = _clip(meta.get("field_perception_fragmentation", 0.0))
+        area_energy_compression = _clip((compression * 0.32) + (volume_pressure * 0.22) + (touch_density * 0.18) + (field_pressure * 0.10) + (1.0 - area_distance) * 0.10)
+        area_mcm_resonance = _clip((area_energy_compression * 0.25) + (area_structural_density * 0.24) + (field_action_support * 0.12) + (field_focus * 0.10) + (form_resonance * 0.12) - (field_fragmentation * 0.12))
+        area_memory_pull = _clip((form_learning_trust * 0.24) + (variant_bearing_memory * 0.20) + (memory_orientation * 0.18) + (packet_reward * 0.14) - (packet_reorg * 0.14) - (memory_conflict * 0.10) + 0.10)
+        area_bearing_quality = _clip((area_structural_density * 0.26) + (area_mcm_resonance * 0.25) + (area_memory_pull * 0.20) + (lookback_bearing_capacity * 0.16) - (old_structure_carryover_risk * 0.18) + 0.10)
+        area_afterimage = _clip((area_memory_pull * 0.26) + (area_mcm_resonance * 0.20) + (area_bearing_quality * 0.18) + (area_temporal_distance * 0.20) - (area_recency * 0.10))
+        area_zoom_need = _clip((area_energy_compression * 0.25) + ((1.0 - visual_clarity) * 0.18) + ((1.0 - area_bearing_quality) * 0.16) + (area_distance * 0.12) + (memory_conflict * 0.10))
+        area_zoom_clarity = _clip((zoom_budget * 0.30) + (visual_clarity * 0.22) + (area_structural_density * 0.18) + (area_mcm_resonance * 0.12) - (area_zoom_need * 0.10) + 0.18)
+        area_replay_fit = _clip((replay_budget * 0.28) + (lookback_relevance * 0.20) + (area_memory_pull * 0.18) + (area_bearing_quality * 0.18) - (area_distance * 0.10))
+        area_temporal_relevance = _clip((area_recency * 0.34) + (area_bearing_quality * 0.20) + (area_replay_fit * 0.16) + (1.0 - area_distance) * 0.14 - (area_decay * 0.22) - (area_afterimage * 0.08))
+        area_present_contact = _clip((area_temporal_relevance * 0.42) + ((1.0 - area_distance) * 0.24) + (area_mcm_resonance * 0.18) + (area_structural_density * 0.12) - (area_afterimage * 0.16))
+        area_patience_quality = _clip((serotonin_stability * 0.20) + (gaba_inhibition * 0.18) + (area_replay_fit * 0.22) + (area_zoom_clarity * 0.16) - (neurochemical_load * 0.12) + 0.18)
+        area_action_timing_fit = _clip((area_present_contact * 0.34) + (area_patience_quality * 0.16) + (area_replay_fit * 0.18) + (area_recency * 0.14) - (area_decay * 0.20) - (area_afterimage * 0.08))
+        area_order_intention = _clip((area_bearing_quality * 0.27) + (area_mcm_resonance * 0.18) + (area_replay_fit * 0.15) + (area_action_timing_fit * 0.18) - (area_zoom_need * 0.10) - (old_structure_carryover_risk * 0.10) - (area_afterimage * 0.10))
+        area_invalidity_pressure = _clip((old_structure_carryover_risk * 0.26) + (memory_conflict * 0.22) + (packet_reorg * 0.20) + (area_zoom_need * 0.12) - (area_bearing_quality * 0.16))
+
+        area_key = "|".join([
+            f"{area_mid:.6f}",
+            f"{area_span:.6f}",
+            f"{start}",
+            str(segment[0].get("timestamp", segment[0].get("open_time", ""))),
+        ])
+        focus_id = "sa_" + hashlib.sha1(area_key.encode("utf-8")).hexdigest()[:10]
+        candidates.append({
+            "area_focus_id": focus_id,
+            "area_start_index": int(max(0, len(candles) - lookback_window_size + start)),
+            "area_end_index": int(max(0, len(candles) - lookback_window_size + start + len(segment) - 1)),
+            "area_price_low": float(area_low),
+            "area_price_high": float(area_high),
+            "area_price_mid": float(area_mid),
+            "area_distance_from_price": float(area_distance),
+            "area_temporal_distance": float(area_temporal_distance),
+            "area_temporal_relevance": float(area_temporal_relevance),
+            "area_recency": float(area_recency),
+            "area_decay": float(area_decay),
+            "area_afterimage": float(area_afterimage),
+            "area_present_contact": float(area_present_contact),
+            "area_action_timing_fit": float(area_action_timing_fit),
+            "area_structural_density": float(area_structural_density),
+            "area_energy_compression": float(area_energy_compression),
+            "area_mcm_resonance": float(area_mcm_resonance),
+            "area_memory_pull": float(area_memory_pull),
+            "area_bearing_quality": float(area_bearing_quality),
+            "area_zoom_need": float(area_zoom_need),
+            "area_zoom_clarity": float(area_zoom_clarity),
+            "area_replay_fit": float(area_replay_fit),
+            "area_patience_quality": float(area_patience_quality),
+            "area_order_intention": float(area_order_intention),
+            "area_invalidity_pressure": float(area_invalidity_pressure),
+        })
+
+    candidates = sorted(
+        candidates,
+        key=lambda item: (
+            float(item.get("area_bearing_quality", 0.0) or 0.0)
+            + float(item.get("area_replay_fit", 0.0) or 0.0) * 0.46
+            + float(item.get("area_zoom_clarity", 0.0) or 0.0) * 0.28
+            + float(item.get("area_action_timing_fit", 0.0) or 0.0) * 0.44
+            + float(item.get("area_present_contact", 0.0) or 0.0) * 0.22
+            - float(item.get("area_invalidity_pressure", 0.0) or 0.0) * 0.70
+            - float(item.get("area_afterimage", 0.0) or 0.0) * 0.34
+        ),
+        reverse=True,
+    )[:3]
+    focus = dict(candidates[0] if candidates else {})
+
+    if not focus:
+        state_label = "no_area_focus"
+    elif float(focus.get("area_invalidity_pressure", 0.0) or 0.0) >= 0.52:
+        state_label = "area_releasing"
+    elif float(focus.get("area_zoom_need", 0.0) or 0.0) >= 0.48 and float(focus.get("area_zoom_clarity", 0.0) or 0.0) < 0.44:
+        state_label = "area_needs_zoom"
+    elif float(focus.get("area_bearing_quality", 0.0) or 0.0) >= 0.46 and float(focus.get("area_replay_fit", 0.0) or 0.0) >= 0.38:
+        state_label = "bearing_area_hypothesis"
+    elif float(focus.get("area_energy_compression", 0.0) or 0.0) >= 0.52:
+        state_label = "compressed_area_attention"
+    else:
+        state_label = "area_observation"
+
+    pressure_interpretation = _clip(
+        (float(focus.get("area_energy_compression", 0.0) or 0.0) * 0.28)
+        + (float(focus.get("area_mcm_resonance", 0.0) or 0.0) * 0.22)
+        + (lookback_load * 0.12)
+        - (float(focus.get("area_patience_quality", 0.0) or 0.0) * 0.16)
+    )
+    strategic_patience = _clip(
+        (float(focus.get("area_patience_quality", 0.0) or 0.0) * 0.34)
+        + (replay_budget * 0.22)
+        + (gaba_inhibition * 0.16)
+        + (serotonin_stability * 0.16)
+        - (pressure_interpretation * 0.16)
+    )
+
+    return {
+        "strategic_window_state": str(state_label),
+        "lookback_window_size": int(lookback_window_size),
+        "lookback_load": float(lookback_load),
+        "lookback_relevance": float(lookback_relevance),
+        "lookback_bearing_capacity": float(lookback_bearing_capacity),
+        "replay_budget": float(replay_budget),
+        "zoom_budget": float(zoom_budget),
+        "old_structure_carryover_risk": float(old_structure_carryover_risk),
+        "strategic_pressure_interpretation": float(pressure_interpretation),
+        "strategic_patience": float(strategic_patience),
+        "area_candidate_count": int(len(candidates)),
+        "area_focus_candidates": [dict(item) for item in candidates],
+        "area_focus_id": str(focus.get("area_focus_id", "-") or "-"),
+        "area_price_low": float(focus.get("area_price_low", 0.0) or 0.0),
+        "area_price_high": float(focus.get("area_price_high", 0.0) or 0.0),
+        "area_price_mid": float(focus.get("area_price_mid", 0.0) or 0.0),
+        "area_distance_from_price": float(focus.get("area_distance_from_price", 0.0) or 0.0),
+        "area_temporal_distance": float(focus.get("area_temporal_distance", 0.0) or 0.0),
+        "area_temporal_relevance": float(focus.get("area_temporal_relevance", 0.0) or 0.0),
+        "area_recency": float(focus.get("area_recency", 0.0) or 0.0),
+        "area_decay": float(focus.get("area_decay", 0.0) or 0.0),
+        "area_afterimage": float(focus.get("area_afterimage", 0.0) or 0.0),
+        "area_present_contact": float(focus.get("area_present_contact", 0.0) or 0.0),
+        "area_action_timing_fit": float(focus.get("area_action_timing_fit", 0.0) or 0.0),
+        "area_structural_density": float(focus.get("area_structural_density", 0.0) or 0.0),
+        "area_energy_compression": float(focus.get("area_energy_compression", 0.0) or 0.0),
+        "area_mcm_resonance": float(focus.get("area_mcm_resonance", 0.0) or 0.0),
+        "area_memory_pull": float(focus.get("area_memory_pull", 0.0) or 0.0),
+        "area_bearing_quality": float(focus.get("area_bearing_quality", 0.0) or 0.0),
+        "area_zoom_need": float(focus.get("area_zoom_need", 0.0) or 0.0),
+        "area_zoom_clarity": float(focus.get("area_zoom_clarity", 0.0) or 0.0),
+        "area_replay_fit": float(focus.get("area_replay_fit", 0.0) or 0.0),
+        "area_patience_quality": float(focus.get("area_patience_quality", 0.0) or 0.0),
+        "area_order_intention": float(focus.get("area_order_intention", 0.0) or 0.0),
+        "area_invalidity_pressure": float(focus.get("area_invalidity_pressure", 0.0) or 0.0),
+    }
+
+def _record_strategic_window_protocol(bot, runtime_result):
+
+    if bot is None:
+        return None
+
+    if not bool(getattr(Config, "MCM_STRATEGIC_WINDOW_PROTOCOL_DEBUG", True)):
+        return None
+
+    result = dict(runtime_result or {})
+    state = dict(result.get("strategic_window_state", getattr(bot, "strategic_window_state", {}) or {}) or {})
+    if not state:
+        return None
+
+    meta = dict(result.get("meta_regulation_state", getattr(bot, "meta_regulation_state", {}) or {}) or {})
+    timestamp = result.get("timestamp", getattr(bot, "current_timestamp", None))
+    sequence = int(getattr(bot, "mcm_strategic_window_protocol_sequence", 0) or 0) + 1
+    setattr(bot, "mcm_strategic_window_protocol_sequence", int(sequence))
+
+    path = dbr_path("mcm_strategic_window_protocol.csv")
+    if path not in _STRATEGIC_WINDOW_PROTOCOL_HEADER_DONE:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        header_text = (
+            "timestamp;sequence;decision;phase;reason;strategic_window_state;lookback_window_size;"
+            "lookback_load;lookback_relevance;lookback_bearing_capacity;replay_budget;zoom_budget;"
+            "old_structure_carryover_risk;strategic_pressure_interpretation;strategic_patience;"
+            "area_candidate_count;area_focus_id;area_price_low;area_price_high;area_distance_from_price;"
+            "area_temporal_distance;area_temporal_relevance;area_recency;area_decay;area_afterimage;"
+            "area_present_contact;area_action_timing_fit;"
+            "area_structural_density;area_energy_compression;area_mcm_resonance;area_memory_pull;"
+            "area_bearing_quality;area_zoom_need;area_zoom_clarity;area_replay_fit;area_patience_quality;"
+            "area_order_intention;area_invalidity_pressure;pre_action_reorganization_pressure;"
+            "pre_action_context_selectivity;effort_state;previous_packet_label;candidates_json\n"
+        )
+        write_start = time.perf_counter()
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(header_text)
+        dbr_file_write_profile(
+            path,
+            (time.perf_counter() - write_start) * 1000.0,
+            bytes_written=len(header_text.encode("utf-8")),
+            operation="strategic_window_protocol_header",
+        )
+        _STRATEGIC_WINDOW_PROTOCOL_HEADER_DONE.add(path)
+
+    def _clean(value):
+        return str(value).replace("\n", " ").replace(";", "|")
+
+    def _num(key, default=0.0):
+        try:
+            return float(state.get(key, default) or default)
+        except Exception:
+            return float(default)
+
+    candidates_json = json.dumps(state.get("area_focus_candidates", []) or [], ensure_ascii=False, separators=(",", ":"))
+    row = [
+        _clean(timestamp),
+        int(sequence),
+        _clean(result.get("decision", result.get("proposed_decision", "WAIT"))),
+        _clean(meta.get("pre_action_phase", "hold")),
+        _clean(meta.get("rejection_reason", result.get("rejection_reason", "-"))),
+        _clean(state.get("strategic_window_state", "no_area_focus")),
+        int(_num("lookback_window_size", 0.0)),
+        f"{_num('lookback_load'):.4f}",
+        f"{_num('lookback_relevance'):.4f}",
+        f"{_num('lookback_bearing_capacity'):.4f}",
+        f"{_num('replay_budget'):.4f}",
+        f"{_num('zoom_budget'):.4f}",
+        f"{_num('old_structure_carryover_risk'):.4f}",
+        f"{_num('strategic_pressure_interpretation'):.4f}",
+        f"{_num('strategic_patience'):.4f}",
+        int(_num("area_candidate_count", 0.0)),
+        _clean(state.get("area_focus_id", "-")),
+        f"{_num('area_price_low'):.8f}",
+        f"{_num('area_price_high'):.8f}",
+        f"{_num('area_distance_from_price'):.4f}",
+        f"{_num('area_temporal_distance'):.4f}",
+        f"{_num('area_temporal_relevance'):.4f}",
+        f"{_num('area_recency'):.4f}",
+        f"{_num('area_decay'):.4f}",
+        f"{_num('area_afterimage'):.4f}",
+        f"{_num('area_present_contact'):.4f}",
+        f"{_num('area_action_timing_fit'):.4f}",
+        f"{_num('area_structural_density'):.4f}",
+        f"{_num('area_energy_compression'):.4f}",
+        f"{_num('area_mcm_resonance'):.4f}",
+        f"{_num('area_memory_pull'):.4f}",
+        f"{_num('area_bearing_quality'):.4f}",
+        f"{_num('area_zoom_need'):.4f}",
+        f"{_num('area_zoom_clarity'):.4f}",
+        f"{_num('area_replay_fit'):.4f}",
+        f"{_num('area_patience_quality'):.4f}",
+        f"{_num('area_order_intention'):.4f}",
+        f"{_num('area_invalidity_pressure'):.4f}",
+        f"{float(meta.get('pre_action_reorganization_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('pre_action_context_selectivity', 0.0) or 0.0):.4f}",
+        _clean(meta.get("effort_state", "settled_effort")),
+        _clean(meta.get("previous_packet_label", "-")),
+        _clean(candidates_json),
+    ]
+    line = ";".join(str(item) for item in row) + "\n"
+    dbr_append_text(
+        path,
+        line,
+        operation="strategic_window_protocol_append",
+        extra=f"state={state.get('strategic_window_state', 'no_area_focus')}|focus={state.get('area_focus_id', '-')}",
+    )
+    return dict(state)
+
+def _record_active_mcm_contact_protocol(bot, runtime_result):
+
+    if bot is None:
+        return None
+
+    if not bool(getattr(Config, "MCM_ACTIVE_CONTACT_PROTOCOL_DEBUG", True)):
+        return None
+
+    result = dict(runtime_result or {})
+    meta = dict(result.get("meta_regulation_state", getattr(bot, "meta_regulation_state", {}) or {}) or {})
+    state = dict(result.get("active_mcm_contact_state", getattr(bot, "active_mcm_contact_state", {}) or {}) or {})
+    if not state:
+        state = dict(meta.get("active_mcm_contact", {}) or {})
+    if not state:
+        return None
+
+    timestamp = result.get("timestamp", getattr(bot, "current_timestamp", None))
+    sequence = int(getattr(bot, "mcm_active_contact_protocol_sequence", 0) or 0) + 1
+    setattr(bot, "mcm_active_contact_protocol_sequence", int(sequence))
+
+    path = dbr_path("mcm_active_contact_protocol.csv")
+    if path not in _ACTIVE_CONTACT_PROTOCOL_HEADER_DONE:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        header_text = (
+            "timestamp;sequence;decision;phase;reason;contact_posture;contact_interest;"
+            "contact_focus_pull;contact_resonance_probe;outer_inner_resonance;outer_inner_coherence;"
+            "inner_change_from_contact;contact_carrying_quality;contact_overcoupling_risk;"
+            "contact_release_readiness;contact_deepen_pull;contact_replay_pull;contact_curiosity;"
+            "contact_felt_shift;contact_selected_depth;contact_salience;overcoupled_touch_score;"
+            "release_contact_score;deepening_contact_score;resonant_contact_score;reflective_contact_score;"
+            "curious_touch_score;contact_action_maturity;contact_bearing_gap;contact_impulse_vs_bearing;"
+            "contact_learning_need;contact_reality_check;contact_regime_mismatch;contact_stability_carryover;"
+            "contact_context_maturity;contact_context_reframe_need;conscious_perception_state;inner_posture_state;"
+            "strategic_window_state;area_bearing_quality;area_order_intention;perceptual_distance;"
+            "object_contact_depth;field_attachment;release_capacity;inner_outer_alignment\n"
+        )
+        write_start = time.perf_counter()
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(header_text)
+        dbr_file_write_profile(
+            path,
+            (time.perf_counter() - write_start) * 1000.0,
+            bytes_written=len(header_text.encode("utf-8")),
+            operation="active_contact_protocol_header",
+        )
+        _ACTIVE_CONTACT_PROTOCOL_HEADER_DONE.add(path)
+
+    def _clean(value):
+        return str(value).replace("\n", " ").replace(";", "|")
+
+    def _num(key, default=0.0):
+        try:
+            return float(state.get(key, meta.get(key, default)) or default)
+        except Exception:
+            return float(default)
+
+    row = [
+        _clean(timestamp),
+        int(sequence),
+        _clean(result.get("decision", result.get("proposed_decision", meta.get("decision", "WAIT")))),
+        _clean(meta.get("pre_action_phase", "hold")),
+        _clean(meta.get("rejection_reason", result.get("rejection_reason", "-"))),
+        _clean(state.get("contact_posture", "background_scan")),
+        f"{_num('contact_interest'):.4f}",
+        f"{_num('contact_focus_pull'):.4f}",
+        f"{_num('contact_resonance_probe'):.4f}",
+        f"{_num('outer_inner_resonance'):.4f}",
+        f"{_num('outer_inner_coherence'):.4f}",
+        f"{_num('inner_change_from_contact'):.4f}",
+        f"{_num('contact_carrying_quality'):.4f}",
+        f"{_num('contact_overcoupling_risk'):.4f}",
+        f"{_num('contact_release_readiness'):.4f}",
+        f"{_num('contact_deepen_pull'):.4f}",
+        f"{_num('contact_replay_pull'):.4f}",
+        f"{_num('contact_curiosity'):.4f}",
+        f"{_num('contact_felt_shift'):.4f}",
+        f"{_num('contact_selected_depth'):.4f}",
+        f"{_num('contact_salience'):.4f}",
+        f"{_num('overcoupled_touch_score'):.4f}",
+        f"{_num('release_contact_score'):.4f}",
+        f"{_num('deepening_contact_score'):.4f}",
+        f"{_num('resonant_contact_score'):.4f}",
+        f"{_num('reflective_contact_score'):.4f}",
+        f"{_num('curious_touch_score'):.4f}",
+        f"{_num('contact_action_maturity'):.4f}",
+        f"{_num('contact_bearing_gap'):.4f}",
+        f"{_num('contact_impulse_vs_bearing'):.4f}",
+        f"{_num('contact_learning_need'):.4f}",
+        f"{_num('contact_reality_check'):.4f}",
+        f"{_num('contact_regime_mismatch'):.4f}",
+        f"{_num('contact_stability_carryover'):.4f}",
+        f"{_num('contact_context_maturity'):.4f}",
+        f"{_num('contact_context_reframe_need'):.4f}",
+        _clean(meta.get("conscious_perception_state", "-")),
+        _clean(meta.get("inner_posture_state", "-")),
+        _clean(meta.get("strategic_window_state", "-")),
+        f"{float(meta.get('area_bearing_quality', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('area_order_intention', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('perceptual_distance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('object_contact_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('field_attachment', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('release_capacity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('inner_outer_alignment', 0.0) or 0.0):.4f}",
+    ]
+    line = ";".join(str(item) for item in row) + "\n"
+    dbr_append_text(
+        path,
+        line,
+        operation="active_contact_protocol_append",
+        extra=f"posture={state.get('contact_posture', 'background_scan')}",
+    )
+    return dict(state)
+
+def _record_neuro_transition_protocol(bot, runtime_result, current_window=None):
+
+    if bot is None:
+        return None
+
+    if not bool(getattr(Config, "MCM_NEURO_TRANSITION_PROTOCOL_DEBUG", True)):
+        return None
+
+    result = dict(runtime_result or {})
+    meta = dict(result.get("meta_regulation_state", {}) or getattr(bot, "meta_regulation_state", {}) or {})
+    if not meta:
+        decision_state = dict(getattr(bot, "mcm_runtime_decision_state", {}) or {})
+        entry_result = dict(decision_state.get("entry_result", {}) or {})
+        meta = dict(entry_result.get("meta_regulation_state", {}) or {})
+        result = dict(entry_result or result)
+
+    tone = str(meta.get("neurochemical_dominant_tone", "-") or "-").strip()
+    timestamp = result.get("timestamp", getattr(bot, "current_timestamp", None))
+    if not tone or tone == "-" or timestamp is None:
+        return None
+
+    window = [dict(item or {}) for item in list(current_window or []) if isinstance(item, dict)]
+    if not window:
+        world_state = dict(result.get("world_state", {}) or {})
+        window = [dict(item or {}) for item in list(world_state.get("window", []) or []) if isinstance(item, dict)]
+
+    protocol = dict(getattr(bot, "mcm_neuro_transition_protocol", {}) or {})
+    pending = [dict(item or {}) for item in list(protocol.get("pending", []) or []) if isinstance(item, dict)]
+    context = max(1, int(getattr(Config, "MCM_NEURO_TRANSITION_PROTOCOL_CONTEXT", 2) or 2))
+
+    def _clean(value):
+        return str(value).replace("\n", " ").replace(";", "|")
+
+    def _float(value, default=0.0):
+        try:
+            return float(value)
+        except Exception:
+            return float(default)
+
+    def _candle_timestamp(candle):
+        item = dict(candle or {})
+        value = item.get("timestamp", item.get("timestamp_ms", item.get("time", item.get("open_time", None))))
+        if value is None:
+            return None
+        return str(value)
+
+    def _candle_float(candle, key):
+        item = dict(candle or {})
+        return _float(item.get(key, item.get(key.capitalize(), 0.0)), 0.0)
+
+    def _find_index_by_timestamp(items, ts):
+        target = str(ts)
+        for idx, candle in enumerate(list(items or [])):
+            if _candle_timestamp(candle) == target:
+                return idx
+        return -1
+
+    def _avg(values):
+        clean_values = [_float(value, 0.0) for value in list(values or [])]
+        clean_values = [value for value in clean_values if value == value]
+        if not clean_values:
+            return 0.0
+        return float(sum(clean_values) / len(clean_values))
+
+    def _row_for_event(event, candles, idx):
+        transition_candle = dict(candles[idx] or {})
+        pre2 = dict(candles[idx - 2] or {}) if idx >= 2 else {}
+        pre1 = dict(candles[idx - 1] or {}) if idx >= 1 else {}
+        post1 = dict(candles[idx + 1] or {}) if (idx + 1) < len(candles) else {}
+        post2 = dict(candles[idx + 2] or {}) if (idx + 2) < len(candles) else {}
+        before = list(candles[max(0, idx - 48):idx])
+
+        close = _candle_float(transition_candle, "close")
+        open_price = _candle_float(transition_candle, "open")
+        high = _candle_float(transition_candle, "high")
+        low = _candle_float(transition_candle, "low")
+        volume = _candle_float(transition_candle, "volume")
+        pre2_close = _candle_float(pre2, "close")
+        pre1_close = _candle_float(pre1, "close")
+        post1_close = _candle_float(post1, "close")
+        post2_close = _candle_float(post2, "close")
+
+        base_price = abs(close) if abs(close) > 1e-12 else 1.0
+        pre_ret = (close - pre2_close) / (abs(pre2_close) if abs(pre2_close) > 1e-12 else base_price) if pre2_close else 0.0
+        post_ret = (post2_close - close) / base_price if post2_close else 0.0
+        window_ret = (post2_close - pre2_close) / (abs(pre2_close) if abs(pre2_close) > 1e-12 else base_price) if pre2_close and post2_close else 0.0
+        body_pct = (close - open_price) / base_price if open_price else 0.0
+        range_pct = (high - low) / base_price if high or low else 0.0
+        volume_baseline = _avg([_candle_float(item, "volume") for item in before]) or volume or 1.0
+        range_baseline = _avg([
+            (_candle_float(item, "high") - _candle_float(item, "low")) / (abs(_candle_float(item, "close")) if abs(_candle_float(item, "close")) > 1e-12 else 1.0)
+            for item in before
+        ]) or range_pct or 1.0
+        volume_ratio = volume / volume_baseline if volume_baseline else 0.0
+        range_ratio = range_pct / range_baseline if range_baseline else 0.0
+        direction_flip = 1 if (pre_ret > 0.0 > post_ret) or (pre_ret < 0.0 < post_ret) else 0
+
+        before_meta = dict(event.get("from_meta", {}) or {})
+        after_meta = dict(event.get("to_meta", {}) or {})
+
+        def _delta(key):
+            return _float(after_meta.get(key, 0.0), 0.0) - _float(before_meta.get(key, 0.0), 0.0)
+
+        row = [
+            _clean(event.get("timestamp", "")),
+            int(event.get("runtime_tick", 0) or 0),
+            int(event.get("sequence", 0) or 0),
+            _clean(event.get("from_tone", "-")),
+            _clean(event.get("to_tone", "-")),
+            _clean(event.get("transition_key", "-")),
+            _clean(event.get("phase", "hold")),
+            _clean(event.get("reason", "-")),
+            _clean(event.get("decision", "WAIT")),
+            f"{open_price:.6f}",
+            f"{high:.6f}",
+            f"{low:.6f}",
+            f"{close:.6f}",
+            f"{volume:.6f}",
+            f"{pre2_close:.6f}",
+            f"{pre1_close:.6f}",
+            f"{post1_close:.6f}",
+            f"{post2_close:.6f}",
+            f"{pre_ret:.6f}",
+            f"{post_ret:.6f}",
+            f"{window_ret:.6f}",
+            f"{abs(window_ret):.6f}",
+            int(direction_flip),
+            f"{volume_ratio:.4f}",
+            f"{range_pct:.6f}",
+            f"{range_ratio:.4f}",
+            f"{body_pct:.6f}",
+            f"{_delta('serotonin_stability'):.4f}",
+            f"{_delta('glutamate_activation'):.4f}",
+            f"{_delta('cortisol_load'):.4f}",
+            f"{_delta('gaba_inhibition'):.4f}",
+            f"{_delta('dopamine_tone'):.4f}",
+            f"{_delta('acetylcholine_focus'):.4f}",
+            f"{_delta('noradrenaline_arousal'):.4f}",
+            f"{_delta('endorphin_relief'):.4f}",
+            f"{_delta('neurochemical_load'):.4f}",
+            f"{_delta('neurochemical_support'):.4f}",
+            f"{_delta('neurochemical_balance'):.4f}",
+            f"{_delta('serotonin_carryover_risk'):.4f}",
+            f"{_delta('emotional_decoupling'):.4f}",
+            f"{_delta('reactive_nervous_drive'):.4f}",
+            f"{_delta('field_perception_pressure'):.4f}",
+            f"{_delta('field_perception_clarity'):.4f}",
+            f"{_delta('field_observation_need'):.4f}",
+            f"{_delta('field_replan_pressure'):.4f}",
+            f"{_delta('field_action_support'):.4f}",
+            f"{_delta('action_inhibition'):.4f}",
+            f"{_delta('action_clearance'):.4f}",
+            f"{_float(after_meta.get('serotonin_stability', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('glutamate_activation', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('cortisol_load', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('neurochemical_balance', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('serotonin_carryover_risk', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('emotional_decoupling', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('reactive_nervous_drive', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('field_perception_pressure', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('field_perception_clarity', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('action_inhibition', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('action_clearance', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('visual_action_uncertainty', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('variant_learning_pressure', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('structure_quality', 0.0), 0.0):.4f}",
+            f"{_float(after_meta.get('context_confidence', 0.0), 0.0):.4f}",
+        ]
+        return row
+
+    path = dbr_path("mcm_neuro_transition_protocol.csv")
+    if path not in _NEURO_TRANSITION_PROTOCOL_HEADER_DONE:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        header_text = (
+            "timestamp;runtime_tick;sequence;from_tone;to_tone;transition_key;phase;reason;decision;"
+            "open;high;low;close;volume;pre2_close;pre1_close;post1_close;post2_close;"
+            "pre_ret;post_ret;window_ret;abs_window_ret;direction_flip;volume_ratio;range_pct;range_ratio;body_pct;"
+            "serotonin_delta;glutamate_delta;cortisol_delta;gaba_delta;dopamine_delta;acetylcholine_delta;"
+            "noradrenaline_delta;endorphin_delta;neurochemical_load_delta;neurochemical_support_delta;neurochemical_balance_delta;"
+            "serotonin_carryover_risk_delta;emotional_decoupling_delta;reactive_nervous_drive_delta;"
+            "field_pressure_delta;field_clarity_delta;field_observation_need_delta;field_replan_pressure_delta;"
+            "field_action_support_delta;action_inhibition_delta;action_clearance_delta;"
+            "serotonin_stability;glutamate_activation;cortisol_load;neurochemical_balance;"
+            "serotonin_carryover_risk;emotional_decoupling;reactive_nervous_drive;"
+            "field_pressure;field_clarity;action_inhibition;action_clearance;visual_action_uncertainty;"
+            "variant_learning_pressure;structure_quality;context_confidence\n"
+        )
+        write_start = time.perf_counter()
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write(header_text)
+        dbr_file_write_profile(
+            path,
+            (time.perf_counter() - write_start) * 1000.0,
+            bytes_written=len(header_text.encode("utf-8")),
+            operation="neuro_transition_protocol_header",
+        )
+        _NEURO_TRANSITION_PROTOCOL_HEADER_DONE.add(path)
+
+    flushed = []
+    remaining = []
+    for event in pending:
+        idx = _find_index_by_timestamp(window, event.get("timestamp", None))
+        if idx >= context and (idx + context) < len(window):
+            flushed.append(_row_for_event(event, window, idx))
+        else:
+            remaining.append(dict(event))
+
+    if flushed:
+        payload = "".join(";".join(str(item) for item in row) + "\n" for row in flushed)
+        dbr_append_text(
+            path,
+            payload,
+            operation="neuro_transition_protocol_append",
+            extra=f"flushed={len(flushed)}",
+        )
+
+    last_tone = str(protocol.get("last_tone", "") or "")
+    last_timestamp = protocol.get("last_timestamp", None)
+    last_meta = dict(protocol.get("last_meta", {}) or {})
+    timestamp_changed = bool(str(last_timestamp) != str(timestamp))
+    tone_changed = bool(last_tone and last_tone != tone and timestamp_changed)
+
+    if tone_changed:
+        sequence = int(protocol.get("sequence", 0) or 0) + 1
+        event = {
+            "timestamp": timestamp,
+            "runtime_tick": int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0),
+            "sequence": int(sequence),
+            "from_tone": str(last_tone),
+            "to_tone": str(tone),
+            "transition_key": f"{last_tone}->{tone}",
+            "phase": str(meta.get("pre_action_phase", result.get("decision_tendency", "hold")) or "hold"),
+            "reason": str(meta.get("rejection_reason", result.get("rejection_reason", "-")) or "-"),
+            "decision": str(meta.get("decision", result.get("proposed_decision", result.get("decision", "WAIT"))) or "WAIT"),
+            "from_meta": dict(last_meta or {}),
+            "to_meta": dict(meta or {}),
+        }
+        idx = _find_index_by_timestamp(window, timestamp)
+        if idx >= context and (idx + context) < len(window):
+            row = _row_for_event(event, window, idx)
+            dbr_append_text(
+                path,
+                ";".join(str(item) for item in row) + "\n",
+                operation="neuro_transition_protocol_append",
+                extra=f"transition={event['transition_key']}",
+            )
+        else:
+            remaining.append(dict(event))
+        protocol["sequence"] = int(sequence)
+
+    protocol.update({
+        "last_tone": str(tone),
+        "last_timestamp": timestamp,
+        "last_meta": dict(meta or {}),
+        "pending": list(remaining[-128:]),
+        "last_pending_count": int(len(remaining[-128:])),
+    })
+    setattr(bot, "mcm_neuro_transition_protocol", dict(protocol))
     return dict(protocol)
 
 STRUCTURE_ENGINE = StructureEngine()
@@ -5859,7 +6845,15 @@ def apply_focus_filter(candle_state, tension_state, vision, focus, pause_mode=Fa
 
     impulse = filtered_orientation_drive + (filtered_optic_flow * 0.35) - (filtered_contrast * 0.08)
     motivation_impulse = (filtered_target_map * 0.48) + (right_eye_field * 0.22) - (filtered_threat_map * 0.14)
-    risk_impulse = -(filtered_threat_map * 0.28) - (filtered_contrast * 0.06) + min(0.0, left_eye_field) * 0.08
+    threat_excess = max(0.0, filtered_threat_map - 0.22)
+    contrast_excess = max(0.0, filtered_contrast - 0.18)
+    sensory_safety = max(0.0, signal_relevance - filtered_threat_map)
+    risk_impulse = (
+        -(threat_excess * 0.28)
+        - (contrast_excess * 0.06)
+        + min(0.0, left_eye_field) * 0.08
+        + (sensory_safety * 0.035)
+    )
     opportunity_bias = (filtered_target_map * 0.62) + max(0.0, filtered_optic_flow) * 0.22 + (signal_relevance * 0.10)
 
     if bool(pause_mode):
@@ -6542,7 +7536,7 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     else:
         total_energy_impulse = (raw_impulse * 0.72) + (replay_impulse * 0.45)
         motivation_impulse = (motivation_impulse * 0.55) - (abs(replay_impulse) * 0.08)
-        risk_impulse = (risk_impulse * 0.85) - (max(0.0, abs(raw_impulse) - 1.0) * 0.10)
+        risk_impulse = (risk_impulse * 0.72) - (max(0.0, abs(raw_impulse) - 1.18) * 0.045)
 
     replay_cycles = max(0, internal_cycles - 1)
     profile_section_start = _mcm_profile_start()
@@ -6563,7 +7557,7 @@ def step_mcm_brain(brain, stimulus, mode="market"):
         field.energy[:, 2] += risk_impulse
     else:
         field.energy[:, 1] += motivation_impulse - (opportunity_bias * 0.06)
-        field.energy[:, 2] += risk_impulse - (opportunity_bias * 0.08)
+        field.energy[:, 2] += risk_impulse - (max(0.0, opportunity_bias - 0.62) * 0.025)
 
     field.energy = np.clip(field.energy, -2.2, 2.2)
 
@@ -6610,6 +7604,7 @@ def step_mcm_brain(brain, stimulus, mode="market"):
     profile_section_start = _mcm_profile_start()
     self_state = self_model.evaluate(field.energy)
     regulation.regulate(field)
+    self_state = self_model.evaluate(field.energy)
     _mcm_profile_debug(
         "step_mcm_brain.self_regulation",
         profile_section_start,
@@ -6902,14 +7897,29 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
 
     experience_state = update_experience_state(bot, reason)
     outcome_decomposition = build_outcome_decomposition(bot, reason, position, experience_state)
-    bot.last_outcome_decomposition = dict(outcome_decomposition or {})
     form_development_state = _update_form_symbol_development_from_outcome(
         bot,
         reason,
         position=position,
         outcome_decomposition=outcome_decomposition,
     )
+    outcome_decomposition = dict(outcome_decomposition or {})
+    for key, value in dict(form_development_state or {}).items():
+        outcome_decomposition[key] = value
     bot.last_form_symbol_development_state = dict(form_development_state or {})
+    experience_packet_feedback = build_experience_packet_feedback(
+        bot,
+        reason,
+        position=position,
+        outcome_decomposition=outcome_decomposition,
+        experience_state=experience_state,
+        form_development_state=form_development_state,
+    )
+    bot.last_experience_packet_feedback = dict(experience_packet_feedback or {})
+    outcome_decomposition["experience_packet_feedback"] = dict(experience_packet_feedback or {})
+    for key, value in dict(experience_packet_feedback or {}).items():
+        outcome_decomposition[key] = value
+    bot.last_outcome_decomposition = dict(outcome_decomposition or {})
 
     commit_pending_learning_context(
         bot,
@@ -6950,7 +7960,8 @@ def apply_outcome_stimulus(bot, outcome_reason, position=None):
         f"signature_key={signature_key or '-'} "
         f"signature_score={signature_score:.4f} "
         f"outcome_decomposition={dict(outcome_decomposition or {})} "
-        f"form_development={dict(form_development_state or {})}"
+        f"form_development={dict(form_development_state or {})} "
+        f"experience_packet_feedback={dict(experience_packet_feedback or {})}"
     )
 
     return snapshot
@@ -6988,7 +7999,22 @@ def build_outer_visual_perception_state(world_state):
     market_balance = float(visual_market_state.get("market_balance", 0.0) or 0.0)
     breakout_tension = float(visual_market_state.get("breakout_tension", 0.0) or 0.0)
     visual_coherence = float(visual_market_state.get("visual_coherence", 0.0) or 0.0)
-
+    visual_form_state = dict(visual_market_state.get("visual_form_state", {}) or {})
+    visual_clarity = float(visual_market_state.get("visual_clarity", 0.0) or 0.0)
+    visual_object_stability = float(visual_market_state.get("visual_object_stability", 0.0) or 0.0)
+    visual_form_novelty = float(visual_market_state.get("visual_form_novelty", 0.0) or 0.0)
+    visual_blindness = float(visual_market_state.get("visual_blindness", 0.0) or 0.0)
+    visual_form_pressure = float(visual_market_state.get("visual_form_pressure", 0.0) or 0.0)
+    visual_shape_resonance = float(visual_market_state.get("visual_shape_resonance", 0.0) or 0.0)
+    visual_shape_fragility = float(visual_market_state.get("visual_shape_fragility", 0.0) or 0.0)
+    sensory_reality_pressure = float(visual_market_state.get("sensory_reality_pressure", 0.0) or 0.0)
+    sensory_load = float(visual_market_state.get("sensory_load", 0.0) or 0.0)
+    sensory_redundancy = float(visual_market_state.get("sensory_redundancy", 0.0) or 0.0)
+    sensory_habituation = float(visual_market_state.get("sensory_habituation", 0.0) or 0.0)
+    sensory_gate = float(visual_market_state.get("sensory_gate", 1.0) or 1.0)
+    sensory_active_axis_count = int(visual_market_state.get("sensory_active_axis_count", 0) or 0)
+    sensory_primary_pressure = float(visual_market_state.get("sensory_primary_pressure", 0.0) or 0.0)
+    sensory_reality_label = str(visual_market_state.get("sensory_reality_label", "quiet_outer_reality") or "quiet_outer_reality")
     signal_relevance = max(
         0.0,
         min(
@@ -7039,6 +8065,22 @@ def build_outer_visual_perception_state(world_state):
         "market_balance": float(market_balance),
         "breakout_tension": float(breakout_tension),
         "visual_coherence": float(visual_coherence),
+        "visual_form_state": dict(visual_form_state or {}),
+        "visual_clarity": float(visual_clarity),
+        "visual_object_stability": float(visual_object_stability),
+        "visual_form_novelty": float(visual_form_novelty),
+        "visual_blindness": float(visual_blindness),
+        "visual_form_pressure": float(visual_form_pressure),
+        "visual_shape_resonance": float(visual_shape_resonance),
+        "visual_shape_fragility": float(visual_shape_fragility),
+        "sensory_reality_pressure": float(sensory_reality_pressure),
+        "sensory_load": float(sensory_load),
+        "sensory_redundancy": float(sensory_redundancy),
+        "sensory_habituation": float(sensory_habituation),
+        "sensory_gate": float(sensory_gate),
+        "sensory_active_axis_count": int(sensory_active_axis_count),
+        "sensory_primary_pressure": float(sensory_primary_pressure),
+        "sensory_reality_label": str(sensory_reality_label),
     }
 
 def build_inner_field_perception_state(snapshot, bot=None):
@@ -7160,6 +8202,13 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
     signal_relevance = float(outer.get("signal_relevance", 0.0) or 0.0)
     visual_contrast = float(outer.get("visual_contrast", 0.0) or 0.0)
     visual_coherence = float(outer.get("visual_coherence", perception.get("visual_coherence", 0.0)) or 0.0)
+    visual_clarity = float(outer.get("visual_clarity", perception.get("visual_clarity", 0.0)) or 0.0)
+    visual_object_stability = float(outer.get("visual_object_stability", perception.get("visual_object_stability", 0.0)) or 0.0)
+    visual_form_novelty = float(outer.get("visual_form_novelty", perception.get("visual_form_novelty", 0.0)) or 0.0)
+    visual_blindness = float(outer.get("visual_blindness", perception.get("visual_blindness", 0.0)) or 0.0)
+    visual_form_pressure = float(outer.get("visual_form_pressure", perception.get("visual_form_pressure", 0.0)) or 0.0)
+    visual_shape_resonance = float(outer.get("visual_shape_resonance", perception.get("visual_shape_resonance", 0.0)) or 0.0)
+    visual_shape_fragility = float(outer.get("visual_shape_fragility", perception.get("visual_shape_fragility", 0.0)) or 0.0)
     market_balance = float(outer.get("market_balance", perception.get("market_balance", 0.0)) or 0.0)
     breakout_tension = float(outer.get("breakout_tension", perception.get("breakout_tension", 0.0)) or 0.0)
     spatial_bias = float(outer.get("spatial_bias", perception.get("spatial_bias", 0.0)) or 0.0)
@@ -7375,6 +8424,13 @@ def build_processing_state(outer_visual_perception_state, inner_field_perception
         "processing_tension": float(processing_tension),
         "processing_areal_tension": float(processing_areal_tension),
         "processing_areal_support": float(processing_areal_support),
+        "visual_clarity": float(visual_clarity),
+        "visual_object_stability": float(visual_object_stability),
+        "visual_form_novelty": float(visual_form_novelty),
+        "visual_blindness": float(visual_blindness),
+        "visual_form_pressure": float(visual_form_pressure),
+        "visual_shape_resonance": float(visual_shape_resonance),
+        "visual_shape_fragility": float(visual_shape_fragility),
         "field_perception_pressure": float(field_perception_pressure),
         "field_perception_support": float(field_perception_support),
         "field_perception_clarity": float(field_perception_clarity),
@@ -7483,6 +8539,252 @@ def build_outcome_decomposition(bot, outcome_reason, position=None, experience_s
         "context_quality": float(context_quality),
         "risk_width_pressure": float(risk_width_pressure),
         "reason": str(reason or "-"),
+    }
+
+def build_experience_packet_feedback(
+    bot,
+    outcome_reason,
+    position=None,
+    outcome_decomposition=None,
+    experience_state=None,
+    form_development_state=None,
+):
+    reason = str(outcome_reason or "").strip().lower()
+    outcome = dict(outcome_decomposition or {})
+    experience = dict(experience_state or {})
+    form_development = dict(form_development_state or {})
+    position_state = dict(position or {}) if isinstance(position, dict) else {}
+    meta = dict(position_state.get("meta", {}) or {}) if isinstance(position_state.get("meta", {}), dict) else {}
+    meta_regulation = dict(meta.get("meta_regulation_state", {}) or {}) if isinstance(meta.get("meta_regulation_state", {}), dict) else {}
+    if not meta_regulation and bot is not None:
+        meta_regulation = dict(getattr(bot, "meta_regulation_state", {}) or {})
+    neurochemical = dict(meta_regulation.get("neurochemical_state", {}) or {}) if isinstance(meta_regulation.get("neurochemical_state", {}), dict) else {}
+    if not neurochemical and bot is not None:
+        neurochemical = dict(getattr(bot, "neurochemical_state", {}) or {})
+    bearing_context = dict(meta.get("bearing_context", {}) or {}) if isinstance(meta.get("bearing_context", {}), dict) else {}
+    form_state = _extract_outcome_form_symbol_state(bot, position=position)
+
+    def _b01(value, default=0.0):
+        try:
+            return _clip01(value)
+        except Exception:
+            return float(default)
+
+    perception_quality = _b01(outcome.get("perception_quality", 0.50), default=0.50)
+    felt_quality = _b01(outcome.get("felt_quality", 0.50), default=0.50)
+    thought_quality = _b01(outcome.get("thought_quality", 0.50), default=0.50)
+    plan_quality = _b01(outcome.get("plan_quality", 0.50), default=0.50)
+    execution_quality = _b01(outcome.get("execution_quality", 0.50), default=0.50)
+    risk_fit_quality = _b01(outcome.get("risk_fit_quality", 0.50), default=0.50)
+    context_quality = _b01(outcome.get("context_quality", 0.0))
+    attempt_density = _b01(outcome.get("attempt_density", 0.0))
+    overtrade_pressure = _b01(outcome.get("overtrade_pressure", 0.0))
+    risk_width_pressure = _b01(outcome.get("risk_width_pressure", 0.0))
+
+    structure_quality = _b01(bearing_context.get("structure_quality", form_state.get("form_symbol_bearing", 0.0)))
+    transfer_bearing = _b01(meta_regulation.get("transfer_bearing", 0.0))
+    structure_action_bearing = _b01(meta_regulation.get("structure_action_bearing", 0.0))
+    field_action_support = _b01(meta_regulation.get("field_action_support", 0.0))
+    interpretation_quality = _b01(meta_regulation.get("interpretation_quality", perception_quality), default=perception_quality)
+    load_bearing_capacity = _b01(experience.get("load_bearing_capacity", meta_regulation.get("load_bearing_capacity", 0.0)))
+    reflection_maturity = _b01(experience.get("reflection_maturity", 0.0))
+    experience_regulation = _b01(experience.get("experience_regulation", 0.0))
+
+    perceptual_distance = _b01(meta_regulation.get("perceptual_distance", 0.0))
+    object_contact_depth = _b01(meta_regulation.get("object_contact_depth", 0.0))
+    field_attachment = _b01(meta_regulation.get("field_attachment", 0.0))
+    release_capacity = _b01(meta_regulation.get("release_capacity", 0.0))
+    inner_outer_alignment = _b01(meta_regulation.get("inner_outer_alignment", 0.0))
+    selective_attention = _b01(meta_regulation.get("selective_attention", 0.0))
+    diffuse_open_development_pressure = _b01(meta_regulation.get("diffuse_open_development_pressure", 0.0))
+    action_clearance = _b01(meta_regulation.get("action_clearance", 0.0))
+    action_inhibition = _b01(meta_regulation.get("action_inhibition", 0.0))
+    regulated_courage = _b01(meta_regulation.get("regulated_courage", 0.0))
+    curiosity_tone = _b01(meta_regulation.get("curiosity_tone", 0.0))
+    fatigue_tone = _b01(meta_regulation.get("fatigue_tone", 0.0))
+    pressure_release = _b01(experience.get("pressure_release", 0.0))
+    emotional_decoupling = _b01(neurochemical.get("emotional_decoupling", meta_regulation.get("emotional_decoupling", 0.0)))
+
+    form_process_quality = _b01(form_development.get("process_quality", 0.0))
+    form_structural_support = _b01(form_development.get("structural_support", 0.0))
+    form_action_affinity = _b01(form_development.get("symbol_action_affinity", form_state.get("form_symbol_action_trust", 0.0)))
+    form_learning_trust = _b01(form_state.get("form_symbol_learning_trust", 0.0))
+    form_novelty = _b01(form_state.get("form_symbol_novelty", 0.0))
+
+    process_core = _b01(
+        (perception_quality * 0.16)
+        + (felt_quality * 0.14)
+        + (thought_quality * 0.16)
+        + (plan_quality * 0.22)
+        + (execution_quality * 0.17)
+        + (risk_fit_quality * 0.15),
+        default=0.50,
+    )
+    packet_bearing_quality = _b01(
+        (structure_quality * 0.24)
+        + (structure_action_bearing * 0.16)
+        + (field_action_support * 0.14)
+        + (transfer_bearing * 0.12)
+        + (interpretation_quality * 0.12)
+        + (context_quality * 0.10)
+        + (load_bearing_capacity * 0.08)
+        + (form_structural_support * 0.04)
+    )
+    packet_inner_outer_fit = _b01(
+        (inner_outer_alignment * 0.26)
+        + (perceptual_distance * 0.14)
+        + (release_capacity * 0.12)
+        + ((1.0 - field_attachment) * 0.12)
+        + (emotional_decoupling * 0.10)
+        + (felt_quality * 0.10)
+        + (thought_quality * 0.08)
+        + (experience_regulation * 0.05)
+        + ((1.0 - diffuse_open_development_pressure) * 0.03)
+    )
+    packet_confidence_integrity = _b01(
+        (action_clearance * 0.19)
+        + (regulated_courage * 0.18)
+        + (plan_quality * 0.18)
+        + (risk_fit_quality * 0.16)
+        + (packet_bearing_quality * 0.15)
+        + (execution_quality * 0.10)
+        - (max(0.0, action_clearance - packet_bearing_quality) * 0.12)
+        - (action_inhibition * 0.06)
+    )
+    packet_repetition_potential = _b01(
+        (process_core * 0.20)
+        + (packet_bearing_quality * 0.20)
+        + (form_process_quality * 0.14)
+        + (form_action_affinity * 0.12)
+        + (form_learning_trust * 0.10)
+        + (context_quality * 0.10)
+        + (packet_confidence_integrity * 0.08)
+        - (risk_width_pressure * 0.08)
+        - (overtrade_pressure * 0.06)
+    )
+    packet_curiosity_pull = _b01(
+        (curiosity_tone * 0.22)
+        + (object_contact_depth * 0.18)
+        + (selective_attention * 0.16)
+        + (form_novelty * 0.14)
+        + (packet_repetition_potential * 0.12)
+        + (max(0.0, 0.62 - packet_bearing_quality) * 0.08)
+        - (fatigue_tone * 0.10)
+    )
+
+    outcome_confirmation = 0.0
+    if reason == "tp_hit":
+        outcome_confirmation = 0.10
+    elif reason == "sl_hit":
+        outcome_confirmation = -0.07
+    elif reason in ("cancel", "timeout"):
+        outcome_confirmation = -0.03
+    elif reason in ("reward_too_small", "rr_too_low", "sl_distance_too_high"):
+        outcome_confirmation = -0.05
+
+    packet_process_reward = _b01(
+        (process_core * 0.34)
+        + (packet_bearing_quality * 0.22)
+        + (packet_inner_outer_fit * 0.18)
+        + (packet_confidence_integrity * 0.12)
+        + (packet_repetition_potential * 0.10)
+        + outcome_confirmation
+        - (overtrade_pressure * 0.07)
+        - (risk_width_pressure * 0.06)
+    )
+    packet_reorganization_need = _b01(
+        ((1.0 - process_core) * 0.22)
+        + ((1.0 - packet_bearing_quality) * 0.20)
+        + ((1.0 - packet_inner_outer_fit) * 0.16)
+        + (risk_width_pressure * 0.12)
+        + (overtrade_pressure * 0.10)
+        + (diffuse_open_development_pressure * 0.10)
+        + (attempt_density * 0.06)
+        + (0.06 if reason == "sl_hit" else 0.0)
+        - (packet_process_reward * 0.16)
+    )
+    constructive_stimulation = _b01(
+        (packet_process_reward * 0.42)
+        + (packet_repetition_potential * 0.20)
+        + (packet_inner_outer_fit * 0.16)
+        + (packet_curiosity_pull * 0.12)
+        + (max(0.0, outcome_confirmation) * 0.10)
+        - (packet_reorganization_need * 0.10)
+    )
+    constructive_dopamine = _b01(
+        (packet_process_reward * 0.34)
+        + (packet_repetition_potential * 0.28)
+        + (packet_curiosity_pull * 0.22)
+        + (max(0.0, outcome_confirmation) * 0.08)
+    )
+    stabilizing_serotonin = _b01(
+        (packet_inner_outer_fit * 0.30)
+        + (packet_bearing_quality * 0.26)
+        + (packet_confidence_integrity * 0.16)
+        + (release_capacity * 0.12)
+        + (reflection_maturity * 0.08)
+        - (packet_reorganization_need * 0.10)
+    )
+    relief_endorphin = _b01(
+        (packet_process_reward * 0.24)
+        + (pressure_release * 0.24)
+        + (release_capacity * 0.18)
+        + ((1.0 - risk_width_pressure) * 0.10)
+        + (packet_inner_outer_fit * 0.08)
+        - (fatigue_tone * 0.08)
+    )
+    focused_acetylcholine = _b01(
+        (perception_quality * 0.20)
+        + (object_contact_depth * 0.18)
+        + (selective_attention * 0.16)
+        + (packet_curiosity_pull * 0.16)
+        + (packet_repetition_potential * 0.14)
+        + ((1.0 - diffuse_open_development_pressure) * 0.08)
+    )
+
+    if (
+        (packet_process_reward >= 0.52 and packet_reorganization_need < 0.36)
+        or (
+            packet_process_reward >= 0.46
+            and packet_bearing_quality >= 0.42
+            and packet_inner_outer_fit >= 0.38
+            and packet_reorganization_need < 0.42
+        )
+    ):
+        packet_label = "constructive_packet"
+    elif packet_reorganization_need >= 0.58 or (packet_process_reward < 0.34 and packet_reorganization_need >= 0.43):
+        packet_label = "reorganize_packet"
+    elif (
+        packet_bearing_quality >= 0.50
+        and packet_process_reward >= 0.38
+        and packet_reorganization_need < 0.48
+    ) or (
+        packet_bearing_quality >= 0.46
+        and packet_process_reward >= 0.40
+        and packet_reorganization_need < 0.44
+    ):
+        packet_label = "bearing_packet"
+    elif packet_curiosity_pull >= 0.46:
+        packet_label = "curiosity_packet"
+    elif packet_reorganization_need >= 0.50 and packet_process_reward < 0.34:
+        packet_label = "reorganize_packet"
+    else:
+        packet_label = "mixed_packet"
+
+    return {
+        "experience_packet_label": str(packet_label),
+        "packet_bearing_quality": float(packet_bearing_quality),
+        "packet_inner_outer_fit": float(packet_inner_outer_fit),
+        "packet_confidence_integrity": float(packet_confidence_integrity),
+        "packet_repetition_potential": float(packet_repetition_potential),
+        "packet_curiosity_pull": float(packet_curiosity_pull),
+        "packet_process_reward": float(packet_process_reward),
+        "packet_reorganization_need": float(packet_reorganization_need),
+        "constructive_stimulation": float(constructive_stimulation),
+        "constructive_dopamine": float(constructive_dopamine),
+        "stabilizing_serotonin": float(stabilizing_serotonin),
+        "relief_endorphin": float(relief_endorphin),
+        "focused_acetylcholine": float(focused_acetylcholine),
     }
 
 def _resolve_temporal_decision_modulation(temporal_perception_state=None):
@@ -7840,6 +9142,133 @@ def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, 
         entry_price = close_price + entry_shift
         validity_center = entry_price - min(entry_shift * 0.35, base_move * 0.15)
 
+    impulse_entry_price = float(entry_price)
+    strategic_entry_price = float(entry_price)
+    strategic_entry_weight = 0.0
+    strategic_entry_fit = 0.0
+    strategic_entry_mode = "impulse_contact"
+    strategic_area_focus_id = "-"
+    strategic_area_low = 0.0
+    strategic_area_high = 0.0
+
+    strategic_window = dict(getattr(bot, "strategic_window_state", {}) or {}) if bot is not None else {}
+    form_symbol = dict(getattr(bot, "form_symbol_state", {}) or {}) if bot is not None else {}
+
+    def _clip(value, lo=0.0, hi=1.0):
+        try:
+            value = float(value)
+        except Exception:
+            value = 0.0
+        if value != value:
+            value = 0.0
+        return max(float(lo), min(float(hi), float(value)))
+
+    selected_strategic_area = dict(strategic_window or {})
+    candidate_pool = list(strategic_window.get("area_focus_candidates", []) or []) if isinstance(strategic_window.get("area_focus_candidates", []), list) else []
+    if candidate_pool:
+        best_area = dict(selected_strategic_area or {})
+        best_area_score = -1.0
+        for raw_candidate in candidate_pool:
+            candidate = dict(raw_candidate or {})
+            cand_low = float(candidate.get("area_price_low", 0.0) or 0.0)
+            cand_high = float(candidate.get("area_price_high", 0.0) or 0.0)
+            if cand_low <= 0.0 or cand_high <= 0.0 or cand_high < cand_low:
+                continue
+            cand_mid = float(candidate.get("area_price_mid", (cand_low + cand_high) * 0.50) or ((cand_low + cand_high) * 0.50))
+            cand_span = max(1e-9, cand_high - cand_low)
+            cand_contains = bool(cand_low <= close_price <= cand_high)
+            if decision == "LONG":
+                cand_directional_fit = _clip((close_price - cand_mid) / max(base_move * 3.4, cand_span, 1e-9))
+                cand_side_fit = max(cand_directional_fit, 0.34 if cand_contains else 0.0)
+            else:
+                cand_directional_fit = _clip((cand_mid - close_price) / max(base_move * 3.4, cand_span, 1e-9))
+                cand_side_fit = max(cand_directional_fit, 0.34 if cand_contains else 0.0)
+            if cand_side_fit <= 0.02:
+                continue
+            cand_score = _clip(
+                (float(candidate.get("area_order_intention", 0.0) or 0.0) * 0.20)
+                + (float(candidate.get("area_bearing_quality", 0.0) or 0.0) * 0.18)
+                + (float(candidate.get("area_replay_fit", 0.0) or 0.0) * 0.14)
+                + (float(candidate.get("area_action_timing_fit", 0.0) or 0.0) * 0.22)
+                + (float(candidate.get("area_present_contact", 0.0) or 0.0) * 0.12)
+                + (cand_side_fit * 0.18)
+                - (float(candidate.get("area_invalidity_pressure", 0.0) or 0.0) * 0.22)
+                - (float(candidate.get("area_afterimage", 0.0) or 0.0) * 0.12)
+            )
+            if cand_score > best_area_score:
+                best_area_score = float(cand_score)
+                best_area = dict(candidate)
+        if best_area_score > 0.0:
+            selected_strategic_area = dict(best_area or {})
+
+    area_low = float(selected_strategic_area.get("area_price_low", 0.0) or 0.0)
+    area_high = float(selected_strategic_area.get("area_price_high", 0.0) or 0.0)
+    if area_low > 0.0 and area_high > 0.0 and area_high >= area_low:
+        area_mid = float(selected_strategic_area.get("area_price_mid", (area_low + area_high) * 0.50) or ((area_low + area_high) * 0.50))
+        area_span = max(1e-9, area_high - area_low)
+        area_order_intention = _clip(selected_strategic_area.get("area_order_intention", 0.0))
+        area_bearing_quality = _clip(selected_strategic_area.get("area_bearing_quality", 0.0))
+        area_replay_fit = _clip(selected_strategic_area.get("area_replay_fit", 0.0))
+        area_patience_quality = _clip(selected_strategic_area.get("area_patience_quality", 0.0))
+        area_invalidity_pressure = _clip(selected_strategic_area.get("area_invalidity_pressure", 0.0))
+        area_action_timing_fit = _clip(selected_strategic_area.get("area_action_timing_fit", 0.0))
+        area_present_contact = _clip(selected_strategic_area.get("area_present_contact", 0.0))
+        area_afterimage = _clip(selected_strategic_area.get("area_afterimage", 0.0))
+        area_temporal_relevance = _clip(selected_strategic_area.get("area_temporal_relevance", 0.0))
+        contact_maturity = _clip(form_symbol.get("form_symbol_contact_maturity", 0.0))
+        contact_utility = _clip(form_symbol.get("form_symbol_contact_utility", 0.0))
+        contact_burden = _clip(form_symbol.get("form_symbol_contact_burden_evidence", 0.0))
+        contact_carefulness = _clip(form_symbol.get("form_symbol_contact_carefulness", 0.0))
+        contact_fit = _clip((contact_maturity * 0.28) + (contact_utility * 0.32) + (area_replay_fit * 0.20) + (area_patience_quality * 0.20) - (contact_burden * 0.18))
+        area_contains_price = bool(area_low <= close_price <= area_high)
+        if decision == "LONG":
+            directional_fit = _clip((close_price - area_mid) / max(base_move * 3.4, area_span, 1e-9))
+            containment_fit = 0.34 if area_contains_price else 0.0
+            side_fit = max(directional_fit, containment_fit)
+            if close_price >= area_low:
+                strategic_anchor = min(close_price, area_high - area_span * 0.18)
+                strategic_anchor = max(area_low + area_span * 0.12, strategic_anchor)
+            else:
+                strategic_anchor = impulse_entry_price
+        else:
+            directional_fit = _clip((area_mid - close_price) / max(base_move * 3.4, area_span, 1e-9))
+            containment_fit = 0.34 if area_contains_price else 0.0
+            side_fit = max(directional_fit, containment_fit)
+            if close_price <= area_high:
+                strategic_anchor = max(close_price, area_low + area_span * 0.18)
+                strategic_anchor = min(area_high - area_span * 0.12, strategic_anchor)
+            else:
+                strategic_anchor = impulse_entry_price
+        anchor_distance = abs(strategic_anchor - close_price)
+        anchor_distance_fit = _clip(1.0 - (anchor_distance / max(base_move * 3.8, area_span * 1.6, 1e-9)))
+        strategic_entry_fit = _clip(
+            (area_order_intention * 0.24)
+            + (area_bearing_quality * 0.22)
+            + (area_replay_fit * 0.14)
+            + (area_patience_quality * 0.10)
+            + (area_action_timing_fit * 0.18)
+            + (area_present_contact * 0.10)
+            + (area_temporal_relevance * 0.08)
+            + (contact_fit * 0.14)
+            + (side_fit * 0.14)
+            + (anchor_distance_fit * 0.08)
+            - (area_invalidity_pressure * 0.22)
+            - (area_afterimage * 0.12)
+            - (contact_carefulness * max(0.0, 0.38 - contact_maturity) * 0.10)
+        )
+        if strategic_anchor > 0.0 and side_fit > 0.02 and strategic_entry_fit > 0.22:
+            strategic_entry_weight = min(0.58, max(0.0, (strategic_entry_fit - 0.22) * 0.96))
+            strategic_entry_price = float((impulse_entry_price * (1.0 - strategic_entry_weight)) + (strategic_anchor * strategic_entry_weight))
+            entry_price = float(strategic_entry_price)
+            if decision == "LONG":
+                validity_center = entry_price + min(abs(close_price - entry_price) * 0.28, base_move * 0.18)
+            else:
+                validity_center = entry_price - min(abs(close_price - entry_price) * 0.28, base_move * 0.18)
+            strategic_entry_mode = "area_contact_blend" if strategic_entry_weight < 0.44 else "area_contact_entry"
+            strategic_area_focus_id = str(selected_strategic_area.get("area_focus_id", "-") or "-")
+            strategic_area_low = float(area_low)
+            strategic_area_high = float(area_high)
+
     validity_halfwidth = max(
         base_move * 0.20,
         base_move * (
@@ -8010,6 +9439,14 @@ def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, 
         "reward_model_score": float(reward_model_score),
         "felt_bearing_score": float(felt_bearing_score),
         "felt_profile_label": str(felt_profile_label),
+        "entry_mode": str(strategic_entry_mode),
+        "impulse_entry_price": float(impulse_entry_price),
+        "strategic_entry_price": float(strategic_entry_price),
+        "strategic_entry_weight": float(strategic_entry_weight),
+        "strategic_entry_fit": float(strategic_entry_fit),
+        "strategic_area_focus_id": str(strategic_area_focus_id),
+        "strategic_area_price_low": float(strategic_area_low),
+        "strategic_area_price_high": float(strategic_area_high),
     }
 
 # --------------------------------------------------
@@ -8704,6 +10141,13 @@ def _normalize_form_symbol_memory_symbols(symbols):
                 continue
             cleaned_variants[str(variant_key)] = {
                 "seen": max(0, int(_num(variant_item, "seen", 0))),
+                "distance": max(0.0, min(1.0, _num(variant_item, "distance", 0.0))),
+                "bearing": max(0.0, min(1.0, _num(variant_item, "bearing", 0.0))),
+                "fragility": max(0.0, min(1.0, _num(variant_item, "fragility", 0.0))),
+                "visual_blindness": max(0.0, min(1.0, _num(variant_item, "visual_blindness", 0.0))),
+                "visual_clarity": max(0.0, min(1.0, _num(variant_item, "visual_clarity", 0.0))),
+                "object_stability": max(0.0, min(1.0, _num(variant_item, "object_stability", 0.0))),
+                "uncertain_exposure": max(0.0, min(1.0, _num(variant_item, "uncertain_exposure", 0.0))),
                 "last_seen_ts": variant_item.get("last_seen_ts", None),
             }
 
@@ -8740,10 +10184,24 @@ def _normalize_form_symbol_memory_symbols(symbols):
             "learning_trust": max(0.0, min(1.0, _num(item, "learning_trust", 0.0))),
             "action_trust": max(0.0, min(1.0, _num(item, "action_trust", 0.0))),
             "caution_trust": max(0.0, min(1.0, _num(item, "caution_trust", 0.0))),
+            "contact_maturity": max(0.0, min(1.0, _num(item, "contact_maturity", 0.0))),
+            "contact_utility": max(0.0, min(1.0, _num(item, "contact_utility", 0.0))),
+            "contact_pain_memory": max(0.0, min(1.0, _num(item, "contact_pain_memory", 0.0))),
+            "contact_carefulness": max(0.0, min(1.0, _num(item, "contact_carefulness", 0.0))),
+            "contact_burden_evidence": max(0.0, min(1.0, _num(item, "contact_burden_evidence", 0.0))),
+            "contact_utility_evidence": max(0.0, min(1.0, _num(item, "contact_utility_evidence", 0.0))),
+            "contact_learning_state": str(item.get("contact_learning_state", "unformed_contact") or "unformed_contact"),
             "constructive_seen": max(0, int(_num(item, "constructive_seen", 0))),
             "unconstructive_seen": max(0, int(_num(item, "unconstructive_seen", 0))),
             "last_zoom_need": max(0.0, min(1.0, _num(item, "last_zoom_need", 0.0))),
             "last_load_reduction": max(0.0, min(1.0, _num(item, "last_load_reduction", 0.0))),
+            "uncertain_form_exposure": max(0.0, min(1.0, _num(item, "uncertain_form_exposure", 0.0))),
+            "uncertainty_familiarity": max(0.0, min(1.0, _num(item, "uncertainty_familiarity", 0.0))),
+            "variant_similarity": max(0.0, min(1.0, _num(item, "variant_similarity", 0.0))),
+            "variant_spread": max(0.0, min(1.0, _num(item, "variant_spread", 0.0))),
+            "variant_learning_pressure": max(0.0, min(1.0, _num(item, "variant_learning_pressure", 0.0))),
+            "variant_bearing_memory": max(0.0, min(1.0, _num(item, "variant_bearing_memory", 0.0))),
+            "uncertain_form_family_state": str(item.get("uncertain_form_family_state", "quiet_form_family") or "quiet_form_family"),
             "first_seen_ts": item.get("first_seen_ts", None),
             "last_seen_ts": item.get("last_seen_ts", None),
             "variants": dict(cleaned_variants or {}),
@@ -8801,6 +10259,13 @@ def _normalize_form_symbol_memory_compounds(compounds):
             "learning_trust": max(0.0, min(1.0, _num(item, "learning_trust", 0.0))),
             "action_trust": max(0.0, min(1.0, _num(item, "action_trust", 0.0))),
             "caution_trust": max(0.0, min(1.0, _num(item, "caution_trust", 0.0))),
+            "contact_maturity": max(0.0, min(1.0, _num(item, "contact_maturity", 0.0))),
+            "contact_utility": max(0.0, min(1.0, _num(item, "contact_utility", 0.0))),
+            "contact_pain_memory": max(0.0, min(1.0, _num(item, "contact_pain_memory", 0.0))),
+            "contact_carefulness": max(0.0, min(1.0, _num(item, "contact_carefulness", 0.0))),
+            "contact_burden_evidence": max(0.0, min(1.0, _num(item, "contact_burden_evidence", 0.0))),
+            "contact_utility_evidence": max(0.0, min(1.0, _num(item, "contact_utility_evidence", 0.0))),
+            "contact_learning_state": str(item.get("contact_learning_state", "unformed_contact") or "unformed_contact"),
             "constructive_seen": max(0, int(_num(item, "constructive_seen", 0))),
             "unconstructive_seen": max(0, int(_num(item, "unconstructive_seen", 0))),
             "first_seen_ts": item.get("first_seen_ts", None),
@@ -8998,6 +10463,20 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
     bearing_context = dict(meta.get("bearing_context", {}) or {}) if isinstance(meta.get("bearing_context", {}), dict) else {}
     if bearing_context:
         structure_quality = _b01(bearing_context.get("structure_quality", structure_quality))
+    contact_state = dict(meta.get("active_mcm_contact_state", meta.get("active_mcm_contact", {})) or {}) if isinstance(meta, dict) else {}
+    if not contact_state and isinstance(meta.get("meta_regulation_state", {}), dict):
+        meta_regulation = dict(meta.get("meta_regulation_state", {}) or {})
+        contact_state = dict(meta_regulation.get("active_mcm_contact", {}) or {})
+    contact_action_maturity = _b01(contact_state.get("contact_action_maturity", 0.0))
+    contact_carrying_quality = _b01(contact_state.get("contact_carrying_quality", 0.0))
+    contact_reality_check = _b01(contact_state.get("contact_reality_check", 0.0))
+    contact_overcoupling_risk = _b01(contact_state.get("contact_overcoupling_risk", 0.0))
+    contact_learning_need = _b01(contact_state.get("contact_learning_need", 0.0))
+    contact_context_reframe_need = _b01(contact_state.get("contact_context_reframe_need", 0.0))
+    contact_regime_mismatch = _b01(contact_state.get("contact_regime_mismatch", 0.0))
+    emotional_decoupling = _b01(meta.get("emotional_decoupling", 0.0))
+    if not emotional_decoupling and isinstance(meta.get("meta_regulation_state", {}), dict):
+        emotional_decoupling = _b01((meta.get("meta_regulation_state", {}) or {}).get("emotional_decoupling", 0.0))
 
     process_quality = _b01(
         (
@@ -9014,28 +10493,83 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
     risk_width_pressure = _b01(outcome.get("risk_width_pressure", 0.0))
     structural_support = _b01((structure_quality * 0.64) + (context_quality * 0.36))
     constructive_signal = _b01((process_quality * 0.62) + (structural_support * 0.38))
+    outcome_contact_reward = 0.40
     result_bias = 0.0
     if reason == "tp_hit":
         result_bias = 0.18
+        outcome_contact_reward = 0.72
     elif reason == "sl_hit":
         result_bias = -0.22 - (max(0.0, 0.56 - structure_quality) * 0.22) - (risk_width_pressure * 0.12)
+        outcome_contact_reward = 0.18
     elif reason in ("cancel", "timeout"):
         result_bias = -0.08
+        outcome_contact_reward = 0.34
     elif reason in ("reward_too_small", "rr_too_low", "sl_distance_too_high"):
         result_bias = -0.12
+        outcome_contact_reward = 0.28
 
     development_sample = _bs(((constructive_signal - 0.50) * 1.40) + result_bias)
+    contact_utility_sample = _b01(
+        (process_quality * 0.26)
+        + (structural_support * 0.20)
+        + (outcome_contact_reward * 0.20)
+        + (contact_carrying_quality * 0.12)
+        + (contact_action_maturity * 0.10)
+        + (contact_reality_check * 0.08)
+        + (emotional_decoupling * 0.04)
+        - (contact_overcoupling_risk * 0.12)
+        - (risk_width_pressure * 0.08)
+    )
+    contact_pain_sample = _b01(
+        ((0.52 if reason == "sl_hit" else 0.08) * 0.34)
+        + (risk_width_pressure * 0.18)
+        + (contact_overcoupling_risk * 0.16)
+        + (max(0.0, 0.48 - process_quality) * 0.16)
+        + (max(0.0, 0.50 - structural_support) * 0.14)
+        + (contact_regime_mismatch * 0.08)
+        - (contact_reality_check * 0.08)
+        - (emotional_decoupling * 0.06)
+    )
+    contact_maturity_sample = _b01(
+        (contact_utility_sample * 0.36)
+        + (contact_action_maturity * 0.18)
+        + (contact_reality_check * 0.14)
+        + (structural_support * 0.12)
+        + (process_quality * 0.10)
+        + (emotional_decoupling * 0.10)
+        - (contact_pain_sample * 0.20)
+    )
+    contact_carefulness_sample = _b01(
+        (contact_pain_sample * 0.38)
+        + (contact_learning_need * 0.20)
+        + (contact_context_reframe_need * 0.16)
+        + (contact_regime_mismatch * 0.12)
+        + (max(0.0, 0.46 - contact_maturity_sample) * 0.14)
+    )
+    contact_learning_state = "unformed_contact"
+    if contact_pain_sample >= 0.30 and contact_maturity_sample < 0.30:
+        contact_learning_state = "burdened_contact"
+    elif contact_carefulness_sample >= 0.22 and contact_pain_sample >= 0.20 and contact_maturity_sample < 0.38:
+        contact_learning_state = "careful_contact"
+    elif contact_utility_sample >= 0.40 and contact_maturity_sample >= 0.32:
+        contact_learning_state = "constructive_contact"
+    elif contact_learning_need >= 0.30 or contact_context_reframe_need >= 0.28:
+        contact_learning_state = "learning_contact"
+    elif contact_maturity_sample >= 0.30:
+        contact_learning_state = "maturing_contact"
     observation_sample = _b01(
         max(0.0, -development_sample) * 0.54
         + max(0.0, 0.52 - structural_support) * 0.34
         + max(0.0, 0.46 - process_quality) * 0.20
         + (risk_width_pressure * 0.12 if reason == "sl_hit" else 0.0)
+        + (contact_carefulness_sample * 0.10)
     )
     reframe_sample = _b01(
         observation_sample * 0.46
         + _b01(form_state.get("form_symbol_novelty", 0.0)) * 0.14
         + _b01(form_state.get("form_symbol_compound_novelty", 0.0)) * 0.12
         + max(0.0, 0.50 - structure_quality) * 0.28
+        + (contact_context_reframe_need * 0.08)
     )
 
     def _learn_item(item, weight=1.0):
@@ -9044,14 +10578,47 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         prior_action = _b01(learned.get("action_affinity", 0.50), default=0.50)
         prior_observe = _b01(learned.get("observation_affinity", 0.0))
         prior_reframe = _b01(learned.get("context_reframe_potential", 0.0))
+        prior_contact_maturity = _b01(learned.get("contact_maturity", 0.0))
+        prior_contact_utility = _b01(learned.get("contact_utility", 0.0))
+        prior_contact_pain = _b01(learned.get("contact_pain_memory", 0.0))
+        prior_contact_carefulness = _b01(learned.get("contact_carefulness", 0.0))
+        prior_contact_burden_evidence = _b01(learned.get("contact_burden_evidence", 0.0))
+        prior_contact_utility_evidence = _b01(learned.get("contact_utility_evidence", 0.0))
         sample = _bs(development_sample * float(weight))
         quality_alpha = 0.12 if abs(sample) < 0.18 else 0.17
         next_quality = _bs((prior_quality * (1.0 - quality_alpha)) + (sample * quality_alpha))
+        contact_alpha = 0.12 if contact_pain_sample < 0.32 else 0.18
+        next_contact_maturity = _b01((prior_contact_maturity * (1.0 - contact_alpha)) + (contact_maturity_sample * contact_alpha))
+        next_contact_utility = _b01((prior_contact_utility * 0.86) + (contact_utility_sample * 0.14))
+        next_contact_pain = _b01((prior_contact_pain * (1.0 - contact_alpha)) + (contact_pain_sample * contact_alpha))
+        next_contact_carefulness = _b01((prior_contact_carefulness * 0.82) + (contact_carefulness_sample * 0.18))
+        contact_burden_signal = _b01(
+            (contact_pain_sample * 0.46)
+            + (contact_carefulness_sample * 0.28)
+            + (risk_width_pressure * 0.12 if reason == "sl_hit" else 0.0)
+            + (max(0.0, -development_sample) * 0.14)
+        )
+        contact_utility_signal = _b01(
+            (contact_utility_sample * 0.42)
+            + (contact_maturity_sample * 0.26)
+            + (max(0.0, development_sample) * 0.18)
+            + (structural_support * 0.14)
+        )
+        burden_alpha = 0.24 if development_sample < -0.08 or reason == "sl_hit" else 0.14
+        utility_alpha = 0.20 if development_sample >= 0.0 else 0.12
+        next_contact_burden_evidence = _b01((prior_contact_burden_evidence * (1.0 - burden_alpha)) + (contact_burden_signal * burden_alpha))
+        next_contact_utility_evidence = _b01((prior_contact_utility_evidence * (1.0 - utility_alpha)) + (contact_utility_signal * utility_alpha))
         action_target = _b01(
             0.47
             + (next_quality * 0.50)
             + ((structural_support - 0.50) * 0.26)
+            + (next_contact_maturity * 0.15)
+            + (next_contact_utility * 0.10)
+            + (next_contact_utility_evidence * 0.05)
             - (observation_sample * 0.10)
+            - (next_contact_pain * 0.14)
+            - (next_contact_carefulness * 0.07)
+            - (next_contact_burden_evidence * 0.06)
             - (risk_width_pressure * 0.12 if reason == "sl_hit" else 0.0),
             default=0.50,
         )
@@ -9059,8 +10626,10 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
             (observation_sample * 0.64)
             + (max(0.0, -next_quality) * 0.28)
             + (risk_width_pressure * 0.12 if reason == "sl_hit" else 0.0)
+            + (next_contact_carefulness * 0.14)
+            + (next_contact_burden_evidence * 0.08)
         )
-        reframe_target = _b01((reframe_sample * 0.72) + (prior_reframe * 0.28))
+        reframe_target = _b01((reframe_sample * 0.62) + (prior_reframe * 0.22) + (next_contact_carefulness * 0.10) + (next_contact_burden_evidence * 0.06))
         constructive_seen = int(learned.get("constructive_seen", 0) or 0)
         unconstructive_seen = int(learned.get("unconstructive_seen", 0) or 0)
         evidence_count = constructive_seen + unconstructive_seen + 1
@@ -9074,6 +10643,24 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         learned["action_affinity"] = float(_b01((prior_action * (1.0 - plasticity)) + (action_target * plasticity), default=0.50))
         learned["observation_affinity"] = float(_b01((prior_observe * 0.80) + (observe_target * 0.20)))
         learned["context_reframe_potential"] = float(_b01((prior_reframe * 0.84) + (reframe_target * 0.16)))
+        learned["contact_maturity"] = float(next_contact_maturity)
+        learned["contact_utility"] = float(next_contact_utility)
+        learned["contact_pain_memory"] = float(next_contact_pain)
+        learned["contact_carefulness"] = float(next_contact_carefulness)
+        learned["contact_burden_evidence"] = float(next_contact_burden_evidence)
+        learned["contact_utility_evidence"] = float(next_contact_utility_evidence)
+        stored_contact_state = str(contact_learning_state)
+        if next_contact_burden_evidence >= 0.16 and next_contact_carefulness >= 0.06 and next_contact_maturity < 0.20:
+            stored_contact_state = "careful_contact"
+        elif next_contact_pain >= 0.09 and next_contact_maturity < 0.16 and next_quality < -0.04:
+            stored_contact_state = "burdened_contact"
+        elif next_contact_utility_evidence >= 0.16 and next_contact_utility >= 0.10 and next_contact_maturity >= 0.08 and next_contact_pain < 0.13:
+            stored_contact_state = "constructive_contact" if next_contact_maturity >= 0.16 else "maturing_contact"
+        elif next_contact_burden_evidence >= 0.10 or next_contact_carefulness >= 0.08:
+            stored_contact_state = "learning_contact"
+        elif next_contact_maturity >= 0.10:
+            stored_contact_state = "maturing_contact"
+        learned["contact_learning_state"] = str(stored_contact_state)
         if development_sample >= 0.0:
             learned["constructive_seen"] = int(learned.get("constructive_seen", 0) or 0) + 1
         else:
@@ -9094,6 +10681,9 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
                 (max(0.0, -next_quality) * 0.56)
                 + (caution_evidence_bias * 0.30)
                 + (risk_width_pressure * 0.14 if reason == "sl_hit" else 0.0)
+                + (next_contact_pain * 0.16)
+                + (next_contact_carefulness * 0.10)
+                + (next_contact_burden_evidence * 0.08)
             )
             * learning_target
             * (0.62 + observation_sample * 0.38)
@@ -9104,6 +10694,10 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         learned["caution_trust"] = float(_b01((prior_caution_trust * (1.0 - caution_alpha)) + (caution_trust_target * caution_alpha)))
         learned["last_development_reason"] = str(reason or "-")
         learned["last_development_sample"] = float(development_sample)
+        learned["last_contact_maturity_sample"] = float(contact_maturity_sample)
+        learned["last_contact_utility_sample"] = float(contact_utility_sample)
+        learned["last_contact_pain_sample"] = float(contact_pain_sample)
+        learned["last_contact_carefulness_sample"] = float(contact_carefulness_sample)
         learned["last_development_ts"] = getattr(bot, "current_timestamp", None)
         return learned
 
@@ -9135,7 +10729,22 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         "symbol_action_affinity": float(symbol_item.get("action_affinity", 0.50) or 0.50),
         "symbol_observation_affinity": float(symbol_item.get("observation_affinity", 0.0) or 0.0),
         "symbol_reframe_potential": float(symbol_item.get("context_reframe_potential", 0.0) or 0.0),
+        "symbol_contact_maturity": float(symbol_item.get("contact_maturity", 0.0) or 0.0),
+        "symbol_contact_utility": float(symbol_item.get("contact_utility", 0.0) or 0.0),
+        "symbol_contact_pain_memory": float(symbol_item.get("contact_pain_memory", 0.0) or 0.0),
+        "symbol_contact_carefulness": float(symbol_item.get("contact_carefulness", 0.0) or 0.0),
+        "symbol_contact_burden_evidence": float(symbol_item.get("contact_burden_evidence", 0.0) or 0.0),
+        "symbol_contact_utility_evidence": float(symbol_item.get("contact_utility_evidence", 0.0) or 0.0),
+        "symbol_contact_learning_state": str(symbol_item.get("contact_learning_state", contact_learning_state) or contact_learning_state),
+        "contact_maturity_sample": float(contact_maturity_sample),
+        "contact_utility_sample": float(contact_utility_sample),
+        "contact_pain_sample": float(contact_pain_sample),
+        "contact_carefulness_sample": float(contact_carefulness_sample),
+        "contact_learning_state": str(contact_learning_state),
         "compound_development_quality": float(compound_item.get("development_quality", 0.0) or 0.0) if compound_item else 0.0,
+        "compound_contact_maturity": float(compound_item.get("contact_maturity", 0.0) or 0.0) if compound_item else 0.0,
+        "compound_contact_burden_evidence": float(compound_item.get("contact_burden_evidence", 0.0) or 0.0) if compound_item else 0.0,
+        "compound_contact_utility_evidence": float(compound_item.get("contact_utility_evidence", 0.0) or 0.0) if compound_item else 0.0,
     }
 
 def build_form_symbol_state(bot, visual_market_state=None, structure_perception_state=None, perception_state=None, felt_state=None, snapshot=None):
@@ -9168,6 +10777,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
     market_balance = float(visual.get("market_balance", perception.get("market_balance", 0.0)) or 0.0)
     breakout_tension = float(visual.get("breakout_tension", perception.get("breakout_tension", 0.0)) or 0.0)
     visual_coherence = float(visual.get("visual_coherence", perception.get("visual_coherence", 0.0)) or 0.0)
+    visual_clarity = float(visual.get("visual_clarity", perception.get("visual_clarity", 0.0)) or 0.0)
+    visual_object_stability = float(visual.get("visual_object_stability", perception.get("visual_object_stability", 0.0)) or 0.0)
+    visual_form_novelty = float(visual.get("visual_form_novelty", perception.get("visual_form_novelty", 0.0)) or 0.0)
+    visual_blindness = float(visual.get("visual_blindness", perception.get("visual_blindness", 0.0)) or 0.0)
+    visual_form_pressure = float(visual.get("visual_form_pressure", perception.get("visual_form_pressure", 0.0)) or 0.0)
+    visual_shape_resonance = float(visual.get("visual_shape_resonance", perception.get("visual_shape_resonance", 0.0)) or 0.0)
+    visual_shape_fragility = float(visual.get("visual_shape_fragility", perception.get("visual_shape_fragility", 0.0)) or 0.0)
     structure_quality = float(structure.get("structure_quality", perception.get("structure_quality", felt.get("structure_quality", 0.0))) or 0.0)
     zone_proximity = float(structure.get("zone_proximity", perception.get("zone_proximity", 0.0)) or 0.0)
     context_confidence = float(structure.get("context_confidence", perception.get("context_confidence", felt.get("context_confidence", 0.0))) or 0.0)
@@ -9346,6 +10962,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
     learned_learning_trust = max(0.0, min(1.0, float(item.get("learning_trust", 0.0) or 0.0)))
     learned_action_trust = max(0.0, min(1.0, float(item.get("action_trust", 0.0) or 0.0)))
     learned_caution_trust = max(0.0, min(1.0, float(item.get("caution_trust", 0.0) or 0.0)))
+    learned_contact_maturity = max(0.0, min(1.0, float(item.get("contact_maturity", 0.0) or 0.0)))
+    learned_contact_utility = max(0.0, min(1.0, float(item.get("contact_utility", 0.0) or 0.0)))
+    learned_contact_pain_memory = max(0.0, min(1.0, float(item.get("contact_pain_memory", 0.0) or 0.0)))
+    learned_contact_carefulness = max(0.0, min(1.0, float(item.get("contact_carefulness", 0.0) or 0.0)))
+    learned_contact_burden_evidence = max(0.0, min(1.0, float(item.get("contact_burden_evidence", 0.0) or 0.0)))
+    learned_contact_utility_evidence = max(0.0, min(1.0, float(item.get("contact_utility_evidence", 0.0) or 0.0)))
+    learned_contact_state = str(item.get("contact_learning_state", "unformed_contact") or "unformed_contact")
     symbolic_object_distance = max(
         0.0,
         min(
@@ -9380,6 +11003,23 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
     split_pressure = max(0.0, min(1.0, (variance * 0.52) + (novelty * 0.24) + (fragility * 0.18) - (stability * 0.10)))
     merge_pressure = max(0.0, min(1.0, (stability * 0.36) + (maturity * 0.30) + (resonance * 0.24) - (novelty * 0.18)))
 
+    uncertain_form_exposure = max(
+        0.0,
+        min(
+            1.0,
+            (visual_blindness * 0.26)
+            + (max(0.0, 0.42 - visual_clarity) * 0.18)
+            + (max(0.0, 0.44 - visual_object_stability) * 0.16)
+            + (visual_shape_fragility * 0.12)
+            + (visual_form_pressure * 0.10)
+            + (fragility * 0.10)
+            + (max(0.0, 0.46 - bearing) * 0.14)
+            + (visual_form_novelty * 0.06)
+            - (visual_shape_resonance * 0.10)
+            - (resonance * 0.06),
+        ),
+    )
+
     previous_state = dict(getattr(bot, "_last_form_symbol_state", {}) or {}) if bot is not None else {}
     previous_symbol_id = str(previous_state.get("form_symbol_id", "") or "").strip()
     compound_id = "-"
@@ -9399,6 +11039,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
     compound_learning_trust = 0.0
     compound_action_trust = 0.0
     compound_caution_trust = 0.0
+    compound_contact_maturity = 0.0
+    compound_contact_utility = 0.0
+    compound_contact_pain_memory = 0.0
+    compound_contact_carefulness = 0.0
+    compound_contact_burden_evidence = 0.0
+    compound_contact_utility_evidence = 0.0
+    compound_contact_state = "unformed_contact"
     if previous_symbol_id and previous_symbol_id != "-" and previous_symbol_id != symbol_id and bot is not None:
         compound_scope = "compound_form"
         compound_key = f"{previous_symbol_id}>{symbol_id}"
@@ -9459,6 +11106,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
         compound_learning_trust = max(0.0, min(1.0, float(compound_item.get("learning_trust", 0.0) or 0.0)))
         compound_action_trust = max(0.0, min(1.0, float(compound_item.get("action_trust", 0.0) or 0.0)))
         compound_caution_trust = max(0.0, min(1.0, float(compound_item.get("caution_trust", 0.0) or 0.0)))
+        compound_contact_maturity = max(0.0, min(1.0, float(compound_item.get("contact_maturity", 0.0) or 0.0)))
+        compound_contact_utility = max(0.0, min(1.0, float(compound_item.get("contact_utility", 0.0) or 0.0)))
+        compound_contact_pain_memory = max(0.0, min(1.0, float(compound_item.get("contact_pain_memory", 0.0) or 0.0)))
+        compound_contact_carefulness = max(0.0, min(1.0, float(compound_item.get("contact_carefulness", 0.0) or 0.0)))
+        compound_contact_burden_evidence = max(0.0, min(1.0, float(compound_item.get("contact_burden_evidence", 0.0) or 0.0)))
+        compound_contact_utility_evidence = max(0.0, min(1.0, float(compound_item.get("contact_utility_evidence", 0.0) or 0.0)))
+        compound_contact_state = str(compound_item.get("contact_learning_state", "unformed_contact") or "unformed_contact")
         compound_item.update({
             "compound_id": str(compound_id),
             "compound_key": str(compound_key),
@@ -9479,6 +11133,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
             "learning_trust": float(compound_learning_trust),
             "action_trust": float(compound_action_trust),
             "caution_trust": float(compound_caution_trust),
+            "contact_maturity": float(compound_contact_maturity),
+            "contact_utility": float(compound_contact_utility),
+            "contact_pain_memory": float(compound_contact_pain_memory),
+            "contact_carefulness": float(compound_contact_carefulness),
+            "contact_burden_evidence": float(compound_contact_burden_evidence),
+            "contact_utility_evidence": float(compound_contact_utility_evidence),
+            "contact_learning_state": str(compound_contact_state),
             "first_seen_ts": compound_item.get("first_seen_ts", getattr(bot, "current_timestamp", None) if bot is not None else None),
             "last_seen_ts": getattr(bot, "current_timestamp", None) if bot is not None else None,
         })
@@ -9552,6 +11213,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
     variants = dict(item.get("variants", {}) or {})
     variant_item = dict(variants.get(form_key, {}) or {})
     variant_item["seen"] = int(variant_item.get("seen", 0) or 0) + 1
+    variant_item["distance"] = float(distance)
+    variant_item["bearing"] = float(bearing)
+    variant_item["fragility"] = float(fragility)
+    variant_item["visual_blindness"] = float(visual_blindness)
+    variant_item["visual_clarity"] = float(visual_clarity)
+    variant_item["object_stability"] = float(visual_object_stability)
+    variant_item["uncertain_exposure"] = float(uncertain_form_exposure)
     variant_item["last_seen_ts"] = getattr(bot, "current_timestamp", None) if bot is not None else None
     variants[str(form_key)] = dict(variant_item)
     max_variants = max(1, int(getattr(Config, "MCM_FORM_SYMBOL_MEMORY_MAX_VARIANTS", 12) or 12))
@@ -9562,6 +11230,225 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
             reverse=True,
         )[:max_variants]
     )
+    variant_count = int(len(item.get("variants", {}) or {}))
+    variant_seen_total = sum(
+        int((variant or {}).get("seen", 0) or 0)
+        for variant in dict(item.get("variants", {}) or {}).values()
+        if isinstance(variant, dict)
+    )
+    variant_exposure_mean = 0.0
+    variant_bearing_mean = 0.0
+    if variant_count > 0:
+        variant_exposure_mean = sum(
+            float((variant or {}).get("uncertain_exposure", 0.0) or 0.0)
+            for variant in dict(item.get("variants", {}) or {}).values()
+            if isinstance(variant, dict)
+        ) / float(max(1, variant_count))
+        variant_bearing_mean = sum(
+            float((variant or {}).get("bearing", 0.0) or 0.0)
+            for variant in dict(item.get("variants", {}) or {}).values()
+            if isinstance(variant, dict)
+        ) / float(max(1, variant_count))
+    variant_similarity = max(0.0, min(1.0, (1.0 - min(1.0, distance)) * 0.58 + stability * 0.28 + resonance * 0.14))
+    variant_spread = max(
+        0.0,
+        min(
+            1.0,
+            (variance * 0.52)
+            + (min(1.0, float(variant_count) / float(max(1, max_variants))) * 0.26)
+            + (novelty * 0.12)
+            + (visual_form_novelty * 0.10),
+        ),
+    )
+    uncertainty_familiarity = max(
+        0.0,
+        min(
+            1.0,
+            (maturity * 0.34)
+            + (min(1.0, float(variant_seen_total) / 24.0) * 0.24)
+            + (variant_similarity * 0.18)
+            + (learned_learning_trust * 0.14)
+            + (variant_exposure_mean * 0.10),
+        ),
+    )
+    variant_bearing_memory = max(
+        0.0,
+        min(
+            1.0,
+            (variant_bearing_mean * 0.32)
+            + (bearing * 0.22)
+            + (max(0.0, learned_development_quality) * 0.16)
+            + (learned_action_trust * 0.14)
+            + (resonance * 0.10)
+            + (visual_shape_resonance * 0.06),
+        ),
+    )
+    variant_learning_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (uncertain_form_exposure * 0.32)
+            + (variant_spread * 0.20)
+            + (max(0.0, 0.52 - uncertainty_familiarity) * 0.20)
+            + (max(0.0, 0.48 - variant_bearing_memory) * 0.16)
+            + (learned_observation_affinity * 0.08)
+            + (learned_reframe_potential * 0.04),
+        ),
+    )
+    uncertain_form_family_state = "quiet_form_family"
+    if uncertain_form_exposure >= 0.48 and uncertainty_familiarity < 0.28:
+        uncertain_form_family_state = "unfamiliar_uncertain_family"
+    elif uncertain_form_exposure >= 0.42 and variant_spread >= 0.42:
+        uncertain_form_family_state = "recurring_uncertain_variants"
+    elif uncertain_form_exposure >= 0.34 and uncertainty_familiarity >= 0.42 and variant_bearing_memory < 0.42:
+        uncertain_form_family_state = "familiar_uncertainty_watch"
+    elif uncertain_form_exposure >= 0.28 and variant_bearing_memory >= 0.48:
+        uncertain_form_family_state = "bearing_uncertainty_family"
+
+    semantic_density = max(
+        0.0,
+        min(
+            1.0,
+            (form_resolution_quality * 0.22)
+            + (maturity * 0.16)
+            + (stability * 0.14)
+            + (resonance * 0.12)
+            + (bearing * 0.14)
+            + (symbolic_containment * 0.10)
+            + (uncertainty_familiarity * 0.06)
+            + (variant_similarity * 0.06)
+            - (fragility * 0.08)
+            - (variant_spread * 0.04),
+        ),
+    )
+    semantic_compression = max(
+        0.0,
+        min(
+            1.0,
+            (load_reduction * 0.28)
+            + (symbolic_object_distance * 0.22)
+            + (symbolic_field_decoupling * 0.18)
+            + (compound_load_reduction * 0.12)
+            + (merge_pressure * 0.10)
+            + (semantic_density * 0.10)
+            - (zoom_need * 0.10)
+            - (split_pressure * 0.06),
+        ),
+    )
+    semantic_coherence = max(
+        0.0,
+        min(
+            1.0,
+            (semantic_density * 0.28)
+            + (semantic_compression * 0.20)
+            + (bearing * 0.16)
+            + (stability * 0.14)
+            + (context_confidence * 0.10)
+            + (visual_coherence * 0.08)
+            + (field_clarity * 0.04)
+            - (field_fragmentation * 0.10)
+            - (fragility * 0.08),
+        ),
+    )
+    semantic_learning_need = max(
+        0.0,
+        min(
+            1.0,
+            (variant_learning_pressure * 0.26)
+            + (zoom_need * 0.20)
+            + (novelty * 0.16)
+            + (uncertain_form_exposure * 0.14)
+            + (split_pressure * 0.10)
+            + (max(0.0, 0.48 - semantic_coherence) * 0.10)
+            + (max(0.0, 0.44 - semantic_compression) * 0.04),
+        ),
+    )
+    semantic_action_nearness = max(
+        0.0,
+        min(
+            1.0,
+            (learned_action_binding * 0.26)
+            + (variant_bearing_memory * 0.18)
+            + (bearing * 0.16)
+            + (semantic_coherence * 0.14)
+            + (compound_bearing * 0.10)
+            + (symbolic_field_decoupling * 0.08)
+            + (learned_action_trust * 0.08)
+            - (learned_caution_trust * 0.10)
+            - (semantic_learning_need * 0.08),
+        ),
+    )
+    semantic_primary_layer = "trace_layer"
+    if semantic_action_nearness >= 0.56 and semantic_coherence >= 0.48:
+        semantic_primary_layer = "action_near_layer"
+    elif semantic_learning_need >= 0.46 and uncertainty_familiarity < 0.48:
+        semantic_primary_layer = "learning_layer"
+    elif learned_observation_binding >= max(learned_action_binding, learned_reframe_binding) and learned_observation_binding >= 0.32:
+        semantic_primary_layer = "observation_layer"
+    elif learned_reframe_binding >= 0.30 or symbolic_field_decoupling >= 0.44:
+        semantic_primary_layer = "reflective_layer"
+    elif symbolic_object_distance >= 0.42 and semantic_density >= 0.46:
+        semantic_primary_layer = "object_layer"
+    elif form_symbol_scope == "structured_form":
+        semantic_primary_layer = "structured_form_layer"
+    elif form_symbol_scope == "wide_form":
+        semantic_primary_layer = "wide_form_layer"
+    semantic_layer_count = 1
+    for layer_value in (
+        semantic_density,
+        semantic_compression,
+        symbolic_object_distance,
+        learned_observation_binding,
+        learned_reframe_binding,
+        semantic_action_nearness,
+        compound_maturity,
+        uncertainty_familiarity,
+    ):
+        if float(layer_value) >= 0.34:
+            semantic_layer_count += 1
+    semantic_layer_count = int(max(1, min(8, semantic_layer_count)))
+    semantic_packet_state = "thin_trace"
+    if semantic_action_nearness >= 0.58 and semantic_coherence >= 0.52:
+        semantic_packet_state = "action_bearing_packet"
+    elif semantic_compression >= 0.52 and semantic_coherence >= 0.48:
+        semantic_packet_state = "condensed_object_packet"
+    elif semantic_learning_need >= 0.50:
+        semantic_packet_state = "open_learning_packet"
+    elif learned_observation_binding >= 0.42:
+        semantic_packet_state = "watching_packet"
+    elif learned_reframe_binding >= 0.38 or symbolic_field_decoupling >= 0.46:
+        semantic_packet_state = "reflective_packet"
+    elif compound_maturity >= 0.46 and compound_resonance >= 0.34:
+        semantic_packet_state = "compound_packet"
+    elif semantic_density >= 0.42:
+        semantic_packet_state = "named_form_packet"
+    semantic_profile = "|".join(
+        [
+            str(form_symbol_scope),
+            str(semantic_primary_layer),
+            str(uncertain_form_family_state),
+            str(compound_scope),
+            str(semantic_packet_state),
+        ]
+    )
+    item.update({
+        "uncertain_form_exposure": float(uncertain_form_exposure),
+        "uncertainty_familiarity": float(uncertainty_familiarity),
+        "variant_similarity": float(variant_similarity),
+        "variant_spread": float(variant_spread),
+        "variant_learning_pressure": float(variant_learning_pressure),
+        "variant_bearing_memory": float(variant_bearing_memory),
+        "uncertain_form_family_state": str(uncertain_form_family_state),
+        "semantic_density": float(semantic_density),
+        "semantic_compression": float(semantic_compression),
+        "semantic_coherence": float(semantic_coherence),
+        "semantic_learning_need": float(semantic_learning_need),
+        "semantic_action_nearness": float(semantic_action_nearness),
+        "semantic_primary_layer": str(semantic_primary_layer),
+        "semantic_layer_count": int(semantic_layer_count),
+        "semantic_packet_state": str(semantic_packet_state),
+        "semantic_profile": str(semantic_profile),
+    })
 
     if bot is not None:
         symbol_space[symbol_id] = dict(item)
@@ -9587,6 +11474,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
             "form_symbol_learning_trust": float(learned_learning_trust),
             "form_symbol_action_trust": float(learned_action_trust),
             "form_symbol_caution_trust": float(learned_caution_trust),
+            "form_symbol_contact_maturity": float(learned_contact_maturity),
+            "form_symbol_contact_utility": float(learned_contact_utility),
+            "form_symbol_contact_pain_memory": float(learned_contact_pain_memory),
+            "form_symbol_contact_carefulness": float(learned_contact_carefulness),
+            "form_symbol_contact_burden_evidence": float(learned_contact_burden_evidence),
+            "form_symbol_contact_utility_evidence": float(learned_contact_utility_evidence),
+            "form_symbol_contact_learning_state": str(learned_contact_state),
             "form_symbol_action_binding": float(learned_action_binding),
             "form_symbol_observation_binding": float(learned_observation_binding),
             "form_symbol_reframe_binding": float(learned_reframe_binding),
@@ -9603,6 +11497,22 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
             "form_symbol_relevance": float(relevance),
             "form_symbol_novelty": float(novelty),
             "form_symbol_distance": float(distance),
+            "uncertain_form_family_state": str(uncertain_form_family_state),
+            "uncertain_form_exposure": float(uncertain_form_exposure),
+            "uncertainty_familiarity": float(uncertainty_familiarity),
+            "variant_similarity": float(variant_similarity),
+            "variant_spread": float(variant_spread),
+            "variant_learning_pressure": float(variant_learning_pressure),
+            "variant_bearing_memory": float(variant_bearing_memory),
+            "form_symbol_semantic_density": float(semantic_density),
+            "form_symbol_semantic_compression": float(semantic_compression),
+            "form_symbol_semantic_coherence": float(semantic_coherence),
+            "form_symbol_semantic_learning_need": float(semantic_learning_need),
+            "form_symbol_semantic_action_nearness": float(semantic_action_nearness),
+            "form_symbol_semantic_primary_layer": str(semantic_primary_layer),
+            "form_symbol_semantic_layer_count": int(semantic_layer_count),
+            "form_symbol_semantic_packet_state": str(semantic_packet_state),
+            "form_symbol_semantic_profile": str(semantic_profile),
             "form_symbol_compound_id": str(compound_id),
             "form_symbol_compound_key": str(compound_key),
             "form_symbol_compound_scope": str(compound_scope),
@@ -9620,6 +11530,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
             "form_symbol_compound_learning_trust": float(compound_learning_trust),
             "form_symbol_compound_action_trust": float(compound_action_trust),
             "form_symbol_compound_caution_trust": float(compound_caution_trust),
+            "form_symbol_compound_contact_maturity": float(compound_contact_maturity),
+            "form_symbol_compound_contact_utility": float(compound_contact_utility),
+            "form_symbol_compound_contact_pain_memory": float(compound_contact_pain_memory),
+            "form_symbol_compound_contact_carefulness": float(compound_contact_carefulness),
+            "form_symbol_compound_contact_burden_evidence": float(compound_contact_burden_evidence),
+            "form_symbol_compound_contact_utility_evidence": float(compound_contact_utility_evidence),
+            "form_symbol_compound_contact_learning_state": str(compound_contact_state),
             "form_symbol_memory_loaded": bool(getattr(bot, "_form_symbol_memory_loaded", False)),
             "form_symbol_memory_symbol_count": int(len(getattr(bot, "form_symbol_space", {}) or {})),
             "form_symbol_memory_compound_count": int(len(getattr(bot, "form_symbol_compound_space", {}) or {})),
@@ -9647,6 +11564,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
         "form_symbol_learning_trust": float(learned_learning_trust),
         "form_symbol_action_trust": float(learned_action_trust),
         "form_symbol_caution_trust": float(learned_caution_trust),
+        "form_symbol_contact_maturity": float(learned_contact_maturity),
+        "form_symbol_contact_utility": float(learned_contact_utility),
+        "form_symbol_contact_pain_memory": float(learned_contact_pain_memory),
+        "form_symbol_contact_carefulness": float(learned_contact_carefulness),
+        "form_symbol_contact_burden_evidence": float(learned_contact_burden_evidence),
+        "form_symbol_contact_utility_evidence": float(learned_contact_utility_evidence),
+        "form_symbol_contact_learning_state": str(learned_contact_state),
         "form_symbol_action_binding": float(learned_action_binding),
         "form_symbol_observation_binding": float(learned_observation_binding),
         "form_symbol_reframe_binding": float(learned_reframe_binding),
@@ -9663,6 +11587,22 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
         "form_symbol_relevance": float(relevance),
         "form_symbol_novelty": float(novelty),
         "form_symbol_distance": float(distance),
+        "uncertain_form_family_state": str(uncertain_form_family_state),
+        "uncertain_form_exposure": float(uncertain_form_exposure),
+        "uncertainty_familiarity": float(uncertainty_familiarity),
+        "variant_similarity": float(variant_similarity),
+        "variant_spread": float(variant_spread),
+        "variant_learning_pressure": float(variant_learning_pressure),
+        "variant_bearing_memory": float(variant_bearing_memory),
+        "form_symbol_semantic_density": float(semantic_density),
+        "form_symbol_semantic_compression": float(semantic_compression),
+        "form_symbol_semantic_coherence": float(semantic_coherence),
+        "form_symbol_semantic_learning_need": float(semantic_learning_need),
+        "form_symbol_semantic_action_nearness": float(semantic_action_nearness),
+        "form_symbol_semantic_primary_layer": str(semantic_primary_layer),
+        "form_symbol_semantic_layer_count": int(semantic_layer_count),
+        "form_symbol_semantic_packet_state": str(semantic_packet_state),
+        "form_symbol_semantic_profile": str(semantic_profile),
         "form_symbol_compound_id": str(compound_id),
         "form_symbol_compound_key": str(compound_key),
         "form_symbol_compound_scope": str(compound_scope),
@@ -9680,6 +11620,13 @@ def build_form_symbol_state(bot, visual_market_state=None, structure_perception_
         "form_symbol_compound_learning_trust": float(compound_learning_trust),
         "form_symbol_compound_action_trust": float(compound_action_trust),
         "form_symbol_compound_caution_trust": float(compound_caution_trust),
+        "form_symbol_compound_contact_maturity": float(compound_contact_maturity),
+        "form_symbol_compound_contact_utility": float(compound_contact_utility),
+        "form_symbol_compound_contact_pain_memory": float(compound_contact_pain_memory),
+        "form_symbol_compound_contact_carefulness": float(compound_contact_carefulness),
+        "form_symbol_compound_contact_burden_evidence": float(compound_contact_burden_evidence),
+        "form_symbol_compound_contact_utility_evidence": float(compound_contact_utility_evidence),
+        "form_symbol_compound_contact_learning_state": str(compound_contact_state),
     }
 
 # --------------------------------------------------
@@ -10694,6 +12641,13 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
     market_balance = float(perception.get("market_balance", 0.0) or 0.0)
     breakout_tension = float(perception.get("breakout_tension", 0.0) or 0.0)
     visual_coherence = float(perception.get("visual_coherence", 0.0) or 0.0)
+    visual_clarity = float(processing.get("visual_clarity", perception.get("visual_clarity", 0.0)) or 0.0)
+    visual_object_stability = float(processing.get("visual_object_stability", perception.get("visual_object_stability", 0.0)) or 0.0)
+    visual_form_novelty = float(processing.get("visual_form_novelty", perception.get("visual_form_novelty", 0.0)) or 0.0)
+    visual_blindness = float(processing.get("visual_blindness", perception.get("visual_blindness", 0.0)) or 0.0)
+    visual_form_pressure = float(processing.get("visual_form_pressure", perception.get("visual_form_pressure", 0.0)) or 0.0)
+    visual_shape_resonance = float(processing.get("visual_shape_resonance", perception.get("visual_shape_resonance", 0.0)) or 0.0)
+    visual_shape_fragility = float(processing.get("visual_shape_fragility", perception.get("visual_shape_fragility", 0.0)) or 0.0)
     spatial_bias = float(perception.get("spatial_bias", 0.0) or 0.0)
     directional_bias = float(perception.get("directional_bias", 0.0) or 0.0)
     signal_quality = float(perception.get("signal_quality", 0.0) or 0.0)
@@ -11038,6 +12992,13 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
         "market_balance": float(market_balance),
         "breakout_tension": float(breakout_tension),
         "visual_coherence": float(visual_coherence),
+        "visual_clarity": float(visual_clarity),
+        "visual_object_stability": float(visual_object_stability),
+        "visual_form_novelty": float(visual_form_novelty),
+        "visual_blindness": float(visual_blindness),
+        "visual_form_pressure": float(visual_form_pressure),
+        "visual_shape_resonance": float(visual_shape_resonance),
+        "visual_shape_fragility": float(visual_shape_fragility),
         "entry_expectation": float(entry_expectation),
         "target_expectation": float(target_expectation),
         "approach_pressure": float(approach_pressure),
@@ -11092,7 +13053,1040 @@ def build_felt_state(bot, candle_state, stimulus, snapshot, perception_state, de
 # --------------------------------------------------
 # meta_regulation_state
 # --------------------------------------------------
-def build_meta_regulation_state(perception_state, processing_state, felt_state, thought_state, fused, pause_mode=False):
+def build_neurochemical_state(perception_state=None, processing_state=None, felt_state=None, thought_state=None, fused=None, meta_axes=None):
+
+    perception = dict(perception_state or {})
+    processing = dict(processing_state or {})
+    felt = dict(felt_state or {})
+    thought = dict(thought_state or {})
+    fused_state = dict(fused or {})
+    axes = dict(meta_axes or {})
+    memory_state = dict(fused_state.get("memory_complexity_state", {}) or {})
+    form_state = dict(fused_state.get("form_symbol_state", {}) or {})
+
+    def _v(source, key, default=0.0):
+        try:
+            return float(source.get(key, default) or default)
+        except Exception:
+            return float(default)
+
+    signal_quality = _v(axes, "signal_quality", _v(perception, "signal_quality"))
+    decision_strength = _v(axes, "decision_strength", max(_v(thought, "long_hypothesis"), _v(thought, "short_hypothesis")))
+    decision_readiness = _v(axes, "decision_readiness", _v(thought, "decision_readiness"))
+    state_maturity = _v(axes, "state_maturity", _v(thought, "state_maturity"))
+    processing_load = _v(axes, "processing_load", _v(processing, "processing_load"))
+    processing_tension = _v(axes, "processing_tension", _v(processing, "processing_tension"))
+    processing_alignment = _v(axes, "processing_alignment", _v(processing, "processing_alignment"))
+    field_pressure = _v(axes, "field_perception_pressure", _v(processing, "field_perception_pressure"))
+    field_support = _v(axes, "field_perception_support", _v(processing, "field_perception_support"))
+    field_clarity = _v(axes, "field_perception_clarity", _v(processing, "field_perception_clarity"))
+    field_focus = _v(axes, "field_perception_focus", _v(processing, "field_perception_focus"))
+    field_stability = _v(axes, "field_perception_stability", _v(processing, "field_perception_stability"))
+    field_fragmentation = _v(axes, "field_perception_fragmentation", _v(processing, "field_perception_fragmentation"))
+    field_strain = _v(axes, "field_perception_strain", _v(processing, "field_perception_strain"))
+    activity_activation = _v(axes, "field_activity_island_activation_mean", _v(processing, "field_activity_island_activation_mean"))
+    activity_pressure = _v(axes, "field_activity_island_pressure_mean", _v(processing, "field_activity_island_pressure_mean"))
+    activity_context = _v(axes, "field_activity_island_context_reactivation_mean", _v(processing, "field_activity_island_context_reactivation_mean"))
+
+    visual_clarity = _v(axes, "visual_clarity", _v(processing, "visual_clarity", _v(perception, "visual_clarity")))
+    visual_object_stability = _v(axes, "visual_object_stability", _v(processing, "visual_object_stability", _v(perception, "visual_object_stability")))
+    visual_blindness = _v(axes, "visual_blindness", _v(processing, "visual_blindness", _v(perception, "visual_blindness")))
+    visual_form_pressure = _v(axes, "visual_form_pressure", _v(processing, "visual_form_pressure", _v(perception, "visual_form_pressure")))
+    visual_shape_resonance = _v(axes, "visual_shape_resonance", _v(processing, "visual_shape_resonance", _v(perception, "visual_shape_resonance")))
+    visual_shape_fragility = _v(axes, "visual_shape_fragility", _v(processing, "visual_shape_fragility", _v(perception, "visual_shape_fragility")))
+    visual_action_uncertainty = _v(axes, "visual_action_uncertainty")
+    visual_blind_action_load = _v(axes, "visual_blind_action_load")
+
+    felt_pressure = _v(axes, "felt_pressure", _v(felt, "felt_pressure"))
+    felt_stability = _v(axes, "felt_stability", _v(felt, "felt_stability"))
+    felt_alignment = _v(axes, "felt_alignment", _v(felt, "felt_alignment"))
+    pressure_release = _v(axes, "pressure_release", _v(felt, "pressure_release"))
+    experience_regulation = _v(axes, "experience_regulation", _v(felt, "experience_regulation"))
+    load_bearing_capacity = _v(axes, "load_bearing_capacity", _v(felt, "load_bearing_capacity"))
+    stress_relief_potential = _v(axes, "stress_relief_potential", _v(felt, "stress_relief_potential"))
+    protective_courage = _v(axes, "protective_courage", _v(felt, "protective_courage"))
+
+    memory_support = _v(axes, "memory_support", _v(memory_state, "memory_support"))
+    memory_inhibition = _v(axes, "memory_inhibition", _v(memory_state, "memory_inhibition"))
+    memory_compare_load = _v(axes, "memory_compare_load", _v(memory_state, "memory_compare_load"))
+    memory_conflict = _v(axes, "memory_conflict", _v(memory_state, "memory_conflict"))
+    cognitive_load = _v(axes, "cognitive_load", _v(memory_state, "cognitive_load"))
+    decision_energy_cost = _v(axes, "decision_energy_cost", _v(memory_state, "decision_energy_cost"))
+    thinking_complexity = _v(axes, "thinking_complexity", _v(memory_state, "thinking_complexity"))
+    memory_orientation = _v(axes, "memory_orientation")
+    orientation_gap = _v(axes, "orientation_gap")
+    blind_thinking_load = _v(axes, "blind_thinking_load")
+
+    action_inhibition = _v(axes, "action_inhibition")
+    action_clearance = _v(axes, "action_clearance")
+    regulated_courage = _v(axes, "regulated_courage")
+    plan_pressure = _v(axes, "plan_pressure")
+    act_watch_readiness = _v(axes, "act_watch_readiness")
+    structure_action_uncertainty = _v(axes, "structure_action_uncertainty")
+    structure_carrying_need = _v(axes, "structure_carrying_need")
+    field_observation_need = _v(axes, "field_observation_need")
+    field_replan_pressure = _v(axes, "field_replan_pressure")
+    field_action_support = _v(axes, "field_action_support")
+    semantic_shift_pressure = _v(axes, "semantic_shift_pressure")
+    transfer_bearing = _v(axes, "transfer_bearing")
+    trust_transfer_support = _v(axes, "trust_transfer_support")
+    transfer_maturity_gap = _v(axes, "transfer_maturity_gap")
+    transfer_break_fatigue = _v(axes, "transfer_break_fatigue")
+    interpretation_quality = _v(axes, "interpretation_quality")
+    route_familiarity = _v(axes, "route_familiarity")
+    learned_development_uncertainty = _v(axes, "learned_development_uncertainty")
+    variant_learning_pressure = _v(axes, "variant_learning_pressure", _v(form_state, "variant_learning_pressure"))
+    variant_bearing_memory = _v(axes, "variant_bearing_memory", _v(form_state, "variant_bearing_memory"))
+    uncertainty_familiarity = _v(axes, "uncertainty_familiarity", _v(form_state, "uncertainty_familiarity"))
+    form_symbol_development_quality = _v(axes, "form_symbol_development_quality", _v(form_state, "form_symbol_development_quality"))
+    form_symbol_learning_trust = _v(axes, "form_symbol_learning_trust", _v(form_state, "form_symbol_learning_trust"))
+    form_symbol_action_trust = _v(axes, "form_symbol_action_trust", _v(form_state, "form_symbol_action_trust"))
+    form_symbol_caution_trust = _v(axes, "form_symbol_caution_trust", _v(form_state, "form_symbol_caution_trust"))
+
+    dopamine_tone = _clip01(
+        (max(0.0, form_symbol_development_quality) * 0.18)
+        + (form_symbol_learning_trust * 0.14)
+        + (form_symbol_action_trust * 0.10)
+        + (trust_transfer_support * 0.12)
+        + (memory_support * 0.12)
+        + (plan_pressure * 0.10)
+        + (action_clearance * 0.08)
+        + (variant_bearing_memory * 0.08)
+        + (signal_quality * 0.08)
+        - (learned_development_uncertainty * 0.08)
+        - (transfer_maturity_gap * 0.05)
+    )
+    gaba_inhibition = _clip01(
+        (action_inhibition * 0.34)
+        + (field_observation_need * 0.12)
+        + (act_watch_readiness * 0.12)
+        + (structure_action_uncertainty * 0.10)
+        + (learned_development_uncertainty * 0.10)
+        + (transfer_maturity_gap * 0.08)
+        + (visual_action_uncertainty * 0.07)
+        + (memory_inhibition * 0.07)
+        - (action_clearance * 0.08)
+    )
+    noradrenaline_arousal = _clip01(
+        (felt_pressure * 0.18)
+        + (field_pressure * 0.16)
+        + (processing_tension * 0.12)
+        + (visual_form_pressure * 0.10)
+        + (activity_pressure * 0.10)
+        + (semantic_shift_pressure * 0.08)
+        + (decision_strength * 0.08)
+        + (plan_pressure * 0.08)
+        + (visual_shape_fragility * 0.06)
+        + (field_strain * 0.04)
+    )
+    acetylcholine_focus = _clip01(
+        (visual_clarity * 0.22)
+        + (visual_object_stability * 0.16)
+        + (field_focus * 0.14)
+        + (field_clarity * 0.14)
+        + (visual_shape_resonance * 0.10)
+        + (signal_quality * 0.08)
+        + (processing_alignment * 0.08)
+        + (max(0.0, 1.0 - visual_blindness) * 0.08)
+    )
+    serotonin_stability = _clip01(
+        (felt_stability * 0.18)
+        + (field_stability * 0.14)
+        + (state_maturity * 0.12)
+        + (load_bearing_capacity * 0.12)
+        + (experience_regulation * 0.10)
+        + (regulated_courage * 0.10)
+        + (route_familiarity * 0.08)
+        + (memory_orientation * 0.08)
+        + (max(0.0, 1.0 - transfer_break_fatigue) * 0.08)
+    )
+    cortisol_load = _clip01(
+        (processing_load * 0.14)
+        + (cognitive_load * 0.12)
+        + (memory_compare_load * 0.10)
+        + (blind_thinking_load * 0.12)
+        + (orientation_gap * 0.10)
+        + (decision_energy_cost * 0.08)
+        + (field_strain * 0.08)
+        + (field_fragmentation * 0.07)
+        + (transfer_break_fatigue * 0.07)
+        + (visual_blind_action_load * 0.06)
+        + (action_inhibition * 0.06)
+    )
+    endorphin_relief = _clip01(
+        (pressure_release * 0.22)
+        + (stress_relief_potential * 0.16)
+        + (field_support * 0.12)
+        + (load_bearing_capacity * 0.12)
+        + (experience_regulation * 0.10)
+        + (action_clearance * 0.08)
+        + (interpretation_quality * 0.08)
+        + (trust_transfer_support * 0.06)
+        + (max(0.0, 1.0 - cortisol_load) * 0.06)
+    )
+    glutamate_activation = _clip01(
+        (activity_activation * 0.20)
+        + (decision_strength * 0.16)
+        + (processing_load * 0.12)
+        + (field_pressure * 0.10)
+        + (thinking_complexity * 0.10)
+        + (decision_energy_cost * 0.08)
+        + (activity_context * 0.08)
+        + (plan_pressure * 0.08)
+        + (visual_form_pressure * 0.04)
+        + (field_action_support * 0.04)
+    )
+
+    neurochemical_load = _clip01((cortisol_load * 0.42) + (gaba_inhibition * 0.24) + (noradrenaline_arousal * 0.18) + (glutamate_activation * 0.16))
+    neurochemical_support = _clip01((serotonin_stability * 0.30) + (endorphin_relief * 0.24) + (acetylcholine_focus * 0.18) + (dopamine_tone * 0.16) + (gaba_inhibition * 0.06) + (memory_orientation * 0.06))
+    neurochemical_balance = max(-1.0, min(1.0, neurochemical_support - neurochemical_load))
+    reward_stability_echo = _clip01(
+        (serotonin_stability * 0.34)
+        + (dopamine_tone * 0.22)
+        + (endorphin_relief * 0.12)
+        + (route_familiarity * 0.10)
+        + (action_clearance * 0.10)
+        + (max(0.0, 1.0 - transfer_break_fatigue) * 0.07)
+        - (gaba_inhibition * 0.10)
+    )
+    world_shift_evidence = _clip01(
+        (semantic_shift_pressure * 0.22)
+        + (max(0.0, 1.0 - transfer_bearing) * 0.20)
+        + (max(0.0, 1.0 - interpretation_quality) * 0.18)
+        + (max(0.0, 1.0 - field_clarity) * 0.12)
+        + (max(0.0, 1.0 - memory_support) * 0.10)
+        + (visual_shape_fragility * 0.10)
+        + (visual_action_uncertainty * 0.08)
+    )
+    serotonin_carryover_risk = _clip01(
+        (reward_stability_echo * world_shift_evidence * 0.72)
+        + (max(0.0, serotonin_stability - ((transfer_bearing + interpretation_quality) * 0.5)) * 0.28)
+        + (max(0.0, action_clearance - action_inhibition) * max(0.0, 1.0 - interpretation_quality) * 0.14)
+    )
+    emotional_decoupling = _clip01(
+        (gaba_inhibition * 0.20)
+        + (acetylcholine_focus * 0.16)
+        + (field_clarity * 0.14)
+        + (interpretation_quality * 0.16)
+        + (transfer_bearing * 0.14)
+        + (memory_support * 0.10)
+        + (form_symbol_caution_trust * 0.10)
+        - (serotonin_carryover_risk * 0.24)
+    )
+    reactive_nervous_drive = _clip01(
+        (dopamine_tone * 0.18)
+        + (glutamate_activation * 0.20)
+        + (noradrenaline_arousal * 0.16)
+        + (action_clearance * 0.16)
+        + (plan_pressure * 0.12)
+        + (serotonin_carryover_risk * 0.14)
+        - (emotional_decoupling * 0.16)
+    )
+
+    tone_map = {
+        "cortisol_load": cortisol_load,
+        "gaba_inhibition": gaba_inhibition,
+        "noradrenaline_arousal": noradrenaline_arousal,
+        "glutamate_activation": glutamate_activation,
+        "serotonin_stability": serotonin_stability,
+        "acetylcholine_focus": acetylcholine_focus,
+        "endorphin_relief": endorphin_relief,
+        "dopamine_tone": dopamine_tone,
+    }
+    dominant_tone = max(tone_map, key=tone_map.get)
+    if neurochemical_balance <= -0.22 and cortisol_load >= max(serotonin_stability, endorphin_relief):
+        state_label = "strained_neurochemistry"
+    elif gaba_inhibition >= 0.56 and action_clearance < 0.48:
+        state_label = "inhibited_neurochemistry"
+    elif acetylcholine_focus >= 0.56 and cortisol_load < 0.50:
+        state_label = "focused_neurochemistry"
+    elif serotonin_carryover_risk >= 0.40 and serotonin_stability >= 0.46 and transfer_bearing < 0.38:
+        state_label = "carryover_neurochemistry"
+    elif serotonin_stability >= 0.54 and neurochemical_balance >= -0.06:
+        state_label = "stable_neurochemistry"
+    elif glutamate_activation >= 0.56 and noradrenaline_arousal >= 0.48:
+        state_label = "activated_neurochemistry"
+    elif endorphin_relief >= 0.48 and cortisol_load < 0.46:
+        state_label = "relieved_neurochemistry"
+    else:
+        state_label = "mixed_neurochemistry"
+
+    return {
+        "neurochemical_state_label": str(state_label),
+        "neurochemical_dominant_tone": str(dominant_tone),
+        "dopamine_tone": float(dopamine_tone),
+        "gaba_inhibition": float(gaba_inhibition),
+        "noradrenaline_arousal": float(noradrenaline_arousal),
+        "acetylcholine_focus": float(acetylcholine_focus),
+        "serotonin_stability": float(serotonin_stability),
+        "cortisol_load": float(cortisol_load),
+        "endorphin_relief": float(endorphin_relief),
+        "glutamate_activation": float(glutamate_activation),
+        "neurochemical_load": float(neurochemical_load),
+        "neurochemical_support": float(neurochemical_support),
+        "neurochemical_balance": float(neurochemical_balance),
+        "reward_stability_echo": float(reward_stability_echo),
+        "world_shift_evidence": float(world_shift_evidence),
+        "serotonin_carryover_risk": float(serotonin_carryover_risk),
+        "emotional_decoupling": float(emotional_decoupling),
+        "reactive_nervous_drive": float(reactive_nervous_drive),
+    }
+
+def build_conscious_perception_state(perception_state=None, processing_state=None, felt_state=None, thought_state=None, fused=None, neurochemical_state=None, meta_axes=None):
+    perception = dict(perception_state or {})
+    processing = dict(processing_state or {})
+    felt = dict(felt_state or {})
+    thought = dict(thought_state or {})
+    fused_state = dict(fused or {})
+    neuro = dict(neurochemical_state or {})
+    axes = dict(meta_axes or {})
+
+    def _v(source, key, default=0.0):
+        try:
+            return float(source.get(key, default) or default)
+        except Exception:
+            return float(default)
+
+    sensory_load = _v(perception, "sensory_load", _v(processing, "sensory_load"))
+    sensory_redundancy = _v(perception, "sensory_redundancy", _v(processing, "sensory_redundancy"))
+    sensory_habituation = _v(perception, "sensory_habituation", _v(processing, "sensory_habituation"))
+    sensory_gate = _v(perception, "sensory_gate", _v(processing, "sensory_gate", 1.0))
+    sensory_pressure = _v(perception, "sensory_reality_pressure", _v(processing, "sensory_reality_pressure"))
+    visual_form_pressure = _v(axes, "visual_form_pressure", _v(processing, "visual_form_pressure", _v(perception, "visual_form_pressure")))
+    visual_form_novelty = _v(axes, "visual_form_novelty", _v(processing, "visual_form_novelty", _v(perception, "visual_form_novelty")))
+    visual_clarity = _v(axes, "visual_clarity", _v(processing, "visual_clarity", _v(perception, "visual_clarity")))
+    visual_object_stability = _v(axes, "visual_object_stability", _v(processing, "visual_object_stability", _v(perception, "visual_object_stability")))
+    visual_blindness = _v(axes, "visual_blindness", _v(processing, "visual_blindness", _v(perception, "visual_blindness")))
+    visual_action_uncertainty = _v(axes, "visual_action_uncertainty")
+
+    field_pressure = _v(axes, "field_perception_pressure", _v(felt, "field_perception_pressure", _v(processing, "field_perception_pressure")))
+    field_support = _v(axes, "field_perception_support", _v(felt, "field_perception_support", _v(processing, "field_perception_support")))
+    field_clarity = _v(axes, "field_perception_clarity", _v(felt, "field_perception_clarity", _v(processing, "field_perception_clarity")))
+    field_focus = _v(axes, "field_perception_focus", _v(felt, "field_perception_focus", _v(processing, "field_perception_focus")))
+    field_stability = _v(axes, "field_perception_stability", _v(felt, "field_perception_stability", _v(processing, "field_perception_stability")))
+    field_fragmentation = _v(axes, "field_perception_fragmentation", _v(felt, "field_perception_fragmentation", _v(processing, "field_perception_fragmentation")))
+    field_strain = _v(axes, "field_perception_strain", _v(felt, "field_perception_strain", _v(processing, "field_perception_strain")))
+    field_observation_need = _v(axes, "field_observation_need")
+    field_replan_pressure = _v(axes, "field_replan_pressure")
+    field_action_support = _v(axes, "field_action_support")
+
+    felt_pressure = _v(axes, "felt_pressure", _v(felt, "felt_pressure"))
+    felt_stability = _v(axes, "felt_stability", _v(felt, "felt_stability"))
+    felt_alignment = _v(axes, "felt_alignment", _v(felt, "felt_alignment"))
+    pressure_release = _v(axes, "pressure_release", _v(felt, "pressure_release"))
+    experience_regulation = _v(axes, "experience_regulation", _v(felt, "experience_regulation"))
+    load_bearing_capacity = _v(axes, "load_bearing_capacity", _v(felt, "load_bearing_capacity"))
+
+    memory_orientation = _v(axes, "memory_orientation")
+    memory_support = _v(axes, "memory_support")
+    memory_compare_load = _v(axes, "memory_compare_load")
+    cognitive_load = _v(axes, "cognitive_load")
+    orientation_gap = _v(axes, "orientation_gap")
+    blind_thinking_load = _v(axes, "blind_thinking_load")
+    structure_action_uncertainty = _v(axes, "structure_action_uncertainty")
+    semantic_shift_pressure = _v(axes, "semantic_shift_pressure")
+    transfer_bearing = _v(axes, "transfer_bearing")
+    interpretation_quality = _v(axes, "interpretation_quality")
+    action_clearance = _v(axes, "action_clearance")
+    action_inhibition = _v(axes, "action_inhibition")
+    symbolic_regulation = _v(axes, "symbolic_regulation")
+    symbolic_object_distance = _v(axes, "symbolic_object_distance")
+    symbolic_containment = _v(axes, "symbolic_containment")
+    symbolic_field_decoupling = _v(axes, "symbolic_field_decoupling")
+    form_symbol_observation_binding = _v(axes, "form_symbol_observation_binding")
+    form_symbol_reframe_binding = _v(axes, "form_symbol_reframe_binding")
+    variant_learning_pressure = _v(axes, "variant_learning_pressure")
+    uncertainty_familiarity = _v(axes, "uncertainty_familiarity")
+
+    serotonin_carryover_risk = _v(neuro, "serotonin_carryover_risk")
+    emotional_decoupling = _v(neuro, "emotional_decoupling")
+    reactive_nervous_drive = _v(neuro, "reactive_nervous_drive")
+    world_shift_evidence = _v(neuro, "world_shift_evidence")
+    acetylcholine_focus = _v(neuro, "acetylcholine_focus")
+    gaba_inhibition = _v(neuro, "gaba_inhibition")
+    cortisol_load = _v(neuro, "cortisol_load")
+
+    stimulus_field_effect = _clip01(
+        (sensory_pressure * 0.18)
+        + (sensory_load * 0.12)
+        + (visual_form_pressure * 0.16)
+        + (visual_form_novelty * 0.08)
+        + (field_pressure * 0.20)
+        + (felt_pressure * 0.14)
+        + (semantic_shift_pressure * 0.08)
+        + (world_shift_evidence * 0.08)
+        - (sensory_habituation * 0.06)
+        - (field_support * 0.06)
+    )
+    perceived_field_change = _clip01(
+        (world_shift_evidence * 0.22)
+        + (semantic_shift_pressure * 0.18)
+        + (visual_form_novelty * 0.14)
+        + (structure_action_uncertainty * 0.12)
+        + (field_fragmentation * 0.10)
+        + (field_strain * 0.08)
+        + (max(0.0, 1.0 - transfer_bearing) * 0.10)
+        - (interpretation_quality * 0.08)
+    )
+    inner_impact_trace = _clip01(
+        (stimulus_field_effect * 0.28)
+        + (felt_pressure * 0.16)
+        + (field_pressure * 0.14)
+        + (reactive_nervous_drive * 0.12)
+        + (serotonin_carryover_risk * 0.10)
+        + (cortisol_load * 0.08)
+        + (orientation_gap * 0.08)
+        + (blind_thinking_load * 0.06)
+        - (emotional_decoupling * 0.10)
+        - (pressure_release * 0.05)
+    )
+    felt_afterimage = _clip01(
+        (serotonin_carryover_risk * 0.24)
+        + (reactive_nervous_drive * 0.14)
+        + (aftereffect_pressure := _v(axes, "aftereffect_pressure", _v(felt, "aftereffect_pressure"))) * 0.16
+        + (inner_impact_trace * 0.16)
+        + (memory_compare_load * 0.08)
+        + (max(0.0, 1.0 - emotional_decoupling) * 0.08)
+        - (pressure_release * 0.10)
+        - (symbolic_containment * 0.06)
+    )
+    field_attachment = _clip01(
+        (inner_impact_trace * 0.24)
+        + (felt_afterimage * 0.18)
+        + (field_pressure * 0.14)
+        + (reactive_nervous_drive * 0.12)
+        + (max(0.0, action_clearance - action_inhibition) * 0.10)
+        + (visual_action_uncertainty * 0.08)
+        - (symbolic_object_distance * 0.12)
+        - (emotional_decoupling * 0.10)
+        - (pressure_release * 0.06)
+    )
+    object_contact_depth = _clip01(
+        (visual_object_stability * 0.20)
+        + (visual_clarity * 0.16)
+        + (field_focus * 0.14)
+        + (acetylcholine_focus * 0.12)
+        + (form_symbol_observation_binding * 0.10)
+        + (uncertainty_familiarity * 0.06)
+        + (perceived_field_change * 0.08)
+        - (visual_blindness * 0.12)
+        - (field_fragmentation * 0.08)
+    )
+    background_containment = _clip01(
+        (sensory_habituation * 0.18)
+        + (sensory_redundancy * 0.12)
+        + (symbolic_containment * 0.18)
+        + (symbolic_regulation * 0.14)
+        + (field_stability * 0.12)
+        + (field_support * 0.10)
+        + (gaba_inhibition * 0.08)
+        + (experience_regulation * 0.08)
+        - (stimulus_field_effect * 0.08)
+    )
+    selective_attention = _clip01(
+        (object_contact_depth * 0.22)
+        + (acetylcholine_focus * 0.16)
+        + (visual_clarity * 0.12)
+        + (field_focus * 0.12)
+        + (form_symbol_reframe_binding * 0.10)
+        + (field_observation_need * 0.08)
+        - (sensory_load * 0.06)
+        - (field_fragmentation * 0.08)
+    )
+    reflective_distance = _clip01(
+        (emotional_decoupling * 0.22)
+        + (symbolic_field_decoupling * 0.18)
+        + (symbolic_object_distance * 0.14)
+        + (background_containment * 0.12)
+        + (pressure_release * 0.10)
+        + (experience_regulation * 0.08)
+        + (field_replan_pressure * 0.06)
+        + (form_symbol_reframe_binding * 0.06)
+        - (field_attachment * 0.12)
+        - (reactive_nervous_drive * 0.06)
+    )
+    release_capacity = _clip01(
+        (pressure_release * 0.18)
+        + (reflective_distance * 0.16)
+        + (background_containment * 0.14)
+        + (emotional_decoupling * 0.12)
+        + (load_bearing_capacity * 0.10)
+        + (field_stability * 0.08)
+        + (symbolic_regulation * 0.08)
+        + (memory_orientation * 0.06)
+        - (felt_afterimage * 0.10)
+        - (cognitive_load * 0.06)
+    )
+    perceptual_distance = _clip01(
+        (reflective_distance * 0.24)
+        + (object_contact_depth * 0.10)
+        + (background_containment * 0.14)
+        + (symbolic_object_distance * 0.16)
+        + (release_capacity * 0.12)
+        + (sensory_gate * 0.08)
+        - (field_attachment * 0.12)
+        - (inner_impact_trace * 0.06)
+    )
+    inner_outer_alignment = _clip01(
+        (field_support * 0.16)
+        + (field_clarity * 0.14)
+        + (felt_alignment * 0.12)
+        + (visual_clarity * 0.10)
+        + (interpretation_quality * 0.12)
+        + (transfer_bearing * 0.10)
+        + (memory_support * 0.08)
+        + (max(0.0, 1.0 - perceived_field_change) * 0.08)
+        - (serotonin_carryover_risk * 0.10)
+        - (orientation_gap * 0.06)
+    )
+
+    arousal_load = _clip01(
+        (reactive_nervous_drive * 0.24)
+        + (cortisol_load * 0.16)
+        + (stimulus_field_effect * 0.16)
+        + (inner_impact_trace * 0.14)
+        + (sensory_load * 0.08)
+        + (field_attachment * 0.10)
+        - (background_containment * 0.08)
+    )
+    curiosity_tone = _clip01(
+        (object_contact_depth * 0.24)
+        + (selective_attention * 0.22)
+        + (acetylcholine_focus * 0.14)
+        + (perceived_field_change * 0.10)
+        + (form_symbol_observation_binding * 0.08)
+        - (felt_afterimage * 0.08)
+    )
+    fatigue_tone = _clip01(
+        (orientation_gap * 0.18)
+        + (blind_thinking_load * 0.16)
+        + (cognitive_load * 0.14)
+        + (memory_compare_load * 0.10)
+        + (max(0.0, 0.22 - release_capacity) * 0.16)
+        + (max(0.0, 0.18 - perceptual_distance) * 0.10)
+        - (acetylcholine_focus * 0.08)
+    )
+    calm_tone = _clip01(
+        (background_containment * 0.22)
+        + (release_capacity * 0.18)
+        + (reflective_distance * 0.16)
+        + (field_stability * 0.12)
+        + (emotional_decoupling * 0.12)
+        + (gaba_inhibition * 0.08)
+        - (arousal_load * 0.10)
+    )
+
+    if field_attachment >= 0.23 and reflective_distance < 0.18 and inner_impact_trace >= 0.30:
+        state_label = "overcoupled_field"
+    elif reflective_distance >= 0.18 and inner_outer_alignment < 0.25 and perceived_field_change >= 0.30:
+        state_label = "reflective_check"
+    elif release_capacity >= 0.20 and field_attachment < 0.18 and felt_afterimage < 0.34:
+        state_label = "release_ready"
+    elif object_contact_depth >= 0.20 and selective_attention >= 0.13:
+        state_label = "object_contact"
+    elif background_containment >= 0.23 and stimulus_field_effect < 0.38:
+        state_label = "background_held"
+    elif perceived_field_change >= 0.34 or variant_learning_pressure >= 0.20 or world_shift_evidence >= 0.64:
+        state_label = "world_shift_contact"
+    else:
+        state_label = "open_perception"
+
+    if release_capacity >= 0.20 and felt_afterimage < 0.34 and field_attachment < 0.20:
+        release_state = "can_release"
+    elif field_attachment >= 0.22 and release_capacity < 0.17:
+        release_state = "attached"
+    elif reflective_distance >= 0.17 and release_capacity >= 0.15:
+        release_state = "reflective_hold"
+    else:
+        release_state = "holding"
+
+    if arousal_load >= 0.34 and field_attachment >= 0.21:
+        inner_posture_state = "overstimulated"
+    elif fatigue_tone >= 0.24 and release_capacity < 0.18:
+        inner_posture_state = "tired"
+    elif curiosity_tone >= 0.18 and object_contact_depth >= 0.19:
+        inner_posture_state = "curious"
+    elif arousal_load >= 0.30 and reactive_nervous_drive >= 0.34:
+        inner_posture_state = "excited"
+    elif calm_tone >= 0.20 and release_capacity >= 0.18:
+        inner_posture_state = "calm"
+    elif reflective_distance >= 0.17 and inner_outer_alignment < 0.26:
+        inner_posture_state = "reflective"
+    else:
+        inner_posture_state = "uncertain_open"
+
+    return {
+        "conscious_perception_state": str(state_label),
+        "inner_posture_state": str(inner_posture_state),
+        "arousal_load": float(arousal_load),
+        "curiosity_tone": float(curiosity_tone),
+        "fatigue_tone": float(fatigue_tone),
+        "calm_tone": float(calm_tone),
+        "stimulus_field_effect": float(stimulus_field_effect),
+        "inner_impact_trace": float(inner_impact_trace),
+        "perceived_field_change": float(perceived_field_change),
+        "felt_afterimage": float(felt_afterimage),
+        "object_release_state": str(release_state),
+        "inner_outer_reflection": float(reflective_distance),
+        "perceptual_distance": float(perceptual_distance),
+        "object_contact_depth": float(object_contact_depth),
+        "field_attachment": float(field_attachment),
+        "release_capacity": float(release_capacity),
+        "selective_attention": float(selective_attention),
+        "background_containment": float(background_containment),
+        "reflective_distance": float(reflective_distance),
+        "inner_outer_alignment": float(inner_outer_alignment),
+    }
+
+def build_active_mcm_contact_state(
+    perception_state=None,
+    processing_state=None,
+    felt_state=None,
+    thought_state=None,
+    meta_regulation_state=None,
+    strategic_window_state=None,
+):
+    perception = dict(perception_state or {})
+    processing = dict(processing_state or {})
+    felt = dict(felt_state or {})
+    thought = dict(thought_state or {})
+    meta = dict(meta_regulation_state or {})
+    strategic = dict(strategic_window_state or {})
+    conscious = dict(meta.get("conscious_perception", {}) or {})
+    neuro = dict(meta.get("neurochemical_state", {}) or {})
+
+    def _v(*sources, key=None, default=0.0):
+        for source in sources:
+            if not isinstance(source, dict):
+                continue
+            try:
+                if key in source:
+                    return float(source.get(key, default) or default)
+            except Exception:
+                continue
+        return float(default)
+
+    visual_clarity = _v(meta, processing, perception, key="visual_clarity")
+    visual_object_stability = _v(meta, processing, perception, key="visual_object_stability")
+    visual_form_pressure = _v(meta, processing, perception, key="visual_form_pressure")
+    visual_form_novelty = _v(meta, processing, perception, key="visual_form_novelty")
+    visual_shape_resonance = _v(meta, processing, perception, key="visual_shape_resonance")
+    sensory_load = _v(meta, processing, perception, key="sensory_load")
+    sensory_gate = _v(meta, processing, perception, key="sensory_gate", default=1.0)
+    field_pressure = _v(meta, felt, thought, processing, key="field_perception_pressure")
+    field_support = _v(meta, felt, thought, processing, key="field_perception_support")
+    field_clarity = _v(meta, felt, thought, processing, key="field_perception_clarity")
+    field_focus = _v(meta, felt, thought, processing, key="field_perception_focus")
+    field_fragmentation = _v(meta, felt, thought, processing, key="field_perception_fragmentation")
+    field_strain = _v(meta, felt, thought, processing, key="field_perception_strain")
+    stimulus_field_effect = _v(meta, conscious, key="stimulus_field_effect")
+    inner_impact_trace = _v(meta, conscious, key="inner_impact_trace")
+    perceived_field_change = _v(meta, conscious, key="perceived_field_change")
+    felt_afterimage = _v(meta, conscious, key="felt_afterimage")
+    perceptual_distance = _v(meta, conscious, key="perceptual_distance")
+    object_contact_depth = _v(meta, conscious, key="object_contact_depth")
+    field_attachment = _v(meta, conscious, key="field_attachment")
+    release_capacity = _v(meta, conscious, key="release_capacity")
+    selective_attention = _v(meta, conscious, key="selective_attention")
+    reflective_distance = _v(meta, conscious, key="reflective_distance")
+    inner_outer_alignment = _v(meta, conscious, key="inner_outer_alignment")
+    arousal_load = _v(meta, conscious, key="arousal_load")
+    curiosity_tone = _v(meta, conscious, key="curiosity_tone")
+    calm_tone = _v(meta, conscious, key="calm_tone")
+    acetylcholine_focus = _v(meta, neuro, key="acetylcholine_focus")
+    serotonin_stability = _v(meta, neuro, key="serotonin_stability")
+    reward_stability_echo = _v(meta, neuro, key="reward_stability_echo")
+    world_shift_evidence = _v(meta, neuro, key="world_shift_evidence")
+    emotional_decoupling = _v(meta, neuro, key="emotional_decoupling")
+    reactive_nervous_drive = _v(meta, neuro, key="reactive_nervous_drive")
+    serotonin_carryover_risk = _v(meta, neuro, key="serotonin_carryover_risk")
+    area_mcm_resonance = _v(strategic, meta, key="area_mcm_resonance")
+    area_memory_pull = _v(strategic, meta, key="area_memory_pull")
+    area_bearing_quality = _v(strategic, meta, key="area_bearing_quality")
+    area_order_intention = _v(strategic, meta, key="area_order_intention")
+    area_zoom_need = _v(strategic, meta, key="area_zoom_need")
+    area_replay_fit = _v(strategic, meta, key="area_replay_fit")
+    strategic_patience = _v(strategic, meta, key="strategic_patience")
+    old_structure_carryover_risk = _v(strategic, meta, key="old_structure_carryover_risk")
+    structure_quality = _v(meta, perception, processing, felt, key="structure_quality")
+    context_confidence = _v(meta, perception, processing, felt, key="context_confidence")
+    trust_transfer_support = _v(meta, felt, thought, key="trust_transfer_support")
+    transfer_maturity_gap = _v(meta, felt, thought, key="transfer_maturity_gap")
+    transfer_bearing = _v(meta, felt, thought, key="transfer_bearing")
+
+    contact_interest = _clip01(
+        (visual_form_pressure * 0.16)
+        + (visual_form_novelty * 0.08)
+        + (visual_shape_resonance * 0.12)
+        + (object_contact_depth * 0.14)
+        + (selective_attention * 0.12)
+        + (curiosity_tone * 0.12)
+        + (area_mcm_resonance * 0.10)
+        + (area_memory_pull * 0.08)
+        + (area_zoom_need * 0.08)
+        - (sensory_load * 0.05)
+    )
+    contact_focus_pull = _clip01(
+        (field_focus * 0.16)
+        + (visual_clarity * 0.14)
+        + (visual_object_stability * 0.12)
+        + (acetylcholine_focus * 0.16)
+        + (selective_attention * 0.18)
+        + (area_bearing_quality * 0.10)
+        + (area_order_intention * 0.08)
+        - (field_fragmentation * 0.08)
+    )
+    contact_resonance_probe = _clip01(
+        (contact_interest * 0.18)
+        + (field_pressure * 0.12)
+        + (field_clarity * 0.10)
+        + (visual_shape_resonance * 0.14)
+        + (stimulus_field_effect * 0.14)
+        + (area_mcm_resonance * 0.16)
+        + (area_memory_pull * 0.10)
+        + (area_replay_fit * 0.06)
+    )
+    outer_inner_resonance = _clip01(
+        (visual_shape_resonance * 0.16)
+        + (field_clarity * 0.12)
+        + (field_support * 0.12)
+        + (inner_outer_alignment * 0.18)
+        + (area_mcm_resonance * 0.14)
+        + (area_memory_pull * 0.10)
+        + (contact_resonance_probe * 0.12)
+        - (field_strain * 0.08)
+        - (serotonin_carryover_risk * 0.06)
+    )
+    inner_change_from_contact = _clip01(
+        (stimulus_field_effect * 0.22)
+        + (inner_impact_trace * 0.20)
+        + (perceived_field_change * 0.14)
+        + (felt_afterimage * 0.10)
+        + (field_attachment * 0.10)
+        + (reactive_nervous_drive * 0.08)
+        + (old_structure_carryover_risk * 0.06)
+        - (release_capacity * 0.08)
+    )
+    contact_overcoupling_risk = _clip01(
+        (field_attachment * 0.22)
+        + (inner_impact_trace * 0.16)
+        + (felt_afterimage * 0.12)
+        + (sensory_load * 0.08)
+        + (arousal_load * 0.10)
+        + (reactive_nervous_drive * 0.10)
+        + (serotonin_carryover_risk * 0.10)
+        + (old_structure_carryover_risk * 0.06)
+        - (perceptual_distance * 0.12)
+        - (emotional_decoupling * 0.08)
+    )
+    outer_inner_coherence = _clip01(
+        (inner_outer_alignment * 0.22)
+        + (outer_inner_resonance * 0.16)
+        + (field_support * 0.12)
+        + (field_clarity * 0.12)
+        + (area_bearing_quality * 0.12)
+        + (strategic_patience * 0.08)
+        + (perceptual_distance * 0.08)
+        - (contact_overcoupling_risk * 0.14)
+        - (field_fragmentation * 0.06)
+    )
+    contact_carrying_quality = _clip01(
+        (outer_inner_coherence * 0.24)
+        + (field_support * 0.14)
+        + (field_clarity * 0.10)
+        + (release_capacity * 0.12)
+        + (calm_tone * 0.08)
+        + (area_bearing_quality * 0.12)
+        + (strategic_patience * 0.08)
+        + (contact_focus_pull * 0.06)
+        - (contact_overcoupling_risk * 0.14)
+    )
+    contact_release_readiness = _clip01(
+        (release_capacity * 0.24)
+        + (perceptual_distance * 0.18)
+        + (reflective_distance * 0.14)
+        + (emotional_decoupling * 0.12)
+        + (sensory_gate * 0.08)
+        + (calm_tone * 0.08)
+        - (field_attachment * 0.12)
+        - (felt_afterimage * 0.08)
+    )
+    contact_deepen_pull = _clip01(
+        (contact_interest * 0.18)
+        + (contact_focus_pull * 0.18)
+        + (object_contact_depth * 0.14)
+        + (area_zoom_need * 0.12)
+        + (area_bearing_quality * 0.10)
+        + (outer_inner_resonance * 0.10)
+        + (curiosity_tone * 0.10)
+        - (contact_overcoupling_risk * 0.10)
+        - (contact_release_readiness * 0.04)
+    )
+    contact_replay_pull = _clip01(
+        (area_replay_fit * 0.20)
+        + (area_memory_pull * 0.14)
+        + (old_structure_carryover_risk * 0.10)
+        + (perceived_field_change * 0.12)
+        + (reflective_distance * 0.12)
+        + (strategic_patience * 0.10)
+        + (contact_interest * 0.08)
+        - (contact_overcoupling_risk * 0.08)
+    )
+    contact_curiosity = _clip01(
+        (curiosity_tone * 0.26)
+        + (contact_interest * 0.18)
+        + (contact_deepen_pull * 0.14)
+        + (visual_form_novelty * 0.10)
+        + (area_zoom_need * 0.08)
+        + (acetylcholine_focus * 0.10)
+        - (contact_overcoupling_risk * 0.10)
+    )
+    contact_felt_shift = max(
+        -1.0,
+        min(
+            1.0,
+            (contact_carrying_quality * 0.46)
+            + (outer_inner_coherence * 0.22)
+            + (contact_release_readiness * 0.14)
+            - (contact_overcoupling_risk * 0.42)
+            - (inner_change_from_contact * max(0.0, 1.0 - outer_inner_coherence) * 0.18),
+        ),
+    )
+    contact_selected_depth = _clip01(
+        (contact_deepen_pull * 0.24)
+        + (contact_focus_pull * 0.18)
+        + (contact_carrying_quality * 0.14)
+        + (contact_interest * 0.14)
+        + (contact_replay_pull * 0.08)
+        - (contact_overcoupling_risk * 0.16)
+        + (contact_release_readiness * 0.04)
+    )
+
+    overcoupled_touch_score = _clip01(
+        (contact_overcoupling_risk * 0.34)
+        + (max(0.0, contact_overcoupling_risk - contact_release_readiness) * 0.24)
+        + (inner_change_from_contact * 0.14)
+        + (field_attachment * 0.14)
+        + (reactive_nervous_drive * 0.08)
+        + (max(0.0, 0.18 - perceptual_distance) * 0.10)
+    )
+    release_contact_score = _clip01(
+        (contact_release_readiness * 0.30)
+        + (perceptual_distance * 0.18)
+        + (reflective_distance * 0.16)
+        + (emotional_decoupling * 0.12)
+        + (calm_tone * 0.10)
+        + (max(0.0, contact_release_readiness - contact_overcoupling_risk + 0.04) * 0.14)
+    )
+    deepening_contact_score = _clip01(
+        (contact_deepen_pull * 0.26)
+        + (contact_focus_pull * 0.18)
+        + (contact_interest * 0.14)
+        + (contact_selected_depth * 0.14)
+        + (object_contact_depth * 0.10)
+        + (max(0.0, contact_carrying_quality - contact_overcoupling_risk + 0.05) * 0.12)
+        + (area_zoom_need * 0.06)
+    )
+    resonant_contact_score = _clip01(
+        (outer_inner_coherence * 0.28)
+        + (contact_carrying_quality * 0.24)
+        + (outer_inner_resonance * 0.16)
+        + (area_bearing_quality * 0.10)
+        + (field_support * 0.10)
+        + (max(0.0, 0.30 - contact_overcoupling_risk) * 0.08)
+        + (strategic_patience * 0.04)
+    )
+    reflective_contact_score = _clip01(
+        (contact_replay_pull * 0.22)
+        + (reflective_distance * 0.22)
+        + (perceptual_distance * 0.16)
+        + (release_capacity * 0.12)
+        + (contact_release_readiness * 0.10)
+        + (perceived_field_change * 0.08)
+        + (max(0.0, contact_overcoupling_risk - contact_carrying_quality) * 0.10)
+    )
+    curious_touch_score = _clip01(
+        (contact_curiosity * 0.24)
+        + (contact_interest * 0.22)
+        + (visual_form_novelty * 0.10)
+        + (acetylcholine_focus * 0.12)
+        + (contact_deepen_pull * 0.14)
+        + (max(0.0, contact_overcoupling_risk - 0.28) * -0.08)
+        + (max(0.0, contact_release_readiness - 0.20) * -0.04)
+    )
+    contact_salience = _clip01(
+        (contact_interest * 0.18)
+        + (contact_resonance_probe * 0.18)
+        + (outer_inner_resonance * 0.14)
+        + (inner_change_from_contact * 0.12)
+        + (contact_focus_pull * 0.12)
+        + (contact_overcoupling_risk * 0.10)
+        + (contact_deepen_pull * 0.08)
+        + (contact_replay_pull * 0.08)
+    )
+
+    contact_regime_mismatch = _clip01(
+        (world_shift_evidence * 0.24)
+        + (transfer_maturity_gap * 0.20)
+        + (max(0.0, 0.58 - context_confidence) * 0.16)
+        + (max(0.0, 0.55 - structure_quality) * 0.14)
+        + (old_structure_carryover_risk * 0.12)
+        + (serotonin_carryover_risk * 0.10)
+        + (max(0.0, contact_salience - contact_carrying_quality) * 0.04)
+    )
+    contact_stability_carryover = _clip01(
+        (serotonin_carryover_risk * 0.30)
+        + (reward_stability_echo * world_shift_evidence * 0.24)
+        + (serotonin_stability * max(0.0, 0.55 - structure_quality) * 0.18)
+        + (old_structure_carryover_risk * 0.12)
+        + (max(0.0, 0.48 - trust_transfer_support) * 0.10)
+        - (emotional_decoupling * 0.10)
+        - (perceptual_distance * 0.06)
+    )
+    contact_context_maturity = _clip01(
+        (structure_quality * 0.20)
+        + (context_confidence * 0.18)
+        + (area_bearing_quality * 0.14)
+        + (trust_transfer_support * 0.14)
+        + (transfer_bearing * 0.10)
+        + (field_support * 0.08)
+        + (emotional_decoupling * 0.08)
+        + (strategic_patience * 0.08)
+        - (contact_regime_mismatch * 0.18)
+        - (contact_stability_carryover * 0.12)
+    )
+    contact_context_reframe_need = _clip01(
+        (contact_regime_mismatch * 0.30)
+        + (contact_stability_carryover * 0.24)
+        + (max(0.0, contact_salience - contact_context_maturity) * 0.14)
+        + (max(0.0, contact_selected_depth - contact_context_maturity) * 0.12)
+        + (max(0.0, 0.55 - structure_quality) * 0.10)
+        + (max(0.0, 0.50 - trust_transfer_support) * 0.10)
+    )
+
+    contact_action_maturity = _clip01(
+        (outer_inner_coherence * 0.18)
+        + (contact_carrying_quality * 0.20)
+        + (contact_release_readiness * 0.14)
+        + (perceptual_distance * 0.10)
+        + (area_bearing_quality * 0.12)
+        + (field_support * 0.10)
+        + (visual_object_stability * 0.06)
+        + (context_confidence * 0.05)
+        + (strategic_patience * 0.05)
+        + (contact_context_maturity * 0.14)
+        - (contact_overcoupling_risk * 0.14)
+        - (max(0.0, contact_deepen_pull - contact_carrying_quality) * 0.08)
+        - (contact_regime_mismatch * 0.10)
+        - (contact_stability_carryover * 0.08)
+    )
+    contact_bearing_gap = _clip01(
+        (max(0.0, contact_salience - contact_carrying_quality) * 0.26)
+        + (max(0.0, contact_selected_depth - contact_release_readiness) * 0.20)
+        + (max(0.0, contact_overcoupling_risk - contact_release_readiness) * 0.20)
+        + (max(0.0, 0.55 - structure_quality) * 0.16)
+        + (max(0.0, area_order_intention - contact_action_maturity) * 0.10)
+        + (max(0.0, 0.22 - outer_inner_coherence) * 0.08)
+        + (contact_regime_mismatch * 0.14)
+        + (contact_stability_carryover * 0.10)
+        + (max(0.0, contact_salience - contact_context_maturity) * 0.10)
+    )
+    contact_impulse_vs_bearing = max(
+        -1.0,
+        min(
+            1.0,
+            (
+                (contact_deepen_pull + contact_curiosity + contact_salience + area_order_intention) * 0.25
+            )
+            - (
+                (
+                    contact_action_maturity
+                    + contact_carrying_quality
+                    + contact_release_readiness
+                    + outer_inner_coherence
+                )
+                * 0.25
+            ),
+        ),
+    )
+    contact_learning_need = _clip01(
+        (contact_bearing_gap * 0.34)
+        + (max(0.0, contact_impulse_vs_bearing) * 0.20)
+        + (max(0.0, 0.55 - structure_quality) * 0.18)
+        + (contact_overcoupling_risk * 0.14)
+        + (max(0.0, 0.16 - contact_release_readiness) * 0.08)
+        + (old_structure_carryover_risk * 0.06)
+        + (contact_context_reframe_need * 0.18)
+    )
+    contact_reality_check = _clip01(
+        (contact_action_maturity * 0.35)
+        + (outer_inner_coherence * 0.18)
+        + (contact_release_readiness * 0.14)
+        + (contact_carrying_quality * 0.14)
+        + (min(structure_quality, area_bearing_quality) * 0.12)
+        + (contact_context_maturity * 0.12)
+        - (contact_bearing_gap * 0.20)
+        - (contact_stability_carryover * 0.10)
+    )
+
+    posture_scores = {
+        "overcoupled_touch": overcoupled_touch_score,
+        "release_contact": release_contact_score,
+        "deepening_contact": deepening_contact_score,
+        "resonant_contact": resonant_contact_score,
+        "reflective_contact": reflective_contact_score,
+        "curious_touch": curious_touch_score,
+    }
+    contact_posture = max(posture_scores, key=posture_scores.get)
+    strongest_posture_score = float(posture_scores.get(contact_posture, 0.0) or 0.0)
+
+    if contact_salience < 0.22 and strongest_posture_score < 0.17:
+        contact_posture = "background_scan"
+    elif contact_release_readiness < 0.11 and contact_overcoupling_risk >= 0.16 and contact_salience >= 0.22:
+        contact_posture = "overcoupled_touch"
+    elif contact_posture == "release_contact" and contact_release_readiness < 0.13:
+        contact_posture = "reflective_contact" if reflective_contact_score >= curious_touch_score else "curious_touch"
+    elif contact_posture == "resonant_contact" and (outer_inner_coherence < 0.18 or contact_release_readiness < 0.11):
+        contact_posture = "curious_touch"
+    elif contact_posture == "deepening_contact" and contact_deepen_pull < 0.19:
+        contact_posture = "curious_touch"
+
+    return {
+        "active_mcm_contact_state": str(contact_posture),
+        "contact_posture": str(contact_posture),
+        "contact_salience": float(contact_salience),
+        "overcoupled_touch_score": float(overcoupled_touch_score),
+        "release_contact_score": float(release_contact_score),
+        "deepening_contact_score": float(deepening_contact_score),
+        "resonant_contact_score": float(resonant_contact_score),
+        "reflective_contact_score": float(reflective_contact_score),
+        "curious_touch_score": float(curious_touch_score),
+        "contact_interest": float(contact_interest),
+        "contact_focus_pull": float(contact_focus_pull),
+        "contact_resonance_probe": float(contact_resonance_probe),
+        "outer_inner_resonance": float(outer_inner_resonance),
+        "outer_inner_coherence": float(outer_inner_coherence),
+        "inner_change_from_contact": float(inner_change_from_contact),
+        "contact_carrying_quality": float(contact_carrying_quality),
+        "contact_overcoupling_risk": float(contact_overcoupling_risk),
+        "contact_release_readiness": float(contact_release_readiness),
+        "contact_deepen_pull": float(contact_deepen_pull),
+        "contact_replay_pull": float(contact_replay_pull),
+        "contact_curiosity": float(contact_curiosity),
+        "contact_felt_shift": float(contact_felt_shift),
+        "contact_selected_depth": float(contact_selected_depth),
+        "contact_action_maturity": float(contact_action_maturity),
+        "contact_bearing_gap": float(contact_bearing_gap),
+        "contact_impulse_vs_bearing": float(contact_impulse_vs_bearing),
+        "contact_learning_need": float(contact_learning_need),
+        "contact_reality_check": float(contact_reality_check),
+        "contact_regime_mismatch": float(contact_regime_mismatch),
+        "contact_stability_carryover": float(contact_stability_carryover),
+        "contact_context_maturity": float(contact_context_maturity),
+        "contact_context_reframe_need": float(contact_context_reframe_need),
+    }
+
+def build_meta_regulation_state(perception_state, processing_state, felt_state, thought_state, fused, pause_mode=False, bot=None):
 
     perception = dict(perception_state or {})
     processing = dict(processing_state or {})
@@ -11118,6 +14112,7 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     dominant_activity_island_id = str(felt.get("dominant_activity_island_id", thought.get("dominant_activity_island_id", processing.get("dominant_activity_island_id", "-"))) or "-")
     field_perception_label = str(felt.get("field_perception_label", thought.get("field_perception_label", processing.get("field_perception_label", "quiet_field"))) or "quiet_field").strip().lower()
     field_activity_island_count = int(felt.get("field_activity_island_count", thought.get("field_activity_island_count", processing.get("field_activity_island_count", 0))) or 0)
+    field_activity_island_activation_mean = float(felt.get("field_activity_island_activation_mean", thought.get("field_activity_island_activation_mean", processing.get("field_activity_island_activation_mean", 0.0))) or 0.0)
     field_activity_island_pressure_mean = float(felt.get("field_activity_island_pressure_mean", thought.get("field_activity_island_pressure_mean", processing.get("field_activity_island_pressure_mean", 0.0))) or 0.0)
     field_activity_island_coherence_mean = float(felt.get("field_activity_island_coherence_mean", thought.get("field_activity_island_coherence_mean", processing.get("field_activity_island_coherence_mean", 0.0))) or 0.0)
     field_activity_island_context_reactivation_mean = float(felt.get("field_activity_island_context_reactivation_mean", thought.get("field_activity_island_context_reactivation_mean", processing.get("field_activity_island_context_reactivation_mean", 0.0))) or 0.0)
@@ -11129,6 +14124,13 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     market_balance = float(felt.get("market_balance", perception.get("market_balance", 0.0)) or 0.0)
     breakout_tension = float(felt.get("breakout_tension", perception.get("breakout_tension", 0.0)) or 0.0)
     visual_coherence = float(felt.get("visual_coherence", perception.get("visual_coherence", 0.0)) or 0.0)
+    visual_clarity = float(felt.get("visual_clarity", processing.get("visual_clarity", perception.get("visual_clarity", 0.0))) or 0.0)
+    visual_object_stability = float(felt.get("visual_object_stability", processing.get("visual_object_stability", perception.get("visual_object_stability", 0.0))) or 0.0)
+    visual_form_novelty = float(felt.get("visual_form_novelty", processing.get("visual_form_novelty", perception.get("visual_form_novelty", 0.0))) or 0.0)
+    visual_blindness = float(felt.get("visual_blindness", processing.get("visual_blindness", perception.get("visual_blindness", 0.0))) or 0.0)
+    visual_form_pressure = float(felt.get("visual_form_pressure", processing.get("visual_form_pressure", perception.get("visual_form_pressure", 0.0))) or 0.0)
+    visual_shape_resonance = float(felt.get("visual_shape_resonance", processing.get("visual_shape_resonance", perception.get("visual_shape_resonance", 0.0))) or 0.0)
+    visual_shape_fragility = float(felt.get("visual_shape_fragility", processing.get("visual_shape_fragility", perception.get("visual_shape_fragility", 0.0))) or 0.0)
     external_pressure = float(felt.get("external_pressure", 0.0) or 0.0)
     inner_conflict_pressure = float(felt.get("inner_conflict_pressure", 0.0) or 0.0)
     repetition_pressure = float(felt.get("repetition_pressure", 0.0) or 0.0)
@@ -11183,6 +14185,20 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     form_symbol_learning_trust = float(form_symbol_state.get("form_symbol_learning_trust", 0.0) or 0.0)
     form_symbol_action_trust = float(form_symbol_state.get("form_symbol_action_trust", 0.0) or 0.0)
     form_symbol_caution_trust = float(form_symbol_state.get("form_symbol_caution_trust", 0.0) or 0.0)
+    form_symbol_contact_maturity = float(form_symbol_state.get("form_symbol_contact_maturity", 0.0) or 0.0)
+    form_symbol_contact_utility = float(form_symbol_state.get("form_symbol_contact_utility", 0.0) or 0.0)
+    form_symbol_contact_pain_memory = float(form_symbol_state.get("form_symbol_contact_pain_memory", 0.0) or 0.0)
+    form_symbol_contact_carefulness = float(form_symbol_state.get("form_symbol_contact_carefulness", 0.0) or 0.0)
+    form_symbol_contact_burden_evidence = float(form_symbol_state.get("form_symbol_contact_burden_evidence", 0.0) or 0.0)
+    form_symbol_contact_utility_evidence = float(form_symbol_state.get("form_symbol_contact_utility_evidence", 0.0) or 0.0)
+    form_symbol_contact_learning_state = str(form_symbol_state.get("form_symbol_contact_learning_state", "unformed_contact") or "unformed_contact")
+    uncertain_form_family_state = str(form_symbol_state.get("uncertain_form_family_state", "quiet_form_family") or "quiet_form_family")
+    uncertain_form_exposure = float(form_symbol_state.get("uncertain_form_exposure", 0.0) or 0.0)
+    uncertainty_familiarity = float(form_symbol_state.get("uncertainty_familiarity", 0.0) or 0.0)
+    variant_similarity = float(form_symbol_state.get("variant_similarity", 0.0) or 0.0)
+    variant_spread = float(form_symbol_state.get("variant_spread", 0.0) or 0.0)
+    variant_learning_pressure = float(form_symbol_state.get("variant_learning_pressure", 0.0) or 0.0)
+    variant_bearing_memory = float(form_symbol_state.get("variant_bearing_memory", 0.0) or 0.0)
     symbolic_regulation = max(
         0.0,
         min(
@@ -11296,6 +14312,13 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (form_symbol_reframe_binding * 0.18)
             + (max(0.0, -form_symbol_development_quality) * 0.26)
             + (form_symbol_caution_trust * 0.44)
+            + (form_symbol_contact_pain_memory * 0.18)
+            + (form_symbol_contact_carefulness * 0.12)
+            + (form_symbol_contact_burden_evidence * 0.16)
+            + (variant_learning_pressure * 0.12)
+            - (form_symbol_contact_maturity * 0.08)
+            - (form_symbol_contact_utility * 0.05)
+            - (form_symbol_contact_utility_evidence * 0.05)
             - (form_symbol_action_trust * 0.10),
         ),
     )
@@ -11303,6 +14326,61 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         field_observation_need = max(0.0, min(1.0, field_observation_need + (learned_development_uncertainty * 0.08)))
         field_replan_pressure = max(0.0, min(1.0, field_replan_pressure + (form_symbol_reframe_binding * 0.06) + (learned_development_uncertainty * 0.035)))
         field_action_support = max(0.0, min(1.0, field_action_support - (learned_development_uncertainty * 0.060)))
+    contact_state_observe_bias = 0.0
+    contact_state_replan_bias = 0.0
+    contact_state_action_bias = 0.0
+    if form_symbol_contact_learning_state == "burdened_contact":
+        contact_state_observe_bias = 0.035
+        contact_state_replan_bias = 0.020
+        contact_state_action_bias = -0.030
+    elif form_symbol_contact_learning_state == "careful_contact":
+        contact_state_observe_bias = 0.026
+        contact_state_replan_bias = 0.014
+        contact_state_action_bias = -0.018
+    elif form_symbol_contact_learning_state == "learning_contact":
+        contact_state_observe_bias = 0.014
+        contact_state_replan_bias = 0.010
+        contact_state_action_bias = -0.006
+    elif form_symbol_contact_learning_state in ("maturing_contact", "constructive_contact"):
+        contact_state_action_bias = min(0.026, (form_symbol_contact_maturity * form_symbol_contact_utility) + (form_symbol_contact_utility_evidence * 0.04))
+    if form_symbol_contact_maturity > 0.0 or form_symbol_contact_pain_memory > 0.0 or form_symbol_contact_burden_evidence > 0.0:
+        field_observation_need = max(
+            0.0,
+            min(
+                1.0,
+                field_observation_need
+                + (form_symbol_contact_carefulness * 0.055)
+                + (form_symbol_contact_pain_memory * 0.040)
+                + (form_symbol_contact_burden_evidence * 0.045)
+                + contact_state_observe_bias,
+            ),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(
+                1.0,
+                field_replan_pressure
+                + (form_symbol_contact_carefulness * 0.040)
+                + (form_symbol_contact_burden_evidence * 0.025)
+                + contact_state_replan_bias,
+            ),
+        )
+        field_action_support = max(
+            0.0,
+            min(
+                1.0,
+                field_action_support
+                + (form_symbol_contact_maturity * form_symbol_contact_utility * 0.055)
+                + (form_symbol_contact_utility_evidence * 0.018)
+                - (form_symbol_contact_pain_memory * 0.035)
+                - (form_symbol_contact_burden_evidence * 0.035)
+                + contact_state_action_bias,
+            ),
+        )
+    if variant_learning_pressure > 0.0:
+        field_observation_need = max(0.0, min(1.0, field_observation_need + (variant_learning_pressure * 0.070)))
+        field_replan_pressure = max(0.0, min(1.0, field_replan_pressure + (variant_learning_pressure * 0.040)))
+        field_action_support = max(0.0, min(1.0, field_action_support - (variant_learning_pressure * 0.025)))
     memory_orientation = max(
         0.0,
         min(
@@ -11382,6 +14460,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (memory_orientation * 0.08)
             + (symbolic_action_regulation * 0.04)
             + (form_symbol_action_binding * 0.08)
+            + (variant_bearing_memory * 0.06)
+            + (uncertainty_familiarity * max(0.0, variant_bearing_memory - 0.36) * 0.04)
             - (memory_inhibition * 0.08),
         ),
     )
@@ -11401,7 +14481,22 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             (structure_action_gap * 0.58)
             + (max(0.0, 0.55 - structure_quality) * 0.42)
             + (learned_development_uncertainty * 0.35)
+            + (variant_learning_pressure * 0.18)
+            + (max(0.0, uncertain_form_exposure - variant_bearing_memory) * 0.14)
             + (max(0.0, mid_support_min - memory_support) * 1.25),
+        ),
+    )
+    structure_carrying_need = max(
+        0.0,
+        min(
+            1.0,
+            (structure_action_uncertainty * 0.34)
+            + (max(0.0, 0.58 - structure_quality) * 0.24)
+            + (max(0.0, 0.46 - context_confidence) * 0.16)
+            + (max(0.0, 0.20 - memory_orientation) * 0.12)
+            + (max(0.0, 0.22 - field_action_support) * 0.14)
+            + (variant_learning_pressure * 0.08)
+            - (variant_bearing_memory * 0.04),
         ),
     )
     if structure_action_uncertainty > 0.0:
@@ -11416,6 +14511,156 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         field_action_support = max(
             0.0,
             min(1.0, field_action_support - (structure_action_uncertainty * 0.055)),
+        )
+    visual_blind_action_load = max(
+        0.0,
+        min(
+            1.0,
+            (visual_blindness * 0.30)
+            + (max(0.0, 0.38 - visual_clarity) * 0.22)
+            + (max(0.0, 0.42 - visual_object_stability) * 0.18)
+            + (visual_shape_fragility * 0.12)
+            + (visual_form_pressure * 0.10)
+            + (max(0.0, 0.58 - structure_quality) * 0.12)
+            - (visual_shape_resonance * 0.10)
+            - (structure_action_bearing * 0.08),
+        ),
+    )
+    visual_action_uncertainty = max(
+        0.0,
+        min(
+            1.0,
+            (visual_blind_action_load * 0.44)
+            + (structure_action_uncertainty * 0.24)
+            + (max(0.0, 0.46 - field_perception_clarity) * 0.14)
+            + (max(0.0, 0.28 - field_action_support) * 0.12)
+            + (visual_form_novelty * 0.06)
+            - (memory_orientation * 0.08),
+        ),
+    )
+    visual_object_binding = max(
+        0.0,
+        min(
+            1.0,
+            (visual_object_stability * 0.24)
+            + (visual_clarity * 0.20)
+            + (visual_coherence * 0.14)
+            + (structure_quality * 0.14)
+            + (context_confidence * 0.10)
+            + (market_balance * 0.08)
+            + (min(visual_shape_resonance, visual_object_stability) * 0.10)
+            - (visual_blindness * 0.12)
+            - (visual_shape_fragility * 0.08),
+        ),
+    )
+    visual_grounding_strength = max(
+        0.0,
+        min(
+            1.0,
+            (visual_object_binding * 0.38)
+            + (structure_action_bearing * 0.20)
+            + (field_perception_clarity * 0.12)
+            + (memory_orientation * 0.10)
+            + (form_symbol_containment * 0.08)
+            + (form_symbol_object_distance * 0.06)
+            + (context_confidence * 0.06)
+            - (max(0.0, visual_shape_resonance - visual_object_binding) * 0.16),
+        ),
+    )
+    visual_resonance_unbound = max(
+        0.0,
+        min(
+            1.0,
+            (max(0.0, visual_shape_resonance - visual_object_binding) * 0.46)
+            + (visual_form_pressure * 0.14)
+            + (visual_blindness * 0.14)
+            + (visual_shape_fragility * 0.12)
+            + (max(0.0, 0.50 - context_confidence) * 0.08)
+            + (max(0.0, 0.52 - structure_quality) * 0.06),
+        ),
+    )
+    visual_grounding_gap = max(
+        0.0,
+        min(
+            1.0,
+            (max(0.0, 0.56 - visual_object_binding) * 0.30)
+            + (visual_resonance_unbound * 0.28)
+            + (max(0.0, 0.50 - visual_grounding_strength) * 0.24)
+            + (visual_blind_action_load * 0.12)
+            + (structure_action_uncertainty * 0.06),
+        ),
+    )
+    visual_grounding_need = max(
+        0.0,
+        min(
+            1.0,
+            (visual_grounding_gap * 0.36)
+            + (visual_resonance_unbound * 0.26)
+            + (visual_action_uncertainty * 0.18)
+            + (max(0.0, 0.44 - visual_clarity) * 0.10)
+            + (max(0.0, 0.46 - visual_object_stability) * 0.10),
+        ),
+    )
+    visual_rational_observation_support = max(
+        0.0,
+        min(
+            1.0,
+            (visual_grounding_need * 0.28)
+            + (acetylcholine_focus * 0.20 if 'acetylcholine_focus' in locals() else 0.0)
+            + (max(0.0, visual_shape_resonance - visual_object_binding) * 0.18)
+            + (form_symbol_object_distance * 0.12)
+            + (perceptual_distance * 0.10 if 'perceptual_distance' in locals() else 0.0)
+            + (field_perception_clarity * 0.08)
+            - (visual_grounding_strength * 0.08),
+        ),
+    )
+    visual_grounding_state = "grounded_form"
+    if visual_resonance_unbound >= 0.30 and visual_grounding_strength < 0.38:
+        visual_grounding_state = "unbound_resonance"
+    elif visual_grounding_need >= 0.32:
+        visual_grounding_state = "needs_visual_grounding"
+    elif visual_object_binding < 0.34 and visual_shape_resonance >= 0.46:
+        visual_grounding_state = "shape_without_object"
+    elif visual_grounding_strength >= 0.54 and visual_object_binding >= 0.48:
+        visual_grounding_state = "grounded_object"
+
+    if visual_grounding_need > 0.0:
+        field_observation_need = max(
+            0.0,
+            min(1.0, field_observation_need + (visual_grounding_need * 0.070)),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(1.0, field_replan_pressure + (max(0.0, visual_grounding_need - 0.22) * 0.045)),
+        )
+        field_action_support = max(
+            0.0,
+            min(1.0, field_action_support - (visual_grounding_gap * 0.035)),
+        )
+        visual_action_uncertainty = max(
+            0.0,
+            min(1.0, visual_action_uncertainty + (visual_grounding_gap * 0.075)),
+        )
+    if visual_action_uncertainty > 0.0:
+        field_observation_need = max(
+            0.0,
+            min(1.0, field_observation_need + (visual_action_uncertainty * 0.075)),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(1.0, field_replan_pressure + (visual_action_uncertainty * 0.040)),
+        )
+        field_action_support = max(
+            0.0,
+            min(1.0, field_action_support - (visual_action_uncertainty * 0.035)),
+        )
+        structure_action_uncertainty = max(
+            0.0,
+            min(1.0, structure_action_uncertainty + (visual_action_uncertainty * 0.085)),
+        )
+        structure_carrying_need = max(
+            0.0,
+            min(1.0, structure_carrying_need + (visual_action_uncertainty * 0.095)),
         )
 
     semantic_active_context_trace = _normalize_active_context_trace(fused_state.get("active_context_trace", {}) or {})
@@ -11462,6 +14707,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (form_symbol_detail_pressure * 0.08)
             + (learned_development_uncertainty * 0.14)
             + (structure_action_uncertainty * 0.12)
+            + (variant_learning_pressure * 0.10)
+            + (variant_spread * uncertain_form_exposure * 0.08)
             + (orientation_gap * 0.10)
             + (blind_thinking_load * 0.08)
             + (memory_conflict * 0.05)
@@ -11481,6 +14728,7 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (context_confidence * 0.10)
             + (field_action_support * 0.08)
             + (form_symbol_action_binding * 0.08)
+            + (variant_bearing_memory * 0.06)
             - (semantic_shift_pressure * 0.16)
             - (learned_development_uncertainty * 0.08),
         ),
@@ -11522,6 +14770,7 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (structure_action_uncertainty * 0.12)
             + (learned_development_uncertainty * 0.10)
             + (form_symbol_caution_trust * 0.06)
+            + (variant_learning_pressure * 0.08)
             - (form_symbol_action_trust * 0.06),
         ),
     )
@@ -11719,6 +14968,16 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             0.0,
             min(1.0, action_inhibition + (fatigue_excess * 0.045)),
         )
+    if visual_action_uncertainty > 0.0:
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (visual_action_uncertainty * 0.090)),
+        )
+    if variant_learning_pressure > 0.0:
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (variant_learning_pressure * 0.075)),
+        )
 
     action_clearance = max(
         0.0,
@@ -11761,6 +15020,43 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             0.0,
             min(1.0, action_clearance - (fatigue_excess * 0.035)),
         )
+    if visual_action_uncertainty > 0.0:
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance - (visual_action_uncertainty * 0.055)),
+        )
+    if variant_learning_pressure > 0.0:
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance - (variant_learning_pressure * 0.040) + (variant_bearing_memory * 0.020)),
+        )
+    plan_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (decision_strength * 0.26)
+            + (regulated_courage * 0.18)
+            + (action_clearance * 0.10)
+            + (max(0.0, structure_quality - 0.40) * 0.16)
+            + (signal_quality * 0.10)
+            + (decision_readiness * 0.10)
+            + (state_maturity * 0.10),
+        ),
+    )
+    act_watch_readiness = max(
+        0.0,
+        min(
+            1.0,
+            (plan_pressure * 0.32)
+            + (structure_carrying_need * 0.26)
+            + (learned_development_uncertainty * 0.14)
+            + (semantic_shift_pressure * 0.10)
+            + (transfer_maturity_gap * 0.10)
+            + (visual_action_uncertainty * 0.12)
+            + (variant_learning_pressure * 0.10)
+            + (max(0.0, action_inhibition - action_clearance) * 0.08),
+        ),
+    )
     orientation_gap = max(
         0.0,
         min(
@@ -11952,7 +15248,38 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         rejection_reason = "plan_allowed"
         pre_action_phase = "act"
 
-    if bool(zero_point_regulation) and not bool(allow_plan):
+    act_watch_enabled = bool(getattr(Config, "MCM_ACT_WATCH_ENABLED", True))
+    act_watch_structure_max = float(getattr(Config, "MCM_ACT_WATCH_STRUCTURE_MAX", 0.58) or 0.58)
+    act_watch_plan_pressure_min = float(getattr(Config, "MCM_ACT_WATCH_PLAN_PRESSURE_MIN", 0.44) or 0.44)
+    act_watch_maturity_min = float(getattr(Config, "MCM_ACT_WATCH_MATURITY_MIN", 0.38) or 0.38)
+    if (
+        act_watch_enabled
+        and bool(allow_plan)
+        and decision in ("LONG", "SHORT")
+        and structure_quality < act_watch_structure_max
+        and plan_pressure >= act_watch_plan_pressure_min
+        and act_watch_readiness >= act_watch_maturity_min
+        and (
+            structure_carrying_need >= 0.18
+            or structure_action_uncertainty >= 0.22
+            or learned_development_uncertainty >= 0.10
+            or visual_action_uncertainty >= 0.20
+            or variant_learning_pressure >= 0.18
+            or transfer_maturity_gap >= 0.46
+        )
+    ):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(form_symbol_reframe_binding >= 0.28 or field_replan_pressure >= 0.56)
+        allow_block = False
+        if variant_learning_pressure >= max(visual_action_uncertainty, structure_action_uncertainty, learned_development_uncertainty, transfer_maturity_gap):
+            rejection_reason = "uncertain_form_family_act_watch"
+        elif visual_action_uncertainty >= max(structure_action_uncertainty, learned_development_uncertainty, transfer_maturity_gap):
+            rejection_reason = "visual_blind_act_watch"
+        else:
+            rejection_reason = "plan_pressure_act_watch"
+        pre_action_phase = "act_watch"
+    elif bool(zero_point_regulation) and not bool(allow_plan):
         allow_observe = True
         allow_ruminate = False
         allow_block = False
@@ -12009,6 +15336,328 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         rejection_reason = "transfer_break_replan" if allow_ruminate else "transfer_break_observe"
         pre_action_phase = "replan" if allow_ruminate else "observe"
 
+    neurochemical_state = build_neurochemical_state(
+        perception,
+        processing,
+        felt,
+        thought,
+        fused_state,
+        meta_axes={
+            "signal_quality": signal_quality,
+            "decision_strength": decision_strength,
+            "decision_readiness": decision_readiness,
+            "state_maturity": state_maturity,
+            "processing_load": processing_load,
+            "processing_tension": processing_tension,
+            "processing_alignment": processing_alignment,
+            "field_perception_pressure": field_perception_pressure,
+            "field_perception_support": field_perception_support,
+            "field_perception_clarity": field_perception_clarity,
+            "field_perception_focus": field_perception_focus,
+            "field_perception_stability": field_perception_stability,
+            "field_perception_fragmentation": field_perception_fragmentation,
+            "field_perception_strain": field_perception_strain,
+            "field_activity_island_activation_mean": field_activity_island_activation_mean,
+            "field_activity_island_pressure_mean": field_activity_island_pressure_mean,
+            "field_activity_island_context_reactivation_mean": field_activity_island_context_reactivation_mean,
+            "visual_clarity": visual_clarity,
+            "visual_object_stability": visual_object_stability,
+            "visual_blindness": visual_blindness,
+            "visual_form_pressure": visual_form_pressure,
+            "visual_shape_resonance": visual_shape_resonance,
+            "visual_shape_fragility": visual_shape_fragility,
+            "visual_blind_action_load": visual_blind_action_load,
+            "visual_action_uncertainty": visual_action_uncertainty,
+            "felt_pressure": felt_pressure,
+            "felt_stability": float(felt.get("felt_stability", 0.0) or 0.0),
+            "felt_alignment": felt_alignment,
+            "pressure_release": float(felt.get("pressure_release", 0.0) or 0.0),
+            "experience_regulation": experience_regulation,
+            "load_bearing_capacity": load_bearing_capacity,
+            "stress_relief_potential": float(felt.get("stress_relief_potential", 0.0) or 0.0),
+            "protective_courage": protective_courage,
+            "memory_support": memory_support,
+            "memory_inhibition": memory_inhibition,
+            "memory_compare_load": memory_compare_load,
+            "memory_conflict": memory_conflict,
+            "cognitive_load": cognitive_load,
+            "decision_energy_cost": decision_energy_cost,
+            "thinking_complexity": thinking_complexity,
+            "memory_orientation": memory_orientation,
+            "orientation_gap": orientation_gap,
+            "blind_thinking_load": blind_thinking_load,
+            "action_inhibition": action_inhibition,
+            "action_clearance": action_clearance,
+            "regulated_courage": regulated_courage,
+            "plan_pressure": plan_pressure,
+            "act_watch_readiness": act_watch_readiness,
+            "structure_action_uncertainty": structure_action_uncertainty,
+            "structure_carrying_need": structure_carrying_need,
+            "field_observation_need": field_observation_need,
+            "field_replan_pressure": field_replan_pressure,
+            "field_action_support": field_action_support,
+            "semantic_shift_pressure": semantic_shift_pressure,
+            "transfer_bearing": transfer_bearing,
+            "trust_transfer_support": trust_transfer_support,
+            "transfer_maturity_gap": transfer_maturity_gap,
+            "transfer_break_fatigue": transfer_break_fatigue,
+            "interpretation_quality": interpretation_quality,
+            "route_familiarity": route_familiarity,
+            "learned_development_uncertainty": learned_development_uncertainty,
+            "variant_learning_pressure": variant_learning_pressure,
+            "variant_bearing_memory": variant_bearing_memory,
+            "uncertainty_familiarity": uncertainty_familiarity,
+            "form_symbol_development_quality": form_symbol_development_quality,
+            "form_symbol_learning_trust": form_symbol_learning_trust,
+            "form_symbol_action_trust": form_symbol_action_trust,
+            "form_symbol_caution_trust": form_symbol_caution_trust,
+        },
+    )
+    conscious_perception_state = build_conscious_perception_state(
+        perception,
+        processing,
+        felt,
+        thought,
+        fused_state,
+        neurochemical_state=neurochemical_state,
+        meta_axes={
+            "field_perception_pressure": field_perception_pressure,
+            "field_perception_support": field_perception_support,
+            "field_perception_clarity": field_perception_clarity,
+            "field_perception_focus": field_perception_focus,
+            "field_perception_stability": field_perception_stability,
+            "field_perception_fragmentation": field_perception_fragmentation,
+            "field_perception_strain": field_perception_strain,
+            "field_observation_need": field_observation_need,
+            "field_replan_pressure": field_replan_pressure,
+            "field_action_support": field_action_support,
+            "visual_clarity": visual_clarity,
+            "visual_object_stability": visual_object_stability,
+            "visual_blindness": visual_blindness,
+            "visual_form_pressure": visual_form_pressure,
+            "visual_form_novelty": visual_form_novelty,
+            "visual_action_uncertainty": visual_action_uncertainty,
+            "felt_pressure": felt_pressure,
+            "felt_stability": float(felt.get("felt_stability", 0.0) or 0.0),
+            "felt_alignment": felt_alignment,
+            "aftereffect_pressure": aftereffect_pressure,
+            "pressure_release": float(felt.get("pressure_release", 0.0) or 0.0),
+            "experience_regulation": experience_regulation,
+            "load_bearing_capacity": load_bearing_capacity,
+            "memory_support": memory_support,
+            "memory_compare_load": memory_compare_load,
+            "cognitive_load": cognitive_load,
+            "memory_orientation": memory_orientation,
+            "orientation_gap": orientation_gap,
+            "blind_thinking_load": blind_thinking_load,
+            "structure_action_uncertainty": structure_action_uncertainty,
+            "semantic_shift_pressure": semantic_shift_pressure,
+            "transfer_bearing": transfer_bearing,
+            "interpretation_quality": interpretation_quality,
+            "action_clearance": action_clearance,
+            "action_inhibition": action_inhibition,
+            "symbolic_regulation": symbolic_regulation,
+            "symbolic_object_distance": form_symbol_object_distance,
+            "symbolic_containment": form_symbol_containment,
+            "symbolic_field_decoupling": form_symbol_field_decoupling,
+            "form_symbol_observation_binding": form_symbol_observation_binding,
+            "form_symbol_reframe_binding": form_symbol_reframe_binding,
+            "variant_learning_pressure": variant_learning_pressure,
+            "uncertainty_familiarity": uncertainty_familiarity,
+        },
+    )
+    conscious_label = str(conscious_perception_state.get("conscious_perception_state", "open_perception") or "open_perception")
+    inner_posture_label = str(conscious_perception_state.get("inner_posture_state", "uncertain_open") or "uncertain_open")
+    perceptual_distance = float(conscious_perception_state.get("perceptual_distance", 0.0) or 0.0)
+    object_contact_depth = float(conscious_perception_state.get("object_contact_depth", 0.0) or 0.0)
+    field_attachment = float(conscious_perception_state.get("field_attachment", 0.0) or 0.0)
+    release_capacity = float(conscious_perception_state.get("release_capacity", 0.0) or 0.0)
+    inner_outer_alignment = float(conscious_perception_state.get("inner_outer_alignment", 0.0) or 0.0)
+    selective_attention = float(conscious_perception_state.get("selective_attention", 0.0) or 0.0)
+    curiosity_tone = float(conscious_perception_state.get("curiosity_tone", 0.0) or 0.0)
+    fatigue_tone = float(conscious_perception_state.get("fatigue_tone", 0.0) or 0.0)
+    calm_tone = float(conscious_perception_state.get("calm_tone", 0.0) or 0.0)
+    arousal_load = float(conscious_perception_state.get("arousal_load", 0.0) or 0.0)
+    previous_packet_feedback = dict(getattr(bot, "last_experience_packet_feedback", {}) or {}) if bot is not None else {}
+    previous_packet_process_reward = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_process_reward", 0.0) or 0.0)))
+    previous_packet_bearing_quality = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_bearing_quality", 0.0) or 0.0)))
+    previous_packet_inner_outer_fit = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_inner_outer_fit", 0.0) or 0.0)))
+    previous_packet_repetition_potential = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_repetition_potential", 0.0) or 0.0)))
+    previous_packet_curiosity_pull = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_curiosity_pull", 0.0) or 0.0)))
+    previous_packet_reorganization_need = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_reorganization_need", 0.0) or 0.0)))
+    previous_constructive_stimulation = max(0.0, min(1.0, float(previous_packet_feedback.get("constructive_stimulation", 0.0) or 0.0)))
+    previous_constructive_dopamine = max(0.0, min(1.0, float(previous_packet_feedback.get("constructive_dopamine", 0.0) or 0.0)))
+    previous_stabilizing_serotonin = max(0.0, min(1.0, float(previous_packet_feedback.get("stabilizing_serotonin", 0.0) or 0.0)))
+    previous_packet_label = str(previous_packet_feedback.get("experience_packet_label", "-") or "-").strip().lower() or "-"
+    engaged_effort = max(
+        0.0,
+        min(
+            1.0,
+            (previous_packet_process_reward * 0.15)
+            + (previous_constructive_stimulation * 0.13)
+            + (previous_packet_bearing_quality * 0.10)
+            + (previous_packet_inner_outer_fit * 0.08)
+            + (previous_constructive_dopamine * 0.06)
+            + (previous_stabilizing_serotonin * 0.05)
+            + (structure_action_bearing * 0.15)
+            + (field_action_support * 0.10)
+            + (inner_outer_alignment * 0.08)
+            + (regulated_courage * 0.08)
+            + (curiosity_tone * 0.05)
+            + (previous_packet_repetition_potential * 0.05)
+            - (previous_packet_reorganization_need * 0.08)
+            - (structure_action_uncertainty * 0.08)
+            - (fatigue_tone * 0.05),
+        ),
+    )
+    effort_reorganization_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (previous_packet_reorganization_need * 0.28)
+            + (structure_action_uncertainty * 0.30)
+            + (max(0.0, 0.52 - structure_action_bearing) * 0.18)
+            + (max(0.0, 0.46 - field_action_support) * 0.12)
+            + (max(0.0, 0.46 - engaged_effort) * 0.22)
+            + (fatigue_tone * 0.08)
+            - (previous_packet_process_reward * 0.08)
+            - (curiosity_tone * 0.04),
+        ),
+    )
+    pre_action_reorganization_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (previous_packet_reorganization_need * 0.20)
+            + (max(0.0, 0.42 - previous_packet_process_reward) * 0.18)
+            + ((1.0 if previous_packet_label == "reorganize_packet" else 0.0) * 0.08)
+            + (structure_action_uncertainty * 0.22)
+            + (max(0.0, 0.58 - structure_quality) * 0.20)
+            + (max(0.0, 0.46 - context_confidence) * 0.14)
+            + (max(0.0, 0.54 - structure_action_bearing) * 0.20)
+            + (max(0.0, 0.48 - field_action_support) * 0.14)
+            + (max(0.0, 0.46 - interpretation_quality) * 0.08)
+            + (max(0.0, 0.42 - inner_outer_alignment) * 0.06)
+            - (previous_constructive_stimulation * 0.08)
+            - (max(0.0, structure_quality - 0.62) * 0.18)
+            - (max(0.0, context_confidence - 0.52) * 0.10)
+            - (max(0.0, structure_action_bearing - 0.54) * 0.10)
+            - (max(0.0, field_action_support - 0.50) * 0.06),
+        ),
+    )
+    pre_action_context_selectivity = max(
+        0.0,
+        min(
+            1.0,
+            (structure_action_bearing * 0.24)
+            + (structure_quality * 0.22)
+            + (context_confidence * 0.12)
+            + (field_action_support * 0.18)
+            + (interpretation_quality * 0.16)
+            + (inner_outer_alignment * 0.12)
+            + (engaged_effort * 0.12)
+            + (previous_packet_process_reward * 0.10)
+            + (previous_constructive_stimulation * 0.08)
+            - (pre_action_reorganization_pressure * 0.18),
+        ),
+    )
+    effort_learning_pull = max(
+        0.0,
+        min(
+            1.0,
+            (previous_packet_curiosity_pull * 0.20)
+            + (previous_packet_repetition_potential * 0.18)
+            + (previous_constructive_stimulation * 0.16)
+            + (object_contact_depth * 0.12)
+            + (selective_attention * 0.10)
+            + (curiosity_tone * 0.10)
+            + (max(0.0, 0.50 - previous_packet_bearing_quality) * 0.08)
+            - (fatigue_tone * 0.08),
+        ),
+    )
+    effort_state = "settled_effort"
+    if (effort_reorganization_pressure >= 0.30 or pre_action_reorganization_pressure >= 0.36) and engaged_effort < 0.45:
+        effort_state = "underengaged_reorganize"
+    elif engaged_effort >= 0.48 and effort_reorganization_pressure < 0.30 and pre_action_reorganization_pressure < 0.34:
+        effort_state = "engaged_bearing"
+    elif effort_learning_pull >= 0.34 and engaged_effort >= 0.34:
+        effort_state = "curious_effort"
+    elif previous_packet_label == "constructive_packet" and engaged_effort >= 0.42:
+        effort_state = "constructive_echo"
+    if effort_state in ("engaged_bearing", "constructive_echo", "curious_effort"):
+        effort_boost = max(0.0, engaged_effort - 0.40)
+        field_action_support = max(0.0, min(1.0, field_action_support + (effort_boost * 0.045)))
+        action_clearance = max(0.0, min(1.0, action_clearance + (effort_boost * 0.040)))
+        act_watch_readiness = max(0.0, min(1.0, act_watch_readiness + (effort_learning_pull * 0.040)))
+    elif effort_state == "underengaged_reorganize":
+        reorganization_signal = max(effort_reorganization_pressure, pre_action_reorganization_pressure)
+        field_observation_need = max(0.0, min(1.0, field_observation_need + (reorganization_signal * 0.085)))
+        field_replan_pressure = max(0.0, min(1.0, field_replan_pressure + (max(0.0, reorganization_signal - 0.24) * 0.075)))
+        action_inhibition = max(0.0, min(1.0, action_inhibition + (reorganization_signal * 0.050)))
+        action_clearance = max(0.0, min(1.0, action_clearance - (reorganization_signal * 0.045)))
+        act_watch_readiness = max(0.0, min(1.0, act_watch_readiness + (effort_learning_pull * 0.060) + (reorganization_signal * 0.055)))
+    diffuse_open_development_pressure = max(
+        0.0,
+        min(
+            1.0,
+            ((1.0 if inner_posture_label == "uncertain_open" else 0.0) * 0.24)
+            + ((1.0 if conscious_label == "open_perception" else 0.0) * 0.12)
+            + (max(0.0, 0.22 - object_contact_depth) * 0.70)
+            + (max(0.0, 0.20 - perceptual_distance) * 0.55)
+            + (max(0.0, 0.20 - release_capacity) * 0.50)
+            + (max(0.0, 0.26 - inner_outer_alignment) * 0.42)
+            + (max(0.0, 0.16 - curiosity_tone) * 0.26)
+            - (calm_tone * 0.08)
+            - (field_attachment * 0.06),
+        ),
+    )
+    posture_development_hint = "stable_posture"
+    if diffuse_open_development_pressure >= 0.34:
+        if object_contact_depth < 0.20 and curiosity_tone < 0.16:
+            posture_development_hint = "develop_object_contact"
+        elif perceptual_distance < 0.18 or inner_outer_alignment < 0.24:
+            posture_development_hint = "develop_reflective_distance"
+        elif release_capacity < 0.18:
+            posture_development_hint = "develop_release_capacity"
+        else:
+            posture_development_hint = "develop_observation"
+
+        field_observation_need = max(0.0, min(1.0, field_observation_need + (diffuse_open_development_pressure * 0.055)))
+        field_replan_pressure = max(0.0, min(1.0, field_replan_pressure + (diffuse_open_development_pressure * 0.030)))
+        action_inhibition = max(0.0, min(1.0, action_inhibition + (diffuse_open_development_pressure * 0.060)))
+        action_clearance = max(0.0, min(1.0, action_clearance - (diffuse_open_development_pressure * 0.040)))
+        act_watch_readiness = max(0.0, min(1.0, act_watch_readiness + (diffuse_open_development_pressure * 0.080)))
+
+    if (
+        bool(allow_plan)
+        and decision in ("LONG", "SHORT")
+        and effort_state == "underengaged_reorganize"
+        and pre_action_reorganization_pressure >= 0.34
+        and pre_action_context_selectivity < 0.46
+        and decision_strength < (1.24 + effort_learning_pull * 0.34)
+    ):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(field_replan_pressure >= 0.52 or effort_learning_pull >= 0.30 or pre_action_reorganization_pressure >= 0.42)
+        allow_block = False
+        rejection_reason = "pre_action_reorganization_replan" if allow_ruminate else "pre_action_reorganization_observe"
+        pre_action_phase = "replan" if allow_ruminate else "observe"
+    elif (
+        bool(allow_plan)
+        and decision in ("LONG", "SHORT")
+        and diffuse_open_development_pressure >= 0.38
+        and decision_strength < (1.16 + max(0.0, curiosity_tone - 0.12) * 0.60 + max(0.0, calm_tone - 0.10) * 0.40)
+    ):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(
+            posture_development_hint in ("develop_reflective_distance", "develop_release_capacity")
+            or field_replan_pressure >= 0.56
+        )
+        allow_block = False
+        rejection_reason = "diffuse_open_reframe" if allow_ruminate else "diffuse_open_observe"
+        pre_action_phase = "replan" if allow_ruminate else "observe"
+
     return {
         "allow_observe": bool(allow_observe),
         "allow_ruminate": bool(allow_ruminate),
@@ -12049,6 +15698,22 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "market_balance": float(market_balance),
         "breakout_tension": float(breakout_tension),
         "visual_coherence": float(visual_coherence),
+        "visual_clarity": float(visual_clarity),
+        "visual_object_stability": float(visual_object_stability),
+        "visual_form_novelty": float(visual_form_novelty),
+        "visual_blindness": float(visual_blindness),
+        "visual_form_pressure": float(visual_form_pressure),
+        "visual_shape_resonance": float(visual_shape_resonance),
+        "visual_shape_fragility": float(visual_shape_fragility),
+        "visual_blind_action_load": float(visual_blind_action_load),
+        "visual_action_uncertainty": float(visual_action_uncertainty),
+        "visual_object_binding": float(visual_object_binding),
+        "visual_grounding_strength": float(visual_grounding_strength),
+        "visual_resonance_unbound": float(visual_resonance_unbound),
+        "visual_grounding_gap": float(visual_grounding_gap),
+        "visual_grounding_need": float(visual_grounding_need),
+        "visual_rational_observation_support": float(visual_rational_observation_support),
+        "visual_grounding_state": str(visual_grounding_state),
         "external_pressure": float(external_pressure),
         "inner_conflict_pressure": float(inner_conflict_pressure),
         "repetition_pressure": float(repetition_pressure),
@@ -12064,6 +15729,17 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "courage_gap": float(courage_gap),
         "action_inhibition": float(action_inhibition),
         "action_clearance": float(action_clearance),
+        "engaged_effort": float(engaged_effort),
+        "effort_state": str(effort_state),
+        "effort_learning_pull": float(effort_learning_pull),
+        "effort_reorganization_pressure": float(effort_reorganization_pressure),
+        "pre_action_reorganization_pressure": float(pre_action_reorganization_pressure),
+        "pre_action_context_selectivity": float(pre_action_context_selectivity),
+        "previous_packet_label": str(previous_packet_label),
+        "previous_packet_process_reward": float(previous_packet_process_reward),
+        "previous_packet_reorganization_need": float(previous_packet_reorganization_need),
+        "diffuse_open_development_pressure": float(diffuse_open_development_pressure),
+        "posture_development_hint": str(posture_development_hint),
         "memory_orientation": float(memory_orientation),
         "orientation_gap": float(orientation_gap),
         "blind_thinking_load": float(blind_thinking_load),
@@ -12083,6 +15759,20 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "form_symbol_learning_trust": float(form_symbol_learning_trust),
         "form_symbol_action_trust": float(form_symbol_action_trust),
         "form_symbol_caution_trust": float(form_symbol_caution_trust),
+        "form_symbol_contact_maturity": float(form_symbol_contact_maturity),
+        "form_symbol_contact_utility": float(form_symbol_contact_utility),
+        "form_symbol_contact_pain_memory": float(form_symbol_contact_pain_memory),
+        "form_symbol_contact_carefulness": float(form_symbol_contact_carefulness),
+        "form_symbol_contact_burden_evidence": float(form_symbol_contact_burden_evidence),
+        "form_symbol_contact_utility_evidence": float(form_symbol_contact_utility_evidence),
+        "form_symbol_contact_learning_state": str(form_symbol_contact_learning_state),
+        "uncertain_form_family_state": str(uncertain_form_family_state),
+        "uncertain_form_exposure": float(uncertain_form_exposure),
+        "uncertainty_familiarity": float(uncertainty_familiarity),
+        "variant_similarity": float(variant_similarity),
+        "variant_spread": float(variant_spread),
+        "variant_learning_pressure": float(variant_learning_pressure),
+        "variant_bearing_memory": float(variant_bearing_memory),
         "learned_development_uncertainty": float(learned_development_uncertainty),
         "zero_point_regulation": bool(zero_point_regulation),
         "zero_point_hint": "finde_wieder_zu_dir_selbst" if bool(zero_point_regulation) else "-",
@@ -12093,6 +15783,9 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "structure_action_bearing": float(structure_action_bearing),
         "structure_action_gap": float(structure_action_gap),
         "structure_action_uncertainty": float(structure_action_uncertainty),
+        "structure_carrying_need": float(structure_carrying_need),
+        "plan_pressure": float(plan_pressure),
+        "act_watch_readiness": float(act_watch_readiness),
         "structure_orientation_guard": bool(structure_orientation_guard),
         "known_form_support": float(known_form_support),
         "route_familiarity": float(route_familiarity),
@@ -12108,6 +15801,46 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "transfer_recovery_need": float(transfer_recovery_need),
         "transfer_break_trigger": float(transfer_break_trigger),
         "transfer_break_ready": bool(transfer_break_ready),
+        "neurochemical_state": dict(neurochemical_state or {}),
+        "neurochemical_state_label": str(neurochemical_state.get("neurochemical_state_label", "mixed_neurochemistry") or "mixed_neurochemistry"),
+        "neurochemical_dominant_tone": str(neurochemical_state.get("neurochemical_dominant_tone", "-") or "-"),
+        "dopamine_tone": float(neurochemical_state.get("dopamine_tone", 0.0) or 0.0),
+        "gaba_inhibition": float(neurochemical_state.get("gaba_inhibition", 0.0) or 0.0),
+        "noradrenaline_arousal": float(neurochemical_state.get("noradrenaline_arousal", 0.0) or 0.0),
+        "acetylcholine_focus": float(neurochemical_state.get("acetylcholine_focus", 0.0) or 0.0),
+        "serotonin_stability": float(neurochemical_state.get("serotonin_stability", 0.0) or 0.0),
+        "cortisol_load": float(neurochemical_state.get("cortisol_load", 0.0) or 0.0),
+        "endorphin_relief": float(neurochemical_state.get("endorphin_relief", 0.0) or 0.0),
+        "glutamate_activation": float(neurochemical_state.get("glutamate_activation", 0.0) or 0.0),
+        "neurochemical_load": float(neurochemical_state.get("neurochemical_load", 0.0) or 0.0),
+        "neurochemical_support": float(neurochemical_state.get("neurochemical_support", 0.0) or 0.0),
+        "neurochemical_balance": float(neurochemical_state.get("neurochemical_balance", 0.0) or 0.0),
+        "reward_stability_echo": float(neurochemical_state.get("reward_stability_echo", 0.0) or 0.0),
+        "world_shift_evidence": float(neurochemical_state.get("world_shift_evidence", 0.0) or 0.0),
+        "serotonin_carryover_risk": float(neurochemical_state.get("serotonin_carryover_risk", 0.0) or 0.0),
+        "emotional_decoupling": float(neurochemical_state.get("emotional_decoupling", 0.0) or 0.0),
+        "reactive_nervous_drive": float(neurochemical_state.get("reactive_nervous_drive", 0.0) or 0.0),
+        "conscious_perception": dict(conscious_perception_state or {}),
+        "conscious_perception_state": str(conscious_perception_state.get("conscious_perception_state", "open_perception") or "open_perception"),
+        "inner_posture_state": str(conscious_perception_state.get("inner_posture_state", "uncertain_open") or "uncertain_open"),
+        "arousal_load": float(conscious_perception_state.get("arousal_load", 0.0) or 0.0),
+        "curiosity_tone": float(conscious_perception_state.get("curiosity_tone", 0.0) or 0.0),
+        "fatigue_tone": float(conscious_perception_state.get("fatigue_tone", 0.0) or 0.0),
+        "calm_tone": float(conscious_perception_state.get("calm_tone", 0.0) or 0.0),
+        "stimulus_field_effect": float(conscious_perception_state.get("stimulus_field_effect", 0.0) or 0.0),
+        "inner_impact_trace": float(conscious_perception_state.get("inner_impact_trace", 0.0) or 0.0),
+        "perceived_field_change": float(conscious_perception_state.get("perceived_field_change", 0.0) or 0.0),
+        "felt_afterimage": float(conscious_perception_state.get("felt_afterimage", 0.0) or 0.0),
+        "object_release_state": str(conscious_perception_state.get("object_release_state", "holding") or "holding"),
+        "inner_outer_reflection": float(conscious_perception_state.get("inner_outer_reflection", 0.0) or 0.0),
+        "perceptual_distance": float(conscious_perception_state.get("perceptual_distance", 0.0) or 0.0),
+        "object_contact_depth": float(conscious_perception_state.get("object_contact_depth", 0.0) or 0.0),
+        "field_attachment": float(conscious_perception_state.get("field_attachment", 0.0) or 0.0),
+        "release_capacity": float(conscious_perception_state.get("release_capacity", 0.0) or 0.0),
+        "selective_attention": float(conscious_perception_state.get("selective_attention", 0.0) or 0.0),
+        "background_containment": float(conscious_perception_state.get("background_containment", 0.0) or 0.0),
+        "reflective_distance": float(conscious_perception_state.get("reflective_distance", 0.0) or 0.0),
+        "inner_outer_alignment": float(conscious_perception_state.get("inner_outer_alignment", 0.0) or 0.0),
         "readiness": float(decision_readiness),
         "maturity": float(state_maturity),
         "uncertainty": float(uncertainty_score),
@@ -12394,6 +16127,22 @@ def build_perception_state(world_state, bot=None):
     market_balance = float(visual_market_state.get("market_balance", 0.0) or 0.0)
     breakout_tension = float(visual_market_state.get("breakout_tension", 0.0) or 0.0)
     visual_coherence = float(visual_market_state.get("visual_coherence", 0.0) or 0.0)
+    visual_form_state = dict(visual_market_state.get("visual_form_state", {}) or {})
+    visual_clarity = float(visual_market_state.get("visual_clarity", 0.0) or 0.0)
+    visual_object_stability = float(visual_market_state.get("visual_object_stability", 0.0) or 0.0)
+    visual_form_novelty = float(visual_market_state.get("visual_form_novelty", 0.0) or 0.0)
+    visual_blindness = float(visual_market_state.get("visual_blindness", 0.0) or 0.0)
+    visual_form_pressure = float(visual_market_state.get("visual_form_pressure", 0.0) or 0.0)
+    visual_shape_resonance = float(visual_market_state.get("visual_shape_resonance", 0.0) or 0.0)
+    visual_shape_fragility = float(visual_market_state.get("visual_shape_fragility", 0.0) or 0.0)
+    sensory_reality_pressure = float(visual_market_state.get("sensory_reality_pressure", 0.0) or 0.0)
+    sensory_load = float(visual_market_state.get("sensory_load", 0.0) or 0.0)
+    sensory_redundancy = float(visual_market_state.get("sensory_redundancy", 0.0) or 0.0)
+    sensory_habituation = float(visual_market_state.get("sensory_habituation", 0.0) or 0.0)
+    sensory_gate = float(visual_market_state.get("sensory_gate", 1.0) or 1.0)
+    sensory_active_axis_count = int(visual_market_state.get("sensory_active_axis_count", 0) or 0)
+    sensory_primary_pressure = float(visual_market_state.get("sensory_primary_pressure", 0.0) or 0.0)
+    sensory_reality_label = str(visual_market_state.get("sensory_reality_label", "quiet_outer_reality") or "quiet_outer_reality")
 
     coherence = float((tension_state or {}).get("coherence", 0.0) or 0.0)
     energy = float((tension_state or {}).get("energy", 0.0) or 0.0)
@@ -12414,8 +16163,8 @@ def build_perception_state(world_state, bot=None):
         ),
     )
 
-    uncertainty_score = max(0.0, min(1.0, (noise_damp * 0.20) + (filtered_threat_map * 0.16) + max(0.0, abs(focus_direction) - focus_confidence) * 0.16 + max(0.0, 1.0 - signal_relevance) * 0.16 + max(0.0, abs(coherence - close_position)) * 0.08 + (breakout_tension * 0.12) + (abs(spatial_bias - directional_bias) * 0.12) - (perception_settle * 0.16) - (market_balance * 0.10)))
-    novelty_score = max(0.0, min(1.0, abs(signal_relevance - prev_signal_relevance) * 0.32 + abs(return_intensity) * 0.16 + abs(filtered_optic_flow) * 0.12 + abs(energy - coherence) * 0.08 + abs(close_position) * 0.06 + abs(short_impulse - mid_impulse) * 0.16 + abs(range_position) * 0.10 - (perception_settle * 0.12)))
+    uncertainty_score = max(0.0, min(1.0, (noise_damp * 0.20) + (filtered_threat_map * 0.16) + max(0.0, abs(focus_direction) - focus_confidence) * 0.16 + max(0.0, 1.0 - signal_relevance) * 0.16 + max(0.0, abs(coherence - close_position)) * 0.08 + (breakout_tension * 0.08) + (sensory_load * 0.08) + (abs(spatial_bias - directional_bias) * 0.10) - (sensory_habituation * 0.08) - (perception_settle * 0.16) - (market_balance * 0.10)))
+    novelty_score = max(0.0, min(1.0, abs(signal_relevance - prev_signal_relevance) * 0.28 + abs(return_intensity) * 0.14 + abs(filtered_optic_flow) * 0.10 + abs(energy - coherence) * 0.07 + abs(close_position) * 0.05 + abs(short_impulse - mid_impulse) * 0.13 + abs(range_position) * 0.08 + (sensory_reality_pressure * 0.06) - (sensory_habituation * 0.10) - (perception_settle * 0.12)))
     signal_quality = max(0.0, min(1.0, (signal_relevance * 0.24) + (focus_confidence * 0.18) + (target_lock * 0.14) + (focus_strength * 0.08) + (max(0.0, filtered_target_map) * 0.08) + (visual_coherence * 0.12) + (market_balance * 0.10) + (max(0.0, 1.0 - breakout_tension) * 0.06) + (perception_settle * 0.14) - (uncertainty_score * 0.14)))
     observe_priority = max(0.0, min(1.0, (uncertainty_score * 0.42) + (novelty_score * 0.16) + (max(0.0, 1.0 - signal_quality) * 0.20) + (breakout_tension * 0.08) + (0.12 if observation_mode else 0.0) - (perception_settle * 0.20) - (market_balance * 0.08)))
 
@@ -12438,6 +16187,22 @@ def build_perception_state(world_state, bot=None):
         "market_balance": float(market_balance),
         "breakout_tension": float(breakout_tension),
         "visual_coherence": float(visual_coherence),
+        "visual_form_state": dict(visual_form_state or {}),
+        "visual_clarity": float(visual_clarity),
+        "visual_object_stability": float(visual_object_stability),
+        "visual_form_novelty": float(visual_form_novelty),
+        "visual_blindness": float(visual_blindness),
+        "visual_form_pressure": float(visual_form_pressure),
+        "visual_shape_resonance": float(visual_shape_resonance),
+        "visual_shape_fragility": float(visual_shape_fragility),
+        "sensory_reality_pressure": float(sensory_reality_pressure),
+        "sensory_load": float(sensory_load),
+        "sensory_redundancy": float(sensory_redundancy),
+        "sensory_habituation": float(sensory_habituation),
+        "sensory_gate": float(sensory_gate),
+        "sensory_active_axis_count": int(sensory_active_axis_count),
+        "sensory_primary_pressure": float(sensory_primary_pressure),
+        "sensory_reality_label": str(sensory_reality_label),
         "structure_seen": float(structure_perception_state.get("structure_seen", 0.0) or 0.0),
         "structure_high": float(structure_perception_state.get("structure_high", 0.0) or 0.0),
         "structure_low": float(structure_perception_state.get("structure_low", 0.0) or 0.0),
@@ -12678,6 +16443,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         thought_state,
         fused,
         pause_mode=pause_mode,
+        bot=bot,
     )
     review_feedback_state = _resolve_review_decision_feedback(
         bot=bot,
@@ -12725,6 +16491,67 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     meta_regulation_state["observation_scoped_balance"] = float(review_feedback_state.get("observation_scoped_balance", 0.0) or 0.0)
     meta_regulation_state["observation_low_count"] = int(review_feedback_state.get("observation_low_count", 0) or 0)
 
+    strategic_window_state = build_strategic_window_state(
+        window,
+        candle_state=candle_state,
+        visual_market_state=visual_market_state,
+        structure_perception_state=structure_perception_state,
+        form_symbol_state=form_symbol_state,
+        meta_regulation_state=meta_regulation_state,
+        bot=bot,
+    )
+    meta_regulation_state["strategic_window_state"] = str(strategic_window_state.get("strategic_window_state", "no_area_focus") or "no_area_focus")
+    meta_regulation_state["strategic_pressure_interpretation"] = float(strategic_window_state.get("strategic_pressure_interpretation", 0.0) or 0.0)
+    meta_regulation_state["strategic_patience"] = float(strategic_window_state.get("strategic_patience", 0.0) or 0.0)
+    meta_regulation_state["lookback_bearing_capacity"] = float(strategic_window_state.get("lookback_bearing_capacity", 0.0) or 0.0)
+    meta_regulation_state["area_bearing_quality"] = float(strategic_window_state.get("area_bearing_quality", 0.0) or 0.0)
+    meta_regulation_state["area_order_intention"] = float(strategic_window_state.get("area_order_intention", 0.0) or 0.0)
+
+    active_mcm_contact_state = build_active_mcm_contact_state(
+        perception_state=perception_state,
+        processing_state=processing_state,
+        felt_state=felt_state,
+        thought_state=thought_state,
+        meta_regulation_state=meta_regulation_state,
+        strategic_window_state=strategic_window_state,
+    )
+    meta_regulation_state["active_mcm_contact"] = dict(active_mcm_contact_state or {})
+    meta_regulation_state["active_mcm_contact_state"] = str(active_mcm_contact_state.get("active_mcm_contact_state", "background_scan") or "background_scan")
+    meta_regulation_state["contact_posture"] = str(active_mcm_contact_state.get("contact_posture", "background_scan") or "background_scan")
+    for _contact_key in (
+        "contact_interest",
+        "contact_focus_pull",
+        "contact_resonance_probe",
+        "outer_inner_resonance",
+        "outer_inner_coherence",
+        "inner_change_from_contact",
+        "contact_carrying_quality",
+        "contact_overcoupling_risk",
+        "contact_release_readiness",
+        "contact_deepen_pull",
+        "contact_replay_pull",
+        "contact_curiosity",
+        "contact_felt_shift",
+        "contact_selected_depth",
+        "contact_salience",
+        "overcoupled_touch_score",
+        "release_contact_score",
+        "deepening_contact_score",
+        "resonant_contact_score",
+        "reflective_contact_score",
+        "curious_touch_score",
+        "contact_action_maturity",
+        "contact_bearing_gap",
+        "contact_impulse_vs_bearing",
+        "contact_learning_need",
+        "contact_reality_check",
+        "contact_regime_mismatch",
+        "contact_stability_carryover",
+        "contact_context_maturity",
+        "contact_context_reframe_need",
+    ):
+        meta_regulation_state[_contact_key] = float(active_mcm_contact_state.get(_contact_key, 0.0) or 0.0)
+
     bot.visual_market_state = dict(visual_market_state)
     bot.temporal_perception_state = dict(temporal_perception_state)
     bot.perception_state = dict(perception_state)
@@ -12734,9 +16561,12 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     bot.processing_state = dict(processing_state)
     bot.expectation_state = dict(expectation_state or {})
     bot.form_symbol_state = dict(form_symbol_state or {})
+    bot.strategic_window_state = dict(strategic_window_state or {})
+    bot.active_mcm_contact_state = dict(active_mcm_contact_state or {})
     bot.felt_state = dict(felt_state)
     bot.thought_state = dict(thought_state)
     bot.meta_regulation_state = dict(meta_regulation_state)
+    bot.neurochemical_state = dict(meta_regulation_state.get("neurochemical_state", {}) or {})
 
     decision = str(meta_regulation_state.get("decision", fused.get("decision", "WAIT")) or "WAIT")
 
@@ -12796,8 +16626,11 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "felt_state": dict(felt_state or {}),
             "thought_state": dict(thought_state or {}),
             "meta_regulation_state": dict(meta_regulation_state or {}),
+            "neurochemical_state": dict(meta_regulation_state.get("neurochemical_state", {}) or {}),
             "expectation_state": dict(expectation_state or {}),
             "form_symbol_state": dict(form_symbol_state or {}),
+            "strategic_window_state": dict(strategic_window_state or {}),
+            "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
             "state_signature": dict(state_signature or {}),
             "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
             "signature_bias": float(fused.get("signature_bias", 0.0) or 0.0),
@@ -12826,6 +16659,8 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             felt_state=felt_state,
             thought_state=thought_state,
         )
+        _record_strategic_window_protocol(bot, result)
+        _record_active_mcm_contact_protocol(bot, result)
         return result
 
     if decision not in ("LONG", "SHORT"):
@@ -12839,6 +16674,8 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
                 "thought_state": dict(thought_state or {}),
                 "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
                 "form_symbol_state": dict(form_symbol_state or {}),
+                "strategic_window_state": dict(strategic_window_state or {}),
+                "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
                 "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
                 "rejection_reason": "decision_not_tradeable",
             },
@@ -12847,6 +16684,20 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             felt_state=felt_state,
             thought_state=thought_state,
         )
+        _record_strategic_window_protocol(bot, {
+            "decision": str(decision or "WAIT"),
+            "meta_regulation_state": dict(meta_regulation_state or {}),
+            "strategic_window_state": dict(strategic_window_state or {}),
+            "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
+            "rejection_reason": "decision_not_tradeable",
+        })
+        _record_active_mcm_contact_protocol(bot, {
+            "decision": str(decision or "WAIT"),
+            "meta_regulation_state": dict(meta_regulation_state or {}),
+            "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "rejection_reason": "decision_not_tradeable",
+        })
         return None
 
     prices = derive_trade_plan_from_brain(decision, candle_state, fused, stimulus, snapshot, bot=bot)
@@ -12862,6 +16713,8 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
                 "thought_state": dict(thought_state or {}),
                 "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
                 "form_symbol_state": dict(form_symbol_state or {}),
+                "strategic_window_state": dict(strategic_window_state or {}),
+                "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
                 "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
                 "rejection_reason": "trade_plan_missing",
             },
@@ -12870,6 +16723,20 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             felt_state=felt_state,
             thought_state=thought_state,
         )
+        _record_strategic_window_protocol(bot, {
+            "decision": str(decision),
+            "meta_regulation_state": dict(meta_regulation_state or {}),
+            "strategic_window_state": dict(strategic_window_state or {}),
+            "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
+            "rejection_reason": "trade_plan_missing",
+        })
+        _record_active_mcm_contact_protocol(bot, {
+            "decision": str(decision),
+            "meta_regulation_state": dict(meta_regulation_state or {}),
+            "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "rejection_reason": "trade_plan_missing",
+        })
         return None
 
     result = {
@@ -12882,6 +16749,14 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         "target_conviction": float(prices.get("target_conviction", 0.0) or 0.0),
         "risk_model_score": float(prices.get("risk_model_score", 0.0) or 0.0),
         "reward_model_score": float(prices.get("reward_model_score", 0.0) or 0.0),
+        "entry_mode": str(prices.get("entry_mode", "impulse_contact") or "impulse_contact"),
+        "impulse_entry_price": float(prices.get("impulse_entry_price", prices["entry_price"]) or prices["entry_price"]),
+        "strategic_entry_price": float(prices.get("strategic_entry_price", prices["entry_price"]) or prices["entry_price"]),
+        "strategic_entry_weight": float(prices.get("strategic_entry_weight", 0.0) or 0.0),
+        "strategic_entry_fit": float(prices.get("strategic_entry_fit", 0.0) or 0.0),
+        "strategic_area_focus_id": str(prices.get("strategic_area_focus_id", "-") or "-"),
+        "strategic_area_price_low": float(prices.get("strategic_area_price_low", 0.0) or 0.0),
+        "strategic_area_price_high": float(prices.get("strategic_area_price_high", 0.0) or 0.0),
         "energy": float(energy),
         "coherence": float(coherence),
         "asymmetry": int(asymmetry),
@@ -12903,8 +16778,11 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         "felt_state": dict(felt_state or {}),
         "thought_state": dict(thought_state or {}),
         "meta_regulation_state": dict(meta_regulation_state or {}),
+        "neurochemical_state": dict(meta_regulation_state.get("neurochemical_state", {}) or {}),
         "expectation_state": dict(expectation_state or {}),
         "form_symbol_state": dict(form_symbol_state or {}),
+        "strategic_window_state": dict(strategic_window_state or {}),
+        "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
         "state_signature": dict(state_signature or {}),
         "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
         "signature_bias": float(fused.get("signature_bias", 0.0) or 0.0),
@@ -12939,6 +16817,8 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         felt_state=felt_state,
         thought_state=thought_state,
     )
+    _record_strategic_window_protocol(bot, result)
+    _record_active_mcm_contact_protocol(bot, result)
     return result
 
 # --------------------------------------------------
@@ -13006,6 +16886,8 @@ def build_runtime_decision_tendency(window, candle_state, bot=None):
             "meta_regulation_state": dict(hold_result.get("meta_regulation_state", {}) or {}),
             "expectation_state": dict(hold_result.get("expectation_state", {}) or {}),
             "form_symbol_state": dict(hold_result.get("form_symbol_state", {}) or {}),
+            "strategic_window_state": dict(hold_result.get("strategic_window_state", {}) or {}),
+            "active_mcm_contact_state": dict(hold_result.get("active_mcm_contact_state", {}) or {}),
             "state_signature": dict(hold_result.get("state_signature", {}) or {}),
             "signature_bias": float(hold_result.get("signature_bias", 0.0) or 0.0),
             "signature_block": bool(hold_result.get("signature_block", False)),
@@ -13060,6 +16942,8 @@ def build_runtime_decision_tendency(window, candle_state, bot=None):
         "meta_regulation_state": dict(brain_snapshot.get("meta_regulation_state", entry_result.get("meta_regulation_state", {})) or {}),
         "expectation_state": dict(brain_snapshot.get("expectation_state", entry_result.get("expectation_state", {})) or {}),
         "form_symbol_state": dict(brain_snapshot.get("form_symbol_state", entry_result.get("form_symbol_state", {})) or {}),
+        "strategic_window_state": dict(brain_snapshot.get("strategic_window_state", entry_result.get("strategic_window_state", {})) or {}),
+        "active_mcm_contact_state": dict(brain_snapshot.get("active_mcm_contact_state", entry_result.get("active_mcm_contact_state", {})) or {}),
         "state_signature": dict(brain_snapshot.get("state_signature", entry_result.get("state_signature", {})) or {}),
         "signature_bias": float(signal_state.get("signature_bias", entry_result.get("signature_bias", 0.0)) or 0.0),
         "signature_block": bool(signal_state.get("signature_block", entry_result.get("signature_block", False))),
@@ -13093,6 +16977,8 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
     meta_regulation_state = dict(result.get("meta_regulation_state", {}) or {})
     review_feedback_state = dict(meta_regulation_state.get("review_feedback_state", result.get("review_feedback_state", {}) or {}) or {})
     form_symbol_state = dict(result.get("form_symbol_state", getattr(bot, "form_symbol_state", {}) if bot is not None else {}) or {})
+    strategic_window_state = dict(result.get("strategic_window_state", getattr(bot, "strategic_window_state", {}) if bot is not None else {}) or {})
+    active_mcm_contact_state = dict(result.get("active_mcm_contact_state", getattr(bot, "active_mcm_contact_state", {}) if bot is not None else {}) or {})
     inner_field_state = dict(result.get("inner_field_perception_state", {}) or {})
     felt_state = dict(result.get("felt_state", {}) or {})
     neural_felt_state = dict(inner_field_state.get("neural_felt_state", felt_state.get("neural_felt_state", {})) or {})
@@ -13127,6 +17013,8 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
         "meta_regulation_state": dict(result.get("meta_regulation_state", {}) or {}),
         "expectation_state": dict(result.get("expectation_state", {}) or {}),
         "form_symbol_state": dict(form_symbol_state or {}),
+        "strategic_window_state": dict(strategic_window_state or {}),
+        "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
         "state_signature": dict(result.get("state_signature", {}) or {}),
         "focus": dict(result.get("focus", {}) or {}),
         "neural_felt_state": dict(neural_felt_state or {}),
@@ -13181,6 +17069,46 @@ def _build_runtime_brain_snapshot(bot, runtime_result, decision_tendency, timest
             "form_symbol_zoom_need": float(form_symbol_state.get("form_symbol_zoom_need", 0.0) or 0.0),
             "form_symbol_bearing": float(form_symbol_state.get("form_symbol_bearing", 0.0) or 0.0),
             "form_symbol_fragility": float(form_symbol_state.get("form_symbol_fragility", 0.0) or 0.0),
+            "strategic_window_state": str(strategic_window_state.get("strategic_window_state", "no_area_focus") or "no_area_focus"),
+            "lookback_window_size": int(strategic_window_state.get("lookback_window_size", 0) or 0),
+            "lookback_bearing_capacity": float(strategic_window_state.get("lookback_bearing_capacity", 0.0) or 0.0),
+            "strategic_pressure_interpretation": float(strategic_window_state.get("strategic_pressure_interpretation", 0.0) or 0.0),
+            "strategic_patience": float(strategic_window_state.get("strategic_patience", 0.0) or 0.0),
+            "area_bearing_quality": float(strategic_window_state.get("area_bearing_quality", 0.0) or 0.0),
+            "area_order_intention": float(strategic_window_state.get("area_order_intention", 0.0) or 0.0),
+            "area_invalidity_pressure": float(strategic_window_state.get("area_invalidity_pressure", 0.0) or 0.0),
+            "active_mcm_contact_state": str(active_mcm_contact_state.get("active_mcm_contact_state", active_mcm_contact_state.get("contact_posture", "background_scan")) or "background_scan"),
+            "contact_posture": str(active_mcm_contact_state.get("contact_posture", "background_scan") or "background_scan"),
+            "contact_interest": float(active_mcm_contact_state.get("contact_interest", 0.0) or 0.0),
+            "contact_focus_pull": float(active_mcm_contact_state.get("contact_focus_pull", 0.0) or 0.0),
+            "contact_resonance_probe": float(active_mcm_contact_state.get("contact_resonance_probe", 0.0) or 0.0),
+            "outer_inner_resonance": float(active_mcm_contact_state.get("outer_inner_resonance", 0.0) or 0.0),
+            "outer_inner_coherence": float(active_mcm_contact_state.get("outer_inner_coherence", 0.0) or 0.0),
+            "inner_change_from_contact": float(active_mcm_contact_state.get("inner_change_from_contact", 0.0) or 0.0),
+            "contact_carrying_quality": float(active_mcm_contact_state.get("contact_carrying_quality", 0.0) or 0.0),
+            "contact_overcoupling_risk": float(active_mcm_contact_state.get("contact_overcoupling_risk", 0.0) or 0.0),
+            "contact_release_readiness": float(active_mcm_contact_state.get("contact_release_readiness", 0.0) or 0.0),
+            "contact_deepen_pull": float(active_mcm_contact_state.get("contact_deepen_pull", 0.0) or 0.0),
+            "contact_replay_pull": float(active_mcm_contact_state.get("contact_replay_pull", 0.0) or 0.0),
+            "contact_curiosity": float(active_mcm_contact_state.get("contact_curiosity", 0.0) or 0.0),
+            "contact_felt_shift": float(active_mcm_contact_state.get("contact_felt_shift", 0.0) or 0.0),
+            "contact_selected_depth": float(active_mcm_contact_state.get("contact_selected_depth", 0.0) or 0.0),
+            "contact_salience": float(active_mcm_contact_state.get("contact_salience", 0.0) or 0.0),
+            "overcoupled_touch_score": float(active_mcm_contact_state.get("overcoupled_touch_score", 0.0) or 0.0),
+            "release_contact_score": float(active_mcm_contact_state.get("release_contact_score", 0.0) or 0.0),
+            "deepening_contact_score": float(active_mcm_contact_state.get("deepening_contact_score", 0.0) or 0.0),
+            "resonant_contact_score": float(active_mcm_contact_state.get("resonant_contact_score", 0.0) or 0.0),
+            "reflective_contact_score": float(active_mcm_contact_state.get("reflective_contact_score", 0.0) or 0.0),
+            "curious_touch_score": float(active_mcm_contact_state.get("curious_touch_score", 0.0) or 0.0),
+            "contact_action_maturity": float(active_mcm_contact_state.get("contact_action_maturity", 0.0) or 0.0),
+            "contact_bearing_gap": float(active_mcm_contact_state.get("contact_bearing_gap", 0.0) or 0.0),
+            "contact_impulse_vs_bearing": float(active_mcm_contact_state.get("contact_impulse_vs_bearing", 0.0) or 0.0),
+            "contact_learning_need": float(active_mcm_contact_state.get("contact_learning_need", 0.0) or 0.0),
+            "contact_reality_check": float(active_mcm_contact_state.get("contact_reality_check", 0.0) or 0.0),
+            "contact_regime_mismatch": float(active_mcm_contact_state.get("contact_regime_mismatch", 0.0) or 0.0),
+            "contact_stability_carryover": float(active_mcm_contact_state.get("contact_stability_carryover", 0.0) or 0.0),
+            "contact_context_maturity": float(active_mcm_contact_state.get("contact_context_maturity", 0.0) or 0.0),
+            "contact_context_reframe_need": float(active_mcm_contact_state.get("contact_context_reframe_need", 0.0) or 0.0),
             "neural_felt_bearing": float(neural_felt_bearing),
             "neural_felt_pressure": float(neural_felt_pressure),
             "neural_felt_memory_resonance": float(neural_felt_memory_resonance),

@@ -1,1 +1,0 @@
-EXIT_CANDIDATE_REPLAY ts=1769599800000000 candidate_ts=1769597400000000 side=LONG entry=127.5064 candidate_price=127.3600 actual_exit_price=127.1968 actual_reason=sl_hit actual_pnl=-0.462393 hypothetical_pnl=-0.299337 delta_pnl=0.163056 score=0.5778 pressure=0.6688 plan_trust=0.4268 fitness=0.4074
