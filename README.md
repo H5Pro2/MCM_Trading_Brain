@@ -410,7 +410,7 @@ Gegenwart zu behandeln.
 
 ### MCM-Raumzeit-Tiefe
 
-![alt text](files/BILDER/MCM-Raumzeit-Tiefe.PNG)
+![alt text](files/BILDER/MCM_Raumzeit_Tiefe.PNG)
 
 Für DIO entsteht räumliche Tiefe nicht nur aus Preisabstand oder
 Chartposition. Tiefe entsteht aus dem Zusammenspiel von Entfernung, Energie
