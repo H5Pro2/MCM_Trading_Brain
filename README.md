@@ -373,7 +373,7 @@ sondern eine mögliche Folge einer funktionierenden MCM-Mechanik.
 
 ## Zeit in Sicht der MCM
 
-![alt text](files/BILDER/Zeit_in_Sicht_der_MCM.PNG)
+![alt text](files/BILDER/Zeit_in_Sicht_der_MCM.png)
 
 Zeit wird in der MCM nicht nur als Uhr oder Timestamp verstanden.
 
@@ -410,7 +410,7 @@ Gegenwart zu behandeln.
 
 ### MCM-Raumzeit-Tiefe
 
-![alt text](files/BILDER/MCM_Raumzeit_Tiefe.PNG)
+![alt text](files/BILDER/MCM_Raumzeit_Tiefe.png)
 
 Für DIO entsteht räumliche Tiefe nicht nur aus Preisabstand oder
 Chartposition. Tiefe entsteht aus dem Zusammenspiel von Entfernung, Energie
