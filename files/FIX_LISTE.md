@@ -635,6 +635,38 @@ Regelwerk: `files/MD_ANWEISUNG.md`.
   - `hypothesis_reality_gap`
   - `source_confusion_load`
 
+- [ ] Zeitliche Kohaerenz / Wahrnehmungskontinuitaet bauen.
+  Ziel:
+  - DIO soll nicht jeden Moment als komplett neu erleben
+  - wiederkehrende, fortgesetzte, nachhallende und veraltete Wahrnehmungen
+    unterscheidbar machen
+  - keine feste Streckenkarte, sondern zeitliche Quellenbindung im MCM-Feld
+  - verhindern, dass DIO denselben Kontakt wie ein dementer Organismus immer
+    wieder als neues Ereignis findet
+  Moegliche Achsen:
+  - `temporal_continuity`
+  - `temporal_source_binding`
+  - `temporal_recurrence`
+  - `temporal_novelty`
+  - `temporal_afterimage`
+  - `temporal_decay`
+  - `temporal_context_depth`
+  - `temporal_self_consistency`
+  - `perception_sequence_coherence`
+  - `memory_time_distance`
+  Status:
+  - im `UMSETZUNGSPLAN.md` als Abschnitt 18.5 aufgenommen
+  - erste Runtime-Mechanik umgesetzt:
+    `build_temporal_coherence_state` bildet zeitliche Identitaet,
+    Fortsetzung, Wiederkehr, Neuheit, Nachhall und Zeitdistanz
+  - Feldentscheidungsprotokoll, Memory-/Thinking-Protokoll und
+    Outcome-Records schreiben die neuen Werte mit
+  - `active_context_trace` kann jetzt ersatzweise aus zeitlicher
+    Wahrnehmung entstehen, wenn kein innerer Cluster aktiv ist
+  - naechster Schritt: Backtest-Lauf auswerten und pruefen, ob
+    `active_context_activation` nicht mehr leer bleibt und ob DIO weniger
+    momenthaft wirkt
+
 - [ ] Gedanken-Energieform diagnostisch vorbereiten.
   Ziel:
   - Gedanken nicht nur als Entscheidungstext, sondern als gerichteten
@@ -683,6 +715,197 @@ Regelwerk: `files/MD_ANWEISUNG.md`.
   - `protective_distance_regulation`
   - `self_reflection_regulator`
   - `distance_regulation`
+  Status:
+  - Diagnose in Runtime, Feldentscheidungsprotokoll,
+    Memory-/Thinking-Protokoll und Outcome-Records umgesetzt
+  - naechster Schritt: Backtest-Lauf auswerten und pruefen, ob die Werte
+    Regimewechsel, Ueberkopplung, Impulsdruck und Rueckkehrkraft sinnvoll
+    sichtbar machen
+  - noch keine harte Verhaltenskopplung eingebaut
+  - Unterbewusstsein / bewusster Arbeitsraum als Wahrnehmungsfilter
+    umgesetzt, naechster Lauf muss zeigen, ob `regulatory_overload`
+    dadurch feiner aufbricht
+  - Integrationsantwort fuer `integration_strain` umgesetzt:
+    Sortierung, Reframing, Memory-Recall und Kontaktvertiefung werden
+    diagnostisch und leicht regulativ sichtbar
+  - Gerichtete Vorsicht / vorsichtige Hypothese umgesetzt:
+    Vorsicht wird nicht als harte Sperre behandelt, sondern kann sich ueber
+    Memory, Reframing, Kontaktvertiefung und bewusste Geduld zu
+    `cautious_plan_seed`, `memory_reframe_seed`, `observe_until_clear` oder
+    `deepen_contact_first` organisieren
+  - Lauf 17 ausgewertet:
+    zeitliche Kohaerenz senkt Drawdown und verbessert Profit Factor, aber
+    `aged_memory_contact` dominiert fast alles
+  - `active_context_activation`, `active_context_support`,
+    `active_context_conflict` und `active_context_bearing` bleiben im
+    Memory-Protokoll noch bei `0.0`
+  - naechster Schritt:
+    zeitliche Identitaet feiner kalibrieren und den zeitlich abgeleiteten
+    `active_context_trace` frueher in Memory-/Thinking-Auswertung einspeisen
+  - umgesetzt:
+    Zeitidentitaet bindet jetzt staerker ueber Formfamilie, Kontext und
+    grobe visuelle Signatur; feine Einzelabdruecke bleiben als
+    `temporal_source_identity` erhalten
+  - umgesetzt:
+    `active_context_trace` wird direkt nach der Zeitwahrnehmung gebildet
+    und vor Thought-/Meta-Regulation in `world_state`, `perception_state`,
+    `fused` und Runtime-Protokollpakete gelegt
+  - naechster Schritt:
+    neuer Lauf; pruefen, ob `aged_memory_contact` abnimmt und
+    `active_context_*` im Memory-Protokoll sichtbar wird
+  - Lauf 18 ausgewertet:
+    `active_context_*` ist jetzt sichtbar, aber deutlich zu hoch
+    (`activation` Durchschnitt ca. `0.8905`, `support` Durchschnitt
+    ca. `0.8991`, `bearing` Durchschnitt ca. `0.8493`)
+  - Lauf 18 ausgewertet:
+    Zeitbindung verteilt sich besser
+    (`unbound_moment`, `aged_memory_contact`, erste
+    `recurrent_contact`/`continued_contact`/`coherent_sequence`), aber
+    Kontextvertrauen ist noch zu wenig dosiert
+  - naechster Schritt:
+    aktiven Kontext nicht entfernen, sondern organisch daempfen und
+    staerker an Quellenbindung, Sequenzkoharenz, Strukturqualitaet und
+    Gegenwartsbindung koppeln
+  - umgesetzt:
+    `active_context_activation` wird weich geblendet statt per `max()`
+    festgehalten
+  - umgesetzt:
+    `reality_anchor` und `overtrust_pressure` dosieren den zeitlichen
+    Kontextfaden; Support/Bearing brauchen mehr Gegenwartsbindung,
+    Conflict/Fragility steigen bei ungebundenem oder schlecht geerdetem
+    Kontakt
+  - naechster Schritt:
+    neuer Lauf; pruefen, ob der aktive Kontext weniger saettigt und
+    Mid/Low-Strukturen mehr natuerliche Skepsis erzeugen
+  - umgesetzt:
+    nervliche Ueberlastung als Reflexionsparameter ergaenzt:
+    `nervous_system_overload`, `escape_action_drive`,
+    `shock_response_risk`, `nervous_overload_reflection_need`
+  - Lauf 19 ausgewertet:
+    starker Referenzlauf vor dieser Erweiterung
+    (`pnl_netto` ca. `+39.8848`, Profit Factor ca. `1.3348`,
+    Max Drawdown ca. `6.3386`), aber die neuen Nervensystem-Spalten
+    fehlen noch in den Protokoll-Headern
+  - naechster Schritt:
+    frischen Lauf nach Prozess-Neustart pruefen; besonders
+    Stress-/Regimewechselbereiche auf Ueberreiz, Entladungsdruck,
+    Schockrisiko und reflektive Distanz auswerten
+  - Lauf 20 ausgewertet:
+    neue Nervensystem-Spalten sind vorhanden; Lauf bleibt positiv
+    (`pnl_netto` ca. `+23.9208`, Profit Factor ca. `1.2016`), aber
+    Drawdown steigt wieder auf ca. `11.6453`
+  - Befund:
+    `nervous_system_overload`, `escape_action_drive`,
+    `shock_response_risk` und `nervous_overload_reflection_need` bleiben
+    messbar, aber meist unterhalb der echten Reflexionsschwelle;
+    `active_context_activation/support/bearing` bleiben im
+    Memory-Protokoll weiter stark gesaettigt
+  - naechster Schritt:
+    nervliche Ueberlastung organisch an Kontextvertrauen und
+    reflektive Distanz koppeln, ohne harte Blocker einzubauen
+  - umgesetzt:
+    `active_context_self_certainty` und `nervous_context_overcoupling`
+    ergaenzt; nervliche Last dimmt Kontext-Selbstsicherheit weich und
+    erhoeht reflektive Distanz, ohne Handlung hart zu sperren
+  - naechster Schritt:
+    Lauf 21 pruefen; besonders ob `nervous_context_overcoupling` in
+    Stressbereichen sichtbar wird und ob `context_overcoupling_reflection`
+    natuerlich auftaucht
+  - Lauf 21 ausgewertet:
+    `nervous_context_overcoupling` ist sichtbar
+    (Durchschnitt ca. `0.1743`, Maximum ca. `0.3084`);
+    `context_overcoupling_reflection` wird mit `3351` Vorkommen sogar
+    haeufigster Metaregulator-Zustand
+  - Befund:
+    Selbstwahrnehmung greift, aber `active_context_activation/support/bearing`
+    bleiben weiter stark gesaettigt; die Reflexion markiert die Lage,
+    reguliert den aktiven Kontext aber noch nicht tief genug
+  - naechster Schritt:
+    Ueberkopplung sanft in den aktiven Kontext zurueckfuehren, damit
+    Support/Bearing bei nervlicher Faerbung weniger absolut wirken
+  - umgesetzt:
+    `nervous_context_overcoupling` moduliert den `active_context_trace`
+    selbst; Support/Bearing/Action-Support werden weich gedimmt,
+    Conflict/Fragility/Attenuation steigen leicht
+  - naechster Schritt:
+    Lauf 22 pruefen; Ziel ist weniger gesaettigter aktiver Kontext und
+    weniger dominante `context_overcoupling_reflection`
+  - Lauf 22 ausgewertet:
+    Kontext-Rekalibrierung wirkt: `active_context_support` sinkt ca.
+    `0.9007 -> 0.8856`, `active_context_bearing` ca.
+    `0.8513 -> 0.8385`, `active_context_conflict` steigt ca.
+    `0.1075 -> 0.1238`
+  - Befund:
+    DIO wird deutlich vorsichtiger (`343` Trades, mehr Observe/Withheld),
+    aber PnL sinkt auf ca. `+11.8929`; die Dosis schuetzt, kostet aber
+    Handlungskraft
+  - naechster Schritt:
+    `context_modulation_label` im Debug sichtbar machen, bevor die
+    Mechanik weiter dosiert wird
+  - umgesetzt:
+    `active_context_modulation_label` in
+    `mcm_memory_thinking_protocol.csv` ergaenzt
+  - naechster Schritt:
+    Lauf 23 pruefen; Verteilung von `unmodulated_context`,
+    `nervous_tinted_context` und `overcoupled_context` mit PnL,
+    Drawdown und Observe/Act-Verhalten vergleichen
+  - Lauf 23 ausgewertet:
+    PnL erholt sich auf ca. `+24.4854`, Trades `371`, Profit Factor
+    ca. `1.2160`; `nervous_tinted_context` dominiert (`7229`),
+    `overcoupled_context` bleibt sichtbar (`1504`)
+  - Befund:
+    Die Modulation wirkt nicht mehr nur als Bremse. DIO gewinnt
+    Handlungskraft zurueck, bleibt aber nervlich markiert. Der Drawdown
+    bleibt mit ca. `15.43` hoch.
+  - naechster Schritt:
+    Low-/Mid-Kontaktreifung ueber konsequenzbasiertes Feedback schaerfen:
+    Low nicht hart blockieren, sondern als belastenden, unreifen oder
+    reorganisationspflichtigen Kontakt im MCM-Feld erfahrbar machen
+  - erweiterte Zielrichtung:
+    Low-/Mid-Kontakte mit MCM-Raumzeit-Tiefe koppeln. DIO soll nicht nur
+    Strukturqualitaet fuehlen, sondern auch, ob ein Kontakt durch
+    Gegenwart, Nachhall, Erinnerung oder Erwartung wirkt.
+
+- [x] MCM-Raumzeit-Tiefe technisch verdichten.
+  Ziel:
+  - Entfernung, Energie und Zeit als innere Wahrnehmungsschicht koppeln
+  - keine harte Zeitregel, sondern Selbstverortung im MCM-Feld
+  - Memory nicht nur als gespeicherte Information behandeln, sondern als
+    verdichtete Erfahrung mit zeitlicher Tiefe
+  - bestehende Werte wie `temporal_context_depth`,
+    `memory_time_distance`, `temporal_afterimage`, `temporal_decay`,
+    `perceptual_distance`, `field_attachment` und Energie-/Druckwerte
+    organisch zusammenfuehren
+  Erste Zielgroessen:
+  - `mcm_spacetime_depth`
+  - `temporal_self_location`
+  Umgesetzt:
+  - `mcm_spacetime_depth`
+  - `memory_experience_depth`
+  - `future_projection_depth`
+  - `temporal_self_location`
+  - `temporal_self_location_state`
+  - Export in Memory-/Field-Protokoll und `trade_stats.py`
+  Naechster Schritt:
+  - Debug-Lauf pruefen und danach regulatorische Kopplung entwickeln:
+    flache Raumzeit-Tiefe soll nicht blockieren, sondern mehr
+    Beobachtung, Reflexion oder Reorganisation nahelegen
+  - Lauf 24 ausgewertet:
+    PnL ca. `+23.4601`, Profit Factor ca. `1.2006`, Drawdown nur
+    ca. `8.2936`; der Verlauf ist deutlich tragfaehiger als Lauf 23,
+    obwohl der End-PnL leicht niedriger ist
+  - Befund:
+    `future_possibility` dominiert, `unlocated_contact` bleibt hoch.
+    DIO bildet Zukunftstiefe, aber Gegenwarts-/Memory-Verortung muss noch
+    reifer werden.
+  - Bestätigung:
+    Lauf 24 ist ein erster positiver Hinweis, dass zeitliche Wahrnehmung
+    als MCM-Welt-Tiefe wirkt: nicht als harte Regel, sondern als
+    organische Entfaltung von Distanz, Reflexion und Tragfaehigkeit.
+  - naechster Schritt:
+    regulatorische Kopplung der Raumzeit-Wahrnehmung bauen: nicht
+    blockieren, sondern flache Selbstverortung in Reflexion, Beobachtung
+    oder Reorganisation uebersetzen
 
 - [ ] Markdown-Dateien weiter nach `MD_ANWEISUNG.md` pflegen.
   Ziel:

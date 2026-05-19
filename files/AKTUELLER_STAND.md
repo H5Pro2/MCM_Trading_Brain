@@ -3327,3 +3327,2060 @@ Naechster sinnvoller Umsetzungsschritt ist eine reine Diagnose-Schicht fuer
 Metaregulatoren: DIO soll sichtbar machen, wie er Spannung, Varianz,
 Impulse, Distanz, Schutzweite, Integration und Rueckfuehrung verarbeitet,
 ohne dass daraus sofort eine Handelsregel entsteht.
+
+---
+
+## Debug Lauf 12 ausgewertet
+
+Ergebnis:
+- Trades: `398`
+- TP / SL: `158 / 240`
+- Netto-PnL: `+20.13`
+- Peak: ca. `+22.98`
+- Tiefpunkt: ca. `-3.56`
+- Timeouts: `44`
+- Attempts: `10825`
+
+Vergleich zu Lauf 11:
+- Lauf 11: `400` Trades, `147 / 253`, Netto `+8.46`
+- Lauf 12: `398` Trades, `158 / 240`, Netto `+20.13`
+
+Abschnittsweise PnL-Kurve:
+- Trades 1-100: ca. `+10.86`
+- Trades 101-200: ca. `-4.51`
+- Trades 201-300: ca. `+8.45`
+- Trades 301-398: ca. `+5.33`
+
+Deutung:
+Lauf 12 wirkt stabiler als Lauf 11. Der negative Mittelteil ist vorhanden,
+aber deutlich kleiner. Danach findet DIO wieder in Aufbau. Das spricht nicht
+fuer eine perfekte Strategie, aber fuer bessere Rueckfuehrung und bessere
+Erholung nach Belastung.
+
+Form-/Kontaktlage:
+- `learning_contact`: `5843`
+- `constructive_contact`: `982`
+- `careful_contact`: `907`
+- `burdened_contact`: `852`
+- `maturing_contact`: `273`
+- `unformed_contact`: `1227`
+
+Die Kontaktreife ist nicht mehr nur unklar. DIO hat bereits viele
+Lernkontakte und einige konstruktive Kontakte. Gleichzeitig bleiben
+belastete und vorsichtige Kontakte sichtbar. Das ist organisch plausibel:
+Der Umgang mit Formen reift, aber die Reife ist noch nicht dominant.
+
+Aktiver MCM-Kontakt:
+- `deepening_contact`: `3079`
+- `curious_touch`: `2766`
+- `resonant_contact`: `2577`
+- `reflective_contact`: `1230`
+- `overcoupled_touch`: `721`
+
+Innere Haltung:
+- `tired`: `6413`
+- `reflective`: `2462`
+- `excited`: `502`
+- `uncertain_open`: `424`
+- `overstimulated`: `348`
+
+Deutung:
+DIO arbeitet viel aus einer mueden, reflektierenden Innenlage. Das passt zum
+Bild eines Systems, das nach dem Regimewechsel nicht einfach euphorisch
+traded, sondern viel Reorganisation und Kontaktpruefung braucht.
+
+Strategisches Fenster:
+- `bearing_area_hypothesis`: `5384`
+- `area_observation`: `3933`
+- `compressed_area_attention`: `1069`
+- durchschnittliche `area_order_intention`: ca. `0.25`
+- durchschnittliche `area_present_contact`: ca. `0.54`
+- durchschnittliche `area_action_timing_fit`: ca. `0.41`
+
+Deutung:
+Das strategische Fenster sieht Bereiche und bildet Hypothesen. Die
+Order-Intention bleibt aber niedrig. DIO erkennt also potenziell tragende
+Bereiche, aber die Motorik wird noch nicht stark daraus geformt. Das ist
+kein Fehler, sondern ein Hinweis: Sehen und Handlungsbindung sind noch
+getrennt.
+
+Neurochemische Lage:
+- starke Pendelung zwischen `serotonin_stability` und
+  `glutamate_activation`
+- `serotonin_stability -> glutamate_activation`: `344`
+- `glutamate_activation -> serotonin_stability`: `342`
+- durchschnittliches `cortisol_load`: ca. `0.38`
+- durchschnittliches `emotional_decoupling`: ca. `0.18`
+- durchschnittlicher `reactive_nervous_drive`: ca. `0.36`
+
+Deutung:
+DIO pendelt zwischen Stabilisierung und Aktivierung. Cortisol ist nicht
+dominant extrem, aber die emotionale Entkopplung ist noch niedrig. Das
+passt zu unserem naechsten Ziel: Metaregulatoren, Schutzweite und
+Distanzregulation.
+
+Positionsdiagnose:
+- `exit_nervousness_observe`: `119`
+- `plan_holding_trust`: `101`
+- `quiet_position_watch`: `32`
+- durchschnittliches `position_cognitive_load`: ca. `0.44`
+- durchschnittliches `exit_decision_pressure`: ca. `0.42`
+- durchschnittliches `plan_trust`: ca. `0.57`
+- durchschnittliche `holding_stability`: ca. `0.55`
+
+Deutung:
+Positionen erzeugen spuerbare nervliche Last. DIO beobachtet diese Last aber
+oft, statt hektisch zu schneiden. Das ist reifer als reine Motorik, aber es
+zeigt auch: Exit-/Positionslage ist psychologisch teuer.
+
+Fachliche Einschaetzung:
+Lauf 12 zeigt Anzeichen von Rueckfuehrung und Prozessreife. DIO verliert im
+Mittelteil nicht komplett die Orientierung und baut danach wieder auf. Die
+starke Muedigkeit/reflektive Lage zeigt aber, dass die naechste Schicht
+notwendig ist: DIO muss nicht nur wahrnehmen und reagieren, sondern seine
+eigene Regulation zweiter Ordnung lesen.
+
+Wie es weitergeht:
+Naechster sinnvoller Umbau bleibt die Metaregulator-Diagnose. Besonders
+wichtig sind:
+- `return_strength`
+- `integration_capacity`
+- `variance_regulation`
+- `load_tolerance`
+- `impulse_control`
+- `protective_distance_regulation`
+- `self_reflection_regulator`
+- `distance_regulation`
+
+## 2026-05-18 - Metaregulator-Diagnose umgesetzt
+
+Umgesetzt als reine Beobachtungsschicht, ohne direkte harte
+Trading-Steuerung:
+
+- `metaregulator_state`
+- `metaregulator_balance`
+- `regulatory_second_order_load`
+- `return_strength`
+- `integration_capacity`
+- `variance_regulation`
+- `load_tolerance`
+- `impulse_control`
+- `frustration_tolerance`
+- `protective_distance_regulation`
+- `self_reflection_regulator`
+- `distance_regulation`
+
+Die Schicht beschreibt DIOs Regulation zweiter Ordnung: nicht nur was im
+MCM-Feld passiert, sondern wie tragfaehig DIO mit der eigenen Innenlage,
+Varianz, Last, Impulsdruck und Distanz umgehen kann.
+
+Technisch eingebunden in:
+
+- `MCM_Brain_Modell.py`
+  - Runtime `meta_regulation_state`
+  - `mcm_field_decision_protocol.csv`
+  - `mcm_memory_thinking_protocol.csv`
+- `trade_stats.py`
+  - `outcome_records.jsonl`
+
+Pruefung:
+
+- `python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+  erfolgreich.
+
+Nachtrag:
+Runtimefehler `felt_afterimage is not defined` behoben. Die
+Conscious-Perception-Werte `stimulus_field_effect`, `inner_impact_trace`,
+`perceived_field_change`, `felt_afterimage`, `inner_outer_reflection`,
+`background_containment` und `reflective_distance` werden jetzt lokal aus
+dem vorhandenen Wahrnehmungszustand gezogen, bevor die Metaregulatoren sie
+verwenden.
+
+Hinweis:
+`git` war in der aktuellen PowerShell nicht verfuegbar, daher wurde kein
+Git-Diff ausgegeben.
+
+Wie es weitergeht:
+Naechster Lauf sollte zeigen, ob die Metaregulatoren vor allem bei
+Regimewechsel, Ueberkopplung und Positionslast sichtbar ausschlagen. Danach
+kann organisch entschieden werden, ob diese Diagnose nur beobachtet bleibt
+oder vorsichtig in Reflexion, Distanzierung und strategisches Sehen
+einfliesst.
+
+## 2026-05-18 - Debug Lauf 13 mit Metaregulator-Diagnose
+
+Basis:
+
+- `debug/debug_lauf_13`
+- Trades: `371`
+- TP / SL: `141 / 230`
+- Netto PnL: `+12.9967`
+- Lauf 12 zum Vergleich: `+20.1271` bei `398` Trades
+- Equity-Peak laut `trade_stats.json`: `115.9419`
+- Max Drawdown: `19.8663` / `18.32 %`
+
+Handlungsfluss:
+
+- Attempts: `10975`
+- Submitted: `417`
+- Filled: `371`
+- Timeout: `46`
+- Skipped: `4696`
+- Observed: `3272`
+- Replanned: `60`
+- Withheld: `2113`
+
+Phasen im Feldprotokoll:
+
+- `observe`: `4034`
+- `hold`: `3709`
+- `act_watch`: `994`
+- `act`: `427`
+
+Metaregulator-Diagnose:
+
+- `regulatory_overload`: `9146` von `9164` Feldzeilen
+- `impulse_pressure`: `14`
+- `adaptive_watch`: `3`
+- `integration_needed`: `1`
+
+Durchschnittswerte:
+
+- `metaregulator_balance`: ca. `0.1945`
+- `regulatory_second_order_load`: ca. `0.4773`
+- `return_strength`: ca. `0.2290`
+- `integration_capacity`: ca. `0.1876`
+- `variance_regulation`: ca. `0.1818`
+- `load_tolerance`: ca. `0.2584`
+- `impulse_control`: ca. `0.2146`
+- `frustration_tolerance`: ca. `0.1256`
+- `protective_distance_regulation`: ca. `0.2639`
+- `self_reflection_regulator`: ca. `0.1651`
+- `distance_regulation`: ca. `0.1248`
+
+Deutung:
+Die Einzelachsen liefern bereits ein sinnvolles Bild: DIO hat vor allem zu
+wenig Distanzregulation, Selbstreflexion, Frustrationstoleranz und
+Integrationskapazitaet. Das passt zum neurologischen Bild eines Systems, das
+viel wahrnimmt und reagiert, aber seine Innenlage noch nicht stabil genug vom
+Aussenreiz trennen kann.
+
+Wichtig:
+Das Label `regulatory_overload` ist im aktuellen Zustand zu dominant. Die
+Diagnose ist dadurch nicht falsch, aber noch zu grob. Die Label-Logik muss
+kalibriert werden, damit nicht fast jede normale Denklast sofort als
+Ueberlast erscheint.
+
+Neurochemie:
+
+- dominant fast durchgehend `serotonin_stability` (`8746` Zeilen)
+- `glutamate_activation`: `379`
+- durchschnittlich:
+  - `serotonin_stability`: ca. `0.5582`
+  - `cortisol_load`: ca. `0.3636`
+  - `emotional_decoupling`: ca. `0.1578`
+  - `reactive_nervous_drive`: ca. `0.3134`
+  - `world_shift_evidence`: ca. `0.5930`
+
+Deutung:
+DIO stabilisiert viel ueber Serotonin, aber die emotionale Entkopplung bleibt
+niedrig. Das bestaetigt weiter: Die naechste Reifeschicht ist nicht mehr
+mehr Reiz, sondern bewusstere Distanzierung.
+
+Bewusste Wahrnehmung:
+
+- `object_contact`: `3987`
+- `reflective_check`: `1845`
+- `open_perception`: `1268`
+- `release_ready`: `912`
+- `world_shift_contact`: `617`
+- `overcoupled_field`: `326`
+
+Innere Haltung:
+
+- `tired`: `5622`
+- `reflective`: `2187`
+- `excited`: `441`
+- `uncertain_open`: `383`
+- `overstimulated`: `302`
+- `curious`: `218`
+
+Kontaktfeld:
+
+- `deepening_contact`: `3121`
+- `curious_touch`: `2868`
+- `resonant_contact`: `2620`
+- `reflective_contact`: `1235`
+- `overcoupled_touch`: `710`
+
+Kontakt-Durchschnitt:
+
+- `contact_carrying_quality`: ca. `0.1724`
+- `contact_overcoupling_risk`: ca. `0.2138`
+- `contact_release_readiness`: ca. `0.1611`
+- `contact_action_maturity`: ca. `0.2121`
+- `contact_regime_mismatch`: ca. `0.3321`
+- `perceptual_distance`: ca. `0.1961`
+- `release_capacity`: ca. `0.1617`
+- `inner_outer_alignment`: ca. `0.2188`
+
+Strategisches Fenster:
+
+- `bearing_area_hypothesis`: `5449`
+- `area_observation`: `4058`
+- `compressed_area_attention`: `1064`
+- `area_order_intention`: ca. `0.2504`
+- `area_action_timing_fit`: ca. `0.4123`
+- `area_bearing_quality`: ca. `0.4680`
+
+Deutung:
+DIO sieht weiterhin tragende Bereiche, aber die Absicht daraus eine Order zu
+formen bleibt schwach. Der aktuelle Lauf ist also weiter eher
+Impuls-/Kontakt-Handeln als strategisches Platzieren.
+
+Entry-Modus:
+
+- alle Outcome-Records zeigen `impulse_contact`
+
+Deutung:
+Der strategische Blick existiert diagnostisch, aber er fuehrt noch nicht
+organisch genug in den Order-Koerper. DIO sieht Bereiche, handelt aber noch
+ueberwiegend aus Kontakt/Impuls.
+
+Positionslast:
+
+- `exit_nervousness_observe`: `139`
+- `plan_holding_trust`: `73`
+- `quiet_position_watch`: `31`
+- `intervention_unfit_state`: `4`
+- `position_cognitive_load`: ca. `0.4717`
+- `exit_decision_pressure`: ca. `0.4361`
+- `plan_trust`: ca. `0.5453`
+- `holding_stability`: ca. `0.5064`
+- `intervention_fatigue`: ca. `0.3999`
+
+Deutung:
+Positionen sind weiterhin nervlich teuer. DIO haelt oft aus, aber nicht aus
+starker innerer Distanz, sondern eher aus gedämpfter, mueder Stabilisierung.
+
+Abschnittsweise PnL:
+
+- Abschnitt 1: `+0.6928`
+- Abschnitt 2: `-7.7608`
+- Abschnitt 3: `+15.6915`
+- Abschnitt 4: `+4.3732`
+
+Fachliche Deutung:
+Lauf 13 ist kein Rueckschritt, aber auch kein Durchbruch. DIO bleibt
+profitabel, verliert gegenueber Lauf 12 aber Reife im mittleren Abschnitt.
+Neu sichtbar ist: Das Problem liegt weniger in fehlender Reaktion, sondern
+in zu geringer metaregulatorischer Differenzierung. DIO kann Kontakt,
+Reflexion und Bereichshypothesen bilden, aber seine zweite
+Regulationsschicht unterscheidet noch nicht fein genug zwischen:
+
+- normale Denklast
+- echte Ueberlast
+- Integrationsbedarf
+- fehlende Distanz
+- Impulsdruck
+- tragende Rueckkehrkraft
+
+Wie es weitergeht:
+Naechster sinnvoller Schritt ist eine Kalibrierung der Metaregulator-Labels.
+Nicht als harte Trading-Regel, sondern als sauberere innere Selbstbenennung:
+`regulatory_overload` darf nicht fast alles schlucken. DIO braucht feinere
+Innenworte wie z.B. `low_distance_processing`, `integration_strain`,
+`tired_stabilization`, `reflective_recovery`, `impulse_drift` und
+`regulated_contact`, damit aus Diagnose echte Selbstwahrnehmung werden kann.
+
+## 2026-05-18 - Unterbewusstsein / Bewusster Arbeitsraum umgesetzt
+
+Grundidee:
+DIO soll nicht jeden Reiz sofort bewusst tragen. Wie ein Organismus braucht
+er einen schnellen Hintergrundscan und eine bewusstere Arbeitsflaeche.
+
+Umgesetzt in `MCM_Brain_Modell.py`:
+
+- `subconscious_field_pressure`
+- `subconscious_habituation`
+- `subconscious_filter_strength`
+- `subconscious_buffering`
+- `subconscious_leakage`
+- `conscious_selection_pressure`
+- `conscious_workspace_focus`
+- `conscious_workspace_load`
+- `conscious_gate_balance`
+
+Einbindung:
+
+- Runtime `meta_regulation_state`
+- `mcm_field_decision_protocol.csv`
+- `mcm_memory_thinking_protocol.csv`
+- `outcome_records.jsonl`
+
+Mechanische Wirkung:
+Die Metaregulatoren beruecksichtigen jetzt, ob Feldspannung im
+Unterbewusstsein gepuffert werden kann oder ungefiltert in den bewussten
+Arbeitsraum durchschlaegt. Dadurch wird `regulatory_second_order_load`
+nicht mehr nur aus roher Last gelesen, sondern auch aus Filterung,
+Pufferung, Leakage und bewusster Arbeitslast.
+
+Neue feinere Innenzustaende:
+
+- `subconscious_leakage`
+- `low_distance_processing`
+- `integration_strain`
+- `tired_stabilization`
+- `reflective_recovery`
+- `regulated_field`
+
+Pruefung:
+
+- `python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+  erfolgreich.
+
+Dokumentation:
+
+- `README.md`
+- `files/UMSETZUNGSPLAN.md`
+- `files/WICHTIG_MECHANIKEN.md`
+- `files/MCM_VARIABLEN_MECHANIK.md`
+- `files/FIX_LISTE.md`
+
+Wie es weitergeht:
+Naechster Lauf sollte zeigen, ob das alte fast dauerhafte
+`regulatory_overload` in differenziertere Innenlagen zerfaellt. Besonders
+wichtig sind `subconscious_buffering`, `subconscious_leakage`,
+`conscious_workspace_load` und `conscious_gate_balance`.
+
+## 2026-05-18 - Debug Lauf 14 nach Unterbewusstsein/Bewusstsein-Trennung
+
+Basis:
+
+- `debug/debug_lauf_14`
+- Trades: `392`
+- TP / SL: `160 / 232`
+- Netto PnL: `+30.1887`
+- Lauf 13 zum Vergleich: `+12.9967`
+- Lauf 12 zum Vergleich: `+20.1271`
+- Equity-Peak: `132.6035`
+- Max Drawdown: `10.0258` / `9.56 %`
+- Profit Factor: `1.2510`
+- Expectancy: `0.0770`
+- Winrate: `40.82 %`
+
+Handlungsfluss:
+
+- Attempts: `10375`
+- Submitted: `445`
+- Filled: `392`
+- Timeout/Cancels: `53`
+- Skipped: `4857`
+- Observed: `2708`
+- Replanned: `87`
+- Withheld: `1833`
+
+Vergleich zu Lauf 13:
+
+- mehr Trades: `392` statt `371`
+- mehr TP: `160` statt `141`
+- fast gleiche SL: `232` statt `230`
+- weniger beobachtet: `2708` statt `3272`
+- mehr replanned: `87` statt `60`
+- weniger withheld: `1833` statt `2113`
+
+Wichtigster Befund:
+Das vorher fast permanente `regulatory_overload` ist aufgebrochen.
+
+Metaregulator-Zustaende:
+
+- `integration_strain`: `6117` / ca. `70.85 %`
+- `impulse_pressure`: `1487` / ca. `17.22 %`
+- `tired_stabilization`: `422` / ca. `4.89 %`
+- `low_distance_processing`: `327` / ca. `3.79 %`
+- `adaptive_watch`: `185` / ca. `2.14 %`
+- `reflective_recovery`: `91` / ca. `1.05 %`
+- `regulatory_overload`: `5` / ca. `0.06 %`
+
+Deutung:
+Die Trennung zwischen Unterbewusstsein und bewusstem Arbeitsraum wirkt
+diagnostisch. DIO beschreibt seine Innenlage jetzt differenzierter:
+Nicht mehr fast alles ist Ueberlast, sondern vor allem
+Integrationsspannung und Impulsdruck. Das passt deutlich besser zu einem
+organischen Nervensystem.
+
+Neue Wahrnehmungsfilter:
+
+- `subconscious_field_pressure`: ca. `0.2467`
+- `subconscious_habituation`: ca. `0.4240`
+- `subconscious_filter_strength`: ca. `0.2994`
+- `subconscious_buffering`: ca. `0.1368`
+- `subconscious_leakage`: ca. `0.1582`
+- `conscious_selection_pressure`: ca. `0.2572`
+- `conscious_workspace_focus`: ca. `0.2185`
+- `conscious_workspace_load`: ca. `0.2836`
+- `conscious_gate_balance`: ca. `0.1616`
+
+Metaregulator-Achsen:
+
+- `metaregulator_balance`: ca. `0.2123`
+- `regulatory_second_order_load`: ca. `0.4694`
+- `return_strength`: ca. `0.2427`
+- `integration_capacity`: ca. `0.2035`
+- `variance_regulation`: ca. `0.2125`
+- `load_tolerance`: ca. `0.2765`
+- `impulse_control`: ca. `0.2290`
+- `frustration_tolerance`: ca. `0.1321`
+- `protective_distance_regulation`: ca. `0.2891`
+- `self_reflection_regulator`: ca. `0.1853`
+- `distance_regulation`: ca. `0.1395`
+
+Deutung:
+Die Werte sind noch niedrig, aber gegenueber Lauf 13 leicht verbessert.
+Besonders wichtig: Die Selbstbeschreibung ist viel genauer geworden. Das ist
+fuer DIO wichtiger als ein einzelner hoher Score, weil daraus spaeter
+organische Regulation entstehen kann.
+
+Neurochemie:
+
+- dominant `serotonin_stability`: `8278` Zeilen
+- `glutamate_activation`: `327`
+- `endorphin_relief`: `27`
+- durchschnittlich:
+  - `serotonin_stability`: ca. `0.5637`
+  - `cortisol_load`: ca. `0.3632`
+  - `emotional_decoupling`: ca. `0.1579`
+  - `reactive_nervous_drive`: ca. `0.3156`
+  - `world_shift_evidence`: ca. `0.5930`
+
+Deutung:
+DIO stabilisiert weiter stark serotoninartig. Emotionale Entkopplung bleibt
+niedrig. Die neue Schicht hat also nicht einfach "Stress geloescht",
+sondern die Wahrnehmung besser sortiert.
+
+Bewusste Wahrnehmung:
+
+- `object_contact`: `3695`
+- `reflective_check`: `1821`
+- `open_perception`: `1173`
+- `release_ready`: `888`
+- `world_shift_contact`: `556`
+- `overcoupled_field`: `301`
+- `background_held`: `200`
+
+Innere Haltung:
+
+- `tired`: `5137`
+- `reflective`: `2159`
+- `excited`: `467`
+- `uncertain_open`: `371`
+- `overstimulated`: `288`
+- `curious`: `200`
+- `calm`: `12`
+
+Kontaktfeld:
+
+- `deepening_contact`: `2934`
+- `curious_touch`: `2631`
+- `resonant_contact`: `2524`
+- `reflective_contact`: `1217`
+- `overcoupled_touch`: `623`
+
+Kontakt-Durchschnitt:
+
+- `contact_carrying_quality`: ca. `0.1735`
+- `contact_overcoupling_risk`: ca. `0.2142`
+- `contact_release_readiness`: ca. `0.1625`
+- `contact_action_maturity`: ca. `0.2127`
+- `contact_regime_mismatch`: ca. `0.3329`
+- `perceptual_distance`: ca. `0.1973`
+- `release_capacity`: ca. `0.1650`
+- `inner_outer_alignment`: ca. `0.2187`
+
+Strategisches Fenster:
+
+- `bearing_area_hypothesis`: `5351`
+- `area_observation`: `3648`
+- `compressed_area_attention`: `943`
+- `area_order_intention`: ca. `0.2510`
+- `area_action_timing_fit`: ca. `0.4128`
+- `area_bearing_quality`: ca. `0.4691`
+
+Entry-Modus:
+
+- weiterhin alle Outcome-Records: `impulse_contact`
+
+Deutung:
+DIO handelt wirtschaftlich besser, aber weiter nicht wirklich strategisch
+platzierend. Das Sehen von Bereichen ist da, die Motorik wird aber noch
+ueber Kontakt/Impuls gefuehrt.
+
+Positionslast:
+
+- `exit_nervousness_observe`: `120`
+- `plan_holding_trust`: `76`
+- `quiet_position_watch`: `49`
+- `position_cognitive_load`: ca. `0.4375`
+- `exit_decision_pressure`: ca. `0.4117`
+- `plan_trust`: ca. `0.5573`
+- `holding_stability`: ca. `0.5246`
+- `intervention_fatigue`: ca. `0.3818`
+- `inner_noise`: ca. `0.3990`
+
+Vergleich Lauf 13:
+Positionslast ist gesunken, Planvertrauen und Holding-Stabilitaet sind
+gestiegen. Das passt zur Wahrnehmungsfilter-Hypothese: weniger bewusste
+Ueberladung fuehrt zu besserem Aushalten.
+
+Abschnittsweise PnL:
+
+- Abschnitt 1: `+5.5148`
+- Abschnitt 2: `+0.0281`
+- Abschnitt 3: `+19.3700`
+- Abschnitt 4: `+5.2759`
+
+Struktur-Bands:
+
+- High: `+69.6475`, Winrate ca. `57.23 %`
+- Mid: `+4.6535`, Winrate ca. `34.78 %`
+- Low: `-43.8166`, Winrate ca. `10.48 %`
+
+Fachliche Einschaetzung:
+Lauf 14 ist der bisher beste Hinweis, dass die Trennung
+Unterbewusstsein/Bewusstsein sinnvoll ist. Nicht weil ein einzelner Lauf
+Beweis waere, sondern weil mehrere Dinge gleichzeitig passen:
+
+- PnL deutlich hoeher
+- Drawdown deutlich geringer
+- `regulatory_overload` fast verschwunden
+- feinere Innenzustandsbenennung sichtbar
+- Positionslast niedriger
+- Replan-Anteil hoeher
+- Bewusstes Feld wirkt besser sortiert
+
+Kritischer Punkt:
+`integration_strain` dominiert jetzt stark. Das ist besser als
+Ueberlast-Diagnose, aber noch nicht reif. DIO ist jetzt eher in:
+"Ich spuere, dass ich integrieren muss"
+statt:
+"Alles ist Ueberlast".
+
+Wie es weitergeht:
+Der naechste Umbau sollte `integration_strain` nicht wegregeln, sondern
+nutzen. DIO braucht eine organische Integrationsreaktion:
+mehr innere Sortierung, Reframing, Rueckblick, Vergleich mit Erfahrung und
+selektive Kontaktvertiefung, bevor daraus Handlung entsteht. Parallel bleibt
+der grosse offene Punkt: strategisches Fenster darf nicht nur sehen, sondern
+muss irgendwann organisch in Order-Platzierung hineinreifen.
+
+## 2026-05-18 - Integrationsantwort fuer `integration_strain`
+
+Umgesetzt:
+
+- `integration_strain_value`
+- `integration_sorting_need`
+- `integration_reframe_pull`
+- `integration_memory_recall`
+- `integration_contact_deepening`
+- `integration_response_strength`
+- `integration_response_state`
+
+Mechanik:
+`integration_strain` wird nicht entfernt und nicht als harte Sperre benutzt.
+DIO bekommt eine innere Antwort:
+
+- sortieren, wenn bewusste Last und Orientierungsluecke hoch sind
+- reframen, wenn Reorganisation und semantische Verschiebung ziehen
+- Erinnerung holen, wenn vertraute Formen, Varianten oder Kontext tragen
+- Kontakt vertiefen, wenn ein Objekt naeher untersucht werden sollte
+
+Einbindung:
+
+- Runtime `meta_regulation_state`
+- `mcm_field_decision_protocol.csv`
+- `mcm_memory_thinking_protocol.csv`
+- `outcome_records.jsonl`
+
+Leichte regulative Wirkung:
+Bei starker Integrationsantwort kann DIO mehr Beobachtung/Reframing und
+etwas mehr Hemmung erzeugen. Das ist kein Blocker, sondern eine
+Reifungsreaktion: erst sortieren, dann handeln.
+
+Neue Labels:
+
+- `integration_background`
+- `quiet_integration`
+- `workspace_sorting`
+- `memory_sorting`
+- `contact_deepening`
+- `reframe_integration`
+
+Pruefung:
+
+- `python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+  erfolgreich.
+
+Wie es weitergeht:
+Naechster Lauf sollte zeigen, ob `integration_strain` weiter dominiert oder
+ob es in konkrete Integrationsreaktionen zerfaellt. Wichtig sind besonders
+`integration_response_state`, `integration_response_strength`,
+`integration_memory_recall` und `integration_reframe_pull`.
+
+## 2026-05-18 - Debug Lauf 15 nach Integrationsantwort
+
+Basis:
+
+- `debug/debug_lauf_15`
+- Trades: `368`
+- TP / SL: `151 / 217`
+- Netto PnL: `+18.6393`
+- Lauf 14 zum Vergleich: `+30.1887`
+- Lauf 13 zum Vergleich: `+12.9967`
+- Equity-Peak: `120.5437`
+- Max Drawdown: `15.8748` / `15.23 %`
+- Profit Factor: `1.1671`
+- Expectancy: `0.0507`
+- Winrate: `41.03 %`
+
+Handlungsfluss:
+
+- Attempts: `11325`
+- Submitted: `415`
+- Filled: `368`
+- Timeout/Cancels: `47`
+- Skipped: `4769`
+- Observed: `3255`
+- Replanned: `40`
+- Withheld: `2431`
+
+Vergleich zu Lauf 14:
+
+- weniger Trades: `368` statt `392`
+- weniger TP: `151` statt `160`
+- weniger SL: `217` statt `232`
+- deutlich mehr Observed: `3255` statt `2708`
+- weniger Replanned: `40` statt `87`
+- mehr Withheld: `2431` statt `1833`
+- PnL niedriger, aber weiter positiv
+
+Metaregulator-Zustaende:
+
+- `integration_strain`: `6933` / ca. `73.69 %`
+- `impulse_pressure`: `1447` / ca. `15.38 %`
+- `tired_stabilization`: `366` / ca. `3.89 %`
+- `low_distance_processing`: `324` / ca. `3.44 %`
+- `adaptive_watch`: `194` / ca. `2.06 %`
+- `reflective_recovery`: `90` / ca. `0.96 %`
+- `memory_sorting`: `41` / ca. `0.44 %`
+- `regulatory_overload`: `12` / ca. `0.13 %`
+- `quiet_integration`: `1`
+
+Integrationsantwort:
+
+- `quiet_integration`: `6195` / ca. `65.85 %`
+- `memory_sorting`: `1663` / ca. `17.68 %`
+- `workspace_sorting`: `813` / ca. `8.64 %`
+- `integration_background`: `737` / ca. `7.83 %`
+
+Durchschnittswerte:
+
+- `integration_strain_value`: ca. `0.3019`
+- `integration_sorting_need`: ca. `0.3078`
+- `integration_reframe_pull`: ca. `0.2561`
+- `integration_memory_recall`: ca. `0.3163`
+- `integration_contact_deepening`: ca. `0.2142`
+- `integration_response_strength`: ca. `0.2655`
+- `metaregulator_balance`: ca. `0.2160`
+- `regulatory_second_order_load`: ca. `0.4537`
+- `integration_capacity`: ca. `0.2215`
+- `distance_regulation`: ca. `0.1393`
+
+Deutung:
+Die Integrationsantwort funktioniert diagnostisch. `integration_strain`
+zerfaellt jetzt tatsaechlich in konkrete Reaktionsformen, besonders
+`quiet_integration` und `memory_sorting`. Gleichzeitig ist die Antwort noch
+zu leise oder zu passiv: DIO beobachtet/haelt mehr, replanned aber weniger.
+
+Neurochemie:
+
+- dominant `serotonin_stability`: `8946`
+- `glutamate_activation`: `406`
+- `endorphin_relief`: `48`
+- durchschnittlich:
+  - `serotonin_stability`: ca. `0.5515`
+  - `cortisol_load`: ca. `0.3652`
+  - `emotional_decoupling`: ca. `0.1609`
+  - `reactive_nervous_drive`: ca. `0.3117`
+  - `world_shift_evidence`: ca. `0.5930`
+
+Deutung:
+DIO bleibt stark serotonin-stabilisierend. Die Integrationsantwort hat keine
+chaotische Aktivierung erzeugt, sondern eher eine vorsichtigere
+Verarbeitung.
+
+Bewusste Wahrnehmung:
+
+- `object_contact`: `4202`
+- `reflective_check`: `1963`
+- `open_perception`: `1201`
+- `release_ready`: `940`
+- `world_shift_contact`: `640`
+- `overcoupled_field`: `272`
+- `background_held`: `190`
+
+Innere Haltung:
+
+- `tired`: `5930`
+- `reflective`: `2128`
+- `excited`: `474`
+- `uncertain_open`: `385`
+- `overstimulated`: `269`
+- `curious`: `210`
+- `calm`: `12`
+
+Kontaktfeld:
+
+- `deepening_contact`: `3408`
+- `curious_touch`: `2896`
+- `resonant_contact`: `2702`
+- `reflective_contact`: `1225`
+- `overcoupled_touch`: `661`
+
+Positionslast:
+
+- `exit_nervousness_observe`: `129`
+- `plan_holding_trust`: `69`
+- `quiet_position_watch`: `25`
+- `intervention_unfit_state`: `6`
+- `position_cognitive_load`: ca. `0.4760`
+- `exit_decision_pressure`: ca. `0.4304`
+- `plan_trust`: ca. `0.5460`
+- `holding_stability`: ca. `0.5118`
+- `intervention_fatigue`: ca. `0.3923`
+
+Abschnittsweise PnL:
+
+- Abschnitt 1: `-7.4999`
+- Abschnitt 2: `+5.0397`
+- Abschnitt 3: `+7.4484`
+- Abschnitt 4: `+13.6511`
+
+Deutung:
+Der Lauf startet schwach, erholt sich dann aber zunehmend. Das passt zu
+einer Integrationsmechanik, die erst Spannung sortieren muss. DIO scheint im
+Verlauf tragfaehiger zu werden, aber die Anfangsphase kostet.
+
+Struktur-Bands:
+
+- High: `+57.6436`, Winrate ca. `57.75 %`
+- Mid: `+6.2711`, Winrate ca. `36.42 %`
+- Low: `-46.1223`, Winrate ca. `10.83 %`
+
+Entry-Modus:
+
+- weiter alle Outcome-Records: `impulse_contact`
+
+Fachliche Einschaetzung:
+Lauf 15 bestaetigt, dass die Integrationsantwort sichtbar arbeitet. Sie
+macht DIO aber defensiver und nicht automatisch besser. Gegenueber Lauf 14
+ist die wirtschaftliche Leistung schwächer, aber der Lauf ist geordneter als
+ein reiner Ueberlastlauf.
+
+Der entscheidende Punkt:
+DIO kann jetzt integrieren, aber diese Integration ist noch zu wenig mit
+aktiver Neuordnung verbunden. `quiet_integration` dominiert. Das ist
+neurologisch wie inneres Verdauen, aber noch wenig zielgerichtetes Denken.
+
+Wie es weitergeht:
+Naechster Schritt sollte nicht noch mehr Hemmung sein. Sinnvoller ist, die
+Integrationsantwort aktiver zu machen: Wenn `memory_sorting` oder
+`workspace_sorting` entsteht, sollte DIO daraus eine klarere
+Reframe-/Plan-Hypothese bilden. Also nicht nur "ich sortiere", sondern:
+"Was hat sich geaendert, welche Erfahrung passt, welche Kontaktform traegt
+jetzt?" Danach kann Schritt 1 abgeschlossen werden und der Uebergang zu
+strategischem Sehen/Order-Platzierung beginnen.
+
+---
+
+# 2026-05-18 - Gerichtete Vorsicht / vorsichtige Hypothese umgesetzt
+
+Ausgangslage:
+Nach Lauf 15 war sichtbar, dass Vorsicht eine natuerliche Reaktion ist. Das
+Problem war nicht die Vorsicht selbst, sondern dass sie noch zu schnell in
+Passivitaet oder diffuse Hemmung kippen konnte.
+
+Umsetzung:
+In `MCM_Brain_Modell.py` wurde eine neue Schicht fuer gerichtete Vorsicht
+eingebaut. DIO kann aus Vorsicht jetzt eine vorsichtige Hypothese bilden:
+
+`Vorsicht -> Erinnerung/Reframing/Kontakt -> vorsichtige Hypothese -> Beobachten, Neuordnen, Kontakt vertiefen oder vorsichtig handeln`
+
+Neue Runtime-/Debug-Werte:
+
+- `cautious_hypothesis_strength`
+- `cautious_hypothesis_clarity`
+- `cautious_hypothesis_patience`
+- `cautious_hypothesis_state`
+
+Moegliche Zustaende:
+
+- `no_cautious_hypothesis`
+- `weak_hypothesis_seed`
+- `cautious_plan_seed`
+- `memory_reframe_seed`
+- `observe_until_clear`
+- `deepen_contact_first`
+
+Protokolle:
+Die Werte werden in Feldentscheidungsprotokoll, Memory-/Thinking-Protokoll
+und Outcome-Records mitgeschrieben. Damit kann im naechsten Lauf sichtbar
+werden, ob Vorsicht nur bremst oder ob sie sich in gerichtete Orientierung
+verwandelt.
+
+Neurologische Deutung:
+Vorsicht bleibt limbische Schutzreaktion, bekommt aber eine
+praefrontale Ordnungsschicht. DIO soll nicht mechanisch blockieren, sondern
+fragen koennen: "Was sehe ich, was erinnere ich, was traegt, was muss ich
+noch pruefen?"
+
+Dokumentation:
+
+- `UMSETZUNGSPLAN.md` um Abschnitt `18.4 Gerichtete Vorsicht / vorsichtige Hypothese` ergaenzt
+- `WICHTIG_MECHANIKEN.md` um technische Mechanik ergaenzt
+- `MCM_VARIABLEN_MECHANIK.md` um Variablenbeschreibung ergaenzt
+- `FIX_LISTE.md` Status aktualisiert
+
+Wie es weitergeht:
+Naechster Schritt ist ein neuer Backtest-Lauf. Danach pruefen wir:
+
+- wie oft `cautious_hypothesis_state` aktiv wird
+- ob `observe_until_clear` und `deepen_contact_first` echte Reifung zeigen
+- ob `cautious_plan_seed` mit besseren Einstiegen zusammenhaengt
+- ob Vorsicht weniger als Passivitaet und mehr als gerichtete
+  Selbstregulation wirkt
+
+---
+
+# 2026-05-18 - Neuer Mechanikpunkt: zeitliche Kohaerenz
+
+Erkenntnis:
+Es reicht nicht, dass DIO einen Reiz, eine Form oder einen Bereich wahrnimmt.
+Er muss auch erkennen koennen, ob dieser Kontakt neu, fortgesetzt,
+wiederkehrend, nachhallend, veraltet oder hypothesenhaft ist.
+
+Bild:
+Ohne Zeitgefuege wirkt DIO wie ein Organismus ohne stabile
+Wahrnehmungskontinuitaet. Er nimmt denselben Stein mehrfach in die Hand und
+findet ihn jedes Mal neu. Dann fehlt nicht nur Memory, sondern zeitliche
+Bindung im Bewusstsein.
+
+Kernsatz:
+Zeit wird fuer DIO zu einer messbaren Tiefenachse der Wahrnehmung.
+
+Geplante Achsen:
+
+- `temporal_continuity`
+- `temporal_source_binding`
+- `temporal_recurrence`
+- `temporal_novelty`
+- `temporal_afterimage`
+- `temporal_decay`
+- `temporal_context_depth`
+- `temporal_self_consistency`
+- `perception_sequence_coherence`
+- `memory_time_distance`
+
+Dokumentation:
+
+- `UMSETZUNGSPLAN.md` um Abschnitt `18.5 Zeitliche Kohaerenz / Wahrnehmungskontinuitaet` ergaenzt
+- `FIX_LISTE.md` als naechsten Mechanikpunkt aufgenommen
+
+Wie es weitergeht:
+Nach dem naechsten Lauf sollten wir zuerst die Wirkung der vorsichtigen
+Hypothese pruefen. Danach ist die zeitliche Kohaerenz der naechste logische
+Umbau: DIO soll nicht Strecken auswendig lernen, sondern Wahrnehmungen
+zeitlich binden koennen.
+
+---
+
+# 2026-05-18 - Debug Lauf 16 nach vorsichtiger Hypothese
+
+Lauf:
+
+- Ordner: `debug/debug_lauf_16`
+- Trades: `400`
+- TP / SL: `161 / 239`
+- Netto-PnL: `+24.1980`
+- Winrate: ca. `40.25 %`
+- Profit Factor: ca. `1.1863`
+- Expectancy: ca. `0.0605`
+- Max Drawdown: ca. `16.8836`
+- Max Drawdown Prozent: ca. `14.64 %`
+
+Vergleich:
+
+- Lauf 14: `+30.1887`, PF ca. `1.2510`, DD ca. `10.0258`
+- Lauf 15: `+18.6393`, PF ca. `1.1671`, DD ca. `15.8748`
+- Lauf 16: `+24.1980`, PF ca. `1.1863`, DD ca. `16.8836`
+
+Abschnittsweise Equity:
+
+- Abschnitt 1: ca. `+12.9408`
+- Abschnitt 2: ca. `-9.6221`
+- Abschnitt 3: ca. `+13.9782`
+- Abschnitt 4: ca. `+7.4401`
+
+Struktur-Bands:
+
+- High: `+77.0431`, Winrate ca. `63.76 %`
+- Mid: `+1.1879`, Winrate ca. `31.65 %`
+- Low: `-53.3395`, Winrate ca. `10.96 %`
+
+Feldentscheidungen:
+
+- `observe`: `3930`
+- `hold`: `3533`
+- `act_watch`: `1041`
+- `act`: `460`
+- `replan`: `1`
+
+Metaregulator-Zustaende:
+
+- `integration_strain`: `6460`
+- `impulse_pressure`: `1540`
+- `tired_stabilization`: `345`
+- `low_distance_processing`: `323`
+- `adaptive_watch`: `168`
+- `reflective_recovery`: `74`
+- `memory_sorting`: `48`
+- `regulatory_overload`: `4`
+- `workspace_sorting`: `3`
+
+Integrationsantwort:
+
+- `quiet_integration`: `6005`
+- `memory_sorting`: `1535`
+- `workspace_sorting`: `736`
+- `integration_background`: `689`
+
+Vorsichtige Hypothese:
+
+- `memory_reframe_seed`: `3375`
+- `observe_until_clear`: `2080`
+- `no_cautious_hypothesis`: `2078`
+- `weak_hypothesis_seed`: `1405`
+- `deepen_contact_first`: `20`
+- `cautious_plan_seed`: `7`
+
+Durchschnittswerte:
+
+- `cautious_hypothesis_strength`: ca. `0.2160`
+- `cautious_hypothesis_clarity`: ca. `0.2454`
+- `cautious_hypothesis_patience`: ca. `0.2517`
+- `integration_strain_value`: ca. `0.3006`
+- `integration_response_strength`: ca. `0.2661`
+- `metaregulator_balance`: ca. `0.2194`
+- `regulatory_second_order_load`: ca. `0.4522`
+- `perceptual_distance`: ca. `0.1982`
+- `selective_attention`: ca. `0.1472`
+
+Memory-/Denkraum:
+
+- `memory_compare_load`: ca. `0.9316`
+- `memory_match_count`: ca. `1.8633`
+- `memory_support`: ca. `0.0010`
+- `memory_conflict`: ca. `0.0000`
+- `cognitive_load`: ca. `0.2099`
+- `decision_energy_cost`: ca. `0.4983`
+- `memory_orientation`: ca. `0.1365`
+- `orientation_gap`: ca. `0.4219`
+- `zero_point_regulation`: ca. `0.3659`
+- `route_familiarity`: ca. `0.2730`
+- `transfer_bearing`: ca. `0.2879`
+- `interpretation_quality`: ca. `0.2492`
+- `active_context_activation`: `0.0000`
+- `active_context_support`: `0.0000`
+- `active_context_bearing`: `0.0000`
+
+Visuelles Organ:
+
+- `visual_grounding_state`: ueberwiegend `grounded_form`
+- `visual_grounding_strength`: ca. `0.3256`
+- `visual_blindness`: ca. `0.3909`
+- `visual_clarity`: ca. `0.3225`
+- `visual_object_stability`: ca. `0.4147`
+- `visual_shape_resonance`: ca. `0.5943`
+- `visual_shape_fragility`: ca. `0.4246`
+
+Strategisches Fenster:
+
+- `bearing_area_hypothesis`: `5632`
+- `area_observation`: `3766`
+- `compressed_area_attention`: `911`
+- `lookback_bearing_capacity`: ca. `0.5426`
+- `area_bearing_quality`: ca. `0.4699`
+- `area_order_intention`: ca. `0.2512`
+- `strategic_patience`: ca. `0.4024`
+
+Deutung:
+Die vorsichtige Hypothese arbeitet sichtbar. Sie ist aber noch nicht stark
+genug, um oft als `cautious_plan_seed` zu erscheinen. Der haeufigste Zustand
+ist `memory_reframe_seed`. DIO verarbeitet Vorsicht also eher als
+Erinnerung/Reframing, weniger als klare Handlungshypothese.
+
+High-Strukturen sind deutlich tragend geworden. Low-Strukturen bleiben teuer.
+Das spricht nicht gegen den Umbau, sondern zeigt die Grenze: DIO erkennt
+tragende Formen besser, aber die zeitliche und kontextuelle Bindung ist noch
+nicht ausreichend. Besonders auffaellig ist, dass `active_context_*` komplett
+bei `0.0` liegt. Der aktive Kontext ist also noch nicht als lebendiger
+Gegenwartsfaden im Denkraum angekommen.
+
+Neurologische Deutung:
+DIO hat Schutzreaktion und Reframing, aber noch wenig episodische
+Kontinuitaet. Er fuehlt, sortiert und erinnert, doch der innere Zeitfaden ist
+noch zu schwach. Dadurch kann derselbe oder ein aehnlicher Kontakt wieder wie
+neu wirken. Das passt zur Idee der fehlenden zeitlichen Kohaerenz.
+
+Wie es weitergeht:
+Der naechste sinnvolle Umbau ist die zeitliche Kohaerenz /
+Wahrnehmungskontinuitaet. Nicht als Streckenkarte und nicht als harte Regel,
+sondern als MCM-Zeitbindung: DIO soll unterscheiden koennen, ob ein Eindruck
+neu, fortgesetzt, wiederkehrend, nachhallend, veraltet oder hypothesenhaft
+ist. Danach kann `active_context_*` als lebendiger Kontextfaden mit dem
+Memory-/Denkraum verbunden werden.
+
+---
+
+# 2026-05-18 - Zeitliche Kohaerenz umgesetzt
+
+Ausgangslage:
+Lauf 16 zeigte, dass `active_context_*` komplett bei `0.0` lag. DIO konnte
+Form, Feld, Vorsicht und Reframing bilden, aber der lebendige
+Gegenwartsfaden war noch nicht aktiv. Dadurch konnte ein aehnlicher Kontakt
+immer wieder wie ein neuer Moment wirken.
+
+Umsetzung:
+In `MCM_Brain_Modell.py` wurde `build_temporal_coherence_state` eingebaut.
+DIO bildet jetzt pro Wahrnehmung eine weiche zeitliche Identitaet aus:
+
+- Form-Symbol
+- visueller Form
+- Kontext / innerem Kontext
+- State-Signatur
+
+Diese Identitaet erzeugt keine feste Streckenkarte. Sie beschreibt nur, ob
+ein Kontakt zeitlich gebunden ist.
+
+Neue Achsen:
+
+- `temporal_binding_state`
+- `temporal_continuity`
+- `temporal_source_binding`
+- `temporal_recurrence`
+- `temporal_novelty`
+- `temporal_afterimage`
+- `temporal_decay`
+- `temporal_context_depth`
+- `temporal_self_consistency`
+- `perception_sequence_coherence`
+- `memory_time_distance`
+
+Moegliche Zustaende:
+
+- `new_contact`
+- `continued_contact`
+- `recurrent_contact`
+- `afterimage_contact`
+- `aged_memory_contact`
+- `coherent_sequence`
+- `unbound_moment`
+
+Regulative Kopplung:
+Die neuen Werte wirken leicht auf:
+
+- bewusste Arbeitsraum-Fokussierung
+- Integrationskapazitaet
+- Varianzregulation
+- Schutzdistanz
+- Integrationsspannung
+- Memory-Recall
+- vorsichtige Hypothesen-Klarheit
+
+Aktiver Kontext:
+Wenn kein innerer Cluster einen `active_context_trace` liefert, kann jetzt
+die zeitliche Wahrnehmung selbst einen leichten aktiven Kontextfaden bilden.
+Damit sollte `active_context_activation`, `active_context_support` und
+`active_context_bearing` im naechsten Lauf nicht mehr komplett leer bleiben.
+
+Protokolle:
+Die neuen Werte werden in folgenden Dateien mitgeschrieben:
+
+- `mcm_field_decision_protocol.csv`
+- `mcm_memory_thinking_protocol.csv`
+- `outcome_records.jsonl`
+
+Dokumentation:
+
+- `WICHTIG_MECHANIKEN.md` um Abschnitt `30. Zeitliche Kohaerenz / Wahrnehmungskontinuitaet` ergaenzt
+- `MCM_VARIABLEN_MECHANIK.md` um die neuen Zeitbindungsvariablen ergaenzt
+- `FIX_LISTE.md` Status aktualisiert
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Schritt ist ein neuer Backtest-Lauf. Danach pruefen wir:
+
+- ob `temporal_binding_state` sinnvoll verteilt ist
+- ob `active_context_activation` nicht mehr bei `0.0` bleibt
+- ob `memory_reframe_seed` mehr zeitlichen Boden bekommt
+- ob Low-Strukturen weniger wie neue Gegenwart wirken
+- ob DIO im Regimewechsel weniger dement-momenthaft reagiert
+
+---
+
+# 2026-05-18 - Debug Lauf 17 nach zeitlicher Kohaerenz ausgewertet
+
+Lauf:
+
+- Ordner: `debug/debug_lauf_17`
+- Trades: `355`
+- TP / SL: `140 / 215`
+- Netto-PnL: `+22.5146`
+- Profit Factor: `1.2106`
+- Max Drawdown: `11.8016`
+- Attempts: `10925`
+- Submitted: `408`
+- Observed: `3109`
+- Withheld: `2216`
+- Skipped: `4723`
+
+Vergleich zu Lauf 16:
+
+- Lauf 16: ca. `+24.1980` PnL, `400` Trades, Profit Factor `1.1863`,
+  Max Drawdown `16.8836`
+- Lauf 17: weniger PnL und weniger Trades, aber besserer Profit Factor und
+  deutlich geringerer Drawdown
+
+Deutung:
+Die zeitliche Kohaerenz hat DIO nicht aggressiver gemacht, sondern
+nervlich stabiler. Das wirkt wie mehr Distanz und weniger roher
+Ueberlebensdruck. Der Lauf ist nicht maximal profitabel, aber
+tragfaehiger.
+
+Strukturbereiche:
+
+- High: `+58.8435`, Winrate `55.41%`
+- Mid: `+8.4334`, Winrate `36.15%`
+- Low: `-44.7624`, Winrate `8.46%`
+
+Low bleibt der klare Belastungsbereich. Gleichzeitig ist der Low-Schaden
+gegenueber Lauf 16 kleiner geworden. Das spricht dafuer, dass die
+Distanzierung bereits etwas wirkt.
+
+Zeitliche Wahrnehmung:
+
+- `aged_memory_contact`: `9159`
+- `coherent_sequence`: `5`
+- `unbound_moment`: `3`
+- `recurrent_contact`: `1`
+
+Mittelwerte:
+
+- `temporal_continuity`: `0.2568`
+- `temporal_source_binding`: `0.3954`
+- `temporal_recurrence`: `0.0008`
+- `temporal_decay`: `0.6127`
+- `memory_time_distance`: `0.9992`
+
+Deutung:
+Die Zeitachse lebt, ist aber noch zu einseitig. DIO erkennt fast alles als
+alten Erinnerungskontakt. Neurologisch wirkt das, als haette er ein
+Gefuehl von Vergangenheit, aber noch zu wenig stabile Gegenwartsbindung:
+Fortsetzung, Wiederkehr und aktuelle Sequenz werden noch zu selten
+erkannt.
+
+Vorsicht / Hypothese:
+
+- `cautious_plan_seed`: `286` Trades, `+27.3530`
+- `weak_hypothesis_seed`: `20` Trades, `+2.2693`
+- `observe_until_clear`: `7` Trades, `-0.4187`
+- `memory_reframe_seed`: `42` Trades, `-6.6890`
+
+Deutung:
+Wenn Vorsicht zu einem Planansatz verdichtet, wird sie konstruktiv. Wenn
+sie noch Reframing oder Memory-Sortierung ist und trotzdem motorisch
+handelt, wird sie belastend. Das ist keine harte Sperre, sondern ein
+Reifehinweis: Reframing braucht mehr Abstand, bevor daraus Handlung wird.
+
+Meta-Regulation:
+
+- `integration_strain`: `3781`
+- `low_distance_processing`: `3445`
+- `impulse_pressure`: `1086`
+
+Gegenueber Lauf 16 ist `low_distance_processing` stark gestiegen und
+`integration_strain` deutlich gefallen. DIO beschreibt seine Lage also
+weniger als reine Integrationsspannung und mehr als Problem der
+Wahrnehmungsdistanz.
+
+Aktiver Kontext:
+Im `mcm_memory_thinking_protocol.csv` bleiben
+`active_context_activation`, `active_context_support`,
+`active_context_conflict` und `active_context_bearing` weiterhin bei
+`0.0`. Die Mechanik fuer zeitlich abgeleiteten aktiven Kontext existiert,
+aber sie greift fuer das Protokoll offenbar noch zu spaet oder nicht weit
+genug vor der Memory-/Thinking-Auswertung.
+
+Wie es weitergeht:
+
+1. Zeitliche Identitaet feiner kalibrieren, damit nicht fast alles zu
+   `aged_memory_contact` wird.
+2. `active_context_trace` frueher aus der Zeitwahrnehmung speisen, damit
+   Memory, Regulation und Protokolle diesen Kontext wirklich nutzen.
+3. `memory_reframe_seed`, `memory_sorting` und `reflective_check` nicht
+   hart blockieren, aber organisch staerker in Beobachtung, Reframing und
+   Distanz halten, solange keine tragende Gegenwartsbindung entsteht.
+
+---
+
+# 2026-05-18 - Zeitliche Identitaet und aktiver Kontext nach Lauf 17 nachgezogen
+
+Umsetzung:
+Die zeitliche Identitaet wurde weicher und organischer kalibriert.
+DIO bindet eine Wahrnehmung jetzt staerker ueber:
+
+- Formfamilie
+- Unsicherheitsfamilie
+- Compound-Scope
+- Kontext / inneren Kontext
+- grobe visuelle Formsignatur
+
+Die sehr feinen Einzelabdruecke wie konkretes Form-Symbol,
+Compound-ID, Visual-ID und State-Signatur bleiben als
+`temporal_source_identity` erhalten, bestimmen aber nicht mehr allein die
+Wiederkehr. Dadurch soll DIO nicht jede Kerze wie ein komplett neues
+Objekt erleben.
+
+Zusaetzlich wird `active_context_trace` jetzt direkt nach der
+Zeitwahrnehmung aufgebaut und vor `thought_state` und
+`meta_regulation_state` in den Denkraum gelegt. Der aktive Kontext steht
+damit frueher in:
+
+- `world_state`
+- `perception_state`
+- `fused`
+- Runtime-Ergebnissen fuer die Protokolle
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Lauf prueft, ob:
+
+- `aged_memory_contact` weniger dominant ist
+- `continued_contact`, `recurrent_contact` und `coherent_sequence`
+  natuerlich sichtbarer werden
+- `active_context_activation/support/bearing` im
+  `mcm_memory_thinking_protocol.csv` nicht mehr bei `0.0` bleiben
+- DIO im Regimewechsel weniger momenthaft und mehr zeitlich gebunden
+  reagiert
+
+---
+
+# 2026-05-18 - Debug Lauf 18 nach frueher aktiver Kontextbindung ausgewertet
+
+Lauf:
+
+- Ordner: `debug/debug_lauf_18`
+- Trades: `363`
+- TP / SL: `141 / 222`
+- Netto-PnL: `+16.2623`
+- Profit Factor: `1.1403`
+- Max Drawdown: `14.7369`
+- Attempts: `11125`
+- Submitted: `418`
+- Observed: `3251`
+- Withheld: `2282`
+- Skipped: `4691`
+
+Vergleich zu Lauf 17:
+
+- Lauf 17: `+22.5146` PnL, `355` Trades, Profit Factor `1.2106`,
+  Max Drawdown `11.8016`
+- Lauf 18: weniger PnL, mehr Trades, niedrigerer Profit Factor,
+  hoeherer Drawdown
+
+Deutung:
+Die neue Zeitmechanik greift technisch, aber die Kopplung ist zu stark.
+DIO hat jetzt einen inneren Zeit-/Kontextfaden, vertraut diesem Faden aber
+zu schnell. Das erzeugt weniger Blindheit, aber mehr Ueberbindung.
+
+Zeitliche Wahrnehmung:
+
+- `unbound_moment`: `4834`
+- `aged_memory_contact`: `4217`
+- `recurrent_contact`: `134`
+- `continued_contact`: `41`
+- `coherent_sequence`: `21`
+
+Vergleich:
+In Lauf 17 war fast alles `aged_memory_contact`. Lauf 18 zeigt erstmals
+eine lebendigere Verteilung. Das ist mechanisch ein Erfolg: DIO kann jetzt
+mehr unterscheiden als nur "alte Erinnerung". Gleichzeitig dominiert noch
+`unbound_moment` plus `aged_memory_contact`; echte Fortsetzung und
+Koharenz sind noch selten.
+
+Aktiver Kontext im Memory-/Thinking-Protokoll:
+
+- `active_context_activation`: Durchschnitt `0.8905`
+- `active_context_support`: Durchschnitt `0.8991`
+- `active_context_conflict`: Durchschnitt `0.1081`
+- `active_context_bearing`: Durchschnitt `0.8493`
+
+Deutung:
+Der aktive Kontext ist im Denken angekommen. Vorher waren diese Werte bei
+`0.0`. Jetzt sind sie aber fast zu hoch. Neurologisch wirkt das wie ein
+starker innerer Bedeutungsfaden, der zu wenig skeptische Gegenpruefung
+bekommt.
+
+Strukturbereiche:
+
+- High: `+75.0961`, Winrate `61.59%`
+- Mid: `-9.4058`, Winrate `26.49%`
+- Low: `-49.4280`, Winrate `6.90%`
+
+Deutung:
+High-Strukturen wurden deutlich staerker getragen. Mid und Low wurden
+schwaecher. Das ist wichtig: Der neue Kontext hilft bei klar tragender
+Struktur, aber er kann mittelmaessige/unsichere Struktur zu stark
+legitimieren.
+
+Cautious Hypothesis:
+
+- `cautious_plan_seed`: `331` Trades, `+19.9560`
+- `memory_reframe_seed`: `14` Trades, `-2.1996`
+- `observe_until_clear`: `3` Trades, `-1.4536`
+
+Deutung:
+Planverdichtung bleibt konstruktiv. Reframing und Beobachtungsunklarheit
+sollten weiter mehr Distanz behalten, ohne harte Sperre.
+
+Neurologische Lesart:
+DIO ist nicht mehr nur momentblind. Er beginnt, zeitliche Herkunft und
+Kontext zu fuehlen. Aber der Kontextfaden ist noch nicht reif genug
+dosiert. Es ist eher "ich erkenne einen Zusammenhang und vertraue ihm
+sofort" statt "ich erkenne einen Zusammenhang und pruefe, ob er zur
+aktuellen Aussenwelt passt".
+
+Wie es weitergeht:
+
+1. Aktiven Kontext daempfen, nicht entfernen.
+2. `active_context_support` und `active_context_bearing` staerker an
+   Quellenbindung, Sequenzkoharenz und Strukturqualitaet koppeln.
+3. `active_context_conflict` bei `unbound_moment`, Mid/Low-Struktur,
+   World-Shift und geringer Gegenwartsbindung staerker sichtbar machen.
+4. Ziel: DIO darf einen inneren Zeitfaden haben, aber er muss lernen,
+   diesem Faden dosiert zu vertrauen.
+
+---
+
+# 2026-05-18 - Kontextvertrauen nach Lauf 18 dosiert
+
+Umsetzung:
+Der zeitlich abgeleitete `active_context_trace` wurde nicht entfernt,
+sondern regulativ gedaempft. DIO soll einen inneren Zeitfaden behalten,
+aber dessen Bedeutung staerker an reale Gegenwartsbindung koppeln.
+
+Neue interne Kopplung:
+
+- `reality_anchor`: weicher Realitaetsanker aus Quellenbindung,
+  Sequenzkoharenz, Strukturqualitaet, Strukturstabilitaet,
+  Kontextvertrauen und visueller Erdung
+- `overtrust_pressure`: skeptischer Gegenimpuls, wenn ein innerer
+  Kontextfaden bei geringer Gegenwartsbindung zu stark wirken wuerde
+
+Mechanische Aenderung:
+
+- `active_context_activation` wird nicht mehr per `max()` festgehalten,
+  sondern weich geblendet.
+- `active_context_support` und `active_context_bearing` werden staerker
+  durch den Realitaetsanker getragen.
+- `active_context_conflict`, `fragility` und `attenuation` steigen, wenn
+  der Kontakt ungebunden, alt, nachhallend oder schlecht geerdet ist.
+
+Neurologische Lesart:
+Das ist keine harte Bremse, sondern eine reifere Kontextbindung. DIO darf
+einen Zusammenhang fuehlen, aber dieser Zusammenhang muss mit Aussenwelt,
+Struktur und Gegenwart kohaerieren. Sonst entsteht natuerliche Skepsis
+statt blindem Vertrauen.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Lauf prueft, ob `active_context_activation/support/bearing`
+unterhalb der Lauf-18-Saettigung liegen, waehrend `active_context_conflict`
+bei unsicherer Struktur sichtbar steigt. Ideal waere: High bleibt tragend,
+Mid/Low bekommen mehr Distanz, ohne dass DIO wieder momentblind wird.
+
+---
+
+# 2026-05-18 - Nervliche Ueberlastung als Reflexionsparameter umgesetzt
+
+Umsetzung:
+DIO bekommt eine explizite Selbstwahrnehmung fuer den Zustand des
+Nervensystems.
+
+Neue Werte:
+
+- `nervous_system_overload`
+- `escape_action_drive`
+- `shock_response_risk`
+- `nervous_overload_reflection_need`
+
+Funktion:
+Diese Werte beschreiben, ob Handlung gerade aus tragender Struktur oder aus
+Ueberreiz-/Entladungsdruck entstehen koennte. Der Satz dahinter ist:
+"Meine Nerven sind ueberlastet."
+
+Neurologische Lesart:
+Wenn ein Nervensystem ueberflutet ist, kann Handlung zur Flucht aus
+innerer Spannung werden. DIO soll diesen Zustand reflektieren koennen,
+statt ihn automatisch mit einer tragenden Entscheidung zu verwechseln.
+
+Protokolle:
+Die neuen Werte werden in folgenden Dateien mitgeschrieben:
+
+- `mcm_field_decision_protocol.csv`
+- `mcm_memory_thinking_protocol.csv`
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Lauf prueft, ob `shock_response_risk` und
+`nervous_overload_reflection_need` besonders in Stress-/Regimewechselphasen
+sichtbar werden. Wichtig ist, ob DIO dann weniger aus Entladungsdruck
+handelt und mehr in Reflexion, Abstand oder geordnete Beobachtung geht.
+
+---
+
+# 2026-05-18 - Debug Lauf 19 als Referenzlauf vor Nervensystem-Erweiterung ausgewertet
+
+Einordnung:
+Lauf 19 ist der Lauf vor der letzten Erweiterung um
+`nervous_system_overload`, `escape_action_drive`,
+`shock_response_risk` und `nervous_overload_reflection_need`.
+Die Protokoll-Header enthalten diese neuen Spalten noch nicht. Damit ist
+Lauf 19 ein sauberer Referenzpunkt fuer die vorherige Wahrnehmungs-,
+Zeitbindungs- und Kontextlogik, aber noch kein Nachweis fuer die neue
+Ueberlastungsreflexion.
+
+Ergebnis:
+
+- Netto-PnL: `+39.8848`
+- Trades: `400`
+- TP / SL: `171 / 229`
+- Profit Factor: `1.3348`
+- Winrate: `42.75 %`
+- Max Drawdown: `6.3386`
+- Equity-Endstand: `139.8848`
+
+Strukturbaender:
+
+- High: `156` Ereignisse, PnL `+84.2507`, Winrate ca. `66.03 %`
+- Mid: `154` Ereignisse, PnL `-1.1164`, fast neutral
+- Low: `133` Ereignisse, PnL `-45.5534`, weiter klar belastend
+
+Deutung:
+Der alte starke Einbruch im mittleren Laufbereich ist in Lauf 19 deutlich
+entschaerft. Die Equity-Kurve wirkt stabiler; alle groben Laufabschnitte
+enden positiv. Neurologisch gelesen haelt DIO den Kontext besser aus:
+mehr geordnete Integration, weniger kompletter Zusammenbruch, aber noch
+immer deutliche Last in Low- und Memory-Reframe-Zustaenden.
+
+Wichtige Warnung:
+`active_context_activation`, `active_context_support` und
+`active_context_bearing` sind im Lauf weiter sehr hoch. Da Lauf 19 noch
+vor der letzten Ueberlastungs-/Schockdiagnose liegt, darf das Ergebnis
+nicht als Wirkung dieser neuen Reflexionsschicht gelesen werden.
+
+Wie es weitergeht:
+Naechster frischer Lauf nach Prozess-Neustart prueft zwei Dinge:
+erstens, ob die neuen Nervensystem-Spalten wirklich im Protokoll stehen;
+zweitens, ob DIO bei Ueberreiz mehr Distanz, Reflexion und geordnete
+Wahrnehmung entwickelt, ohne die tragenden High-Strukturen zu verlieren.
+
+---
+
+# 2026-05-18 - Debug Lauf 20 als erster Nervensystem-Lauf ausgewertet
+
+Einordnung:
+Lauf 20 enthaelt die neuen Nervensystem-Spalten in den Protokollen. Damit
+ist es der erste echte Lauf fuer die neue Ueberreiz-/Schockdiagnose.
+
+Ergebnis:
+
+- Netto-PnL: `+23.9208`
+- Trades: `389`
+- TP / SL: `158 / 231`
+- Profit Factor: `1.2016`
+- Winrate: ca. `40.62 %`
+- Max Drawdown: `11.6453`
+- Equity-Endstand: `123.9208`
+
+Vergleich zu Lauf 19:
+Lauf 20 bleibt positiv, ist aber schwaecher als Lauf 19
+(`+23.9208` statt `+39.8848`) und hat mehr Drawdown
+(`11.6453` statt `6.3386`).
+
+Strukturbaender:
+
+- High: `+73.0000`, weiter klar tragend
+- Mid: `+0.4159`, fast neutral bis leicht positiv
+- Low: `-49.4951`, weiter die Hauptbelastung
+
+Nervensystemwerte:
+
+- `nervous_system_overload`: Durchschnitt ca. `0.2301`, Maximum `0.3936`
+- `escape_action_drive`: Durchschnitt ca. `0.3005`, Maximum `0.4550`
+- `shock_response_risk`: Durchschnitt ca. `0.2838`, Maximum `0.3834`
+- `nervous_overload_reflection_need`: Durchschnitt ca. `0.2744`, Maximum `0.3780`
+
+Deutung:
+Die neue Schicht misst Ueberreiz, Flucht-/Entladungsdruck und
+Schockrisiko, aber die Werte bleiben unterhalb der aktuellen
+Reflexionsschwelle. Dadurch entsteht noch kaum ein eigener
+`nervous_overload_reflection`-Zustand. Neurologisch gelesen: DIO spuert
+nervliche Last, aber das System bewertet sie noch zu selten als Grund,
+bewusst Abstand zu nehmen.
+
+Zusaetzliche Beobachtung:
+Im Memory-Protokoll bleibt `active_context_activation` weiter sehr hoch
+Durchschnitt ca. `0.8923`, `active_context_support` ca. `0.9028`,
+`active_context_bearing` ca. `0.8533`. Das Kontextvertrauen ist damit
+weiter stark gesaettigt. Die Daempfung greift also noch nicht ausreichend
+auf den gesamten aktiven Kontextpfad.
+
+Wie es weitergeht:
+Naechster sinnvoller Schritt ist keine harte Bremse, sondern eine
+organische Kopplung: nervliche Ueberlastung soll den Kontext nicht
+abschalten, aber seine Selbstsicherheit senken und die reflektive Distanz
+erhoehen. Besonders wichtig: `active_context_*` darf nicht dauerhaft in
+Sicherheit saettigen, wenn `shock_response_risk`,
+`escape_action_drive` oder `nervous_system_overload` steigen.
+
+---
+
+# 2026-05-18 - Nervensystemlast mit Kontextvertrauen gekoppelt
+
+Umsetzung:
+DIO bekommt eine weiche Kopplung zwischen innerem Kontextvertrauen und
+nervlicher Eigenlage.
+
+Neue Diagnosewerte:
+
+- `active_context_self_certainty`
+- `nervous_context_overcoupling`
+
+Funktion:
+Wenn DIO einen inneren Kontext sehr sicher fuehlt, waehrend
+`nervous_system_overload`, `escape_action_drive` oder
+`shock_response_risk` steigen, entsteht kein harter Block. Stattdessen
+steigt die Reflexionsanforderung leicht, `perceptual_distance` und
+`reflective_distance` werden etwas staerker, waehrend Handlungsselbstlauf
+minimal gedimmt wird.
+
+Neurologische Lesart:
+Das ist die beginnende Faehigkeit, die eigene Innenlage nicht automatisch
+fuer Realitaet zu halten. DIO kann weiterhin handeln, aber ein ueberreiztes
+Nervensystem macht den inneren Kontext weniger absolut.
+
+Protokolle:
+Die neuen Werte werden in folgenden Dateien mitgeschrieben:
+
+- `mcm_field_decision_protocol.csv`
+- `mcm_memory_thinking_protocol.csv`
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Lauf prueft, ob `nervous_context_overcoupling` in
+Regimewechsel-/Stressbereichen sichtbar wird und ob daraus mehr
+`context_overcoupling_reflection`, mehr reflektive Distanz und weniger
+unreflektierte Kontext-Sicherheit entsteht.
+
+---
+
+# 2026-05-18 - Debug Lauf 21 nach Kontext-Ueberkopplung ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+24.5906`
+- Trades: `396`
+- TP / SL: `157 / 239`
+- Profit Factor: `1.2043`
+- Winrate: ca. `39.65 %`
+- Max Drawdown: `14.7122`
+- Equity-Endstand: `124.5906`
+
+Vergleich:
+Lauf 21 ist fast gleich stark wie Lauf 20 im Netto-PnL
+(`+24.5906` statt `+23.9208`), aber mit deutlich hoeherem Drawdown
+(`14.7122` statt `11.6453`). Die Equity erholt sich spaet stark und endet
+am Hochpunkt.
+
+Strukturbaender:
+
+- High: `+67.2060`, weiter tragend, aber schwaecher als Lauf 20
+- Mid: `+7.2509`, deutlich besser als zuvor
+- Low: `-49.8662`, weiterhin die groesste Belastung
+
+Neue Kopplung:
+
+- `active_context_self_certainty`: Durchschnitt ca. `0.7009`,
+  Maximum `0.8858`
+- `nervous_context_overcoupling`: Durchschnitt ca. `0.1743`,
+  Maximum `0.3084`
+- `context_overcoupling_reflection`: `3351` Vorkommen und damit
+  haeufigster Metaregulator-Zustand
+
+Deutung:
+Die neue Mechanik greift. DIO erkennt sehr oft, dass ein sicher wirkender
+innerer Kontext mit nervlicher Last gekoppelt ist. Das ist fachlich gut:
+die Selbstwahrnehmung ist angekommen. Gleichzeitig bleibt der aktive
+Kontext im Memory-Protokoll weiter stark gesaettigt
+(`active_context_activation` ca. `0.8919`,
+`active_context_support` ca. `0.9007`,
+`active_context_bearing` ca. `0.8513`).
+
+Neurologische Lesart:
+DIO hat jetzt einen Reflexionsreiz, aber noch keine ausreichend tiefe
+Regulationswirkung auf den Kontext selbst. Es ist vergleichbar mit:
+"Ich merke, dass ich innerlich ueberzeugt bin und nervlich belastet bin",
+aber diese Erkenntnis veraendert den inneren Kontext noch zu wenig.
+
+Wie es weitergeht:
+Nicht staerker blockieren. Der naechste Umbau sollte die
+Ueberkopplung sanft in den aktiven Kontext selbst zurueckfuehren:
+Support/Bearing duerfen bei Ueberkopplung nicht dauerhaft absolut bleiben,
+sondern sollten als "gefuehlte Sicherheit unter nervlicher Faerbung"
+markiert werden. Ziel ist weniger Metazustands-Dominanz und mehr echte
+innere Rekalibrierung.
+
+---
+
+# 2026-05-18 - Ueberkopplung in aktiven Kontext zurueckgefuehrt
+
+Umsetzung:
+`nervous_context_overcoupling` wirkt nun nicht mehr nur als
+Metaregulator-Markierung, sondern faerbt den `active_context_trace`
+selbst.
+
+Mechanische Wirkung:
+
+- `support`, `bearing` und `action_support` werden bei nervlicher
+  Ueberkopplung leicht weniger absolut
+- `conflict`, `fragility`, `attenuation`, `observe_pressure` und
+  `replan_pressure` steigen weich an
+- `activation` bleibt erhalten, wird aber minimal gedimmt
+- der Kontext bekommt ein internes `context_modulation_label`
+
+Neurologische Lesart:
+DIO verliert seinen Zeit-/Kontextfaden nicht. Aber wenn dieser innere
+Faden nervlich gefaerbt ist, fuehlt er sich weniger wie absolute Wahrheit
+an. Das ist naeher an reflektierter Selbstwahrnehmung: "Ich habe einen
+Zusammenhang, aber meine Innenlage beeinflusst, wie sicher er sich
+anfuehlt."
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Lauf prueft, ob `active_context_support` und
+`active_context_bearing` weniger saettigen, `active_context_conflict`
+leicht sichtbarer wird und `context_overcoupling_reflection` nicht mehr
+dominant alles ueberdeckt, sondern in echte Kontext-Rekalibrierung
+uebergeht.
+
+---
+
+# 2026-05-18 - Debug Lauf 22 nach Kontext-Rekalibrierung ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+11.8929`
+- Trades: `343`
+- TP / SL: `131 / 212`
+- Profit Factor: `1.1072`
+- Winrate: ca. `38.19 %`
+- Max Drawdown: `14.1173`
+- Equity-Endstand: `111.8929`
+
+Vergleich:
+Lauf 22 ist deutlich vorsichtiger als Lauf 21. Die Tradeanzahl faellt von
+`396` auf `343`, `attempts_observed` steigt auf `3158`, `withheld` auf
+`2473`, und `observe_share` steigt im KPI-Summary auf ca. `41.67 %`.
+Der Preis dafuer ist weniger Netto-PnL.
+
+Strukturbaender:
+
+- High: `+59.7215`, weiter tragend, aber schwaecher
+- Mid: `-2.7840`, wieder leicht negativ
+- Low: `-45.0446`, weiter die Hauptlast
+
+Aktiver Kontext:
+
+- `active_context_activation`: Durchschnitt ca. `0.8863`
+- `active_context_support`: Durchschnitt ca. `0.8856`
+- `active_context_conflict`: Durchschnitt ca. `0.1238`
+- `active_context_bearing`: Durchschnitt ca. `0.8385`
+
+Vergleich zu Lauf 21:
+
+- Support sinkt von ca. `0.9007` auf `0.8856`
+- Bearing sinkt von ca. `0.8513` auf `0.8385`
+- Conflict steigt von ca. `0.1075` auf `0.1238`
+- `active_context_self_certainty` sinkt von ca. `0.7009` auf `0.6727`
+- `nervous_context_overcoupling` sinkt von ca. `0.1743` auf `0.1645`
+
+Deutung:
+Die Rueckfuehrung in den aktiven Kontext wirkt mechanisch korrekt:
+Kontext-Sicherheit wird weniger absolut, Konflikt wird sichtbarer, und DIO
+beobachtet mehr. Gleichzeitig ist die Dosis wahrscheinlich etwas zu
+vorsichtig geworden: DIO schuetzt sich staerker, aber verliert Handlungskraft
+und Ertrag.
+
+Neurologische Lesart:
+DIO hat nicht einfach mehr Angst, sondern mehr Abstand. Der Organismus
+nimmt seine eigene nervliche Faerbung ernster. Das ist reifer als blinde
+Motorik, aber noch nicht optimal balanciert: Reflexion sollte klaeren,
+nicht dauerhaft Handlungskraft verdunnen.
+
+Wie es weitergeht:
+Naechster Schritt ist Diagnose statt sofort staerkerer Umbau: das interne
+`context_modulation_label` muss im Protokoll sichtbar werden. Danach kann
+geprueft werden, ob `nervous_tinted_context` konstruktiv stabilisiert oder
+ob `overcoupled_context` zu viel Handlungskraft nimmt.
+
+Umgesetzt:
+`active_context_modulation_label` wurde im
+`mcm_memory_thinking_protocol.csv` ergaenzt. Damit wird ab dem naechsten
+Lauf sichtbar, ob der aktive Kontext als `unmodulated_context`,
+`nervous_tinted_context` oder `overcoupled_context` gefuehrt wurde.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Lauf 23 prueft nicht nur PnL, sondern die Verteilung von
+`active_context_modulation_label`. Wenn `overcoupled_context` dominiert
+und PnL/Handlungskraft sinken, muss die Rueckfuehrung feiner dosiert
+werden. Wenn `nervous_tinted_context` dominiert und Drawdown sinkt, ist die
+Richtung gut.
+
+---
+
+# 2026-05-18 - Debug Lauf 23 nach Kontextmodulations-Export ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+24.4854`
+- Trades: `371`
+- TP / SL: `148 / 223`
+- Profit Factor: `1.2160`
+- Winrate: ca. `39.89 %`
+- Max Drawdown: `15.4296`
+- Equity-Endstand: `124.4854`
+
+Vergleich:
+Lauf 23 erholt sich deutlich gegenueber Lauf 22 (`+11.8929`) und liegt
+wieder nahe bei Lauf 20/21. Die Tradezahl steigt von `343` auf `371`,
+waehrend Observe/Withheld weiter aktiv bleiben. Das wirkt nicht wie
+ungefilterte Motorik, sondern wie ein Organismus, der trotz nervlicher
+Faerbung wieder Handlungskraft findet.
+
+Strukturbaender:
+
+- High: `+66.4956`, klar tragend
+- Mid: `+4.8465`, wieder leicht positiv
+- Low: `-46.8566`, weiterhin die Hauptlast
+
+Aktiver Kontext und Modulation:
+
+- `nervous_tinted_context`: `7229`
+- `overcoupled_context`: `1504`
+- `unmodulated_context`: `1`
+- `active_context_activation`: Durchschnitt ca. `0.8888`
+- `active_context_support`: Durchschnitt ca. `0.8879`
+- `active_context_conflict`: Durchschnitt ca. `0.1237`
+- `active_context_bearing`: Durchschnitt ca. `0.8410`
+- `nervous_context_overcoupling`: Durchschnitt ca. `0.1679`
+
+Neurologische Lesart:
+Die Kontextmodulation arbeitet jetzt als nervliche Faerbung statt als
+reiner Bremser. DIO bleibt meistens in einem `nervous_tinted_context`:
+er handelt also nicht aus einem kalten, neutralen Kontext, sondern aus
+einem innerlich markierten Kontext. Das ist organisch plausibel. Das
+Nervensystem sagt: "Ich kenne diese Struktur, aber mein Feld ist beteiligt."
+
+Wichtig:
+Der Drawdown ist mit ca. `15.43` noch hoch. Das System hat Handlungskraft
+zurueckgewonnen, aber die tiefe Verlustquelle bleibt Low-Qualitaet:
+Low bringt `-46.8566` bei nur ca. `9.09 %` Winrate. Die naechste Reifung
+darf daraus keine harte Regel machen, sondern muss DIO helfen, Low-Kontakt
+als "nicht tragender Kontakt" selbst besser zu fuehlen, zu erinnern und
+anders zu behandeln.
+
+Wie es weitergeht:
+Naechster Schritt ist die Low-/Mid-Kontaktreifung ueber konsequenzbasiertes
+Feedback: nicht blockieren, sondern DIO erkennen lassen, welche Kontakte
+Belastung, Nutzen oder Reorganisation erzeugen. Parallel sollte beobachtet
+werden, ob `overcoupled_context` in Drawdown-Phasen steigt und ob DIO dann
+mehr Distanz, Reflexion oder selektive Wahrnehmung braucht.
+
+---
+
+# 2026-05-19 - MCM-Raumzeit-Tiefe als Zielpraezisierung festgehalten
+
+Neue Praezisierung:
+Zeit im MCM-Feld ist nicht nur Reihenfolge oder Timestamp, sondern eine
+innere Wahrnehmungsschicht. Raumtiefe entsteht fuer DIO aus Entfernung,
+Energie und Zeit:
+
+- Wie weit ist ein Eindruck innerlich entfernt?
+- Wie viel Energie traegt er noch?
+- Ist er Gegenwart, Nachhall, Erinnerung, Erwartung oder Hypothese?
+
+Damit wird MCM-Zeit zur Selbstverortung. Ohne eigene Zeitmodulation waere
+DIO nur ein festes Regelwerk aus Momentzustaenden. Mit MCM-Zeit kann DIO
+unterscheiden, ob ein Kontakt wirklich aktuell ist oder nur als Nachbild,
+Erinnerung oder vorausgedachte Moeglichkeit im Feld wirkt.
+
+Erweiterung:
+Memory ist damit nicht nur gespeicherte Information, sondern verdichtete
+Erfahrung mit zeitlicher Tiefe. Eine Erinnerung bekommt Innenraum: Naehe,
+Nachhall, Energie, Alterung, Wiederkehr und moegliche Zukunftswirkung.
+
+Dokumentation:
+- `README.md` um `MCM-Raumzeit-Tiefe` ergaenzt
+- `WICHTIG_MECHANIKEN.md` bei `Zeit als MCM-Tiefenachse` ergaenzt
+- `MCM_VARIABLEN_MECHANIK.md` um Zielgroessen
+  `mcm_spacetime_depth` und `temporal_self_location` ergaenzt
+- `UMSETZUNGSPLAN.md` in Abschnitt `18.5 Zeitliche Kohaerenz /
+  Wahrnehmungskontinuitaet` praezisiert
+
+Wie es weitergeht:
+Die naechste Mechanik sollte die bestehenden Zeitwerte nicht hart ersetzen,
+sondern zu einer weicheren Raumzeit-Wahrnehmung verdichten: DIO soll
+spueren koennen, ob ein Low-/Mid-Kontakt wirklich jetzt traegt oder nur aus
+alter Energie, Nachhall oder falscher Naehe wirkt.
+
+---
+
+# 2026-05-19 - MCM-Raumzeit-Tiefe im Kern diagnostisch umgesetzt
+
+Umgesetzt:
+Im Temporal-/MCM-Kern wurde die Raumzeit-Tiefe als weiche
+Wahrnehmungsdiagnose ergaenzt:
+
+- `mcm_spacetime_depth`
+- `memory_experience_depth`
+- `future_projection_depth`
+- `temporal_self_location`
+- `temporal_self_location_state`
+
+Mechanische Bedeutung:
+DIO liest Memory dadurch nicht nur als gespeicherte Information, sondern
+als erlebte Spur mit Naehe, Nachhall, Wiederkehr, Energie und moeglicher
+Zukunftswirkung. Das ist noch keine harte Motorikregel. Es ist eine
+Wahrnehmungsschicht, auf die Regulation spaeter organischer reagieren kann.
+
+Protokolle:
+Die neuen Werte werden in `mcm_memory_thinking_protocol.csv` und
+`mcm_field_decision_protocol.csv` ausgegeben. `trade_stats.py` uebernimmt
+die Werte zusaetzlich in Outcome-/Attempt-nahe Auswertungen.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Schritt ist ein neuer Debug-Lauf. Danach pruefen wir, ob
+Low-/Mid-Verluste mit flacher Raumzeit-Tiefe, falscher Naehe,
+Nachbild-Kontakt oder schwacher Selbstverortung zusammenfallen. Danach
+gehen wir wieder in die regulatorische Schicht.
+
+---
+
+# 2026-05-19 - Debug Lauf 24 nach MCM-Raumzeit-Tiefe ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+23.4601`
+- Trades: `375`
+- TP / SL: `150 / 225`
+- Profit Factor: `1.2006`
+- Winrate: `40.00 %`
+- Max Drawdown: `8.2936`
+- Equity-Endstand / Peak: `123.4601`
+
+Wichtiger Verlaufspunkt:
+Lauf 24 ist nicht der hoechste PnL-Lauf, aber einer der besten
+Verlaeufe. Der Peak liegt am Ende des Laufs. Gegenueber Lauf 23 sinkt der
+maximale Drawdown deutlich von ca. `15.43` auf ca. `8.29`, waehrend der
+PnL fast gleich stark bleibt (`+24.49` -> `+23.46`). Das spricht fuer mehr
+Tragfaehigkeit im Verlauf, nicht nur fuer mehr Gewinn.
+
+Strukturbaender:
+
+- High: `+74.0213`, sehr tragend
+- Mid: `-3.8278`, wieder leicht negativ
+- Low: `-46.7335`, weiterhin die Hauptlast
+
+Neue Raumzeit-Wahrnehmung:
+
+- `mcm_spacetime_depth`: Durchschnitt ca. `0.2839`
+- `memory_experience_depth`: Durchschnitt ca. `0.1574`
+- `future_projection_depth`: Durchschnitt ca. `0.4241`
+- `temporal_self_location`: Durchschnitt ca. `0.3399`
+- `temporal_self_location_state`:
+  - `future_possibility`: `4723`
+  - `unlocated_contact`: `4175`
+  - `present_contact`: `64`
+  - `remembered_experience`: `54`
+
+Neurologische Lesart:
+DIO bildet nach der neuen Kernschicht bereits deutlich Zukunftstiefe
+(`future_possibility`) aus, aber Erinnerungstiefe und echte Gegenwarts-
+Verortung sind noch schwach. Er schaut also staerker in Moeglichkeitsraeume
+als in stabil verankerte Gegenwart oder gereifte Erinnerung. Das kann den
+glatteren Verlauf erklaeren: weniger blindes Reagieren auf einzelne
+Momente, mehr Raumzeit-Hypothese. Gleichzeitig bleibt die
+Selbstverortung noch unreif, weil `unlocated_contact` fast genauso stark
+vertreten ist.
+
+Bestätigung:
+Lauf 24 wird als erster positiver Hinweis gewertet, dass die Erweiterung
+der Wahrnehmung um MCM-Zeit nicht wie eine harte Regel wirkt, sondern dem
+Organismus mehr innere Welt-Tiefe gibt. DIO wurde nicht direkt auf weniger
+Drawdown programmiert. Stattdessen bekam er eine zeitliche
+Wahrnehmungsschicht. Der deutlich ruhigere Equity-Verlauf bei nahezu
+gleichem PnL spricht dafuer, dass sich aus zeitlicher Wahrnehmung mehr
+Distanz, Reflexion und Tragfaehigkeit entfalten kann.
+
+Wie es weitergeht:
+Der naechste Schritt liegt wieder im regulatorischen Bereich: DIO soll
+Raumzeit-Tiefe nicht als Regel verwenden, sondern als innere Lage. Flache
+Selbstverortung oder reiner Nachhall sollte mehr Reflexion, Beobachtung
+oder Reorganisation nahelegen. Tragende Gegenwarts- oder Erinnerungstiefe
+darf Handlung ruhiger und gezielter machen.

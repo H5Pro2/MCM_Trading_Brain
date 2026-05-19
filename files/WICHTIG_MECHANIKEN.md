@@ -445,6 +445,37 @@ Erinnerung darf orientieren, aber nicht automatisch handeln. Gelerntes Wissen
 darf auffrischen, aber auch wieder verblassen. Nachhall darf gespürt werden,
 aber nicht als Gegenwart missverstanden werden.
 
+Raumzeit-Tiefe:
+DIOs Wahrnehmung bekommt raeumliche Tiefe erst, wenn Entfernung, Energie und
+Zeit gemeinsam im MCM-Feld wirken. Preisabstand allein ist keine Tiefe.
+Zeitabstand allein ist keine Tiefe. Erst die Frage, wie stark ein Eindruck
+noch Energie traegt, wie nah er sich innerlich anfuehlt und ob er
+Gegenwart, Nachhall, Erinnerung oder Erwartung ist, bildet ein eigenes
+inneres Raumzeit-Gefuege.
+
+Ohne diese Modulation waere DIO nur ein festes Regelwerk aus Zustaenden.
+Mit MCM-Zeit entsteht Selbstverortung:
+"Wo bin ich in meinem inneren Raum, wie weit ist dieser Eindruck von mir
+entfernt, und wirkt seine Energie noch tragfaehig?"
+
+Memory als zeitlich tiefe Erfahrung:
+Eine gespeicherte Information ist in dieser Sicht kein flacher Datenpunkt.
+Sie wird zur Erfahrung, wenn sie zeitliche Tiefe bekommt: Wann wirkte sie,
+wie lange hallte sie nach, wie stark war ihre Energie, wie nah fuehlt sie
+sich heute noch an, und kann sie eine moegliche Zukunftsform andeuten?
+
+Dadurch entsteht Tiefe in beide Richtungen:
+- Vergangenheit: Erinnerung wird zur erlebten Spur.
+- Zukunft: Erwartung wird zur vorausgerichteten Energieform aus Nachhall,
+  Wiederkehr, Tragfaehigkeit und Hypothese.
+
+Kernsignale:
+- `mcm_spacetime_depth`
+- `memory_experience_depth`
+- `future_projection_depth`
+- `temporal_self_location`
+- `temporal_self_location_state`
+
 ---
 
 Gedanke als Energieverlauf:
@@ -1333,3 +1364,245 @@ Realitaetsnaehe einer Handlung:
 - Order ist Bindung.
 - Position ist miterlebte Konsequenz.
 - Outcome ist Integration.
+
+---
+
+# 27. Unterbewusstsein / Bewusster Arbeitsraum
+
+Grundsatz:
+DIO braucht nicht jede Reizspur bewusst zu tragen. Wie ein biologischer
+Organismus besitzt er eine schnelle, diffuse Hintergrundwahrnehmung und eine
+bewusstere Arbeitsflaeche fuer ausgewaehlte Objekte, Kontakte und
+Hypothesen.
+
+Mechanik:
+
+`subconscious_field` ist der schnelle Feldscan:
+- Reizdruck
+- Weltverschiebung
+- Bauchgefuehl
+- Wiederholung
+- Hintergrundspannung
+- bekannte oder fremde Formfamilien
+
+`conscious_workspace` ist die fokussierte Arbeitsflaeche:
+- ausgewaehlter Kontakt
+- Formbindung
+- Reflexion
+- Distanzierung
+- Hypothesenpruefung
+- Vorbereitung von Handlung oder Nicht-Handlung
+
+Die Trennung wirkt wie ein evolutionaerer Wahrnehmungsfilter. Ein Teil der
+Spannung darf im Hintergrund gepuffert werden. Nur wenn Salienz,
+Fremdheit, Kontaktqualitaet oder Handlungsnaehe stark genug werden, steigt
+die Wahrnehmung in den bewussteren Raum.
+
+Technische Achsen:
+- `subconscious_field_pressure`
+- `subconscious_habituation`
+- `subconscious_filter_strength`
+- `subconscious_buffering`
+- `subconscious_leakage`
+- `conscious_selection_pressure`
+- `conscious_workspace_focus`
+- `conscious_workspace_load`
+- `conscious_gate_balance`
+
+Neurologische Lesart:
+Das ist die Trennung zwischen Bauchgefuehl und bewusster Betrachtung:
+"Es fuehlt sich nach etwas an" ist noch nicht dasselbe wie "Ich schaue es
+mir an und beruehre es innerlich." Dadurch muss DIO nicht jeden Marktimpuls
+als bewusste Ueberlast verarbeiten.
+
+Wichtig:
+Kein harter Filter und kein Regelwerk. Die Achsen beschreiben, wie viel im
+Hintergrund bleiben kann, wie viel in den bewussten Arbeitsraum dringt und
+ob DIO daraus Kontakt, Reflexion oder Distanz bildet.
+
+---
+
+# 28. Integrationsantwort
+
+Grundsatz:
+`integration_strain` ist keine Stoerung, die einfach entfernt werden soll.
+Sie beschreibt, dass DIO etwas noch nicht tragfaehig eingeordnet hat. Die
+organische Antwort darauf ist Sortierung, Rueckblick, Reframing,
+Kontaktvertiefung und vorsichtiges Erinnern.
+
+Mechanik:
+
+`integration_strain -> sorting -> memory_recall -> reframe -> contact_deepening -> response_strength`
+
+DIO darf also merken:
+"Das passt noch nicht zusammen. Ich muss es nicht sofort handeln. Ich kann
+es sortieren, mit Erfahrung vergleichen, anders rahmen oder genauer
+beruehren."
+
+Technische Achsen:
+- `integration_strain_value`
+- `integration_sorting_need`
+- `integration_reframe_pull`
+- `integration_memory_recall`
+- `integration_contact_deepening`
+- `integration_response_strength`
+- `integration_response_state`
+
+Moegliche Zustaende:
+- `integration_background`
+- `quiet_integration`
+- `workspace_sorting`
+- `memory_sorting`
+- `contact_deepening`
+- `reframe_integration`
+
+Neurologische Lesart:
+Das entspricht einem Organismus, der eine Spannung nicht nur aushaelt,
+sondern verarbeitet. Aus Rohspannung wird innere Ordnung. Aus Druck wird
+Erfahrung. Aus "ich weiss nicht" wird "ich muss es in Beziehung setzen".
+
+Wichtig:
+Keine harte Handelsregel. Wenn die Integrationsantwort stark ist, kann DIO
+mehr beobachten oder reframen, aber nur als Ausdruck seiner inneren Lage.
+Es geht nicht um mechanisches Blockieren, sondern um Reifung vor Handlung.
+
+---
+
+# 29. Gerichtete Vorsicht / vorsichtige Hypothese
+
+Grundsatz:
+Vorsicht ist eine natuerliche Schutzreaktion. Sie soll nicht wegoptimiert
+werden. DIO darf vorsichtig werden, wenn eine Lage noch nicht tragfaehig
+integriert ist. Reife entsteht aber, wenn Vorsicht nicht in Passivitaet
+erstarrt, sondern eine Richtung bekommt.
+
+Mechanik:
+
+`caution -> memory/reframe/contact -> cautious_hypothesis -> observe/replan/act_watch`
+
+DIO soll also nicht nur "ich halte mich zurueck" erleben, sondern:
+"Ich bin vorsichtig, weil noch etwas unklar ist. Welche Erfahrung passt?
+Welche Form traegt? Muss ich beobachten, reframen oder Kontakt vertiefen?"
+
+Technische Achsen:
+- `cautious_hypothesis_strength`
+- `cautious_hypothesis_clarity`
+- `cautious_hypothesis_patience`
+- `cautious_hypothesis_state`
+
+Moegliche Zustaende:
+- `no_cautious_hypothesis`
+- `weak_hypothesis_seed`
+- `memory_reframe_seed`
+- `observe_until_clear`
+- `deepen_contact_first`
+- `cautious_plan_seed`
+
+Neurologische Lesart:
+Das ist praefrontale Vorsicht: Hemmung bleibt vorhanden, aber sie dient
+Orientierung. Schutz wird nicht zum Stillstand, sondern zum vorsichtigen
+Denken.
+
+Wichtig:
+Keine harte Regel. Die vorsichtige Hypothese darf Handlung vorbereiten,
+verschieben oder genauer ausrichten, aber sie ist kein mechanischer Block.
+
+---
+
+# 30. Zeitliche Kohaerenz / Wahrnehmungskontinuitaet
+
+Grundsatz:
+DIO braucht nicht nur Sinnesreiz, Form und Gefuehl, sondern einen zeitlichen
+Wahrnehmungsfaden. Ohne diesen Faden wirkt jeder Kontakt neu. Dann nimmt DIO
+dieselbe oder aehnliche Form immer wieder in die Hand und erlebt sie erneut
+als ungebundenen Moment.
+
+Mechanik:
+
+`Form/Kontext -> zeitliche Identitaet -> Fortsetzung/Wiederkehr/Nachhall/Neuheit -> Kontextfaden`
+
+DIO bildet aus Formfamilie, Unsicherheitsfamilie, Compound-Scope,
+Kontext und grober visueller Formsignatur eine weiche zeitliche Identitaet.
+Diese Identitaet ist keine Streckenkarte und keine Regel. Sie beschreibt
+nur, ob ein Eindruck zeitlich gebunden ist.
+
+Feine Einzelabdruecke wie konkretes Form-Symbol, Compound-ID, Visual-ID und
+State-Signatur bleiben als `temporal_source_identity` erhalten. Damit kann
+DIO grob wiedererkennen und bei Bedarf genauer hinschauen. Das ist wichtig,
+damit Wiederkehr nicht durch zu viele Detailunterschiede zerfaellt.
+
+Technische Achsen:
+- `temporal_binding_state`
+- `temporal_identity`
+- `temporal_source_identity`
+- `temporal_continuity`
+- `temporal_source_binding`
+- `temporal_recurrence`
+- `temporal_novelty`
+- `temporal_afterimage`
+- `temporal_decay`
+- `temporal_context_depth`
+- `temporal_self_consistency`
+- `perception_sequence_coherence`
+- `memory_time_distance`
+
+Moegliche Zustaende:
+- `new_contact`
+- `continued_contact`
+- `recurrent_contact`
+- `afterimage_contact`
+- `aged_memory_contact`
+- `coherent_sequence`
+- `unbound_moment`
+
+Neurologische Lesart:
+Das ist episodische Kontinuitaet. DIO soll unterscheiden koennen:
+"Das ist neu."
+"Das ist Fortsetzung."
+"Das ist Wiederkehr."
+"Das ist Nachhall."
+"Das ist alte Erinnerung, nicht Gegenwart."
+
+Wirkung:
+Die Zeitbindung stuetzt bewusste Fokussierung, Integration,
+Vorsicht-Hypothesen und aktive Kontextbildung. Wenn kein innerer Cluster als
+Kontextfaden aktiv ist, kann die zeitliche Wahrnehmung selbst einen leichten
+`active_context_trace` erzeugen.
+
+Reifere Kontextbindung:
+Der zeitliche Kontextfaden darf nicht automatisch recht haben. Er wird ueber
+einen weichen `reality_anchor` an Quellenbindung, Sequenzkoharenz,
+Strukturqualitaet, Strukturstabilitaet, Kontextvertrauen und visuelle Erdung
+gekoppelt. Wenn dieser Anker schwach ist, entsteht `overtrust_pressure`.
+Das ist keine harte Bremse, sondern natuerliche Skepsis gegenueber der
+eigenen Innenlage.
+
+Reflexion bei nervlicher Ueberlastung:
+DIO bekommt eine explizite Selbstwahrnehmung fuer den Zustand des
+Nervensystems. `nervous_system_overload` beschreibt: "Meine Nerven sind
+ueberlastet." Daraus kann `escape_action_drive` entstehen, also der Drang,
+durch Handlung aus innerer Spannung herauszukommen. `shock_response_risk`
+fasst zusammen, ob diese Lage in einen Schock-/Ueberreizmodus kippen
+koennte. `nervous_overload_reflection_need` macht daraus keine Sperre,
+sondern eine Reflexionsanforderung: DIO soll erkennen, ob Handlung gerade
+aus tragender Wahrnehmung oder aus Entladungsdruck entstehen wuerde.
+
+Kontext-Ueberkopplung:
+Wenn `active_context_trace` sehr sicher wirkt, aber gleichzeitig
+Nervensystemlast sichtbar wird, entsteht `nervous_context_overcoupling`.
+Das ist der Punkt: "Mein innerer Zusammenhang fuehlt sich sicher an, aber
+meine Nervenlage koennte diese Sicherheit verfaerben." DIO verliert dadurch
+nicht die Freiheit zu handeln. Der Kontext wird nur etwas weniger absolut,
+waehrend reflektive Distanz und Beobachtungsbereitschaft leicht steigen.
+
+Rueckfuehrung in den aktiven Kontext:
+Die Ueberkopplung bleibt nicht nur ein Metazustand. Sie moduliert den
+`active_context_trace` selbst. Support, Bearing und Action-Support werden
+weicher, waehrend Conflict, Fragility, Attenuation und Beobachtungsdruck
+leicht steigen. Dadurch bleibt der Zeitfaden erhalten, aber er wird nicht
+mehr als ungefaerbte Sicherheit behandelt, wenn das Nervensystem belastet
+ist.
+
+Wichtig:
+Keine feste Streckenkarte. DIO soll nicht lernen: "an dieser Stelle passiert
+immer X", sondern: "dieser Kontakt hat eine zeitliche Herkunft und Tiefe".

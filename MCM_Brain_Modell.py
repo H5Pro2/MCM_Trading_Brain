@@ -406,8 +406,91 @@ def _normalize_active_context_trace(trace):
         "inner_pattern_recognition_strength": max(0.0, min(1.0, float(item.get("inner_pattern_recognition_strength", inner_pattern_recognition_state.get("recognition_strength", 0.0)) or 0.0))),
         "inner_pattern_recognition_recurrent": bool(item.get("inner_pattern_recognition_recurrent", inner_pattern_recognition_state.get("recurrent", False))),
         "inner_pattern_recognition_changed": bool(item.get("inner_pattern_recognition_changed", inner_pattern_recognition_state.get("changed", False))),
+        "active_context_self_certainty": max(0.0, min(1.0, float(item.get("active_context_self_certainty", 0.0) or 0.0))),
+        "nervous_context_overcoupling": max(0.0, min(1.0, float(item.get("nervous_context_overcoupling", 0.0) or 0.0))),
+        "context_modulation_label": str(item.get("context_modulation_label", "unmodulated_context") or "unmodulated_context"),
         "last_seen_tick": int(float(item.get("last_seen_tick", 0) or 0)),
     }
+
+# --------------------------------------------------
+def _resolve_context_modulation_source(bot=None, runtime_result=None):
+
+    runtime = dict(runtime_result or {})
+    meta = dict(runtime.get("meta_regulation_state", {}) or {})
+
+    if not meta and bot is not None:
+        try:
+            meta = dict(getattr(bot, "mcm_runtime_decision_state", {}).get("entry_result", {}).get("meta_regulation_state", {}) or {})
+        except Exception:
+            meta = {}
+
+    if not meta and bot is not None:
+        try:
+            meta = dict(getattr(bot, "mcm_runtime_brain_snapshot", {}).get("meta_regulation_state", {}) or {})
+        except Exception:
+            meta = {}
+
+    return dict(meta or {})
+
+# --------------------------------------------------
+def _apply_nervous_context_modulation(trace, bot=None, runtime_result=None):
+
+    item = _normalize_active_context_trace(trace)
+    if not item:
+        return {}
+
+    meta = _resolve_context_modulation_source(bot=bot, runtime_result=runtime_result)
+
+    def _read(key, default=0.0):
+        try:
+            return float(meta.get(key, item.get(key, default)) or default)
+        except Exception:
+            return float(default)
+
+    nervous_context_overcoupling = max(0.0, min(1.0, _read("nervous_context_overcoupling", 0.0)))
+    nervous_reflection_need = max(0.0, min(1.0, _read("nervous_overload_reflection_need", 0.0)))
+    shock_response_risk = max(0.0, min(1.0, _read("shock_response_risk", 0.0)))
+
+    context_self_certainty = max(
+        0.0,
+        min(
+            1.0,
+            float(item.get("activation", 0.0) or 0.0)
+            * ((float(item.get("support", 0.0) or 0.0) + float(item.get("bearing", 0.0) or 0.0)) * 0.5)
+            * max(0.0, 1.0 - float(item.get("conflict", 0.0) or 0.0)),
+        ),
+    )
+    modulation = max(
+        0.0,
+        min(
+            1.0,
+            (nervous_context_overcoupling * 0.62)
+            + (nervous_reflection_need * 0.22)
+            + (shock_response_risk * 0.12),
+        ),
+    )
+
+    if modulation <= 0.001:
+        item["active_context_self_certainty"] = float(context_self_certainty)
+        item["nervous_context_overcoupling"] = float(nervous_context_overcoupling)
+        item["context_modulation_label"] = "unmodulated_context"
+        return _normalize_active_context_trace(item)
+
+    item["activation"] = max(0.0, min(1.0, float(item.get("activation", 0.0) or 0.0) - (modulation * 0.018)))
+    item["support"] = max(0.0, min(1.0, float(item.get("support", 0.0) or 0.0) * (1.0 - modulation * 0.075)))
+    item["bearing"] = max(0.0, min(1.0, float(item.get("bearing", 0.0) or 0.0) * (1.0 - modulation * 0.065)))
+    item["action_support"] = max(0.0, min(1.0, float(item.get("action_support", 0.0) or 0.0) * (1.0 - modulation * 0.070)))
+    item["conflict"] = max(0.0, min(1.0, float(item.get("conflict", 0.0) or 0.0) + (modulation * 0.080)))
+    item["fragility"] = max(0.0, min(1.0, float(item.get("fragility", 0.0) or 0.0) + (modulation * 0.075)))
+    item["attenuation"] = max(0.0, min(1.0, float(item.get("attenuation", 0.0) or 0.0) + (modulation * 0.090)))
+    item["observe_pressure"] = max(0.0, min(1.0, float(item.get("observe_pressure", 0.0) or 0.0) + (modulation * 0.050)))
+    item["replan_pressure"] = max(0.0, min(1.0, float(item.get("replan_pressure", 0.0) or 0.0) + (modulation * 0.035)))
+    item["overtrust_pressure"] = max(0.0, min(1.0, float(item.get("overtrust_pressure", 0.0) or 0.0) + (modulation * 0.100)))
+    item["active_context_self_certainty"] = float(context_self_certainty)
+    item["nervous_context_overcoupling"] = float(nervous_context_overcoupling)
+    item["context_modulation_label"] = "nervous_tinted_context" if modulation < 0.24 else "overcoupled_context"
+
+    return _normalize_active_context_trace(item)
 
 # --------------------------------------------------
 def _snapshot_field_topology_layout(field, limit=96, field_snapshot=None):
@@ -731,6 +814,128 @@ def _build_active_context_trace_from_inner_cluster(bot=None):
     }
 
 # --------------------------------------------------
+def _build_active_context_trace_from_temporal_state(bot=None, runtime_result=None):
+
+    if bot is None:
+        return {}
+
+    result = dict(runtime_result or {})
+    temporal_state = dict(
+        result.get(
+            "temporal_perception_state",
+            getattr(bot, "temporal_perception_state", {}) or {},
+        )
+        or {}
+    )
+    if not temporal_state:
+        return {}
+
+    identity = str(temporal_state.get("temporal_identity", "") or "").strip()
+    if not identity or identity == "-":
+        return {}
+
+    continuity = max(0.0, min(1.0, float(temporal_state.get("temporal_continuity", 0.0) or 0.0)))
+    source_binding = max(0.0, min(1.0, float(temporal_state.get("temporal_source_binding", 0.0) or 0.0)))
+    recurrence = max(0.0, min(1.0, float(temporal_state.get("temporal_recurrence", 0.0) or 0.0)))
+    novelty = max(0.0, min(1.0, float(temporal_state.get("temporal_novelty", 0.0) or 0.0)))
+    afterimage = max(0.0, min(1.0, float(temporal_state.get("temporal_afterimage", 0.0) or 0.0)))
+    decay = max(0.0, min(1.0, float(temporal_state.get("temporal_decay", 0.0) or 0.0)))
+    context_depth = max(0.0, min(1.0, float(temporal_state.get("temporal_context_depth", 0.0) or 0.0)))
+    self_consistency = max(0.0, min(1.0, float(temporal_state.get("temporal_self_consistency", 0.0) or 0.0)))
+    sequence_coherence = max(0.0, min(1.0, float(temporal_state.get("perception_sequence_coherence", 0.0) or 0.0)))
+    memory_time_distance = max(0.0, min(1.0, float(temporal_state.get("memory_time_distance", 1.0) or 1.0)))
+    structure_quality = max(0.0, min(1.0, float(temporal_state.get("temporal_structure_quality", 0.0) or 0.0)))
+    structure_stability = max(0.0, min(1.0, float(temporal_state.get("temporal_structure_stability", 0.0) or 0.0)))
+    context_confidence = max(0.0, min(1.0, float(temporal_state.get("temporal_context_confidence", 0.0) or 0.0)))
+    visual_grounding_strength = max(0.0, min(1.0, float(temporal_state.get("temporal_visual_grounding_strength", 0.0) or 0.0)))
+    binding_state = str(temporal_state.get("temporal_binding_state", "unbound_moment") or "unbound_moment")
+    unbound_pressure = 1.0 if binding_state in ("unbound_moment", "aged_memory_contact", "afterimage_contact") else 0.0
+    reality_anchor = max(
+        0.0,
+        min(
+            1.0,
+            (source_binding * 0.22)
+            + (sequence_coherence * 0.18)
+            + (structure_quality * 0.18)
+            + (structure_stability * 0.12)
+            + (context_confidence * 0.12)
+            + (visual_grounding_strength * 0.12)
+            + (continuity * 0.06),
+        ),
+    )
+    overtrust_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (unbound_pressure * 0.20)
+            + (decay * 0.18)
+            + (memory_time_distance * 0.14)
+            + (novelty * 0.14)
+            + (max(0.0, 0.52 - reality_anchor) * 0.34),
+        ),
+    )
+
+    activation = max(
+        0.0,
+        min(
+            1.0,
+            0.03
+            + (continuity * 0.20)
+            + (source_binding * 0.18)
+            + (sequence_coherence * 0.20)
+            + (context_depth * 0.10)
+            + (recurrence * 0.08)
+            + (reality_anchor * 0.10)
+            - (decay * 0.06)
+            - (novelty * 0.04),
+        ),
+    )
+    activation = max(0.0, min(1.0, activation * (0.54 + (reality_anchor * 0.34)) - (overtrust_pressure * 0.10)))
+    if activation <= 0.01:
+        return {}
+
+    support = max(0.0, min(1.0, ((source_binding * 0.28) + (sequence_coherence * 0.24) + (continuity * 0.16) + (context_depth * 0.10) + (reality_anchor * 0.18)) * (0.60 + (reality_anchor * 0.32))))
+    conflict = max(0.0, min(1.0, (novelty * 0.22) + (decay * 0.22) + (afterimage * 0.14) + (max(0.0, 0.42 - source_binding) * 0.16) + (overtrust_pressure * 0.30)))
+    fragility = max(0.0, min(1.0, (decay * 0.24) + (novelty * 0.18) + (max(0.0, 0.42 - sequence_coherence) * 0.20) + (afterimage * 0.10) + (overtrust_pressure * 0.18)))
+    bearing = max(0.0, min(1.0, ((self_consistency * 0.24) + (sequence_coherence * 0.24) + (context_depth * 0.16) + (source_binding * 0.12) + (reality_anchor * 0.18)) * (0.58 + (reality_anchor * 0.34))))
+    reinforcement = max(0.0, min(1.0, (recurrence * 0.22) + (continuity * 0.24) + (bearing * 0.24) + (max(0.0, 1.0 - memory_time_distance) * 0.10)))
+    attenuation = max(0.0, min(1.0, (decay * 0.28) + (memory_time_distance * 0.18) + (novelty * 0.16) + (max(0.0, 0.34 - continuity) * 0.14) + (overtrust_pressure * 0.24)))
+
+    return {
+        "cluster_id": f"temporal:{identity}",
+        "activation": float(activation),
+        "support": float(support),
+        "conflict": float(conflict),
+        "fragility": float(fragility),
+        "bearing": float(bearing),
+        "action_support": float(max(0.0, min(1.0, (bearing * 0.28) + (support * 0.20) - (conflict * 0.10)))),
+        "observe_pressure": float(max(0.0, min(1.0, (conflict * 0.28) + (fragility * 0.24) + (novelty * 0.12)))),
+        "replan_pressure": float(max(0.0, min(1.0, (decay * 0.24) + (afterimage * 0.20) + (max(0.0, novelty - continuity) * 0.18)))),
+        "reinforcement": float(reinforcement),
+        "attenuation": float(attenuation),
+        "reality_anchor": float(reality_anchor),
+        "overtrust_pressure": float(overtrust_pressure),
+        "inner_field_history_length": int(max(0, int(float(temporal_state.get("temporal_ticks_since_seen", 0) or 0)))),
+        "inner_field_history_label": str(temporal_state.get("temporal_binding_state", "unbound_moment") or "unbound_moment"),
+        "inner_field_pressure_trend": float(max(-1.0, min(1.0, novelty + decay - continuity - source_binding))),
+        "inner_field_bearing_trend": float(max(-1.0, min(1.0, bearing - conflict))),
+        "inner_field_topology_tension_trend": float(max(-1.0, min(1.0, fragility - sequence_coherence))),
+        "inner_field_memory_resonance_trend": float(max(-1.0, min(1.0, recurrence + continuity - memory_time_distance))),
+        "inner_pattern_identity": str(identity),
+        "inner_pattern_identity_label": str(temporal_state.get("temporal_binding_state", "unbound_moment") or "unbound_moment"),
+        "inner_pattern_identity_confidence": float(source_binding),
+        "inner_pattern_identity_stability": float(sequence_coherence),
+        "inner_pattern_identity_streak": int(max(0, int(float(temporal_state.get("temporal_ticks_since_seen", 0) or 0)))),
+        "inner_pattern_identity_recurrent": bool(recurrence >= 0.38),
+        "inner_pattern_identity_changed": bool(novelty > continuity),
+        "inner_pattern_recognition_label": str(temporal_state.get("temporal_binding_state", "unbound_moment") or "unbound_moment"),
+        "inner_pattern_recognition_strength": float(sequence_coherence),
+        "inner_pattern_recognition_recurrent": bool(recurrence >= 0.38),
+        "inner_pattern_recognition_changed": bool(novelty > continuity),
+        "last_seen_tick": int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0),
+    }
+
+# --------------------------------------------------
 def _refresh_active_context_trace(trace, bot=None, runtime_result=None, market_tick_advanced=True):
 
     current = _decay_active_context_trace(
@@ -738,21 +943,42 @@ def _refresh_active_context_trace(trace, bot=None, runtime_result=None, market_t
         market_tick_advanced=market_tick_advanced,
     )
     candidate = _build_active_context_trace_from_inner_cluster(bot=bot)
+    if not candidate:
+        candidate = _build_active_context_trace_from_temporal_state(
+            bot=bot,
+            runtime_result=runtime_result,
+        )
 
     if not candidate:
-        return dict(current or {})
+        return _apply_nervous_context_modulation(
+            current,
+            bot=bot,
+            runtime_result=runtime_result,
+        )
 
     if not current:
-        return _normalize_active_context_trace(candidate)
+        return _apply_nervous_context_modulation(
+            candidate,
+            bot=bot,
+            runtime_result=runtime_result,
+        )
 
     if str(current.get("cluster_id", "-") or "-") != str(candidate.get("cluster_id", "-") or "-"):
         if float(candidate.get("activation", 0.0) or 0.0) >= float(current.get("activation", 0.0) or 0.0) * 0.78:
-            return _normalize_active_context_trace(candidate)
-        return dict(current)
+            return _apply_nervous_context_modulation(
+                candidate,
+                bot=bot,
+                runtime_result=runtime_result,
+            )
+        return _apply_nervous_context_modulation(
+            current,
+            bot=bot,
+            runtime_result=runtime_result,
+        )
 
     alpha = max(0.08, min(0.34, float(candidate.get("activation", 0.0) or 0.0)))
     merged = dict(current)
-    merged["activation"] = max(float(current.get("activation", 0.0) or 0.0), float(candidate.get("activation", 0.0) or 0.0))
+    merged["activation"] = float((float(current.get("activation", 0.0) or 0.0) * (1.0 - alpha)) + (float(candidate.get("activation", 0.0) or 0.0) * alpha))
 
     for key in (
         "support",
@@ -779,6 +1005,10 @@ def _refresh_active_context_trace(trace, bot=None, runtime_result=None, market_t
         "process_quality",
         "neurochemical_support",
         "neurochemical_strain",
+        "reality_anchor",
+        "overtrust_pressure",
+        "active_context_self_certainty",
+        "nervous_context_overcoupling",
     ):
         merged[key] = float((float(current.get(key, 0.0) or 0.0) * (1.0 - alpha)) + (float(candidate.get(key, 0.0) or 0.0) * alpha))
 
@@ -839,8 +1069,13 @@ def _refresh_active_context_trace(trace, bot=None, runtime_result=None, market_t
     merged["inner_pattern_recognition_strength"] = float(candidate.get("inner_pattern_recognition_strength", current.get("inner_pattern_recognition_strength", 0.0)) or 0.0)
     merged["inner_pattern_recognition_recurrent"] = bool(candidate.get("inner_pattern_recognition_recurrent", current.get("inner_pattern_recognition_recurrent", False)))
     merged["inner_pattern_recognition_changed"] = bool(candidate.get("inner_pattern_recognition_changed", current.get("inner_pattern_recognition_changed", False)))
+    merged["context_modulation_label"] = str(candidate.get("context_modulation_label", current.get("context_modulation_label", "unmodulated_context")) or "unmodulated_context")
     merged["last_seen_tick"] = int(candidate.get("last_seen_tick", current.get("last_seen_tick", 0)) or 0)
-    return _normalize_active_context_trace(merged)    
+    return _apply_nervous_context_modulation(
+        merged,
+        bot=bot,
+        runtime_result=runtime_result,
+    )    
 
 # --------------------------------------------------
 def step_mcm_runtime_idle(bot=None, cycles=1):
@@ -5089,6 +5324,8 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
             "noradrenaline_arousal;acetylcholine_focus;serotonin_stability;cortisol_load;"
             "endorphin_relief;glutamate_activation;neurochemical_load;neurochemical_support;neurochemical_balance;"
             "reward_stability_echo;world_shift_evidence;serotonin_carryover_risk;emotional_decoupling;reactive_nervous_drive;"
+            "nervous_system_overload;escape_action_drive;shock_response_risk;nervous_overload_reflection_need;"
+            "active_context_self_certainty;nervous_context_overcoupling;"
             "conscious_perception_state;inner_posture_state;arousal_load;curiosity_tone;fatigue_tone;calm_tone;"
             "stimulus_field_effect;inner_impact_trace;perceived_field_change;felt_afterimage;"
             "object_release_state;inner_outer_reflection;perceptual_distance;object_contact_depth;field_attachment;"
@@ -5097,6 +5334,19 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
             "pre_action_reorganization_pressure;pre_action_context_selectivity;"
             "previous_packet_label;previous_packet_process_reward;previous_packet_reorganization_need;"
             "diffuse_open_development_pressure;posture_development_hint;"
+            "metaregulator_state;metaregulator_balance;regulatory_second_order_load;"
+            "subconscious_field_pressure;subconscious_habituation;subconscious_filter_strength;"
+            "subconscious_buffering;subconscious_leakage;conscious_selection_pressure;"
+            "conscious_workspace_focus;conscious_workspace_load;conscious_gate_balance;"
+            "integration_strain_value;integration_sorting_need;integration_reframe_pull;"
+            "integration_memory_recall;integration_contact_deepening;integration_response_strength;integration_response_state;"
+            "cautious_hypothesis_strength;cautious_hypothesis_clarity;cautious_hypothesis_patience;cautious_hypothesis_state;"
+            "temporal_binding_state;temporal_continuity;temporal_source_binding;temporal_recurrence;"
+            "temporal_novelty;temporal_afterimage;temporal_decay;temporal_context_depth;"
+            "mcm_spacetime_depth;memory_experience_depth;future_projection_depth;temporal_self_location;temporal_self_location_state;"
+            "temporal_self_consistency;perception_sequence_coherence;memory_time_distance;"
+            "return_strength;integration_capacity;variance_regulation;load_tolerance;impulse_control;"
+            "frustration_tolerance;protective_distance_regulation;self_reflection_regulator;distance_regulation;"
             "thinking_complexity;memory_compare_load;memory_match_count;memory_support;memory_inhibition;"
             "memory_conflict;cognitive_load;decision_energy_cost;memory_effect_on_phase;"
             "memory_orientation;orientation_gap;blind_thinking_load;zero_point_regulation;"
@@ -5116,7 +5366,7 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
             "context_cluster_hit_ratio;context_cluster_loss_ratio;context_cluster_cancel_timeout_ratio;"
             "context_cluster_negative_evidence;context_cluster_quality;context_cluster_distance;context_cluster_trust;context_cluster_variance;"
             "signature_key;signature_seen;signature_score;signature_hit_ratio;signature_quality;signature_distance;"
-            "active_context_activation;active_context_support;active_context_conflict;active_context_bearing;"
+            "active_context_activation;active_context_support;active_context_conflict;active_context_bearing;active_context_modulation_label;"
             "action_clearance;action_inhibition;decision_readiness;processing_load;thought_pressure;field_clarity\n"
         )
         write_start = time.perf_counter()
@@ -5164,6 +5414,12 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         f"{float(meta.get('serotonin_carryover_risk', 0.0) or 0.0):.4f}",
         f"{float(meta.get('emotional_decoupling', 0.0) or 0.0):.4f}",
         f"{float(meta.get('reactive_nervous_drive', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('nervous_system_overload', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('escape_action_drive', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('shock_response_risk', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('nervous_overload_reflection_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('active_context_self_certainty', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('nervous_context_overcoupling', 0.0) or 0.0):.4f}",
         _clean(meta.get("conscious_perception_state", "open_perception")),
         _clean(meta.get("inner_posture_state", "uncertain_open")),
         f"{float(meta.get('arousal_load', 0.0) or 0.0):.4f}",
@@ -5195,6 +5451,54 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         f"{float(meta.get('previous_packet_reorganization_need', 0.0) or 0.0):.4f}",
         f"{float(meta.get('diffuse_open_development_pressure', 0.0) or 0.0):.4f}",
         _clean(meta.get("posture_development_hint", "stable_posture")),
+        _clean(meta.get("metaregulator_state", "adaptive_watch")),
+        f"{float(meta.get('metaregulator_balance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('regulatory_second_order_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_field_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_habituation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_filter_strength', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_buffering', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_leakage', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('conscious_selection_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('conscious_workspace_focus', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('conscious_workspace_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('conscious_gate_balance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_strain_value', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_sorting_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_reframe_pull', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_memory_recall', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_contact_deepening', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_response_strength', 0.0) or 0.0):.4f}",
+        _clean(meta.get("integration_response_state", "integration_background")),
+        f"{float(meta.get('cautious_hypothesis_strength', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('cautious_hypothesis_clarity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('cautious_hypothesis_patience', 0.0) or 0.0):.4f}",
+        _clean(meta.get("cautious_hypothesis_state", "no_cautious_hypothesis")),
+        _clean(meta.get("temporal_binding_state", "unbound_moment")),
+        f"{float(meta.get('temporal_continuity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_source_binding', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_recurrence', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_novelty', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_afterimage', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_decay', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_context_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('mcm_spacetime_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('memory_experience_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('future_projection_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_self_location', 0.0) or 0.0):.4f}",
+        _clean(meta.get("temporal_self_location_state", "unlocated_contact")),
+        f"{float(meta.get('temporal_self_consistency', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('perception_sequence_coherence', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('memory_time_distance', 1.0) or 1.0):.4f}",
+        f"{float(meta.get('return_strength', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_capacity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('variance_regulation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('load_tolerance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('impulse_control', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('frustration_tolerance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('protective_distance_regulation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('self_reflection_regulator', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('distance_regulation', 0.0) or 0.0):.4f}",
         f"{_num('thinking_complexity'):.4f}",
         f"{_num('memory_compare_load'):.4f}",
         int(_num("memory_match_count")),
@@ -5271,6 +5575,7 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         f"{float(active_context_trace.get('support', 0.0) or 0.0):.4f}",
         f"{float(active_context_trace.get('conflict', 0.0) or 0.0):.4f}",
         f"{float(active_context_trace.get('bearing', 0.0) or 0.0):.4f}",
+        _clean(active_context_trace.get("context_modulation_label", "unmodulated_context")),
         f"{float(meta.get('action_clearance', 0.0) or 0.0):.4f}",
         f"{float(meta.get('action_inhibition', 0.0) or 0.0):.4f}",
         f"{float(meta.get('decision_readiness', thought.get('decision_readiness', 0.0)) or 0.0):.4f}",
@@ -5580,6 +5885,8 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
             "noradrenaline_arousal;acetylcholine_focus;serotonin_stability;cortisol_load;"
             "endorphin_relief;glutamate_activation;neurochemical_load;neurochemical_support;neurochemical_balance;"
             "reward_stability_echo;world_shift_evidence;serotonin_carryover_risk;emotional_decoupling;reactive_nervous_drive;"
+            "nervous_system_overload;escape_action_drive;shock_response_risk;nervous_overload_reflection_need;"
+            "active_context_self_certainty;nervous_context_overcoupling;"
             "conscious_perception_state;inner_posture_state;arousal_load;curiosity_tone;fatigue_tone;calm_tone;"
             "stimulus_field_effect;inner_impact_trace;perceived_field_change;felt_afterimage;"
             "object_release_state;inner_outer_reflection;perceptual_distance;object_contact_depth;field_attachment;"
@@ -5588,6 +5895,19 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
             "pre_action_reorganization_pressure;pre_action_context_selectivity;"
             "previous_packet_label;previous_packet_process_reward;previous_packet_reorganization_need;"
             "diffuse_open_development_pressure;posture_development_hint;"
+            "metaregulator_state;metaregulator_balance;regulatory_second_order_load;"
+            "subconscious_field_pressure;subconscious_habituation;subconscious_filter_strength;"
+            "subconscious_buffering;subconscious_leakage;conscious_selection_pressure;"
+            "conscious_workspace_focus;conscious_workspace_load;conscious_gate_balance;"
+            "integration_strain_value;integration_sorting_need;integration_reframe_pull;"
+            "integration_memory_recall;integration_contact_deepening;integration_response_strength;integration_response_state;"
+            "cautious_hypothesis_strength;cautious_hypothesis_clarity;cautious_hypothesis_patience;cautious_hypothesis_state;"
+            "temporal_binding_state;temporal_continuity;temporal_source_binding;temporal_recurrence;"
+            "temporal_novelty;temporal_afterimage;temporal_decay;temporal_context_depth;"
+            "mcm_spacetime_depth;memory_experience_depth;future_projection_depth;temporal_self_location;temporal_self_location_state;"
+            "temporal_self_consistency;perception_sequence_coherence;memory_time_distance;"
+            "return_strength;integration_capacity;variance_regulation;load_tolerance;impulse_control;"
+            "frustration_tolerance;protective_distance_regulation;self_reflection_regulator;distance_regulation;"
             "field_focus;field_clarity;field_stability;field_fragmentation;field_strain;"
             "field_pressure;field_support;field_observation_need;field_replan_pressure;field_action_support;"
             "action_clearance;action_inhibition;regulated_courage;decision_strength;state_maturity;decision_readiness;"
@@ -5641,6 +5961,12 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
         f"{float(meta.get('serotonin_carryover_risk', 0.0) or 0.0):.4f}",
         f"{float(meta.get('emotional_decoupling', 0.0) or 0.0):.4f}",
         f"{float(meta.get('reactive_nervous_drive', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('nervous_system_overload', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('escape_action_drive', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('shock_response_risk', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('nervous_overload_reflection_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('active_context_self_certainty', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('nervous_context_overcoupling', 0.0) or 0.0):.4f}",
         _clean(meta.get("conscious_perception_state", "open_perception")),
         _clean(meta.get("inner_posture_state", "uncertain_open")),
         f"{float(meta.get('arousal_load', 0.0) or 0.0):.4f}",
@@ -5672,6 +5998,54 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
         f"{float(meta.get('previous_packet_reorganization_need', 0.0) or 0.0):.4f}",
         f"{float(meta.get('diffuse_open_development_pressure', 0.0) or 0.0):.4f}",
         _clean(meta.get("posture_development_hint", "stable_posture")),
+        _clean(meta.get("metaregulator_state", "adaptive_watch")),
+        f"{float(meta.get('metaregulator_balance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('regulatory_second_order_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_field_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_habituation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_filter_strength', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_buffering', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_leakage', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('conscious_selection_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('conscious_workspace_focus', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('conscious_workspace_load', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('conscious_gate_balance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_strain_value', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_sorting_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_reframe_pull', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_memory_recall', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_contact_deepening', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_response_strength', 0.0) or 0.0):.4f}",
+        _clean(meta.get("integration_response_state", "integration_background")),
+        f"{float(meta.get('cautious_hypothesis_strength', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('cautious_hypothesis_clarity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('cautious_hypothesis_patience', 0.0) or 0.0):.4f}",
+        _clean(meta.get("cautious_hypothesis_state", "no_cautious_hypothesis")),
+        _clean(meta.get("temporal_binding_state", "unbound_moment")),
+        f"{float(meta.get('temporal_continuity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_source_binding', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_recurrence', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_novelty', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_afterimage', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_decay', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_context_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('mcm_spacetime_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('memory_experience_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('future_projection_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('temporal_self_location', 0.0) or 0.0):.4f}",
+        _clean(meta.get("temporal_self_location_state", "unlocated_contact")),
+        f"{float(meta.get('temporal_self_consistency', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('perception_sequence_coherence', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('memory_time_distance', 1.0) or 1.0):.4f}",
+        f"{float(meta.get('return_strength', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('integration_capacity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('variance_regulation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('load_tolerance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('impulse_control', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('frustration_tolerance', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('protective_distance_regulation', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('self_reflection_regulator', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('distance_regulation', 0.0) or 0.0):.4f}",
         f"{float(meta.get('field_perception_focus', processing.get('field_perception_focus', 0.0)) or 0.0):.4f}",
         f"{float(meta.get('field_perception_clarity', processing.get('field_perception_clarity', 0.0)) or 0.0):.4f}",
         f"{float(meta.get('field_perception_stability', processing.get('field_perception_stability', 0.0)) or 0.0):.4f}",
@@ -8787,6 +9161,305 @@ def build_experience_packet_feedback(
         "focused_acetylcholine": float(focused_acetylcholine),
     }
 
+# --------------------------------------------------
+def build_temporal_coherence_state(
+    temporal_perception_state=None,
+    bot=None,
+    visual_market_state=None,
+    structure_perception_state=None,
+    form_symbol_state=None,
+    state_signature=None,
+    candle_state=None,
+):
+
+    previous = dict(temporal_perception_state or {})
+    visual = dict(visual_market_state or {})
+    structure = dict(structure_perception_state or {})
+    symbol = dict(form_symbol_state or {})
+    signature = dict(state_signature or {})
+    candle = dict(candle_state or {})
+
+    def _clip(value, lo=0.0, hi=1.0):
+        try:
+            value = float(value)
+        except Exception:
+            value = 0.0
+        if value != value:
+            value = 0.0
+        return max(float(lo), min(float(hi), float(value)))
+
+    def _flt(value, default=0.0):
+        try:
+            return float(value)
+        except Exception:
+            return float(default)
+
+    runtime_tick = int(getattr(bot, "mcm_runtime_market_ticks", 0) or 0) if bot is not None else 0
+    timestamp = candle.get("timestamp", None)
+    visual_form = dict(visual.get("visual_form_state", {}) or {})
+    form_symbol_id = str(symbol.get("form_symbol_id", "") or "").strip()
+    form_symbol_family_key = str(symbol.get("form_symbol_family_key", symbol.get("form_symbol_key", "")) or "").strip()
+    form_symbol_variant_key = str(symbol.get("form_symbol_variant_key", "") or "").strip()
+    compound_id = str(symbol.get("form_symbol_compound_id", "") or "").strip()
+    compound_scope = str(symbol.get("form_symbol_compound_scope", "") or "").strip()
+    uncertain_form_family_state = str(symbol.get("uncertain_form_family_state", "") or "").strip()
+    visual_form_id = str(visual.get("visual_form_id", visual_form.get("visual_form_id", "")) or "").strip()
+    signature_key = str(signature.get("signature_key", "") or "").strip()
+    context_cluster_id = str(getattr(bot, "last_context_cluster_id", "") or "").strip() if bot is not None else ""
+    inner_context_cluster_id = str(getattr(bot, "last_inner_context_cluster_id", "") or "").strip() if bot is not None else ""
+
+    visual_bucket = "|".join(
+        str(round(_flt(visual.get(key, 0.0)), 2))
+        for key in ("visual_clarity", "visual_object_stability", "visual_shape_resonance", "visual_shape_fragility")
+    )
+    family_anchor = form_symbol_family_key or form_symbol_id or form_symbol_variant_key
+    identity_parts = [
+        item
+        for item in (
+            family_anchor,
+            uncertain_form_family_state,
+            compound_scope,
+            context_cluster_id,
+            inner_context_cluster_id,
+            visual_bucket,
+        )
+        if item and item != "-"
+    ]
+    if identity_parts:
+        raw_identity = "|".join(identity_parts[:5])
+    else:
+        raw_identity = visual_bucket
+    source_identity_parts = [
+        item
+        for item in (
+            form_symbol_id,
+            compound_id,
+            visual_form_id,
+            context_cluster_id,
+            inner_context_cluster_id,
+            signature_key[:16] if signature_key else "",
+        )
+        if item and item != "-"
+    ]
+    raw_source_identity = "|".join(source_identity_parts[:6]) if source_identity_parts else raw_identity
+    temporal_identity = hashlib.sha1(raw_identity.encode("utf-8", errors="ignore")).hexdigest()[:12] if raw_identity else "-"
+    temporal_source_identity = hashlib.sha1(raw_source_identity.encode("utf-8", errors="ignore")).hexdigest()[:12] if raw_source_identity else temporal_identity
+
+    previous_identity = str(previous.get("temporal_identity", "") or "").strip()
+    identity_memory = dict(previous.get("temporal_identity_memory", {}) or {})
+    remembered = dict(identity_memory.get(temporal_identity, {}) or {}) if temporal_identity and temporal_identity != "-" else {}
+    last_seen_tick = int(remembered.get("last_seen_tick", previous.get("last_seen_tick", runtime_tick)) or runtime_tick)
+    ticks_since_seen = max(0, int(runtime_tick) - int(last_seen_tick)) if remembered else 999
+    previous_timestamp = previous.get("last_timestamp", None)
+    same_identity = bool(temporal_identity and temporal_identity != "-" and temporal_identity == previous_identity)
+
+    visual_clarity = _clip(visual.get("visual_clarity", 0.0))
+    visual_object_stability = _clip(visual.get("visual_object_stability", 0.0))
+    visual_grounding_strength = _clip(visual.get("visual_grounding_strength", visual.get("visual_object_binding", 0.0)))
+    visual_form_novelty = _clip(visual.get("visual_form_novelty", 0.0))
+    visual_shape_resonance = _clip(visual.get("visual_shape_resonance", 0.0))
+    visual_shape_fragility = _clip(visual.get("visual_shape_fragility", 0.0))
+    structure_quality = _clip(structure.get("structure_quality", 0.0))
+    structure_stability = _clip(structure.get("structure_stability", 0.0))
+    context_confidence = _clip(structure.get("context_confidence", 0.0))
+    route_familiarity = _clip(previous.get("route_familiarity", 0.0))
+    symbol_learning_trust = _clip(symbol.get("form_symbol_learning_trust", 0.0))
+    symbol_action_trust = _clip(symbol.get("form_symbol_action_trust", 0.0))
+    symbol_caution_trust = _clip(symbol.get("form_symbol_caution_trust", 0.0))
+
+    previous_continuity = _clip(previous.get("temporal_continuity", 0.0))
+    previous_afterimage = _clip(previous.get("temporal_afterimage", 0.0))
+    previous_source_binding = _clip(previous.get("temporal_source_binding", 0.0))
+    previous_self_consistency = _clip(previous.get("temporal_self_consistency", 0.0))
+
+    recurrence_raw = 0.0
+    if remembered:
+        recurrence_raw = _clip((1.0 / (1.0 + (ticks_since_seen / 24.0))) + (_clip(remembered.get("seen_count", 0.0)) * 0.08))
+    elif same_identity:
+        recurrence_raw = 0.52
+
+    source_binding = _clip(
+        (visual_grounding_strength * 0.18)
+        + (visual_object_stability * 0.14)
+        + (visual_clarity * 0.12)
+        + (structure_quality * 0.14)
+        + (structure_stability * 0.12)
+        + (context_confidence * 0.10)
+        + (symbol_learning_trust * 0.08)
+        + (max(symbol_action_trust, symbol_caution_trust) * 0.06)
+        + (previous_source_binding * 0.06)
+    )
+    continuity = _clip(
+        (previous_continuity * 0.20)
+        + ((1.0 if same_identity else 0.0) * 0.22)
+        + (recurrence_raw * 0.18)
+        + (source_binding * 0.18)
+        + (visual_object_stability * 0.10)
+        + (structure_stability * 0.08)
+        + (max(0.0, 1.0 - visual_form_novelty) * 0.04)
+    )
+    novelty = _clip(
+        (visual_form_novelty * 0.24)
+        + (visual_shape_fragility * 0.12)
+        + ((0.0 if same_identity else 1.0) * 0.18)
+        + (max(0.0, 0.48 - source_binding) * 0.18)
+        + (max(0.0, 0.34 - recurrence_raw) * 0.12)
+        - (continuity * 0.12)
+    )
+    afterimage = _clip(
+        (previous_afterimage * 0.72)
+        + (max(0.0, continuity - source_binding) * 0.12)
+        + (visual_shape_resonance * 0.07)
+        + (max(0.0, novelty - continuity) * 0.06)
+        - (source_binding * 0.05)
+    )
+    memory_time_distance = _clip(1.0 if not remembered else ticks_since_seen / 96.0)
+    temporal_decay = _clip((memory_time_distance * 0.58) + (afterimage * 0.18) + (max(0.0, 0.36 - continuity) * 0.16))
+    temporal_context_depth = _clip(
+        (continuity * 0.20)
+        + (recurrence_raw * 0.16)
+        + (source_binding * 0.16)
+        + (structure_quality * 0.12)
+        + (symbol_learning_trust * 0.10)
+        + (visual_shape_resonance * 0.08)
+        + (max(0.0, 1.0 - memory_time_distance) * 0.10)
+        + (context_confidence * 0.08)
+    )
+    temporal_self_consistency = _clip(
+        (previous_self_consistency * 0.18)
+        + (continuity * 0.22)
+        + (source_binding * 0.18)
+        + (temporal_context_depth * 0.14)
+        + (structure_stability * 0.10)
+        + (visual_object_stability * 0.08)
+        - (novelty * 0.08)
+        - (temporal_decay * 0.06)
+    )
+    perception_sequence_coherence = _clip(
+        (continuity * 0.24)
+        + (temporal_self_consistency * 0.20)
+        + (source_binding * 0.18)
+        + (recurrence_raw * 0.12)
+        + (max(0.0, 1.0 - temporal_decay) * 0.10)
+        + (context_confidence * 0.08)
+        - (novelty * 0.08)
+    )
+    memory_experience_depth = _clip(
+        (max(0.0, 1.0 - memory_time_distance) * 0.30)
+        + (recurrence_raw * 0.20)
+        + (temporal_context_depth * 0.18)
+        + (afterimage * 0.14)
+        + (source_binding * 0.10)
+        + (symbol_learning_trust * 0.08)
+    )
+    future_projection_depth = _clip(
+        (temporal_context_depth * 0.22)
+        + (perception_sequence_coherence * 0.18)
+        + (structure_stability * 0.14)
+        + (context_confidence * 0.12)
+        + (max(symbol_action_trust, symbol_caution_trust) * 0.10)
+        + (visual_shape_resonance * 0.10)
+        + (max(0.0, 1.0 - temporal_decay) * 0.14)
+    )
+    mcm_spacetime_depth = _clip(
+        (temporal_context_depth * 0.24)
+        + (source_binding * 0.16)
+        + (max(0.0, 1.0 - memory_time_distance) * 0.14)
+        + (afterimage * 0.12)
+        + (recurrence_raw * 0.12)
+        + (visual_shape_resonance * 0.08)
+        + (structure_quality * 0.08)
+        + (context_confidence * 0.06)
+    )
+    temporal_self_location = _clip(
+        (mcm_spacetime_depth * 0.22)
+        + (source_binding * 0.18)
+        + (continuity * 0.16)
+        + (perception_sequence_coherence * 0.14)
+        + (max(0.0, 1.0 - temporal_decay) * 0.12)
+        + (max(0.0, 1.0 - novelty) * 0.08)
+        + (previous_self_consistency * 0.10)
+    )
+
+    if novelty >= 0.54 and continuity < 0.28 and source_binding < 0.42:
+        temporal_binding_state = "new_contact"
+    elif continuity >= 0.42 and memory_time_distance < 0.30:
+        temporal_binding_state = "continued_contact"
+    elif recurrence_raw >= 0.28 and memory_time_distance >= 0.18:
+        temporal_binding_state = "recurrent_contact"
+    elif afterimage >= 0.28 and source_binding < 0.40 and temporal_decay >= 0.36:
+        temporal_binding_state = "afterimage_contact"
+    elif perception_sequence_coherence >= 0.38 and source_binding >= 0.34:
+        temporal_binding_state = "coherent_sequence"
+    elif memory_time_distance >= 0.62 and continuity < 0.26 and source_binding < 0.42:
+        temporal_binding_state = "aged_memory_contact"
+    else:
+        temporal_binding_state = "unbound_moment"
+
+    temporal_self_location_state = "unlocated_contact"
+    if temporal_binding_state in ("continued_contact", "coherent_sequence") and temporal_self_location >= 0.42:
+        temporal_self_location_state = "present_contact"
+    elif afterimage >= 0.30 and temporal_decay >= 0.34:
+        temporal_self_location_state = "afterimage_trace"
+    elif memory_experience_depth >= 0.42 and memory_time_distance >= 0.18:
+        temporal_self_location_state = "remembered_experience"
+    elif future_projection_depth >= 0.42 and temporal_context_depth >= 0.30:
+        temporal_self_location_state = "future_possibility"
+    elif novelty >= 0.48 and source_binding < 0.38:
+        temporal_self_location_state = "new_unmapped_contact"
+
+    identity_memory[temporal_identity] = {
+        "last_seen_tick": int(runtime_tick),
+        "last_timestamp": timestamp,
+        "seen_count": int(remembered.get("seen_count", 0) or 0) + 1,
+        "last_continuity": float(continuity),
+        "last_source_binding": float(source_binding),
+        "last_state": str(temporal_binding_state),
+    }
+    if len(identity_memory) > 96:
+        sorted_items = sorted(
+            identity_memory.items(),
+            key=lambda kv: int(dict(kv[1] or {}).get("last_seen_tick", 0) or 0),
+            reverse=True,
+        )
+        identity_memory = dict(sorted_items[:96])
+
+    merged = dict(previous or {})
+    merged.update({
+        "temporal_identity": str(temporal_identity),
+        "temporal_identity_source": str(raw_identity),
+        "temporal_source_identity": str(temporal_source_identity),
+        "temporal_source_identity_detail": str(raw_source_identity),
+        "temporal_binding_state": str(temporal_binding_state),
+        "temporal_continuity": float(continuity),
+        "temporal_source_binding": float(source_binding),
+        "temporal_recurrence": float(recurrence_raw),
+        "temporal_novelty": float(novelty),
+        "temporal_afterimage": float(afterimage),
+        "temporal_decay": float(temporal_decay),
+        "temporal_context_depth": float(temporal_context_depth),
+        "mcm_spacetime_depth": float(mcm_spacetime_depth),
+        "memory_experience_depth": float(memory_experience_depth),
+        "future_projection_depth": float(future_projection_depth),
+        "temporal_self_location": float(temporal_self_location),
+        "temporal_self_location_state": str(temporal_self_location_state),
+        "temporal_self_consistency": float(temporal_self_consistency),
+        "perception_sequence_coherence": float(perception_sequence_coherence),
+        "memory_time_distance": float(memory_time_distance),
+        "temporal_structure_quality": float(structure_quality),
+        "temporal_structure_stability": float(structure_stability),
+        "temporal_context_confidence": float(context_confidence),
+        "temporal_visual_grounding_strength": float(visual_grounding_strength),
+        "temporal_ticks_since_seen": int(ticks_since_seen if remembered else 999),
+        "temporal_same_identity": bool(same_identity),
+        "last_seen_tick": int(runtime_tick),
+        "last_timestamp": timestamp,
+        "previous_timestamp": previous_timestamp,
+        "temporal_identity_memory": dict(identity_memory or {}),
+    })
+    return dict(merged or {})
+
+# --------------------------------------------------
 def _resolve_temporal_decision_modulation(temporal_perception_state=None):
 
     temporal_state = dict(temporal_perception_state or {})
@@ -13282,6 +13955,33 @@ def build_neurochemical_state(perception_state=None, processing_state=None, felt
         + (serotonin_carryover_risk * 0.14)
         - (emotional_decoupling * 0.16)
     )
+    nervous_system_overload = _clip01(
+        (cortisol_load * 0.24)
+        + (noradrenaline_arousal * 0.20)
+        + (glutamate_activation * 0.16)
+        + (serotonin_carryover_risk * 0.16)
+        + (reactive_nervous_drive * 0.14)
+        + (max(0.0, -neurochemical_balance) * 0.14)
+        - (emotional_decoupling * 0.18)
+        - (gaba_inhibition * 0.05)
+    )
+    escape_action_drive = _clip01(
+        (nervous_system_overload * 0.34)
+        + (reactive_nervous_drive * 0.24)
+        + (action_clearance * 0.14)
+        + (plan_pressure * 0.12)
+        + (world_shift_evidence * 0.10)
+        - (emotional_decoupling * 0.22)
+        - (acetylcholine_focus * 0.08)
+    )
+    shock_response_risk = _clip01(
+        (nervous_system_overload * 0.36)
+        + (escape_action_drive * 0.26)
+        + (world_shift_evidence * 0.14)
+        + (max(0.0, 0.34 - emotional_decoupling) * 0.18)
+        + (serotonin_carryover_risk * 0.12)
+        - (acetylcholine_focus * 0.06)
+    )
 
     tone_map = {
         "cortisol_load": cortisol_load,
@@ -13294,7 +13994,9 @@ def build_neurochemical_state(perception_state=None, processing_state=None, felt
         "dopamine_tone": dopamine_tone,
     }
     dominant_tone = max(tone_map, key=tone_map.get)
-    if neurochemical_balance <= -0.22 and cortisol_load >= max(serotonin_stability, endorphin_relief):
+    if shock_response_risk >= 0.44 and nervous_system_overload >= 0.38:
+        state_label = "overloaded_neurochemistry"
+    elif neurochemical_balance <= -0.22 and cortisol_load >= max(serotonin_stability, endorphin_relief):
         state_label = "strained_neurochemistry"
     elif gaba_inhibition >= 0.56 and action_clearance < 0.48:
         state_label = "inhibited_neurochemistry"
@@ -13330,6 +14032,9 @@ def build_neurochemical_state(perception_state=None, processing_state=None, felt
         "serotonin_carryover_risk": float(serotonin_carryover_risk),
         "emotional_decoupling": float(emotional_decoupling),
         "reactive_nervous_drive": float(reactive_nervous_drive),
+        "nervous_system_overload": float(nervous_system_overload),
+        "escape_action_drive": float(escape_action_drive),
+        "shock_response_risk": float(shock_response_risk),
     }
 
 def build_conscious_perception_state(perception_state=None, processing_state=None, felt_state=None, thought_state=None, fused=None, neurochemical_state=None, meta_axes=None):
@@ -15478,6 +16183,30 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     fatigue_tone = float(conscious_perception_state.get("fatigue_tone", 0.0) or 0.0)
     calm_tone = float(conscious_perception_state.get("calm_tone", 0.0) or 0.0)
     arousal_load = float(conscious_perception_state.get("arousal_load", 0.0) or 0.0)
+    stimulus_field_effect = float(conscious_perception_state.get("stimulus_field_effect", 0.0) or 0.0)
+    inner_impact_trace = float(conscious_perception_state.get("inner_impact_trace", 0.0) or 0.0)
+    perceived_field_change = float(conscious_perception_state.get("perceived_field_change", 0.0) or 0.0)
+    felt_afterimage = float(conscious_perception_state.get("felt_afterimage", 0.0) or 0.0)
+    inner_outer_reflection = float(conscious_perception_state.get("inner_outer_reflection", 0.0) or 0.0)
+    background_containment = float(conscious_perception_state.get("background_containment", 0.0) or 0.0)
+    reflective_distance = float(conscious_perception_state.get("reflective_distance", 0.0) or 0.0)
+    temporal_perception_state = dict(getattr(bot, "temporal_perception_state", {}) or {}) if bot is not None else {}
+    temporal_continuity = float(temporal_perception_state.get("temporal_continuity", 0.0) or 0.0)
+    temporal_source_binding = float(temporal_perception_state.get("temporal_source_binding", 0.0) or 0.0)
+    temporal_recurrence = float(temporal_perception_state.get("temporal_recurrence", 0.0) or 0.0)
+    temporal_novelty = float(temporal_perception_state.get("temporal_novelty", 0.0) or 0.0)
+    temporal_afterimage = float(temporal_perception_state.get("temporal_afterimage", 0.0) or 0.0)
+    temporal_decay = float(temporal_perception_state.get("temporal_decay", 0.0) or 0.0)
+    temporal_context_depth = float(temporal_perception_state.get("temporal_context_depth", 0.0) or 0.0)
+    mcm_spacetime_depth = float(temporal_perception_state.get("mcm_spacetime_depth", 0.0) or 0.0)
+    memory_experience_depth = float(temporal_perception_state.get("memory_experience_depth", 0.0) or 0.0)
+    future_projection_depth = float(temporal_perception_state.get("future_projection_depth", 0.0) or 0.0)
+    temporal_self_location = float(temporal_perception_state.get("temporal_self_location", 0.0) or 0.0)
+    temporal_self_location_state = str(temporal_perception_state.get("temporal_self_location_state", "unlocated_contact") or "unlocated_contact")
+    temporal_self_consistency = float(temporal_perception_state.get("temporal_self_consistency", 0.0) or 0.0)
+    perception_sequence_coherence = float(temporal_perception_state.get("perception_sequence_coherence", 0.0) or 0.0)
+    memory_time_distance = float(temporal_perception_state.get("memory_time_distance", 1.0) or 1.0)
+    temporal_binding_state = str(temporal_perception_state.get("temporal_binding_state", "unbound_moment") or "unbound_moment")
     previous_packet_feedback = dict(getattr(bot, "last_experience_packet_feedback", {}) or {}) if bot is not None else {}
     previous_packet_process_reward = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_process_reward", 0.0) or 0.0)))
     previous_packet_bearing_quality = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_bearing_quality", 0.0) or 0.0)))
@@ -15628,6 +16357,680 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         action_clearance = max(0.0, min(1.0, action_clearance - (diffuse_open_development_pressure * 0.040)))
         act_watch_readiness = max(0.0, min(1.0, act_watch_readiness + (diffuse_open_development_pressure * 0.080)))
 
+    dopamine_tone = float(neurochemical_state.get("dopamine_tone", 0.0) or 0.0)
+    gaba_inhibition = float(neurochemical_state.get("gaba_inhibition", 0.0) or 0.0)
+    acetylcholine_focus = float(neurochemical_state.get("acetylcholine_focus", 0.0) or 0.0)
+    serotonin_stability = float(neurochemical_state.get("serotonin_stability", 0.0) or 0.0)
+    cortisol_load = float(neurochemical_state.get("cortisol_load", 0.0) or 0.0)
+    endorphin_relief = float(neurochemical_state.get("endorphin_relief", 0.0) or 0.0)
+    world_shift_evidence = float(neurochemical_state.get("world_shift_evidence", 0.0) or 0.0)
+    serotonin_carryover_risk = float(neurochemical_state.get("serotonin_carryover_risk", 0.0) or 0.0)
+    emotional_decoupling = float(neurochemical_state.get("emotional_decoupling", 0.0) or 0.0)
+    reactive_nervous_drive = float(neurochemical_state.get("reactive_nervous_drive", 0.0) or 0.0)
+    nervous_system_overload = float(neurochemical_state.get("nervous_system_overload", 0.0) or 0.0)
+    escape_action_drive = float(neurochemical_state.get("escape_action_drive", 0.0) or 0.0)
+    shock_response_risk = float(neurochemical_state.get("shock_response_risk", 0.0) or 0.0)
+    field_overcoupling = max(field_attachment, field_perception_strain, felt_afterimage)
+    nervous_overload_reflection_need = max(
+        0.0,
+        min(
+            1.0,
+            (shock_response_risk * 0.38)
+            + (nervous_system_overload * 0.24)
+            + (escape_action_drive * 0.18)
+            + (max(0.0, 0.34 - emotional_decoupling) * 0.16)
+            + (field_overcoupling * 0.10),
+        ),
+    )
+    active_context_self_certainty = _clip01(
+        active_context_activation
+        * ((active_context_support + active_context_bearing) * 0.5)
+        * max(0.0, 1.0 - active_context_conflict)
+    )
+    nervous_context_overcoupling = _clip01(
+        active_context_self_certainty
+        * (
+            (nervous_system_overload * 0.34)
+            + (escape_action_drive * 0.28)
+            + (shock_response_risk * 0.26)
+            + (max(0.0, 0.24 - emotional_decoupling) * 0.20)
+        )
+    )
+    if nervous_context_overcoupling > 0.0:
+        nervous_overload_reflection_need = _clip01(
+            nervous_overload_reflection_need
+            + (nervous_context_overcoupling * 0.18)
+        )
+        field_observation_need = _clip01(
+            field_observation_need
+            + (nervous_context_overcoupling * 0.060)
+        )
+        act_watch_readiness = _clip01(
+            act_watch_readiness
+            + (nervous_context_overcoupling * 0.050)
+        )
+        action_inhibition = _clip01(
+            action_inhibition
+            + (nervous_context_overcoupling * 0.070)
+        )
+        action_clearance = _clip01(
+            action_clearance
+            - (nervous_context_overcoupling * 0.050)
+        )
+        regulated_courage = _clip01(
+            regulated_courage
+            - (nervous_context_overcoupling * 0.050)
+        )
+        perceptual_distance = _clip01(
+            perceptual_distance
+            + (nervous_context_overcoupling * 0.060)
+        )
+        reflective_distance = _clip01(
+            reflective_distance
+            + (nervous_context_overcoupling * 0.055)
+        )
+        inner_outer_reflection = _clip01(
+            inner_outer_reflection
+            + (nervous_context_overcoupling * 0.050)
+        )
+        conscious_perception_state["perceptual_distance"] = float(perceptual_distance)
+        conscious_perception_state["reflective_distance"] = float(reflective_distance)
+        conscious_perception_state["inner_outer_reflection"] = float(inner_outer_reflection)
+    zero_point_value = 1.0 if bool(zero_point_regulation) else 0.0
+    reflective_posture_value = 1.0 if inner_posture_label == "reflective" else 0.0
+    reflective_perception_value = 1.0 if conscious_label == "reflective_check" else 0.0
+    subconscious_field_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (field_perception_pressure * 0.20)
+            + (field_perception_strain * 0.14)
+            + (stimulus_field_effect * 0.14)
+            + (inner_impact_trace * 0.12)
+            + (perceived_field_change * 0.12)
+            + (world_shift_evidence * 0.10)
+            + (visual_resonance_unbound * 0.08)
+            + (reactive_nervous_drive * 0.10),
+        ),
+    )
+    subconscious_habituation = max(
+        0.0,
+        min(
+            1.0,
+            (uncertainty_familiarity * 0.18)
+            + (variant_bearing_memory * 0.16)
+            + (known_form_support * 0.16)
+            + (route_familiarity * 0.14)
+            + (form_symbol_containment * 0.14)
+            + (form_symbol_field_decoupling * 0.12)
+            + (gaba_inhibition * 0.10),
+        ),
+    )
+    subconscious_filter_strength = max(
+        0.0,
+        min(
+            1.0,
+            (background_containment * 0.18)
+            + (symbolic_regulation * 0.16)
+            + (subconscious_habituation * 0.16)
+            + (form_symbol_object_distance * 0.12)
+            + (form_symbol_field_decoupling * 0.12)
+            + (emotional_decoupling * 0.10)
+            + (serotonin_stability * 0.08)
+            + (gaba_inhibition * 0.08),
+        ),
+    )
+    subconscious_buffering = max(
+        0.0,
+        min(
+            1.0,
+            subconscious_field_pressure
+            * (0.34 + subconscious_filter_strength * 0.54 + subconscious_habituation * 0.20)
+            * max(0.15, 1.0 - field_attachment * 0.34),
+        ),
+    )
+    conscious_selection_pressure = max(
+        0.0,
+        min(
+            1.0,
+            (object_contact_depth * 0.17)
+            + (selective_attention * 0.15)
+            + (visual_grounding_need * 0.13)
+            + (visual_action_uncertainty * 0.11)
+            + (semantic_shift_pressure * 0.10)
+            + (transfer_maturity_gap * 0.10)
+            + (field_observation_need * 0.10)
+            + (curiosity_tone * 0.07)
+            + (felt_afterimage * 0.07),
+        ),
+    )
+    conscious_workspace_focus = max(
+        0.0,
+        min(
+            1.0,
+            (selective_attention * 0.16)
+            + (inner_outer_reflection * 0.15)
+            + (perceptual_distance * 0.14)
+            + (visual_grounding_strength * 0.14)
+            + (interpretation_quality * 0.14)
+            + (memory_orientation * 0.10)
+            + (perception_sequence_coherence * 0.08)
+            + (acetylcholine_focus * 0.09)
+            + (release_capacity * 0.08),
+        ),
+    )
+    conscious_workspace_load = max(
+        0.0,
+        min(
+            1.0,
+            (conscious_selection_pressure * 0.24)
+            + (processing_load * 0.15)
+            + (cognitive_load * 0.14)
+            + (orientation_gap * 0.12)
+            + (temporal_novelty * 0.08)
+            + (temporal_decay * 0.06)
+            + (field_attachment * 0.10)
+            + (arousal_load * 0.10)
+            + (blind_thinking_load * 0.09)
+            + (max(0.0, subconscious_field_pressure - subconscious_buffering) * 0.06),
+        ),
+    )
+    conscious_gate_balance = max(
+        0.0,
+        min(
+            1.0,
+            (conscious_workspace_focus * 0.36)
+            + (subconscious_filter_strength * 0.22)
+            + (temporal_source_binding * 0.10)
+            + (temporal_self_consistency * 0.08)
+            + (release_capacity * 0.14)
+            + (inner_outer_alignment * 0.12)
+            + (emotional_decoupling * 0.10)
+            + (subconscious_buffering * 0.06)
+            - (conscious_workspace_load * 0.20),
+        ),
+    )
+    subconscious_leakage = max(
+        0.0,
+        min(
+            1.0,
+            (subconscious_field_pressure * 0.38)
+            + (conscious_selection_pressure * 0.20)
+            + (field_overcoupling * 0.16)
+            + (reactive_nervous_drive * 0.14)
+            + (felt_afterimage * 0.12)
+            - (subconscious_filter_strength * 0.24)
+            - (subconscious_buffering * 0.16)
+            - (conscious_workspace_focus * 0.10),
+        ),
+    )
+
+    return_strength = max(
+        0.0,
+        min(
+            1.0,
+            (field_perception_stability * 0.16)
+            + (field_perception_support * 0.14)
+            + (release_capacity * 0.15)
+            + (calm_tone * 0.12)
+            + (experience_regulation * 0.11)
+            + (action_clearance * 0.10)
+            + (serotonin_stability * 0.10)
+            + (endorphin_relief * 0.06)
+            + (subconscious_buffering * 0.08)
+            + (zero_point_value * 0.08)
+            - (field_perception_instability * 0.08)
+            - (orientation_gap * 0.06)
+            - (reactive_nervous_drive * 0.06),
+        ),
+    )
+    integration_capacity = max(
+        0.0,
+        min(
+            1.0,
+            (interpretation_quality * 0.18)
+            + (memory_orientation * 0.14)
+            + (route_familiarity * 0.11)
+            + (temporal_context_depth * 0.10)
+            + (mcm_spacetime_depth * 0.06)
+            + (memory_experience_depth * 0.04)
+            + (future_projection_depth * 0.04)
+            + (perception_sequence_coherence * 0.08)
+            + (inner_outer_alignment * 0.14)
+            + (previous_packet_process_reward * 0.10)
+            + (previous_packet_bearing_quality * 0.09)
+            + (form_symbol_contact_maturity * 0.10)
+            + (known_form_support * 0.08)
+            + (selective_attention * 0.06)
+            + (conscious_gate_balance * 0.08)
+            - (previous_packet_reorganization_need * 0.08)
+            - (semantic_shift_pressure * 0.05)
+            - (transfer_maturity_gap * 0.05),
+        ),
+    )
+    variance_regulation = max(
+        0.0,
+        min(
+            1.0,
+            (variant_learning_pressure * 0.10)
+            + (variant_bearing_memory * 0.12)
+            + (interpretation_quality * 0.12)
+            + (temporal_continuity * 0.08)
+            + (temporal_recurrence * 0.07)
+            + (field_perception_stability * 0.12)
+            + (action_inhibition * 0.12)
+            + (release_capacity * 0.12)
+            + (inner_outer_alignment * 0.10)
+            + (gaba_inhibition * 0.10)
+            + (emotional_decoupling * 0.10)
+            + (subconscious_filter_strength * 0.10)
+            - (field_perception_fragmentation * 0.10)
+            - (arousal_load * 0.08)
+            - (blind_thinking_load * 0.06),
+        ),
+    )
+    load_tolerance = max(
+        0.0,
+        min(
+            1.0,
+            (load_bearing_capacity * 0.18)
+            + (field_perception_support * 0.12)
+            + (serotonin_stability * 0.12)
+            + (gaba_inhibition * 0.10)
+            + (action_inhibition * 0.10)
+            + (calm_tone * 0.12)
+            + (protective_courage * 0.08)
+            + (return_strength * 0.10)
+            + (subconscious_buffering * 0.08)
+            - (cortisol_load * 0.10)
+            - (processing_load * 0.08)
+            - (cognitive_load * 0.08)
+            - (fatigue_tone * 0.08),
+        ),
+    )
+    impulse_control = max(
+        0.0,
+        min(
+            1.0,
+            (action_inhibition * 0.18)
+            + (release_capacity * 0.14)
+            + (perceptual_distance * 0.13)
+            + (regulated_courage * 0.10)
+            + (gaba_inhibition * 0.12)
+            + (reflective_distance * 0.12)
+            + (pre_action_context_selectivity * 0.09)
+            + (emotional_decoupling * 0.08)
+            + (conscious_gate_balance * 0.08)
+            - (plan_pressure * 0.10)
+            - (reactive_nervous_drive * 0.10)
+            - (field_perception_pressure * 0.06),
+        ),
+    )
+    frustration_tolerance = max(
+        0.0,
+        min(
+            1.0,
+            (return_strength * 0.16)
+            + (integration_capacity * 0.15)
+            + (effort_learning_pull * 0.12)
+            + (pre_action_reorganization_pressure * 0.08)
+            + (calm_tone * 0.10)
+            + (serotonin_stability * 0.10)
+            + (endorphin_relief * 0.08)
+            + (previous_packet_process_reward * 0.08)
+            - (fatigue_tone * 0.10)
+            - (cortisol_load * 0.10)
+            - (reactive_nervous_drive * 0.08)
+            - (blind_thinking_load * 0.06),
+        ),
+    )
+    protective_distance_regulation = max(
+        0.0,
+        min(
+            1.0,
+            (protective_width_regulation * 0.15)
+            + (perceptual_distance * 0.16)
+            + (release_capacity * 0.15)
+            + (max(0.0, 1.0 - temporal_decay) * 0.08)
+            + (emotional_decoupling * 0.13)
+            + (visual_rational_observation_support * 0.10)
+            + (background_containment * 0.09)
+            + (form_symbol_field_decoupling * 0.09)
+            + (reflective_distance * 0.10)
+            + (subconscious_filter_strength * 0.08)
+            - (field_attachment * 0.12)
+            - (max(0.0, object_contact_depth - 0.62) * 0.08)
+            - (field_overcoupling * 0.06),
+        ),
+    )
+    self_reflection_regulator = max(
+        0.0,
+        min(
+            1.0,
+            (inner_outer_alignment * 0.16)
+            + (inner_outer_reflection * 0.14)
+            + (reflective_distance * 0.14)
+            + (perceptual_distance * 0.10)
+            + (interpretation_quality * 0.12)
+            + (selective_attention * 0.10)
+            + (reflective_posture_value * 0.10)
+            + (reflective_perception_value * 0.08)
+            + (acetylcholine_focus * 0.06)
+            + (conscious_workspace_focus * 0.08)
+            + (nervous_overload_reflection_need * 0.08)
+            - (arousal_load * 0.08)
+            - (blind_thinking_load * 0.06),
+        ),
+    )
+    distance_regulation = max(
+        0.0,
+        min(
+            1.0,
+            (perceptual_distance * 0.17)
+            + (release_capacity * 0.16)
+            + (background_containment * 0.12)
+            + (reflective_distance * 0.14)
+            + (emotional_decoupling * 0.12)
+            + (form_symbol_field_decoupling * 0.10)
+            + (protective_distance_regulation * 0.11)
+            + (subconscious_buffering * 0.08)
+            - (field_attachment * 0.12)
+            - (felt_afterimage * 0.08)
+            - (serotonin_carryover_risk * 0.08),
+        ),
+    )
+    metaregulator_balance = max(
+        0.0,
+        min(
+            1.0,
+            (
+                return_strength
+                + integration_capacity
+                + variance_regulation
+                + load_tolerance
+                + impulse_control
+                + frustration_tolerance
+                + protective_distance_regulation
+                + self_reflection_regulator
+                + distance_regulation
+            )
+            / 9.0,
+        ),
+    )
+    regulatory_second_order_load = max(
+        0.0,
+        min(
+            1.0,
+            ((1.0 - metaregulator_balance) * 0.42)
+            + (effort_reorganization_pressure * 0.14)
+            + (pre_action_reorganization_pressure * 0.14)
+            + (field_perception_strain * 0.10)
+            + (arousal_load * 0.08)
+            + (fatigue_tone * 0.08)
+            + (field_overcoupling * 0.04),
+        ),
+    )
+    regulatory_second_order_load = max(
+        0.0,
+        min(
+            1.0,
+            regulatory_second_order_load
+            - (subconscious_buffering * 0.12)
+            - (conscious_gate_balance * 0.08)
+            + (subconscious_leakage * 0.10)
+            + (conscious_workspace_load * 0.05),
+        ),
+    )
+    regulatory_second_order_load = max(
+        0.0,
+        min(
+            1.0,
+            regulatory_second_order_load
+            + (nervous_overload_reflection_need * 0.08)
+            + (shock_response_risk * 0.05)
+            + (nervous_context_overcoupling * 0.06),
+        ),
+    )
+    metaregulator_state = "adaptive_watch"
+    if metaregulator_balance >= 0.46 and regulatory_second_order_load < 0.36 and subconscious_leakage < 0.26:
+        metaregulator_state = "regulated_field"
+    elif shock_response_risk >= 0.42 and nervous_overload_reflection_need >= 0.30:
+        metaregulator_state = "nervous_overload_reflection"
+    elif nervous_context_overcoupling >= 0.18 and nervous_overload_reflection_need >= 0.30:
+        metaregulator_state = "context_overcoupling_reflection"
+    elif subconscious_leakage >= 0.36 and protective_distance_regulation < 0.38:
+        metaregulator_state = "subconscious_leakage"
+    elif conscious_workspace_load >= 0.36 and distance_regulation < 0.20:
+        metaregulator_state = "low_distance_processing"
+    elif integration_capacity < 0.32 and previous_packet_reorganization_need > 0.38:
+        metaregulator_state = "integration_strain"
+    elif impulse_control < 0.35 and plan_pressure > 0.44:
+        metaregulator_state = "impulse_pressure"
+    elif fatigue_tone >= 0.26 and serotonin_stability >= 0.50 and load_tolerance >= 0.22:
+        metaregulator_state = "tired_stabilization"
+    elif reflective_perception_value > 0.0 and self_reflection_regulator >= 0.20:
+        metaregulator_state = "reflective_recovery"
+    elif protective_distance_regulation < 0.35 and field_attachment > 0.24:
+        metaregulator_state = "overcoupled_protection"
+    elif load_tolerance < 0.26 and variance_regulation < 0.24 and regulatory_second_order_load >= 0.46:
+        metaregulator_state = "regulatory_overload"
+
+    integration_strain_value = max(
+        0.0,
+        min(
+            1.0,
+            (max(0.0, 0.34 - integration_capacity) * 0.64)
+            + (previous_packet_reorganization_need * 0.18)
+            + (semantic_shift_pressure * 0.14)
+            + (transfer_maturity_gap * 0.12)
+            + (max(0.0, temporal_novelty - temporal_continuity) * 0.10)
+            + (temporal_decay * 0.08)
+            + (conscious_workspace_load * 0.10)
+            + (max(0.0, subconscious_leakage - subconscious_buffering) * 0.10),
+        ),
+    )
+    integration_sorting_need = max(
+        0.0,
+        min(
+            1.0,
+            (integration_strain_value * 0.28)
+            + (orientation_gap * 0.18)
+            + (blind_thinking_load * 0.14)
+            + (conscious_selection_pressure * 0.12)
+            + (field_observation_need * 0.10)
+            + (max(0.0, 0.30 - conscious_workspace_focus) * 0.12)
+            + (max(0.0, 0.24 - distance_regulation) * 0.06),
+        ),
+    )
+    integration_reframe_pull = max(
+        0.0,
+        min(
+            1.0,
+            (integration_strain_value * 0.24)
+            + (form_symbol_reframe_binding * 0.18)
+            + (effort_learning_pull * 0.14)
+            + (previous_packet_reorganization_need * 0.14)
+            + (semantic_shift_pressure * 0.12)
+            + (transfer_recovery_need * 0.10)
+            + (reflective_distance * 0.08),
+        ),
+    )
+    integration_memory_recall = max(
+        0.0,
+        min(
+            1.0,
+            (memory_orientation * 0.20)
+            + (route_familiarity * 0.16)
+            + (temporal_context_depth * 0.12)
+            + (temporal_recurrence * 0.08)
+            + (known_form_support * 0.14)
+            + (variant_bearing_memory * 0.12)
+            + (uncertainty_familiarity * 0.10)
+            + (form_symbol_learning_trust * 0.10)
+            + (subconscious_habituation * 0.10)
+            - (memory_conflict * 0.10)
+            - (orientation_gap * 0.06),
+        ),
+    )
+    integration_contact_deepening = max(
+        0.0,
+        min(
+            1.0,
+            (integration_strain_value * 0.16)
+            + (object_contact_depth * 0.16)
+            + (contact_state_observe_bias * 2.0)
+            + (form_symbol_contact_carefulness * 0.12)
+            + (form_symbol_contact_maturity * 0.10)
+            + (conscious_selection_pressure * 0.12)
+            + (curiosity_tone * 0.10)
+            + (integration_memory_recall * 0.10)
+            - (subconscious_leakage * 0.08),
+        ),
+    )
+    integration_response_strength = max(
+        0.0,
+        min(
+            1.0,
+            (integration_sorting_need * 0.28)
+            + (integration_reframe_pull * 0.24)
+            + (integration_memory_recall * 0.18)
+            + (integration_contact_deepening * 0.18)
+            + (conscious_gate_balance * 0.08)
+            + (return_strength * 0.04),
+        ),
+    )
+    integration_response_state = "integration_background"
+    if integration_response_strength >= 0.34 and integration_reframe_pull >= 0.28:
+        integration_response_state = "reframe_integration"
+    elif integration_sorting_need >= 0.34 and integration_memory_recall >= 0.20:
+        integration_response_state = "memory_sorting"
+    elif integration_contact_deepening >= 0.30:
+        integration_response_state = "contact_deepening"
+    elif integration_strain_value >= 0.30 and conscious_workspace_load >= 0.30:
+        integration_response_state = "workspace_sorting"
+    elif integration_response_strength >= 0.24:
+        integration_response_state = "quiet_integration"
+
+    if integration_response_strength > 0.0:
+        integration_relief = min(0.11, integration_response_strength * 0.075)
+        field_observation_need = max(
+            0.0,
+            min(1.0, field_observation_need + (integration_sorting_need * 0.045) + (integration_contact_deepening * 0.030)),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(1.0, field_replan_pressure + (integration_reframe_pull * 0.050)),
+        )
+        act_watch_readiness = max(
+            0.0,
+            min(1.0, act_watch_readiness + (integration_memory_recall * 0.035) + (integration_contact_deepening * 0.030)),
+        )
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (integration_sorting_need * 0.030) + (integration_reframe_pull * 0.020)),
+        )
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance - (max(0.0, integration_sorting_need - integration_memory_recall) * 0.030)),
+        )
+        regulatory_second_order_load = max(
+            0.0,
+            min(1.0, regulatory_second_order_load - integration_relief + (max(0.0, integration_strain_value - integration_response_strength) * 0.035)),
+        )
+        integration_capacity = max(
+            0.0,
+            min(1.0, integration_capacity + (integration_response_strength * 0.045) + (integration_memory_recall * 0.020)),
+        )
+        metaregulator_balance = max(
+            0.0,
+            min(1.0, metaregulator_balance + (integration_response_strength * 0.025)),
+        )
+        if metaregulator_state == "integration_strain" and integration_response_strength >= 0.30:
+            metaregulator_state = str(integration_response_state)
+
+    cautious_hypothesis_strength = max(
+        0.0,
+        min(
+            1.0,
+            (integration_memory_recall * 0.22)
+            + (integration_reframe_pull * 0.18)
+            + (integration_contact_deepening * 0.14)
+            + (conscious_gate_balance * 0.12)
+            + (interpretation_quality * 0.12)
+            + (transfer_bearing * 0.10)
+            + (temporal_source_binding * 0.08)
+            + (perception_sequence_coherence * 0.08)
+            + (field_action_support * 0.08)
+            + (form_symbol_action_binding * 0.06)
+            - (integration_sorting_need * 0.08)
+            - (subconscious_leakage * 0.06),
+        ),
+    )
+    cautious_hypothesis_clarity = max(
+        0.0,
+        min(
+            1.0,
+            (cautious_hypothesis_strength * 0.28)
+            + (memory_orientation * 0.20)
+            + (route_familiarity * 0.15)
+            + (temporal_context_depth * 0.12)
+            + (temporal_self_consistency * 0.10)
+            + (visual_grounding_strength * 0.12)
+            + (structure_action_bearing * 0.12)
+            + (inner_outer_alignment * 0.08)
+            + (selective_attention * 0.05),
+        ),
+    )
+    cautious_hypothesis_patience = max(
+        0.0,
+        min(
+            1.0,
+            (protective_distance_regulation * 0.20)
+            + (distance_regulation * 0.18)
+            + (integration_sorting_need * 0.16)
+            + (max(0.0, 1.0 - temporal_source_binding) * 0.08)
+            + (temporal_afterimage * 0.06)
+            + (action_inhibition * 0.14)
+            + (subconscious_buffering * 0.12)
+            + (serotonin_stability * 0.10)
+            + (gaba_inhibition * 0.10)
+            - (plan_pressure * 0.08),
+        ),
+    )
+    cautious_hypothesis_state = "no_cautious_hypothesis"
+    if cautious_hypothesis_strength >= 0.30 and cautious_hypothesis_clarity >= 0.24:
+        cautious_hypothesis_state = "cautious_plan_seed"
+    elif integration_memory_recall >= 0.32 and integration_reframe_pull >= 0.24:
+        cautious_hypothesis_state = "memory_reframe_seed"
+    elif integration_sorting_need >= 0.32 and cautious_hypothesis_patience >= 0.24:
+        cautious_hypothesis_state = "observe_until_clear"
+    elif integration_contact_deepening >= 0.25:
+        cautious_hypothesis_state = "deepen_contact_first"
+    elif cautious_hypothesis_strength >= 0.22:
+        cautious_hypothesis_state = "weak_hypothesis_seed"
+
+    if cautious_hypothesis_state != "no_cautious_hypothesis":
+        act_watch_readiness = max(
+            0.0,
+            min(1.0, act_watch_readiness + (cautious_hypothesis_strength * 0.040) + (cautious_hypothesis_clarity * 0.025)),
+        )
+        field_replan_pressure = max(
+            0.0,
+            min(1.0, field_replan_pressure + (max(0.0, cautious_hypothesis_strength - cautious_hypothesis_clarity) * 0.030)),
+        )
+        field_action_support = max(
+            0.0,
+            min(1.0, field_action_support + (cautious_hypothesis_clarity * 0.030) - (cautious_hypothesis_patience * 0.010)),
+        )
+        action_inhibition = max(
+            0.0,
+            min(1.0, action_inhibition + (cautious_hypothesis_patience * 0.018)),
+        )
+        action_clearance = max(
+            0.0,
+            min(1.0, action_clearance + (cautious_hypothesis_clarity * 0.018) - (max(0.0, cautious_hypothesis_patience - cautious_hypothesis_clarity) * 0.014)),
+        )
+
     if (
         bool(allow_plan)
         and decision in ("LONG", "SHORT")
@@ -15656,6 +17059,33 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         )
         allow_block = False
         rejection_reason = "diffuse_open_reframe" if allow_ruminate else "diffuse_open_observe"
+        pre_action_phase = "replan" if allow_ruminate else "observe"
+
+    if (
+        bool(allow_plan)
+        and decision in ("LONG", "SHORT")
+        and integration_response_strength >= 0.36
+        and integration_sorting_need > integration_memory_recall
+        and decision_strength < (1.18 + integration_memory_recall * 0.32 + conscious_gate_balance * 0.18)
+    ):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(integration_reframe_pull >= 0.30 or field_replan_pressure >= 0.52)
+        allow_block = False
+        rejection_reason = "integration_reframe" if allow_ruminate else "integration_observe"
+        pre_action_phase = "replan" if allow_ruminate else "observe"
+    elif (
+        bool(allow_plan)
+        and decision in ("LONG", "SHORT")
+        and cautious_hypothesis_state in ("observe_until_clear", "deepen_contact_first")
+        and cautious_hypothesis_clarity < 0.26
+        and decision_strength < (1.14 + cautious_hypothesis_strength * 0.24)
+    ):
+        allow_plan = False
+        allow_observe = True
+        allow_ruminate = bool(cautious_hypothesis_state == "observe_until_clear" and integration_reframe_pull >= 0.28)
+        allow_block = False
+        rejection_reason = "cautious_hypothesis_reframe" if allow_ruminate else "cautious_hypothesis_observe"
         pre_action_phase = "replan" if allow_ruminate else "observe"
 
     return {
@@ -15740,6 +17170,54 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "previous_packet_reorganization_need": float(previous_packet_reorganization_need),
         "diffuse_open_development_pressure": float(diffuse_open_development_pressure),
         "posture_development_hint": str(posture_development_hint),
+        "metaregulator_state": str(metaregulator_state),
+        "metaregulator_balance": float(metaregulator_balance),
+        "regulatory_second_order_load": float(regulatory_second_order_load),
+        "subconscious_field_pressure": float(subconscious_field_pressure),
+        "subconscious_habituation": float(subconscious_habituation),
+        "subconscious_filter_strength": float(subconscious_filter_strength),
+        "subconscious_buffering": float(subconscious_buffering),
+        "subconscious_leakage": float(subconscious_leakage),
+        "conscious_selection_pressure": float(conscious_selection_pressure),
+        "conscious_workspace_focus": float(conscious_workspace_focus),
+        "conscious_workspace_load": float(conscious_workspace_load),
+        "conscious_gate_balance": float(conscious_gate_balance),
+        "integration_strain_value": float(integration_strain_value),
+        "integration_sorting_need": float(integration_sorting_need),
+        "integration_reframe_pull": float(integration_reframe_pull),
+        "integration_memory_recall": float(integration_memory_recall),
+        "integration_contact_deepening": float(integration_contact_deepening),
+        "integration_response_strength": float(integration_response_strength),
+        "integration_response_state": str(integration_response_state),
+        "cautious_hypothesis_strength": float(cautious_hypothesis_strength),
+        "cautious_hypothesis_clarity": float(cautious_hypothesis_clarity),
+        "cautious_hypothesis_patience": float(cautious_hypothesis_patience),
+        "cautious_hypothesis_state": str(cautious_hypothesis_state),
+        "temporal_binding_state": str(temporal_binding_state),
+        "temporal_continuity": float(temporal_continuity),
+        "temporal_source_binding": float(temporal_source_binding),
+        "temporal_recurrence": float(temporal_recurrence),
+        "temporal_novelty": float(temporal_novelty),
+        "temporal_afterimage": float(temporal_afterimage),
+        "temporal_decay": float(temporal_decay),
+        "temporal_context_depth": float(temporal_context_depth),
+        "mcm_spacetime_depth": float(mcm_spacetime_depth),
+        "memory_experience_depth": float(memory_experience_depth),
+        "future_projection_depth": float(future_projection_depth),
+        "temporal_self_location": float(temporal_self_location),
+        "temporal_self_location_state": str(temporal_self_location_state),
+        "temporal_self_consistency": float(temporal_self_consistency),
+        "perception_sequence_coherence": float(perception_sequence_coherence),
+        "memory_time_distance": float(memory_time_distance),
+        "return_strength": float(return_strength),
+        "integration_capacity": float(integration_capacity),
+        "variance_regulation": float(variance_regulation),
+        "load_tolerance": float(load_tolerance),
+        "impulse_control": float(impulse_control),
+        "frustration_tolerance": float(frustration_tolerance),
+        "protective_distance_regulation": float(protective_distance_regulation),
+        "self_reflection_regulator": float(self_reflection_regulator),
+        "distance_regulation": float(distance_regulation),
         "memory_orientation": float(memory_orientation),
         "orientation_gap": float(orientation_gap),
         "blind_thinking_load": float(blind_thinking_load),
@@ -15820,6 +17298,12 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "serotonin_carryover_risk": float(neurochemical_state.get("serotonin_carryover_risk", 0.0) or 0.0),
         "emotional_decoupling": float(neurochemical_state.get("emotional_decoupling", 0.0) or 0.0),
         "reactive_nervous_drive": float(neurochemical_state.get("reactive_nervous_drive", 0.0) or 0.0),
+        "nervous_system_overload": float(neurochemical_state.get("nervous_system_overload", 0.0) or 0.0),
+        "escape_action_drive": float(neurochemical_state.get("escape_action_drive", 0.0) or 0.0),
+        "shock_response_risk": float(neurochemical_state.get("shock_response_risk", 0.0) or 0.0),
+        "nervous_overload_reflection_need": float(nervous_overload_reflection_need),
+        "active_context_self_certainty": float(active_context_self_certainty),
+        "nervous_context_overcoupling": float(nervous_context_overcoupling),
         "conscious_perception": dict(conscious_perception_state or {}),
         "conscious_perception_state": str(conscious_perception_state.get("conscious_perception_state", "open_perception") or "open_perception"),
         "inner_posture_state": str(conscious_perception_state.get("inner_posture_state", "uncertain_open") or "uncertain_open"),
@@ -16416,6 +17900,29 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     )
 
     state_signature = build_state_signature(candle_state, tension_state, snapshot, stimulus, bot=bot)
+    temporal_perception_state = build_temporal_coherence_state(
+        temporal_perception_state=temporal_perception_state,
+        bot=bot,
+        visual_market_state=visual_market_state,
+        structure_perception_state=structure_perception_state,
+        form_symbol_state=form_symbol_state,
+        state_signature=state_signature,
+        candle_state=candle_state,
+    )
+    world_state["temporal_perception_state"] = dict(temporal_perception_state or {})
+    perception_state["temporal_perception_state"] = dict(temporal_perception_state or {})
+    bot.temporal_perception_state = dict(temporal_perception_state or {})
+    early_active_context_trace = _refresh_active_context_trace(
+        getattr(bot, "active_context_trace", {}) or {},
+        bot=bot,
+        runtime_result={
+            "temporal_perception_state": dict(temporal_perception_state or {}),
+        },
+        market_tick_advanced=True,
+    )
+    bot.active_context_trace = dict(early_active_context_trace or {})
+    world_state["active_context_trace"] = dict(early_active_context_trace or {})
+    perception_state["active_context_trace"] = dict(early_active_context_trace or {})
 
     register_pending_learning_context(
         bot,
@@ -16425,6 +17932,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     fused = dict(fused_preview or {})
     fused = reinterpret_focus_by_signature(bot, fused, state_signature)
     fused["form_symbol_state"] = dict(form_symbol_state or {})
+    fused["active_context_trace"] = dict(early_active_context_trace or {})
 
     thought_state = build_thought_state(
         candle_state,
@@ -16619,6 +18127,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "focus": dict(stimulus.get("focus", {}) or {}),
             "world_state": dict(world_state or {}),
             "structure_perception_state": dict(structure_perception_state or {}),
+            "temporal_perception_state": dict(temporal_perception_state or {}),
             "outer_visual_perception_state": dict(outer_visual_perception_state or {}),
             "inner_field_perception_state": dict(inner_field_perception_state or {}),
             "processing_state": dict(processing_state or {}),
@@ -16631,6 +18140,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "form_symbol_state": dict(form_symbol_state or {}),
             "strategic_window_state": dict(strategic_window_state or {}),
             "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "active_context_trace": dict(early_active_context_trace or {}),
             "state_signature": dict(state_signature or {}),
             "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
             "signature_bias": float(fused.get("signature_bias", 0.0) or 0.0),
@@ -16676,6 +18186,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
                 "form_symbol_state": dict(form_symbol_state or {}),
                 "strategic_window_state": dict(strategic_window_state or {}),
                 "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+                "active_context_trace": dict(early_active_context_trace or {}),
                 "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
                 "rejection_reason": "decision_not_tradeable",
             },
@@ -16689,6 +18200,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "meta_regulation_state": dict(meta_regulation_state or {}),
             "strategic_window_state": dict(strategic_window_state or {}),
             "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "active_context_trace": dict(early_active_context_trace or {}),
             "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
             "rejection_reason": "decision_not_tradeable",
         })
@@ -16696,6 +18208,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "decision": str(decision or "WAIT"),
             "meta_regulation_state": dict(meta_regulation_state or {}),
             "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "active_context_trace": dict(early_active_context_trace or {}),
             "rejection_reason": "decision_not_tradeable",
         })
         return None
@@ -16715,6 +18228,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
                 "form_symbol_state": dict(form_symbol_state or {}),
                 "strategic_window_state": dict(strategic_window_state or {}),
                 "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+                "active_context_trace": dict(early_active_context_trace or {}),
                 "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
                 "rejection_reason": "trade_plan_missing",
             },
@@ -16728,6 +18242,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "meta_regulation_state": dict(meta_regulation_state or {}),
             "strategic_window_state": dict(strategic_window_state or {}),
             "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "active_context_trace": dict(early_active_context_trace or {}),
             "context_cluster_id": str(fused.get("context_cluster_id", "-") or "-"),
             "rejection_reason": "trade_plan_missing",
         })
@@ -16735,6 +18250,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
             "decision": str(decision),
             "meta_regulation_state": dict(meta_regulation_state or {}),
             "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+            "active_context_trace": dict(early_active_context_trace or {}),
             "rejection_reason": "trade_plan_missing",
         })
         return None
@@ -16783,6 +18299,7 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         "form_symbol_state": dict(form_symbol_state or {}),
         "strategic_window_state": dict(strategic_window_state or {}),
         "active_mcm_contact_state": dict(active_mcm_contact_state or {}),
+        "active_context_trace": dict(early_active_context_trace or {}),
         "state_signature": dict(state_signature or {}),
         "memory_complexity_state": dict(fused.get("memory_complexity_state", {}) or {}),
         "signature_bias": float(fused.get("signature_bias", 0.0) or 0.0),

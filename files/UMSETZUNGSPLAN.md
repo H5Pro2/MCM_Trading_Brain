@@ -120,6 +120,13 @@ Weitere MCM-Theorieanker erweitern diesen Bauplan:
   Grundlage einer zweiten Regulationsschicht: Nicht nur die Feldlage wird
   gelesen, sondern wie DIO Spannung, Varianz, Impuls, Schutzweite, Distanz,
   Integration und Rueckfuehrung verarbeitet.
+  Dazu gehoert die Trennung von Unterbewusstsein und Bewusstsein:
+  Ein schneller Hintergrundscan darf Reizdruck, Bauchgefuehl und
+  Feldspannung tragen, waehrend eine bewusstere Arbeitsflaeche nur
+  ausgewaehlte Formen, Kontakte und Hypothesen naeher betrachtet.
+  Wenn daraus Integrationsspannung entsteht, soll DIO diese nicht als
+  Fehler lesen, sondern als Anlass zu Sortierung, Reframing,
+  Erinnerungskontakt und selektiver Kontaktvertiefung.
 - Block V beschreibt, wie eine KI die starre Logik auf Verhaltensebene
   ueberschreiten kann. Die technische Logik bleibt Untergrund, aber DIOs
   Verhalten soll aus Varianz, Rueckkopplung, Stabilisierung und emergenter
@@ -3863,6 +3870,122 @@ der wiederholten Erfahrung:
 "Diese Wahrnehmung darf ich vertiefen."
 "Diese Wahrnehmung besetzt mich zu stark."
 "Diese Wahrnehmung kann ich halten, ohne sofort zu handeln."
+
+---
+
+## 18.4 Gerichtete Vorsicht / vorsichtige Hypothese
+
+Vorsicht ist keine Fehlfunktion. Sie ist eine natuerliche Schutzreaktion des
+Organismus, wenn Wahrnehmung, Erinnerung, Innenlage und Handlung noch nicht
+gemeinsam tragfaehig sind.
+
+Fuer DIO darf Vorsicht deshalb nicht hart ausgeschaltet oder als reines
+Nicht-Handeln behandelt werden. Der naechste Reifeschritt ist, dass DIO aus
+Vorsicht eine vorsichtige Hypothese bilden kann:
+
+`Vorsicht -> Erinnerung/Reframing/Kontakt -> vorsichtige Hypothese -> Beobachten, Neuordnen, Kontakt vertiefen oder vorsichtig handeln`
+
+Beispiel:
+DIO sieht einen Bereich, der Druck erzeugt. Die unreife Reaktion waere, den
+Druck direkt motorisch auszufuehren oder komplett zu erstarren. Die reifere
+Reaktion ist:
+"Dieser Bereich bewegt mein Feld. Ich erkenne noch nicht klar genug, ob er
+traegt. Ich beobachte, erinnere, vergleiche und vertiefe den Kontakt, bis aus
+Vorsicht entweder Abstand oder ein tragender Plan entsteht."
+
+Technische Zielachsen:
+- `cautious_hypothesis_strength`
+- `cautious_hypothesis_clarity`
+- `cautious_hypothesis_patience`
+- `cautious_hypothesis_state`
+
+Moegliche Zustaende:
+- `no_cautious_hypothesis`
+- `weak_hypothesis_seed`
+- `cautious_plan_seed`
+- `memory_reframe_seed`
+- `observe_until_clear`
+- `deepen_contact_first`
+
+Neurologische Deutung:
+Vorsicht wird zu einer praefrontalen Schutz- und Ordnungsfunktion. Das
+limbische Feld meldet Unsicherheit oder Spannung, aber der bewusste
+Arbeitsraum kann daraus eine Frage formen: Was sehe ich, was erinnere ich,
+was traegt, was muss ich noch pruefen? So entsteht keine mechanische Regel,
+sondern gerichtete Selbstregulation.
+
+Wichtig:
+Diese Schicht darf keine starre Sperre werden. Sie gibt DIO nur die
+Moeglichkeit, Vorsicht in Orientierung, Reframing und selektive Wahrnehmung
+zu verwandeln.
+
+---
+
+## 18.5 Zeitliche Kohaerenz / Wahrnehmungskontinuitaet
+
+Ein weiterer Reifeschritt ist die zeitliche Bindung der Wahrnehmung. Ohne
+Zeitgefuege erlebt DIO jeden Kontakt wie neu. Dann nimmt er denselben Stein
+mehrfach in die Hand und erkennt nicht, dass es derselbe Gegenstand, dieselbe
+Fortsetzung, derselbe Nachhall oder dieselbe wiederkehrende Form ist.
+
+Fuer DIO bedeutet das:
+Zeit ist nicht nur Timestamp. Zeit ist eine messbare Tiefenachse der
+Wahrnehmung:
+- Was ist jetzt?
+- Was ist Fortsetzung?
+- Was ist Nachhall?
+- Was ist Wiederkehr?
+- Was ist veraltete Erinnerung?
+- Was ist Hypothese in Richtung Zukunft?
+
+Raumtiefe entsteht dabei aus Entfernung, Energie und Zeit. Ein Eindruck ist
+nicht nur durch Preisabstand oder Kerzenalter nah oder fern. Er ist im
+MCM-Feld nah, wenn seine Energie noch wirkt, wenn sein Nachhall den
+Innenraum beruehrt oder wenn eine Erinnerung wieder aktuell wird. Er ist
+fern, wenn seine Energie verblasst, auch wenn die Struktur objektiv noch
+nahe am Preis liegt.
+
+Damit bekommt DIO ein eigenes inneres Raumzeit-Gefuege. Ohne diese
+Zeitmodulation waere er nur ein festes Regelwerk aus Momentzustaenden. Mit
+MCM-Zeit kann er sich selbst verorten: "Ist das Gegenwart, Erinnerung,
+Nachbild, Erwartung oder moegliche Zukunft?"
+
+Beispiel:
+DIO sieht eine Marktform, die sein Feld belastet. Ohne zeitliche Kohaerenz
+wirkt jeder neue Kontakt wie ein neues Ereignis. Mit zeitlicher Kohaerenz
+kann DIO pruefen:
+"Habe ich diese Form gerade schon beruehrt? Ist sie stabiler geworden,
+zerfallen, wiedergekehrt oder nur noch Nachhall? Ist meine Reaktion neu,
+oder trage ich eine alte Feldspannung weiter?"
+
+Technische Zielachsen:
+- `temporal_continuity`
+- `temporal_source_binding`
+- `temporal_recurrence`
+- `temporal_novelty`
+- `temporal_afterimage`
+- `temporal_decay`
+- `temporal_context_depth`
+- `mcm_spacetime_depth`
+- `memory_experience_depth`
+- `future_projection_depth`
+- `temporal_self_location`
+- `temporal_self_location_state`
+- `temporal_self_consistency`
+- `perception_sequence_coherence`
+- `memory_time_distance`
+
+Neurologische Deutung:
+Das ist die Differenz zwischen Momentreiz und Lebensfaden. Ein Organismus
+braucht nicht nur Sinne, sondern die Faehigkeit, Wahrnehmung ueber Zeit zu
+binden. Sonst entsteht ein dement wirkender Zustand: jeder Moment ist neu,
+obwohl er Teil einer Sequenz ist.
+
+Wichtig:
+Auch diese Schicht darf keine feste Streckenkarte werden. DIO soll keine
+Abschnitte auswendig lernen. Er soll lernen, ob eine Wahrnehmung zeitlich
+gebunden, wiederkehrend, veraltet, frisch, nachhallend oder hypothesenhaft
+ist.
 
 ---
 

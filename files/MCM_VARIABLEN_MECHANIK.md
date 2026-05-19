@@ -2402,6 +2402,410 @@ Lage verarbeitet. Sie sind keine harten Gates.
 
 ---
 
+# Unterbewusstsein / Bewusster Arbeitsraum
+
+Diese Variablen trennen schnelle, diffuse Hintergrundwahrnehmung von
+bewussterer Betrachtung. Sie sind keine Gates, sondern beschreiben den
+Uebergang von Bauchgefuehl zu bewusstem Kontakt.
+
+## `subconscious_field_pressure`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Unterbewusster Feldscan
+- Funktion: beschreibt, wie viel Reizdruck, Weltverschiebung,
+  Nachwirkung und reaktive Nervenspannung im Hintergrundfeld ankommt.
+
+## `subconscious_habituation`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Gewoehnung / Wiedererkennung
+- Funktion: beschreibt, wie vertraut, tragbar oder wiedererkannt ein
+  Hintergrundreiz bereits ist.
+
+## `subconscious_filter_strength`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Wahrnehmungsfilter
+- Funktion: beschreibt, wie gut DIO Hintergrundreize puffern kann, ohne sie
+  sofort bewusst tragen zu muessen.
+
+## `subconscious_buffering`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Hintergrundpufferung
+- Funktion: beschreibt, wie viel Feldspannung unterbewusst gehalten wird.
+
+## `subconscious_leakage`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Durchschlag ins Bewusstsein
+- Funktion: beschreibt, wie stark ungefilterter Hintergrunddruck in die
+  bewusste Arbeitsflaeche eindringt.
+
+## `conscious_selection_pressure`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Bewusste Auswahl
+- Funktion: beschreibt, wie stark ein Reiz nach bewusster Betrachtung,
+  Kontakt oder Reflexion zieht.
+
+## `conscious_workspace_focus`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Bewusster Arbeitsraum
+- Funktion: beschreibt, wie fokussiert und geordnet DIO eine ausgewaehlte
+  Form, Hypothese oder Kontaktlage betrachten kann.
+
+## `conscious_workspace_load`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Bewusste Denklast
+- Funktion: beschreibt, wie teuer die bewusste Verarbeitung gerade ist.
+
+## `conscious_gate_balance`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Uebergang Unterbewusstsein -> Bewusstsein
+- Funktion: beschreibt, ob der Uebergang vom Hintergrundfeld in den
+  bewussten Arbeitsraum tragfaehig dosiert ist.
+
+---
+
+# Integrationsantwort
+
+Diese Variablen beschreiben, wie DIO mit `integration_strain` arbeitet.
+Sie sind keine Verbote, sondern innere Verarbeitungsachsen.
+
+## `integration_strain_value`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Integrationsspannung
+- Funktion: beschreibt, wie stark neue Lage, Reorganisation,
+  semantische Verschiebung und bewusste Last noch nicht eingeordnet sind.
+
+## `integration_sorting_need`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: innere Sortierung
+- Funktion: beschreibt, wie stark DIO ordnen, entwirren und den
+  Arbeitsraum entlasten muss.
+
+## `integration_reframe_pull`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Reframing
+- Funktion: beschreibt, wie stark eine Lage anders betrachtet oder neu
+  gerahmt werden will.
+
+## `integration_memory_recall`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Erinnerung / Vergleich
+- Funktion: beschreibt, wie viel tragfaehige Erfahrung fuer die aktuelle
+  Integrationsspannung verfuegbar ist.
+
+## `integration_contact_deepening`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: selektive Kontaktvertiefung
+- Funktion: beschreibt, ob DIO einen Kontakt genauer anfassen, pruefen oder
+  fuehlen sollte, statt alles global zu verarbeiten.
+
+## `integration_response_strength`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Integrationsreaktion
+- Funktion: beschreibt, wie stark DIO auf Integrationsspannung mit
+  Sortierung, Reframing, Erinnerung und Kontaktvertiefung antwortet.
+
+## `integration_response_state`
+
+- Typ: Textlabel
+- Ebene: innere Selbstbenennung
+- Funktion: beschreibt die dominante Form der Integrationsantwort.
+
+---
+
+# Gerichtete Vorsicht / vorsichtige Hypothese
+
+Diese Variablen beschreiben, ob Vorsicht nur passiv macht oder ob daraus
+eine vorsichtige Orientierung entsteht.
+
+## `cautious_hypothesis_strength`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: vorsichtige Hypothesenbildung
+- Funktion: beschreibt, wie stark aus Memory-Recall, Reframing und
+  Kontaktvertiefung eine vorsichtige Hypothese entsteht.
+
+## `cautious_hypothesis_clarity`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Hypothesenklarheit
+- Funktion: beschreibt, wie klar und strukturgebunden diese vorsichtige
+  Hypothese bereits ist.
+
+## `cautious_hypothesis_patience`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Geduld / Schutzhemmung
+- Funktion: beschreibt, ob DIO die Vorsicht tragen kann, ohne sofort in
+  Handlung oder Chaos zu kippen.
+
+## `cautious_hypothesis_state`
+
+- Typ: Textlabel
+- Ebene: innere Selbstbenennung
+- Funktion: beschreibt, ob keine, schwache, erinnerungsbasierte,
+  beobachtende, kontaktvertiefende oder planende Vorsicht vorliegt.
+
+---
+
+# Zeitliche Kohaerenz / Wahrnehmungskontinuitaet
+
+Diese Variablen beschreiben, ob DIO eine Wahrnehmung als neuen Moment,
+Fortsetzung, Wiederkehr, Nachhall, alte Erinnerung oder koharente Sequenz
+erlebt.
+
+## `temporal_identity`
+
+- Typ: Text-ID
+- Ebene: grobe Zeitidentitaet
+- Funktion: bindet einen Wahrnehmungskontakt ueber Formfamilie, Kontext und
+  grobe visuelle Signatur.
+- Bedeutung: "Gehoert dieser Moment zu einer bekannten fortlaufenden
+  Kontaktspur?"
+
+## `temporal_source_identity`
+
+- Typ: Text-ID
+- Ebene: feine Quellenidentitaet
+- Funktion: haelt den konkreteren Einzelabdruck aus Form-Symbol,
+  Compound-ID, Visual-ID, Kontext und Signatur fest.
+- Bedeutung: "Welcher feine Abdruck liegt unter der groben Zeitspur?"
+- Hinweis: Diese ID verhindert nicht die Wiederkehr. Sie dient als
+  Quelleninformation, damit DIO nicht nur grob, sondern bei Bedarf auch
+  detailliert schauen kann.
+
+## `temporal_binding_state`
+
+- Typ: Textlabel
+- Ebene: Zeitbindung / episodische Kontinuitaet
+- Funktion: benennt den dominanten zeitlichen Kontaktzustand.
+
+## `temporal_continuity`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Fortsetzung
+- Funktion: beschreibt, wie stark die aktuelle Wahrnehmung als Fortsetzung
+  einer vorherigen Wahrnehmung erlebt wird.
+
+## `temporal_source_binding`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Quellenbindung
+- Funktion: beschreibt, wie gut DIO die Wahrnehmung an Form, Struktur,
+  Kontext und visuellen Boden binden kann.
+
+## `temporal_recurrence`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Wiederkehr
+- Funktion: beschreibt, ob die zeitliche Identitaet bereits wiederholt
+  aufgetaucht ist.
+
+## `temporal_novelty`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Neuheit
+- Funktion: beschreibt, wie neu oder ungebunden der aktuelle Kontakt wirkt.
+
+## `temporal_afterimage`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Nachhall
+- Funktion: beschreibt, wie stark eine vorherige Wahrnehmung noch im Feld
+  nachwirkt.
+
+## `temporal_decay`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Alterung / Verblassen
+- Funktion: beschreibt, wie weit eine Wahrnehmung zeitlich von der
+  Gegenwart entfernt oder verblasst ist.
+
+## `temporal_context_depth`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Kontext-Tiefe
+- Funktion: beschreibt, wie viel zeitliche, strukturelle und symbolische
+  Tiefe ein Kontakt besitzt.
+- MCM-Lesart: diese Tiefe entsteht nicht nur aus Zeitabstand, sondern aus
+  Entfernung, Energie und innerer Aktualitaet des Kontakts.
+
+## `mcm_spacetime_depth` / Zielgroesse
+
+- Bereich: `0.0 - 1.0`
+- Ebene: MCM-Raumzeit / innere Tiefenwahrnehmung
+- Status: diagnostisch umgesetzt im Temporal-/MCM-Kern.
+- Funktion: beschreibt, wie tief ein Eindruck im inneren Raumzeit-Gefuege
+  liegt.
+- Bedeutung: "Wie weit, wie energiereich und wie aktuell ist dieser
+  Eindruck in meinem MCM-Feld?"
+
+## `memory_experience_depth`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Memory / zeitlich tiefe Erfahrung
+- Status: diagnostisch umgesetzt.
+- Funktion: beschreibt, ob eine Erinnerung nicht nur vorhanden ist, sondern
+  als erlebte Spur mit Naehe, Wiederkehr, Nachhall und Lernvertrauen wirkt.
+- Bedeutung: "Ist das nur gespeicherte Information oder bereits Erfahrung
+  mit Zeit-Tiefe?"
+
+## `future_projection_depth`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Hypothese / Zukunftstiefe
+- Status: diagnostisch umgesetzt.
+- Funktion: beschreibt, ob aus aktueller Tiefe, Sequenzkohaerenz,
+  Strukturstabilitaet und Nachhall eine vorausgerichtete Moeglichkeitsform
+  entsteht.
+- Bedeutung: "Kann aus dieser Erfahrung eine moegliche Zukunftsform
+  entstehen?"
+
+## `temporal_self_location`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Selbstverortung / innere Zeit
+- Status: diagnostisch umgesetzt.
+- Funktion: beschreibt, ob DIO sich im eigenen Wahrnehmungsverlauf
+  verorten kann: Gegenwart, Nachhall, Erinnerung, Hypothese oder Erwartung.
+- Bedeutung: "Wo stehe ich gerade in meinem eigenen inneren Zeitraum?"
+
+## `temporal_self_location_state`
+
+- Typ: Textlabel
+- Ebene: Selbstverortung / innere Zeit
+- Status: diagnostisch umgesetzt.
+- Funktion: benennt die qualitative Lage des Kontakts.
+- Moegliche Werte:
+  - `present_contact`
+  - `afterimage_trace`
+  - `remembered_experience`
+  - `future_possibility`
+  - `new_unmapped_contact`
+  - `unlocated_contact`
+
+## `temporal_self_consistency`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Selbstkonsistenz
+- Funktion: beschreibt, ob DIOs innere Wahrnehmung ueber Zeit stimmig
+  bleibt.
+
+## `perception_sequence_coherence`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Sequenz-Kohaerenz
+- Funktion: beschreibt, ob einzelne Wahrnehmungsmomente zu einer
+  zusammenhaengenden Sequenz werden.
+
+## `memory_time_distance`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Memory-Zeitdistanz
+- Funktion: beschreibt, wie weit die passende Erinnerung zeitlich von der
+  Gegenwart entfernt ist.
+
+## `reality_anchor`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Zeitbindung / Gegenwartspruefung
+- Funktion: beschreibt, wie gut ein innerer Kontextfaden durch
+  Quellenbindung, Sequenzkoharenz, Strukturqualitaet, Strukturstabilitaet,
+  Kontextvertrauen und visuelle Erdung getragen wird.
+- Bedeutung: "Passt mein innerer Zusammenhang wirklich zur aktuellen
+  Aussenwelt?"
+
+## `overtrust_pressure`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Kontextvertrauen / Skepsis
+- Funktion: beschreibt, ob ein innerer Zeitfaden bei schwacher
+  Gegenwartsbindung zu viel Bedeutung bekommen wuerde.
+- Bedeutung: "Ich fuehle einen Zusammenhang, aber ich sollte ihm noch nicht
+  blind vertrauen."
+
+## `nervous_system_overload`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Nervensystem / innere Ueberlastung
+- Funktion: beschreibt, ob Cortisol, Noradrenalin, Glutamat,
+  Carryover-Risiko und reaktiver Handlungsdruck die innere Tragfaehigkeit
+  ueberlasten.
+- Bedeutung: "Meine Nerven sind ueberlastet."
+
+## `escape_action_drive`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Handlung / Entladungsdruck
+- Funktion: beschreibt, ob Handlung eher als Ausweg aus innerer Spannung
+  entstehen koennte.
+- Bedeutung: "Will ich handeln, weil die Struktur traegt, oder weil ich aus
+  der Situation raus will?"
+
+## `shock_response_risk`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Schock-/Ueberreizreaktion
+- Funktion: beschreibt, ob Ueberlastung, Weltwechsel, geringe emotionale
+  Entkopplung und reaktiver Handlungsdruck in einen Schockmodus kippen
+  koennten.
+- Bedeutung: "Mein Nervensystem koennte gerade ueberreagieren."
+
+## `nervous_overload_reflection_need`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Reflexion / Selbstwahrnehmung
+- Funktion: beschreibt, wie stark DIO die eigene nervliche Lage betrachten
+  sollte, bevor aus Spannung Handlung wird.
+- Bedeutung: "Ich muss meine innere Lage pruefen, bevor ich handle."
+
+## `active_context_self_certainty`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Kontextvertrauen / innere Sicherheit
+- Funktion: beschreibt, wie absolut der aktive innere Kontext gerade
+  wirkt. Er entsteht aus Aktivierung, Support, Bearing und geringem
+  Konflikt des `active_context_trace`.
+- Bedeutung: "Mein innerer Kontext fuehlt sich sicher an."
+
+## `nervous_context_overcoupling`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Nervensystem / Kontext-Ueberkopplung
+- Funktion: beschreibt, ob ein sehr sicher wirkender innerer Kontext auf
+  ein belastetes Nervensystem trifft. Dann wird die Kontext-Sicherheit
+  nicht geloescht, aber reflektiver und weniger absolut behandelt.
+- Bedeutung: "Ich bin innerlich sicher, aber meine Nervenlage koennte
+  diese Sicherheit verzerren."
+
+## `context_modulation_label`
+
+- Bereich: Textzustand
+- Ebene: aktiver Kontext / Selbstwahrnehmung
+- Funktion: beschreibt, ob der aktive Kontext ungefaerbt bleibt oder durch
+  nervliche Ueberkopplung moduliert wurde.
+- Moegliche Werte:
+  - `unmodulated_context`
+  - `nervous_tinted_context`
+  - `overcoupled_context`
+- Bedeutung: "Mein Zeit-/Kontextfaden ist vorhanden, aber seine gefuehlte
+  Sicherheit kann nervlich gefaerbt sein."
+
+---
+
 # Noch Zu Dokumentieren
 
 - `nervous_variance`

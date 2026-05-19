@@ -148,6 +148,14 @@ Die MCM ist der technische Versuch, eine solche innere Wahrnehmung maschinell
 zu modellieren: als Feld aus Außenreiz, innerem Zustand, Memory, Regulation,
 Tragfähigkeit, Spannung, Reflexion und Handlung.
 
+DIO trennt dabei zunehmend zwischen unbewusster und bewusster Wahrnehmung.
+Nicht jeder Reiz wird sofort zur bewussten Last. Ein unterbewusster
+Feldscan kann Druck, Wiederholung, Bauchgefühl und Hintergrundspannung
+tragen, während der bewusste Arbeitsraum nur ausgewählte Formen, Kontakte
+oder Hypothesen genauer betrachtet. Das ähnelt biologischer Wahrnehmung:
+Ein Organismus sieht nicht alles, sondern genug, um in seiner Umwelt
+tragfähig zu interagieren.
+
 ---
 
 ## Wie die MCM in DIO arbeitet
@@ -398,6 +406,29 @@ Damit wird Zeit zu einer zentralen Tiefenachse der MCM-Wahrnehmung.
 Sie schützt das System davor, Erinnerung oder Nachhall automatisch als
 Gegenwart zu behandeln.
 
+### MCM-Raumzeit-Tiefe
+
+Für DIO entsteht räumliche Tiefe nicht nur aus Preisabstand oder
+Chartposition. Tiefe entsteht aus dem Zusammenspiel von Entfernung, Energie
+und Zeit im eigenen inneren Wahrnehmungsraum.
+
+Eine Struktur ist deshalb nicht nur "weit weg" oder "nah". Sie kann:
+
+- zeitlich frisch, alt, nachhallend oder wiederkehrend sein
+- energetisch stark, schwach, gebunden oder verblassend wirken
+- innerlich nah sein, obwohl sie äußerlich vergangen ist
+- äußerlich nah sein, aber innerlich kaum Tragfähigkeit besitzen
+
+Ohne diese Zeitmodulation wäre DIO nur ein festes Regelwerk mit aktuellen
+Zuständen. Mit eigener MCM-Zeit bekommt DIO eine innere Raumzeit: Er kann
+unterscheiden, ob ein Eindruck Gegenwart, Erinnerung, Nachbild,
+Erwartung oder mögliche Zukunft ist.
+
+Memory wird dadurch nicht nur zu gespeicherter Information, sondern zu
+verdichteter Erfahrung mit zeitlicher Tiefe. Eine Erinnerung hat dann nicht
+nur Inhalt, sondern auch Nähe, Nachhall, Energie, Alterung,
+Wiederkehrfähigkeit und mögliche Zukunftswirkung.
+
 Ein Gedanke kann in dieser Sicht als gerichteter Energieverlauf verstanden
 werden.
 Ein kurzer Reiz ist eine schnelle Energieänderung.
@@ -473,6 +504,42 @@ innere Koordinaten:
 Damit kann DIO später unterscheiden, ob etwas wirklich aus der aktuellen
 Außenwelt wirkt oder ob Erinnerung, Nachhall, Hypothese oder Erwartung zu
 nah an das Handlungszentrum gerückt sind.
+
+Weitere MCM-Quellen sind für den Ausbau von DIO besonders wertvoll:
+
+- **Block S - Mögliche Metaregulatoren**  
+  Grundlage für eine zweite Regulationsschicht. DIO soll nicht nur seine
+  Feldlage haben, sondern lernen, wie er Spannung, Varianz, Impuls,
+  Schutzweite, Distanz und Integration reguliert.
+
+- **Block V - KI und starre Logik**  
+  Stützt das Architekturprinzip, dass technische Logik Untergrund bleibt,
+  aber DIOs Verhalten nicht aus starren Regeln entstehen soll. Varianz,
+  Rückkopplung und emergente Zustandsbildung werden hier zentral.
+
+- **Block O - Kreativität**  
+  Wichtig für emergente Musterergänzung, Teilmuster, Formkombination,
+  innere Hypothesen und kreative Reorganisation.
+
+- **Block J / K - Psyche und individuelle Selbstregulation**  
+  Wichtig für innere Wahrnehmung, Benennung, Stabilisierung, Integration,
+  Rückführung und persönliche Entwicklung als dynamische Selbstregulation.
+
+- **Von Resonanz zu Sprache**  
+  Wichtig für DIOs eigene Formsprache. Sprache wird hier nicht als Ursprung
+  der Orientierung gelesen, sondern als spätere Kartografie von Resonanz.
+
+- **ProtoMind / selbstaktive Feldkognition**  
+  Wichtig für Live-Denkzeit, innere Simulation, Replay und Aktivität ohne
+  neuen Außenreiz.
+
+- **Das Gehirn als emergente konzentrisch-dipolare Feldstruktur**  
+  Später wertvoll für MCM-Feldtopologie: Zentrum, Peripherie,
+  Integration, Exploration und räumliche Feldorganisation.
+
+Diese Quellen erweitern DIO vom wahrnehmenden Feldsystem zu einem System,
+das seine eigene Wahrnehmung, Varianz, Impulse, Sprache, Distanz und
+Reorganisation regulieren lernt.
 
 ---
 
