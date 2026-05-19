@@ -1716,7 +1716,12 @@ class Bot:
     def _finalize_active_position_cancel(self, resolved_position, exit_context, order_id, cancel_cause):
 
         cancel_state_before = self._build_regulation_state_snapshot()
-        apply_outcome_stimulus(self, "cancel", self.position)
+        position_for_outcome = dict(self.position or {})
+        position_for_outcome["meta"] = {
+            **dict(position_for_outcome.get("meta", {}) or {}),
+            **dict(exit_context or {}),
+        }
+        apply_outcome_stimulus(self, "cancel", position_for_outcome)
         cancel_state_after = self._build_regulation_state_snapshot()
         cancel_state_delta = self._build_regulation_state_delta(
             cancel_state_before,
@@ -1755,7 +1760,12 @@ class Bot:
     def _finalize_active_position_resolution(self, resolved_position, exit_context, reason, live_mode: bool):
 
         state_before = self._build_regulation_state_snapshot()
-        apply_outcome_stimulus(self, reason, self.position)
+        position_for_outcome = dict(self.position or {})
+        position_for_outcome["meta"] = {
+            **dict(position_for_outcome.get("meta", {}) or {}),
+            **dict(exit_context or {}),
+        }
+        apply_outcome_stimulus(self, reason, position_for_outcome)
         state_after = self._build_regulation_state_snapshot()
         state_delta = self._build_regulation_state_delta(
             state_before,

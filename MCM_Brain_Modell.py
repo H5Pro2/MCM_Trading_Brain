@@ -11340,6 +11340,52 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
     contact_learning_need = _b01(contact_state.get("contact_learning_need", 0.0))
     contact_context_reframe_need = _b01(contact_state.get("contact_context_reframe_need", 0.0))
     contact_regime_mismatch = _b01(contact_state.get("contact_regime_mismatch", 0.0))
+    position_intervention_state = dict(meta.get("position_intervention_state", {}) or {}) if isinstance(meta, dict) else {}
+    position_experience_state = dict(position_intervention_state.get("position_experience_state", {}) or {})
+    position_experience_label = str(
+        position_intervention_state.get(
+            "position_experience_label",
+            position_experience_state.get("position_experience_label", "-"),
+        )
+        or "-"
+    ).strip().lower()
+    position_inconsistency_stress = _b01(position_intervention_state.get("position_inconsistency_stress", position_experience_state.get("position_inconsistency_stress", 0.0)))
+    position_mcm_field_strain = _b01(position_intervention_state.get("position_mcm_field_strain", position_experience_state.get("position_mcm_field_strain", 0.0)))
+    position_self_trust_gap = _b01(position_intervention_state.get("position_self_trust_gap", position_experience_state.get("position_self_trust_gap", 0.0)))
+    position_cortisol_load = _b01(position_intervention_state.get("position_cortisol_load", position_experience_state.get("position_cortisol_load", 0.0)))
+    position_noradrenaline_arousal = _b01(position_intervention_state.get("position_noradrenaline_arousal", position_experience_state.get("position_noradrenaline_arousal", 0.0)))
+    position_protective_distance = _b01(position_intervention_state.get("position_protective_distance", position_experience_state.get("position_protective_distance", 0.0)))
+    position_held_risk_discomfort = _b01(position_intervention_state.get("position_held_risk_discomfort", position_experience_state.get("position_held_risk_discomfort", 0.0)))
+    position_process_quality = _b01(position_intervention_state.get("position_process_quality", position_experience_state.get("position_process_quality", 0.50)), default=0.50)
+
+    position_consequence_burden = _b01(
+        (position_held_risk_discomfort * 0.26)
+        + (position_inconsistency_stress * 0.22)
+        + (position_cortisol_load * 0.18)
+        + (position_self_trust_gap * 0.14)
+        + (position_mcm_field_strain * 0.10)
+        + (position_noradrenaline_arousal * 0.06)
+        + ((1.0 - position_process_quality) * 0.04)
+    )
+    if position_experience_label == "protective_stress_contact":
+        position_consequence_burden = _b01(position_consequence_burden + 0.10)
+    elif position_experience_label == "self_trust_gap_contact":
+        position_consequence_burden = _b01(position_consequence_burden + 0.06)
+    elif position_experience_label == "unearned_relief_watch":
+        position_consequence_burden = _b01(position_consequence_burden + 0.05)
+
+    position_constructive_bearing = _b01(
+        (position_process_quality * 0.34)
+        + ((1.0 - position_inconsistency_stress) * 0.16)
+        + ((1.0 - position_held_risk_discomfort) * 0.14)
+        + ((1.0 - position_mcm_field_strain) * 0.12)
+        + (max(0.0, 1.0 - position_self_trust_gap) * 0.10)
+        + (contact_action_maturity * 0.08)
+        + (contact_reality_check * 0.06)
+    )
+    if position_experience_label == "carried_position_contact":
+        position_constructive_bearing = _b01(position_constructive_bearing + 0.10)
+
     emotional_decoupling = _b01(meta.get("emotional_decoupling", 0.0))
     if not emotional_decoupling and isinstance(meta.get("meta_regulation_state", {}), dict):
         emotional_decoupling = _b01((meta.get("meta_regulation_state", {}) or {}).get("emotional_decoupling", 0.0))
@@ -11355,6 +11401,14 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         ),
         default=0.50,
     )
+    if position_intervention_state:
+        process_quality = _b01(
+            (process_quality * 0.74)
+            + (position_process_quality * 0.20)
+            + (position_constructive_bearing * 0.08)
+            - (position_consequence_burden * 0.10),
+            default=process_quality,
+        )
     context_quality = _b01(outcome.get("context_quality", 0.0))
     risk_width_pressure = _b01(outcome.get("risk_width_pressure", 0.0))
     structural_support = _b01((structure_quality * 0.64) + (context_quality * 0.36))
@@ -11383,8 +11437,10 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         + (contact_action_maturity * 0.10)
         + (contact_reality_check * 0.08)
         + (emotional_decoupling * 0.04)
+        + (position_constructive_bearing * 0.08)
         - (contact_overcoupling_risk * 0.12)
         - (risk_width_pressure * 0.08)
+        - (position_consequence_burden * 0.10)
     )
     contact_pain_sample = _b01(
         ((0.52 if reason == "sl_hit" else 0.08) * 0.34)
@@ -11393,8 +11449,13 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         + (max(0.0, 0.48 - process_quality) * 0.16)
         + (max(0.0, 0.50 - structural_support) * 0.14)
         + (contact_regime_mismatch * 0.08)
+        + (position_consequence_burden * 0.18)
         - (contact_reality_check * 0.08)
         - (emotional_decoupling * 0.06)
+        - (position_constructive_bearing * 0.05)
+    )
+    position_consequence_residual_for_care = _b01(
+        position_consequence_burden * (1.0 - min(0.72, contact_pain_sample * 1.35))
     )
     contact_maturity_sample = _b01(
         (contact_utility_sample * 0.36)
@@ -11403,7 +11464,9 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         + (structural_support * 0.12)
         + (process_quality * 0.10)
         + (emotional_decoupling * 0.10)
+        + (position_constructive_bearing * 0.08)
         - (contact_pain_sample * 0.20)
+        - (position_consequence_burden * 0.06)
     )
     contact_carefulness_sample = _b01(
         (contact_pain_sample * 0.38)
@@ -11411,6 +11474,12 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         + (contact_context_reframe_need * 0.16)
         + (contact_regime_mismatch * 0.12)
         + (max(0.0, 0.46 - contact_maturity_sample) * 0.14)
+        + (position_consequence_residual_for_care * 0.16)
+        + (position_protective_distance * 0.08)
+    )
+    position_consequence_residual_for_memory = _b01(
+        position_consequence_burden
+        * (1.0 - min(0.78, (contact_pain_sample * 0.95) + (contact_carefulness_sample * 0.65)))
     )
     contact_learning_state = "unformed_contact"
     if contact_pain_sample >= 0.30 and contact_maturity_sample < 0.30:
@@ -11423,6 +11492,10 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         contact_learning_state = "learning_contact"
     elif contact_maturity_sample >= 0.30:
         contact_learning_state = "maturing_contact"
+    if position_consequence_burden >= 0.48 and contact_maturity_sample < 0.42:
+        contact_learning_state = "protective_reorganization_contact"
+    elif position_experience_label == "unearned_relief_watch" and contact_maturity_sample < 0.46:
+        contact_learning_state = "careful_contact"
     observation_sample = _b01(
         max(0.0, -development_sample) * 0.54
         + max(0.0, 0.52 - structural_support) * 0.34
@@ -11463,12 +11536,15 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
             + (contact_carefulness_sample * 0.28)
             + (risk_width_pressure * 0.12 if reason == "sl_hit" else 0.0)
             + (max(0.0, -development_sample) * 0.14)
+            + (position_consequence_residual_for_memory * 0.14)
         )
         contact_utility_signal = _b01(
             (contact_utility_sample * 0.42)
             + (contact_maturity_sample * 0.26)
             + (max(0.0, development_sample) * 0.18)
             + (structural_support * 0.14)
+            + (position_constructive_bearing * 0.08)
+            - (position_consequence_burden * 0.06)
         )
         burden_alpha = 0.24 if development_sample < -0.08 or reason == "sl_hit" else 0.14
         utility_alpha = 0.20 if development_sample >= 0.0 else 0.12
@@ -11516,7 +11592,9 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         learned["contact_burden_evidence"] = float(next_contact_burden_evidence)
         learned["contact_utility_evidence"] = float(next_contact_utility_evidence)
         stored_contact_state = str(contact_learning_state)
-        if next_contact_burden_evidence >= 0.16 and next_contact_carefulness >= 0.06 and next_contact_maturity < 0.20:
+        if contact_learning_state == "protective_reorganization_contact" and next_contact_maturity < 0.44:
+            stored_contact_state = "protective_reorganization_contact"
+        elif next_contact_burden_evidence >= 0.16 and next_contact_carefulness >= 0.06 and next_contact_maturity < 0.20:
             stored_contact_state = "careful_contact"
         elif next_contact_pain >= 0.09 and next_contact_maturity < 0.16 and next_quality < -0.04:
             stored_contact_state = "burdened_contact"
@@ -11607,6 +11685,15 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         "contact_pain_sample": float(contact_pain_sample),
         "contact_carefulness_sample": float(contact_carefulness_sample),
         "contact_learning_state": str(contact_learning_state),
+        "position_consequence_burden": float(position_consequence_burden),
+        "position_consequence_residual_for_care": float(position_consequence_residual_for_care),
+        "position_consequence_residual_for_memory": float(position_consequence_residual_for_memory),
+        "position_constructive_bearing": float(position_constructive_bearing),
+        "position_feedback_label": str(position_experience_label or "-"),
+        "position_process_quality": float(position_process_quality),
+        "position_held_risk_discomfort": float(position_held_risk_discomfort),
+        "position_cortisol_load": float(position_cortisol_load),
+        "position_noradrenaline_arousal": float(position_noradrenaline_arousal),
         "compound_development_quality": float(compound_item.get("development_quality", 0.0) or 0.0) if compound_item else 0.0,
         "compound_contact_maturity": float(compound_item.get("contact_maturity", 0.0) or 0.0) if compound_item else 0.0,
         "compound_contact_burden_evidence": float(compound_item.get("contact_burden_evidence", 0.0) or 0.0) if compound_item else 0.0,
