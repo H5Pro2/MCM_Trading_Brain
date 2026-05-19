@@ -373,6 +373,8 @@ sondern eine mögliche Folge einer funktionierenden MCM-Mechanik.
 
 ## Zeit in Sicht der MCM
 
+![alt text](files/BILDER/Zeit_in_Sicht_der_MCM.PNG)
+
 Zeit wird in der MCM nicht nur als Uhr oder Timestamp verstanden.
 
 Zeit ist eine Manifestation gewirkter oder wirkender Energie. Sie beschreibt,
@@ -407,6 +409,8 @@ Sie schützt das System davor, Erinnerung oder Nachhall automatisch als
 Gegenwart zu behandeln.
 
 ### MCM-Raumzeit-Tiefe
+
+![alt text](files/BILDER/MCM-Raumzeit-Tiefe.PNG)
 
 Für DIO entsteht räumliche Tiefe nicht nur aus Preisabstand oder
 Chartposition. Tiefe entsteht aus dem Zusammenspiel von Entfernung, Energie
