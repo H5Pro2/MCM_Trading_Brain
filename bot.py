@@ -1886,11 +1886,95 @@ class Bot:
             + (_clamp(giveback_r / max(float(mfe_r), 0.25)) * 0.12)
         )
 
+        contact_state = dict(getattr(self, "active_mcm_contact_state", {}) or {})
+        temporal_state = dict(getattr(self, "temporal_perception_state", {}) or {})
+        meta_state = dict(getattr(self, "meta_regulation_state", {}) or {})
+        contact_reality_check = _clamp(contact_state.get("contact_reality_check", 0.0))
+        contact_temporal_bearing = _clamp(contact_state.get("contact_temporal_bearing", 0.0))
+        contact_bearing_gap = _clamp(contact_state.get("contact_bearing_gap", 0.0))
+        contact_action_maturity = _clamp(contact_state.get("contact_action_maturity", 0.0))
+        contact_learning_need = _clamp(contact_state.get("contact_learning_need", 0.0))
+        contact_overcoupling_risk = _clamp(contact_state.get("contact_overcoupling_risk", 0.0))
+        temporal_self_location = _clamp(temporal_state.get("temporal_self_location", 0.0))
+        spacetime_reflection_need = _clamp(meta_state.get("spacetime_reflection_need", 0.0))
+        structure_action_uncertainty = _clamp(meta_state.get("structure_action_uncertainty", 0.0))
+
+        position_self_trust_gap = _clamp(
+            ((1.0 - plan_trust) * 0.22)
+            + (contact_bearing_gap * 0.18)
+            + ((1.0 - contact_reality_check) * 0.14)
+            + ((1.0 - contact_temporal_bearing) * 0.12)
+            + (structure_action_uncertainty * 0.12)
+            + (negative_current_load * 0.10)
+            + (giveback_load * 0.08)
+            + ((1.0 - temporal_self_location) * 0.04)
+        )
+        position_inconsistency_stress = _clamp(
+            (position_self_trust_gap * 0.26)
+            + (position_cognitive_load * 0.20)
+            + (exit_decision_pressure * 0.16)
+            + (inner_noise * 0.14)
+            + (adverse_load * 0.10)
+            + (contact_learning_need * 0.08)
+            + (spacetime_reflection_need * 0.06)
+        )
+        position_noradrenaline_arousal = _clamp(
+            (exit_decision_pressure * 0.28)
+            + (negative_current_load * 0.20)
+            + (giveback_load * 0.18)
+            + (contact_overcoupling_risk * 0.14)
+            + (structure_action_uncertainty * 0.12)
+            + (_clamp(float(bars_open) / 40.0) * 0.08)
+        )
         prior_count = int(self.position.get("intervention_pressure_count", 0) or 0) if self.position else 0
         prior_sum = float(self.position.get("intervention_pressure_sum", 0.0) or 0.0) if self.position else 0.0
         pressure_count = prior_count + 1
         pressure_sum = prior_sum + float(exit_decision_pressure)
         sustained_exit_pressure = _clamp(pressure_sum / max(1, pressure_count))
+
+        position_cortisol_load = _clamp(
+            (position_inconsistency_stress * 0.32)
+            + (position_cognitive_load * 0.22)
+            + (sustained_exit_pressure * 0.18)
+            + (recovery_load * 0.12)
+            + (adverse_load * 0.08)
+            + (spacetime_reflection_need * 0.08)
+        )
+        position_mcm_field_strain = _clamp(
+            (position_cortisol_load * 0.26)
+            + (position_noradrenaline_arousal * 0.22)
+            + (contact_overcoupling_risk * 0.18)
+            + (position_self_trust_gap * 0.16)
+            + ((1.0 - holding_stability) * 0.10)
+            + ((1.0 - temporal_self_location) * 0.08)
+        )
+        position_protective_distance = _clamp(
+            (position_mcm_field_strain * 0.28)
+            + (position_self_trust_gap * 0.22)
+            + (position_cortisol_load * 0.18)
+            + (spacetime_reflection_need * 0.14)
+            + ((1.0 - contact_action_maturity) * 0.10)
+            + ((1.0 - holding_stability) * 0.08)
+        )
+        position_held_risk_discomfort = _clamp(
+            (adverse_load * 0.22)
+            + (negative_current_load * 0.20)
+            + (position_self_trust_gap * 0.18)
+            + (position_noradrenaline_arousal * 0.16)
+            + (position_cortisol_load * 0.14)
+            + (giveback_load * 0.10)
+        )
+        position_process_quality = _clamp(
+            (plan_trust * 0.22)
+            + (holding_stability * 0.18)
+            + (contact_reality_check * 0.14)
+            + (contact_temporal_bearing * 0.12)
+            + (contact_action_maturity * 0.10)
+            + ((1.0 - position_inconsistency_stress) * 0.10)
+            + ((1.0 - position_mcm_field_strain) * 0.08)
+            + ((1.0 - position_held_risk_discomfort) * 0.06)
+        )
+
         intervention_fatigue = _clamp(
             (sustained_exit_pressure * 0.48)
             + (_clamp(pressure_count / 48.0) * 0.20)
@@ -1928,6 +2012,31 @@ class Bot:
         else:
             intervention_label = "quiet_position_watch"
 
+        if position_process_quality >= 0.58 and position_mcm_field_strain <= 0.36:
+            position_experience_label = "carried_position_contact"
+        elif current_r > 0.0 and position_process_quality < 0.42:
+            position_experience_label = "unearned_relief_watch"
+        elif position_cortisol_load >= 0.56 or position_held_risk_discomfort >= 0.58:
+            position_experience_label = "protective_stress_contact"
+        elif position_self_trust_gap >= 0.50:
+            position_experience_label = "self_trust_gap_contact"
+        elif position_protective_distance >= 0.48:
+            position_experience_label = "protective_distance_watch"
+        else:
+            position_experience_label = "open_position_feel"
+
+        position_experience_state = {
+            "position_inconsistency_stress": float(position_inconsistency_stress),
+            "position_mcm_field_strain": float(position_mcm_field_strain),
+            "position_self_trust_gap": float(position_self_trust_gap),
+            "position_cortisol_load": float(position_cortisol_load),
+            "position_noradrenaline_arousal": float(position_noradrenaline_arousal),
+            "position_protective_distance": float(position_protective_distance),
+            "position_held_risk_discomfort": float(position_held_risk_discomfort),
+            "position_process_quality": float(position_process_quality),
+            "position_experience_label": str(position_experience_label),
+        }
+
         state = {
             "position_cognitive_load": float(position_cognitive_load),
             "exit_decision_pressure": float(exit_decision_pressure),
@@ -1949,6 +2058,16 @@ class Bot:
             "context_confidence": float(context_confidence),
             "bars_open": int(bars_open),
             "intervention_label": str(intervention_label),
+            "position_inconsistency_stress": float(position_inconsistency_stress),
+            "position_mcm_field_strain": float(position_mcm_field_strain),
+            "position_self_trust_gap": float(position_self_trust_gap),
+            "position_cortisol_load": float(position_cortisol_load),
+            "position_noradrenaline_arousal": float(position_noradrenaline_arousal),
+            "position_protective_distance": float(position_protective_distance),
+            "position_held_risk_discomfort": float(position_held_risk_discomfort),
+            "position_process_quality": float(position_process_quality),
+            "position_experience_label": str(position_experience_label),
+            "position_experience_state": dict(position_experience_state),
         }
 
         if bool(getattr(Config, "MCM_POSITION_INTERVENTION_PROTOCOL_DEBUG", True)):
@@ -1964,7 +2083,16 @@ class Bot:
                     f"exit_decision_pressure={exit_decision_pressure:.4f} plan_trust={plan_trust:.4f} "
                     f"holding_stability={holding_stability:.4f} intervention_fatigue={intervention_fatigue:.4f} "
                     f"inner_noise={inner_noise:.4f} intervention_unfit_state={intervention_unfit_state:.4f} "
-                    f"intervention_fitness={intervention_fitness:.4f} label={intervention_label}",
+                    f"intervention_fitness={intervention_fitness:.4f} label={intervention_label} "
+                    f"position_inconsistency_stress={position_inconsistency_stress:.4f} "
+                    f"position_mcm_field_strain={position_mcm_field_strain:.4f} "
+                    f"position_self_trust_gap={position_self_trust_gap:.4f} "
+                    f"position_cortisol_load={position_cortisol_load:.4f} "
+                    f"position_noradrenaline_arousal={position_noradrenaline_arousal:.4f} "
+                    f"position_protective_distance={position_protective_distance:.4f} "
+                    f"position_held_risk_discomfort={position_held_risk_discomfort:.4f} "
+                    f"position_process_quality={position_process_quality:.4f} "
+                    f"position_experience_label={position_experience_label}",
                     "mcm_position_intervention_protocol.csv",
                 )
 

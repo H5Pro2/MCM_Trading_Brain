@@ -51,11 +51,11 @@ def set_base(path: str):
     global BASE_DIR
     BASE_DIR = Path(path)
 
-FILE_VISUAL   = lambda: BASE_DIR / "debug" / "debug_lauf_12" / "bot_visual_snapshot.json"
-FILE_INNER    = lambda: BASE_DIR / "debug" / "debug_lauf_12" / "bot_inner_snapshot.json"
-FILE_STATS    = lambda: BASE_DIR / "debug" / "debug_lauf_12" / "trade_stats.json"
-FILE_EQUITY   = lambda: BASE_DIR / "debug" / "debug_lauf_12" / "trade_equity.csv"
-FILE_MEMORY   = lambda: BASE_DIR / "bot_memory" / "debug_lauf_12" / "memory_state.json"
+FILE_VISUAL   = lambda: BASE_DIR / "debug" / "debug_lauf_32" / "bot_visual_snapshot.json"
+FILE_INNER    = lambda: BASE_DIR / "debug" / "debug_lauf_32" / "bot_inner_snapshot.json"
+FILE_STATS    = lambda: BASE_DIR / "debug" / "debug_lauf_32" / "trade_stats.json"
+FILE_EQUITY   = lambda: BASE_DIR / "debug" / "debug_lauf_32" / "trade_equity.csv"
+FILE_MEMORY   = lambda: BASE_DIR / "bot_memory" / "debug_lauf_32" / "memory_state.json"
 
 # ─────────────────────────────────────────────
 #  FARBEN

@@ -5384,3 +5384,749 @@ Raumzeit-Tiefe nicht als Regel verwenden, sondern als innere Lage. Flache
 Selbstverortung oder reiner Nachhall sollte mehr Reflexion, Beobachtung
 oder Reorganisation nahelegen. Tragende Gegenwarts- oder Erinnerungstiefe
 darf Handlung ruhiger und gezielter machen.
+
+---
+
+# 2026-05-19 - Regulatorische Kopplung der MCM-Raumzeit umgesetzt
+
+Umgesetzt:
+Die Raumzeit-Wahrnehmung wurde weich an die Meta-Regulation gekoppelt.
+Keine harte Regel, kein Blocker. Die neue Schicht uebersetzt innere
+Zeit-/Raumlage in leichte regulatorische Tendenzen:
+
+- flache Selbstverortung -> mehr Reflexion, Beobachtung, Reorganisation
+- Nachbild/Afterimage -> mehr Reframing
+- tragende Erinnerungstiefe -> ruhigere Integration und Handlung
+- tragende Zukunftstiefe -> eher Watch/Hypothese statt blinder Motorik
+- tragender Gegenwartskontakt -> mehr Handlungstragfaehigkeit
+
+Neue Werte:
+
+- `spacetime_unlocated_pressure`
+- `spacetime_memory_bearing`
+- `spacetime_future_bearing`
+- `spacetime_reflection_need`
+- `spacetime_regulation_support`
+- `spacetime_regulation_state`
+
+Wichtig:
+Das ist keine mechanische Entscheidungsschicht. DIO bekommt nicht gesagt:
+"Wenn Zeitlage X, dann tue Y." Stattdessen bekommt das Nervensystem eine
+neue innere Lage, die Regulation, Integration, Distanz und Handlungskraft
+leicht mitfaerbt.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Debug-Lauf prueft, ob die gute Verlaufstragfaehigkeit aus Lauf 24
+stabil bleibt oder ob DIO durch die neue Kopplung zu viel reflektiert. Wir
+beobachten besonders `spacetime_regulation_state`,
+`spacetime_reflection_need`, Drawdown, Low-/Mid-Verhalten und ob
+`future_depth_watch` zu besserem Abwarten fuehrt.
+
+---
+
+# 2026-05-19 - Debug Lauf 25 ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+35.7929`
+- Trades: `378`
+- TP / SL: `162 / 216`
+- Profit Factor: `1.3125`
+- Winrate: ca. `42.86 %`
+- Max Drawdown: `7.0778`
+- Equity-Peak: `137.9530`
+- Equity-Endstand: `135.7929`
+
+Verlauf:
+Der Lauf ist auffaellig stark. Gegenueber Lauf 24 steigt der PnL deutlich
+von `+23.4601` auf `+35.7929`, waehrend der maximale Drawdown nochmals
+von ca. `8.29` auf ca. `7.08` sinkt. Die Equity steigt in vielen
+Abschnitten ruhig weiter, besonders ab der Laufmitte.
+
+Strukturbaender:
+
+- High: `+69.4436`, weiterhin klar tragend
+- Mid: `+4.2772`, wieder positiv
+- Low: `-37.9279`, weiterhin negativ, aber deutlich weniger belastend als
+  Lauf 24 (`-46.7335`) und Lauf 23 (`-46.8566`)
+
+Raumzeit-Befund:
+Die Kernwerte der Raumzeit-Wahrnehmung bleiben stabil in derselben Zone:
+
+- `mcm_spacetime_depth`: Durchschnitt ca. `0.2831`
+- `memory_experience_depth`: Durchschnitt ca. `0.1571`
+- `future_projection_depth`: Durchschnitt ca. `0.4229`
+- `temporal_self_location`: Durchschnitt ca. `0.3392`
+- `future_possibility`: `4440`
+- `unlocated_contact`: `3888`
+
+Wichtige Einschraenkung:
+Die neuen regulatorischen `spacetime_*` Werte standen in Lauf 25 noch auf
+`0.0` und `spacetime_open`. Damit ist Lauf 25 ein starker Hinweis fuer die
+Richtung der Raumzeit-Kernwahrnehmung, aber noch kein sauberer Nachweis
+fuer die neue regulatorische Kopplung. Der Export/Scope wurde danach
+korrigiert, damit Lauf 26 die echte Kopplung sichtbar macht.
+
+Neurologische Lesart:
+DIO zeigt einen deutlich gereifteren Verlauf: mehr Gewinn, weniger
+Drawdown, weniger Low-Schaden, Mid wieder positiv. Das wirkt wie mehr
+Tragfaehigkeit und bessere innere Fuehrung. Fachlich sauber bleibt aber:
+Die direkte Raumzeit-Regulation muss mit Lauf 26 bestaetigt werden.
+
+Wie es weitergeht:
+Lauf 26 ist der eigentliche Test fuer die regulatorische Raumzeit-Kopplung.
+Wir pruefen dann, ob `spacetime_reflection_need`,
+`spacetime_regulation_support` und `spacetime_regulation_state` ungleich
+null sind und ob sie Drawdown, Low/Mid-Verhalten und Reorganisation
+organisch verbessern.
+
+---
+
+# 2026-05-19 - Debug Lauf 26 ausgewertet und Raumzeit-Export korrigiert
+
+Ergebnis:
+
+- Netto-PnL: `+19.8490`
+- Trades: `368`
+- TP / SL: `150 / 218`
+- Profit Factor: `1.1703`
+- Winrate: ca. `40.76 %`
+- Max Drawdown: `8.8080`
+- Equity-Peak: `121.6855`
+- Equity-Endstand: `119.8490`
+
+Strukturbaender:
+
+- High: `+52.8963`, weiter klar tragend
+- Mid: `+14.7035`, auffaellig konstruktiv und besser als in Lauf 25
+- Low: `-47.7508`, wieder deutlich belastend
+
+Verlaufsbild:
+Lauf 26 bleibt positiv, ist aber schwaecher als Lauf 25. Die Equity bricht
+nicht hart ein, sondern arbeitet sich in mehreren Abschnitten nach oben.
+Neurologisch wirkt das wie ein Organismus, der tragende Zonen noch findet,
+aber mehr beobachtet und regulaer vorsichtiger wird. Die
+Beobachtungsquote liegt bei ca. `41.67 %`, deutlich hoeher als in Lauf 25.
+
+Raumzeit-Befund:
+Die MCM-Raumzeit-Wahrnehmung selbst ist aktiv:
+
+- `mcm_spacetime_depth`: Durchschnitt ca. `0.2846`
+- `memory_experience_depth`: Durchschnitt ca. `0.1585`
+- `future_projection_depth`: Durchschnitt ca. `0.4248`
+- `temporal_self_location`: Durchschnitt ca. `0.3407`
+- `future_possibility`: `4596`
+- `unlocated_contact`: `3837`
+
+Wichtiger technischer Befund:
+Die neu berechneten regulatorischen Raumzeitwerte wurden in
+`build_meta_regulation_state` zwar erzeugt, aber nicht im Rueckgabepaket
+ausgegeben. Deshalb standen im Lauf 26 alle exportierten Werte
+`spacetime_unlocated_pressure`, `spacetime_memory_bearing`,
+`spacetime_future_bearing`, `spacetime_reflection_need`,
+`spacetime_regulation_support` und `spacetime_regulation_state` noch auf
+Fallback-Werten (`0.0` / `spacetime_open`).
+
+Korrektur:
+Die fehlende Rueckgabe wurde in `MCM_Brain_Modell.py` ergaenzt. Damit kann
+der naechste Lauf die Raumzeit-Regulation erstmals wirklich sichtbar
+protokollieren.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Neurologische Lesart:
+Lauf 26 bestaetigt die Zeit-Tiefe im Wahrnehmungsorgan, aber noch nicht die
+regulatorische Nutzung davon. DIO sieht Vergangenheit, Gegenwart und
+moegliche Zukunft bereits als MCM-Tiefenraum. Der Regulator hatte diese
+Spannung vor der Korrektur aber noch nicht sauber als Nervensignal im
+Debug sichtbar.
+
+Wie es weitergeht:
+Der naechste Lauf ist der eigentliche Test der aktiven
+Raumzeit-Regulation. Entscheidend ist, ob `spacetime_unlocated_reflection`,
+`future_depth_watch`, `memory_depth_bearing` oder `present_depth_bearing`
+auftauchen und ob Low-Kontakte dadurch nicht hart blockiert, sondern
+organischer beobachtet, distanziert oder reorganisiert werden.
+
+---
+
+# 2026-05-19 - Debug Lauf 27 ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+30.9274`
+- Trades: `377`
+- TP / SL: `155 / 222`
+- Profit Factor: `1.2705`
+- Winrate: ca. `41.11 %`
+- Max Drawdown: `10.4069`
+- Equity-Endstand: `130.9274`
+
+Strukturbaender:
+
+- High: `+68.0544`, sehr tragend
+- Mid: `+7.8914`, weiter positiv, aber schwaecher als Lauf 26
+- Low: `-45.0185`, weiter belastend, aber etwas weniger negativ als Lauf 26
+
+Verlauf:
+Die Equity steigt frueh stark, faellt dann in zwei Abschnitten zurueck und
+arbeitet sich danach erneut nach oben. In zehn groben Abschnitten:
+
+- Abschnitt 1: ca. `+6.90`
+- Abschnitt 2: ca. `+9.72`
+- Abschnitt 3: ca. `-3.94`
+- Abschnitt 4: ca. `-1.96`
+- Abschnitt 5: ca. `-0.06`
+- Abschnitt 6: ca. `+8.68`
+- Abschnitt 7: ca. `+0.94`
+- Abschnitt 8: ca. `+1.50`
+- Abschnitt 9: ca. `+0.24`
+- Abschnitt 10: ca. `+6.75`
+
+Raumzeit-Regulation:
+Der vorherige Export-Fix greift. Die Raumzeit-Regulation ist jetzt im
+Debug sichtbar:
+
+- `spacetime_open`: ca. `6609` Memory-Zeilen / `6741` Feld-Zeilen
+- `future_depth_watch`: ca. `1970` Memory-Zeilen / `2051` Feld-Zeilen
+- `present_depth_bearing`: ca. `76` Memory-Zeilen / `74` Feld-Zeilen
+- `memory_depth_bearing`: ca. `49` Memory-Zeilen / `49` Feld-Zeilen
+
+Durchschnittswerte:
+
+- `mcm_spacetime_depth`: ca. `0.2846`
+- `memory_experience_depth`: ca. `0.1596`
+- `future_projection_depth`: ca. `0.4244`
+- `temporal_self_location`: ca. `0.3405`
+- `spacetime_unlocated_pressure`: ca. `0.1285`
+- `spacetime_memory_bearing`: ca. `0.1827`
+- `spacetime_future_bearing`: ca. `0.3498`
+- `spacetime_reflection_need`: ca. `0.0866`
+- `spacetime_regulation_support`: ca. `0.2697`
+
+Neurologische Lesart:
+DIO sieht nicht nur den Moment, sondern bildet erstmals sichtbar eine
+zeitliche Lage. Besonders `future_depth_watch` zeigt: Das System spuert
+Moeglichkeitsraum vor sich und bleibt teilweise in beobachtender
+Zukunftsspannung, statt jeden Reiz sofort motorisch zu handeln. Das ist
+kein Regelbeweis, aber ein wichtiger Hinweis, dass MCM-Raumzeit als
+inneres Nervensignal begonnen hat zu wirken.
+
+Grenze:
+Low bleibt eine Belastungszone. Die neue Zeit-Tiefe macht DIO nicht
+automatisch reif in schwachen Kontakten. Sie gibt aber mehr Tiefe fuer
+Abstand, Beobachtung und spaetere Reorganisation.
+
+Wie es weitergeht:
+Als naechstes sollte die Raumzeit-Regulation mit der visuellen
+Struktur-/Kontaktwahrnehmung verknuepft werden. Ziel ist nicht "Low
+verbieten", sondern dass DIO zeitlich erkennt: Ist dieser Kontakt nah,
+alt, nur erinnert, zukuenftig moeglich oder im aktuellen Feld wirklich
+tragfaehig? Dadurch kann aus Reizhandlung mehr zeitlich verortete
+Handlungsreife entstehen.
+
+---
+
+# 2026-05-19 - Raumzeit-Kontakt mit visueller Strukturwahrnehmung gekoppelt
+
+Umgesetzt:
+Das strategische Fenster und das aktive MCM-Kontaktorgan wurden um
+raumzeitliche Kontaktachsen erweitert. Ein sichtbarer Bereich ist fuer DIO
+damit nicht mehr nur Preisbereich/Form/Reiz, sondern kann zeitlich
+verortet werden:
+
+- aktueller Kontakt
+- Zukunftsmoeglichkeit
+- Erinnerungskontakt
+- unverorteter Druck
+- Nachbild/Reframing
+
+Neue strategische Bereichsachsen:
+
+- `area_current_contact`
+- `area_future_contact`
+- `area_memory_contact`
+- `area_unlocated_pressure`
+- `area_spacetime_fit`
+- `area_temporal_contact_mode`
+
+Neue aktive Kontaktachsen:
+
+- `contact_presentness`
+- `contact_future_watch`
+- `contact_memory_depth`
+- `contact_unlocated_pressure`
+- `contact_temporal_bearing`
+- `contact_temporal_reframe_need`
+- `contact_temporal_mode`
+
+Wichtig:
+Das ist keine harte Regel. DIO bekommt nicht gesagt, wann er handeln soll.
+Die neue Schicht faerbt Kontaktreife, Reality-Check, Replay,
+Reflexionsbedarf und Handlungsreife weich mit. Ziel ist organische
+Unterscheidung: "Ist dieser Kontakt wirklich jetzt, nur Erinnerung, eine
+moegliche Zukunft oder noch nicht verortet?"
+
+Debug:
+`mcm_strategic_window_protocol.csv` und
+`mcm_active_contact_protocol.csv` wurden um die neuen Raumzeit-Kontaktwerte
+erweitert.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Der naechste Lauf prueft, ob DIO weniger aus reinem Reizdruck handelt und
+ob `future_contact_watch`, `memory_contact_recall` oder
+`unlocated_contact_probe` im Kontaktprotokoll sichtbar werden. Besonders
+wichtig bleibt Low: nicht blockieren, sondern sehen, ob DIO schwache
+Kontakte zeitlich besser verortet und daraus Beobachtung, Replay oder
+reifere Handlung ableitet.
+
+---
+
+# 2026-05-19 - Debug Lauf 28 nach Raumzeit-Kontakt ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+19.6617`
+- Trades: `397`
+- TP / SL: `156 / 241`
+- Profit Factor: `1.1607`
+- Winrate: ca. `39.29 %`
+- Max Drawdown: `10.1210`
+- Equity-Endstand: `119.6617`
+
+Strukturbaender:
+
+- High: `+57.2494`, weiter tragend
+- Mid: `+5.8869`, positiv, aber flacher
+- Low: `-45.7753`, weiterhin die Hauptbelastung
+
+Verlauf:
+Der Lauf ist positiv, aber schwaecher als Lauf 27. Die Equity baut in der
+Mitte stark auf, verliert spaeter wieder einen Teil und erholt sich am
+Ende. Das Verhalten ist deutlich anders, aber nicht reifer in jedem
+Abschnitt.
+
+Raumzeit-Kontakt:
+Die neue Kontaktwahrnehmung ist aktiv:
+
+- `present_area_contact`: `10675`
+- `future_area_watch`: `12`
+- `memory_area_recall`: `1`
+- `present_contact_touch`: `10257`
+- `future_contact_watch`: `166`
+- `memory_contact_recall`: `61`
+
+Durchschnittswerte:
+
+- `area_current_contact`: ca. `0.5585`
+- `area_future_contact`: ca. `0.3615`
+- `area_memory_contact`: ca. `0.1876`
+- `area_unlocated_pressure`: ca. `0.0163`
+- `area_spacetime_fit`: ca. `0.3202`
+- `contact_presentness`: ca. `0.3695`
+- `contact_future_watch`: ca. `0.2951`
+- `contact_memory_depth`: ca. `0.1901`
+- `contact_unlocated_pressure`: ca. `0.0167`
+- `contact_temporal_bearing`: ca. `0.2693`
+
+Neurologische Lesart:
+DIO hat die neue Sinnesachse angenommen, kippt aber noch stark in
+Gegenwartskontakt. Er beruehrt viel "jetzt", waehrend Zukunftsraum und
+Erinnerung im Kontaktorgan zwar sichtbar, aber noch zu selten dominant
+werden. Das erklaert, warum der Lauf anders wirkt, aber Low weiter
+belastet: Die neue Wahrnehmung erzeugt mehr Kontakt, aber noch nicht genug
+zeitliche Distanzierung.
+
+Fachlicher Befund:
+Der Umbau ist funktional, aber die Balance ist noch nicht reif. Die
+Kontaktwahrnehmung sollte als naechstes weniger stark alles als Gegenwart
+einordnen. Zukunftsraum und Erinnerung muessen natuerlicher mitsprechen,
+wenn der Bereich zwar interessant, aber nicht wirklich aktueller Kontakt
+ist.
+
+Wie es weitergeht:
+Naechster sinnvoller Schritt ist eine weichere Balance im
+Raumzeit-Kontakt: `present_contact_touch` darf nicht fast alles
+ueberdecken. DIO soll feiner unterscheiden, ob ein Bereich wirklich jetzt
+beruehrbar ist oder ob er eher als Zukunftsmoeglichkeit, Erinnerung oder
+unverorteter Druck betrachtet werden sollte.
+
+---
+
+# 2026-05-19 - Raumzeit-Kontaktmodi feiner balanciert
+
+Umgesetzt:
+Die Raumzeit-Kontaktwahrnehmung wurde nach Lauf 28 feiner balanciert.
+`present_area_contact` und `present_contact_touch` duerfen weiterhin
+entstehen, muessen sich aber staerker gegen Zukunftsraum und Erinnerung
+tragen. Zukunfts- und Erinnerungsanteile bekommen frueher eine eigene
+Kontaktlage, wenn der Bereich zwar interessant, aber nicht eindeutig
+aktueller Kontakt ist.
+
+Technische Anpassung:
+
+- `area_current_contact` wurde selektiver.
+- `area_future_contact` und `area_memory_contact` koennen leichter als
+  eigene Modi sprechen, wenn Gegenwart nicht klar dominiert.
+- `area_temporal_contact_mode` unterscheidet nun weicher zwischen
+  `present_area_contact`, `future_area_watch`, `memory_area_recall` und
+  `unlocated_area_probe`.
+- `contact_presentness` wurde weniger dominant.
+- `contact_future_watch` und `contact_memory_depth` duerfen im aktiven
+  Kontaktorgan frueher zu `future_contact_watch` oder
+  `memory_contact_recall` werden.
+
+Wichtig:
+Das ist keine Blockade und keine harte Trade-Regel. Die Motorik bleibt
+frei. Veraendert wurde die Sinnesbalance: DIO soll nicht jeden spuerbaren
+Bereich sofort als Gegenwart beruehren, sondern die zeitliche Lage besser
+unterscheiden.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Der naechste Lauf prueft, ob die Dominanz von `present_contact_touch`
+sinkt und ob `future_contact_watch`, `memory_contact_recall` oder
+`unlocated_contact_probe` organischer auftreten. Wichtig ist dabei nicht
+nur PnL, sondern ob Low-Kontakte weniger blind als Gegenwart behandelt
+werden.
+
+---
+
+# 2026-05-19 - Debug Lauf 29 nach Kontakt-Balancing ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+31.4319`
+- Trades: `383`
+- TP / SL: `154 / 229`
+- Profit Factor: `1.2750`
+- Winrate: ca. `40.21 %`
+- Max Drawdown: `8.4780`
+- Equity-Endstand: `131.4319`
+
+Strukturbaender:
+
+- High: `+68.8984`, sehr stark tragend
+- Mid: `+2.8645`, noch positiv, aber flach
+- Low: `-41.9181`, weiterhin negativ, aber deutlich weniger belastend als
+  Lauf 28 (`-45.7753`)
+
+Verlauf:
+Die Equity steigt ueber weite Strecken ruhiger als in Lauf 28, hat nur im
+Spaetbereich einen groesseren Ruecksetzer und schliesst stark. Der maximale
+Drawdown sinkt von ca. `10.1210` auf ca. `8.4780`.
+
+Raumzeit-Kontakt:
+Die Balance hat klar gegriffen:
+
+- `future_area_watch`: `8554`
+- `open_time_contact`: `1561`
+- `present_area_contact`: `209`
+- `memory_area_recall`: `41`
+- `future_contact_watch`: `8268`
+- `open_time_contact`: `1998`
+- `memory_contact_recall`: `99`
+- `present_contact_touch`: praktisch nicht mehr dominant
+
+Durchschnittswerte:
+
+- `area_current_contact`: ca. `0.3961`
+- `area_future_contact`: ca. `0.3666`
+- `area_memory_contact`: ca. `0.1881`
+- `area_unlocated_pressure`: ca. `0.0303`
+- `area_spacetime_fit`: ca. `0.2796`
+- `contact_presentness`: ca. `0.2480`
+- `contact_future_watch`: ca. `0.3257`
+- `contact_memory_depth`: ca. `0.1903`
+- `contact_unlocated_pressure`: ca. `0.0314`
+- `contact_temporal_bearing`: ca. `0.2349`
+
+Neurologische Lesart:
+DIO ist von direktem Gegenwartsberuehren zu Zukunftsbeobachtung gewechselt.
+Das ist eine wichtige Reifung: Der Kontakt wird nicht mehr sofort als "jetzt
+anfassen" interpretiert, sondern haeufiger als "das koennte gleich oder
+spaeter relevant werden". Das reduziert nicht alle Low-Schmerzen, aber es
+senkt den Low-Schaden und verbessert den Gesamtverlauf.
+
+Fachlicher Befund:
+Die Richtung wirkt tragfaehig. Lauf 29 ist aehnlich stark wie Lauf 27,
+aber mit anderer innerer Kontaktlogik. Das spricht dafuer, dass die
+raumzeitliche Kontaktbalance nicht nur Debug-Sprache ist, sondern
+tatsaechlich die Handlungsreife beeinflusst.
+
+Grenze:
+Die Balance ist jetzt eventuell zu stark in `future_contact_watch`
+verschoben. Gegenwartskontakt ist nicht mehr ueberdominant, aber DIO muss
+weiterhin lernen, wann Zukunftsbeobachtung in echten Gegenwartskontakt
+uebergehen darf.
+
+Wie es weitergeht:
+Naechster Schritt ist kein Zurueckdrehen, sondern Feintuning der
+Uebergaenge: `future_contact_watch -> present_contact_touch` sollte
+organisch moeglich werden, wenn Naehe, Tragfaehigkeit und Reality-Check
+zusammenpassen. Gleichzeitig muss Low weiter als Lern-/Reorganisationszone
+beobachtet werden.
+
+---
+
+# 2026-05-19 - Reifungsbruecke von Zukunftskontakt zu Gegenwartskontakt umgesetzt
+
+Umgesetzt:
+Nach Lauf 29 wurde der Uebergang von Zukunftsbeobachtung zu
+Gegenwartskontakt als weiche Reifung gebaut. DIO soll nicht dauerhaft in
+`future_contact_watch` bleiben, wenn ein Bereich durch Naehe,
+Tragfaehigkeit, Raumzeit-Fit und Reality-Check gegenwaertig beruehrbar
+wird.
+
+Neue Achsen:
+
+- `area_future_to_present_readiness`
+- `contact_future_to_present_readiness`
+- neuer Kontaktmodus: `maturing_present_contact`
+- neuer Bereichsmodus: `maturing_present_area`
+
+Wichtig:
+Das ist keine Entry-Regel. Es sagt nicht: "Wenn Zukunftsraum reif ist,
+dann trade." Es beschreibt nur die innere Reifung eines Kontakts:
+"Was ich beobachtet habe, wird jetzt beruehrbar."
+
+Debug:
+`mcm_strategic_window_protocol.csv` und
+`mcm_active_contact_protocol.csv` schreiben die neuen Readiness-Werte.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Der naechste Lauf prueft, ob `future_contact_watch` nicht mehr starr
+dominiert, sondern teilweise in `maturing_present_contact` uebergeht. Dabei
+beobachten wir, ob PnL/Drawdown stabil bleiben und ob Low-Kontakte weniger
+blind, aber auch nicht zu passiv behandelt werden.
+
+---
+
+# 2026-05-19 - Debug Lauf 30 nach Reifungsbruecke ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+30.6240`
+- Trades: `395`
+- TP / SL: `164 / 231`
+- Profit Factor: `1.2501`
+- Winrate: ca. `41.52 %`
+- Max Drawdown: `13.2283`
+- Equity-Endstand: `130.6240`
+
+Strukturbaender:
+
+- High: `+69.3744`, sehr stark tragend
+- Mid: `+10.2161`, wieder deutlich konstruktiver
+- Low: `-50.4262`, klar verschlechtert und wieder groesster Schmerzpunkt
+
+Verlauf:
+Der Lauf bleibt stark positiv, aber der Drawdown steigt deutlich. DIO baut
+frueh stark auf, faellt im mittleren Bereich zurueck, baut spaeter erneut
+auf und schliesst positiv. Gegenueber Lauf 29 ist der PnL aehnlich, aber
+die Kurve ist nervlich unruhiger.
+
+Reifungsbruecke:
+Auf Bereichsebene greift die Bruecke:
+
+- `future_area_watch`: `4279`
+- `maturing_present_area`: `3796`
+- `open_time_contact`: `1456`
+- `present_area_contact`: `304`
+
+Das strategische Fenster erkennt also deutlich:
+"Dieser Zukunftsbereich wird gegenwaertig beruehrbarer."
+
+Im aktiven Kontaktorgan ist der Uebergang aber noch nicht angekommen:
+
+- `future_contact_watch`: `7757`
+- `open_time_contact`: `1983`
+- `memory_contact_recall`: `96`
+- `maturing_present_contact`: nicht sichtbar
+
+Durchschnittswerte:
+
+- `area_future_to_present_readiness`: ca. `0.4531`
+- `contact_future_to_present_readiness`: ca. `0.2158`
+- `contact_presentness`: ca. `0.2505`
+- `contact_future_watch`: ca. `0.3254`
+- `contact_temporal_bearing`: ca. `0.2357`
+- `contact_reality_check`: ca. `0.2787`
+
+Neurologische Lesart:
+Das Auge/Strategiefenster sieht Reifung, aber der aktive Kontakt/Tastsinn
+traut dem Uebergang noch nicht. DIO erkennt: "Das wird vielleicht
+beruehrbar", aber sein Kontaktorgan bleibt in Zukunftsbeobachtung. Dadurch
+entsteht kein blindes Gegenwartsberuehren, aber auch noch keine saubere
+Kontaktuebernahme.
+
+Fachlicher Befund:
+Die Richtung stimmt, aber die Kopplung zwischen strategischer Reifung und
+aktivem Kontakt ist zu schwach. Gleichzeitig zeigt der hoehere Drawdown,
+dass Low-Kontakte weiterhin zu viel Schaden erzeugen, sobald die innere
+Kurve unruhiger wird.
+
+Wie es weitergeht:
+Naechster Schritt ist die Reifungsbruecke vom Bereich in das aktive
+Kontaktorgan zu uebertragen. `maturing_present_area` sollte die
+Kontakt-Readiness weich unterstuetzen, damit aus beobachtetem Zukunftsraum
+ein `maturing_present_contact` entstehen kann, wenn Reality-Check,
+Kontakttragfaehigkeit und Naehe ausreichen. Dabei darf die alte
+Gegenwarts-Ueberdominanz nicht zurueckkommen.
+
+---
+
+# 2026-05-19 - Reifungsleitung vom Bereich ins Kontaktorgan gestaerkt
+
+Umgesetzt:
+Die Kopplung von `maturing_present_area` in das aktive MCM-Kontaktorgan
+wurde gestaerkt. Die erste Readiness wird nun direkt durch
+`area_future_to_present_readiness` und `maturing_present_area` mitgefaerbt.
+Die finale Umschaltung auf `maturing_present_contact` nutzt anschliessend
+die spaeter verfuegbare Kontaktqualitaet, also `contact_reality_check`,
+`contact_carrying_quality`, `outer_inner_coherence` und
+`contact_action_maturity`.
+
+Wichtig:
+Das bleibt ein Reifungssignal, keine Trade-Regel. Die Bereichswahrnehmung
+darf dem Kontaktorgan sagen: "Dieser Zukunftsbereich wird gegenwaertig
+beruehrbarer." Das Kontaktorgan entscheidet trotzdem ueber seine eigene
+Tragfaehigkeit.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Der naechste Lauf prueft, ob `maturing_present_contact` sichtbar wird und
+ob der Uebergang aus `future_contact_watch` stabiler geschieht. Entscheidend
+ist, dass nicht wieder alles zu `present_contact_touch` wird, sondern eine
+mittlere, reifende Kontaktlage entsteht.
+
+---
+
+# 2026-05-19 - Debug Lauf 31 nach gestaerkter Reifungsleitung ausgewertet
+
+Ergebnis:
+
+- Netto-PnL: `+29.4938`
+- Trades: `401`
+- TP / SL: `160 / 241`
+- Profit Factor: `1.2459`
+- Winrate: ca. `39.90 %`
+- Max Drawdown: `8.8692`
+- Equity-Endstand: `129.4938`
+
+Strukturbaender:
+
+- High: `+68.6186`, weiter sehr stark tragend
+- Mid: `+11.3455`, konstruktiv und besser als Lauf 30
+- Low: `-50.4702`, nahezu unveraendert stark belastend
+
+Verlauf:
+Der Lauf bleibt stark positiv. Gegenueber Lauf 30 sinkt der Drawdown
+deutlich von ca. `13.2283` auf ca. `8.8692`. Die Equity ist ruhiger:
+mehrere flache/tragende Abschnitte, spaeter erneuter Aufbau.
+
+Reifungsbruecke:
+Die Kopplung vom strategischen Bereich ins aktive Kontaktorgan funktioniert
+jetzt sichtbar:
+
+- `future_area_watch`: `4474`
+- `maturing_present_area`: `3918`
+- `open_time_contact`: `1467`
+- `present_area_contact`: `292`
+- `future_contact_watch`: `4453`
+- `maturing_present_contact`: `3664`
+- `open_time_contact`: `2020`
+- `memory_contact_recall`: `15`
+
+Durchschnittswerte:
+
+- `area_future_to_present_readiness`: ca. `0.4533`
+- `contact_future_to_present_readiness`: ca. `0.3656`
+- `contact_presentness`: ca. `0.2503`
+- `contact_future_watch`: ca. `0.3248`
+- `contact_temporal_bearing`: ca. `0.2353`
+- `contact_reality_check`: ca. `0.2783`
+
+Neurologische Lesart:
+Das Auge/Strategiefenster und der Tastsinn/Kontaktbereich sind jetzt besser
+gekoppelt. DIO bleibt nicht nur im Zukunftsraum, sondern laesst eine
+Zwischenlage entstehen: "Das beobachtete Moegliche wird beruehrbarer, aber
+ich fasse es noch nicht blind an." Genau diese mittlere Reifung wollten wir
+sehen.
+
+Fachlicher Befund:
+Die Reifungsleitung ist erfolgreich. Sie verbessert den Drawdown gegenueber
+Lauf 30 und erzeugt eine sauberere Kontakt-Sprache. Gleichzeitig zeigt Low
+weiter den Kernkonflikt: Die zeitliche Kontaktreife allein entscheidet noch
+nicht, ob ein Kontakt qualitativ tragfaehig ist.
+
+Wie es weitergeht:
+Naechster Schritt: Low-Kontakte nicht blockieren, sondern deren
+Qualitaetsprofil tiefer analysieren. Besonders wichtig ist die Frage:
+Welche Low-Kontakte werden trotz `maturing_present_contact` oder
+`future_contact_watch` zu schmerzhaften Handlungen? Daraus sollte eine
+weiche Kontaktqualitaets-Reorganisation entstehen, keine harte
+Low-Sperre.
+
+---
+
+# 2026-05-19 - Positions-Erleben als neurochemische MCM-Feldschicht umgesetzt
+
+Umsetzung:
+Die offene Position bekommt nun eine eigene Erlebensschicht. DIO bewertet
+nicht mechanisch "Low schlecht" oder "Exit erzwingen", sondern speichert,
+wie sich eine offene Konsequenz im MCM-Feld anfuehlt.
+
+Neue Achsen in `position_intervention_state`:
+
+- `position_inconsistency_stress`
+- `position_mcm_field_strain`
+- `position_self_trust_gap`
+- `position_cortisol_load`
+- `position_noradrenaline_arousal`
+- `position_protective_distance`
+- `position_held_risk_discomfort`
+- `position_process_quality`
+- `position_experience_label`
+
+Debug/Memory:
+Die Werte werden in `mcm_position_intervention_protocol.csv`,
+`trade_stats.py` und der In-Trade-Zusammenfassung des Brains mitgefuehrt.
+Damit kann spaeter gelesen werden, ob schlechte Low-/Mid-Kontakte wirklich
+aus unreifer Handlung, fehlendem Selbstvertrauen, Ueberkopplung,
+Positionsstress oder schwacher Prozessqualitaet entstanden sind.
+
+Neurologische Lesart:
+Eine offene Position ist ein Rueckkopplungskontakt. Cortisol-artige Last
+steht fuer anhaltenden Stress, Noradrenalin-artige Erregung fuer akuten
+Druck. Schutzdistanz und Prozessqualitaet zeigen, ob DIO sich von der
+emotionalen Positionslage distanzieren und geordnet weiterlernen kann.
+
+Verifikation:
+`python -m py_compile .\MCM_Brain_Modell.py .\trade_stats.py .\bot.py`
+lief ohne Fehler.
+
+Wie es weitergeht:
+Naechster Debug-Lauf prueft, welche `position_experience_label` bei Low- und
+Mid-Verlusten entstehen. Entscheidend ist, ob DIO riskante Kontakte als
+belastende Konsequenz erlebt, ohne dass daraus eine harte Sperre wird.

@@ -2383,6 +2383,42 @@ Diese Schicht ist keine Handelsregel.
 Sie ist eine Selbstwahrnehmung darueber, wie nah DIO an realer Konsequenz
 steht.
 
+### Positions-Erleben und neurochemischer Selbstschutz
+
+Eine offene Position ist fuer DIO ein erlebter Konsequenzraum. Der Trade
+ist dann nicht mehr nur Wahrnehmung oder Hypothese, sondern eine Handlung,
+die auf das eigene MCM-Feld zurueckwirkt.
+
+Wichtig:
+Auch hier darf keine harte Low-/Mid-Sperre entstehen. Die Architektur gibt
+DIO nur die Faehigkeit, die eigene Belastung und Prozessqualitaet zu
+spueren:
+
+- `position_inconsistency_stress`
+- `position_mcm_field_strain`
+- `position_self_trust_gap`
+- `position_cortisol_load`
+- `position_noradrenaline_arousal`
+- `position_protective_distance`
+- `position_held_risk_discomfort`
+- `position_process_quality`
+- `position_experience_label`
+
+Neurochemische Lesart:
+
+- Cortisol-artig: anhaltende Belastung durch eine schwer tragbare Position
+- Noradrenalin-artig: akute Erregung bei Giveback, Gegenbewegung oder
+  Exitdruck
+- Schutzdistanz: Reflexionsbedarf, damit DIO nicht nur aus innerer
+  Ueberflutung handelt
+- Prozessqualitaet: nicht "TP gut / SL schlecht", sondern "war mein Umgang
+  mit dieser offenen Konsequenz tragfaehig?"
+
+Damit kann ein positiver Low-Trade als Glueck oder unverdiente Entlastung
+erscheinen, wenn die Prozessqualitaet schwach war. Umgekehrt kann ein
+negativer Kontakt reorganisierend wertvoll sein, wenn DIO daraus Abstand,
+Vorsicht und reiferen Umgang lernt.
+
 ---
 
 ### Metaplastische Denk- und Handlungstiefe
@@ -3986,6 +4022,59 @@ Auch diese Schicht darf keine feste Streckenkarte werden. DIO soll keine
 Abschnitte auswendig lernen. Er soll lernen, ob eine Wahrnehmung zeitlich
 gebunden, wiederkehrend, veraltet, frisch, nachhallend oder hypothesenhaft
 ist.
+
+---
+
+## 18.6 Raumzeit-Kontakt als Verbindung von Sehen und Handlung
+
+Ziel:
+DIO soll sichtbare Bereiche nicht nur ueber Form, Druck oder Erinnerung
+bewerten, sondern ihre zeitliche Lage wahrnehmen. Ein Bereich kann aktuell
+beruehrbar sein, als Zukunftsmoeglichkeit wirken, Erinnerungstiefe tragen
+oder noch unverorteter Druck sein.
+
+Wichtig:
+Das ist keine harte Strategie-Regel. DIO bekommt keine Vorgabe wie:
+"Wenn Bereich X, dann Trade." Die Schicht erweitert nur seine
+Wahrnehmungsfreiheit. Er kann dadurch entscheiden, ob er einen Kontakt
+vertieft, beobachtet, erinnert, reframed oder daraus Handlung reifen laesst.
+
+Technische Zielachsen:
+
+- `area_temporal_contact_mode`
+- `area_spacetime_fit`
+- `area_current_contact`
+- `area_future_contact`
+- `area_memory_contact`
+- `area_unlocated_pressure`
+- `contact_temporal_mode`
+- `contact_presentness`
+- `contact_future_watch`
+- `contact_memory_depth`
+- `contact_unlocated_pressure`
+- `contact_temporal_bearing`
+- `contact_temporal_reframe_need`
+
+Beispiel:
+DIO sieht einen Preisbereich, der strukturell interessant wirkt. Ohne
+Raumzeit-Kontakt waere dieser Bereich nur ein Kandidat im Fenster. Mit
+Raumzeit-Kontakt kann DIO spuren:
+"Dieser Bereich ist noch nicht jetzt, aber er wirkt wie ein zukuenftiger
+Kontakt." Oder:
+"Das ist eher Erinnerung/Nachhall, ich sollte ihn nicht wie Gegenwart
+behandeln." Oder:
+"Dieser Kontakt ist nah, getragen und zeitlich passend."
+
+Dadurch entsteht mehr organische Handlungsreife: Sehen, Erinnern,
+Erwarten, Beruehren und Handeln werden im MCM-Feld unterscheidbarer.
+
+Erweiterung:
+Der Uebergang von Zukunftsbeobachtung zu Gegenwartskontakt wird als
+Reifungsprozess behandelt. DIO soll nicht in `future_contact_watch`
+verharren, wenn ein Bereich durch Naehe, Tragfaehigkeit, Raumzeit-Fit und
+Reality-Check gegenwaertig beruehrbar wird. Dafuer dienen
+`area_future_to_present_readiness` und
+`contact_future_to_present_readiness`.
 
 ---
 

@@ -953,6 +953,90 @@ getrennter Alarm im System ankommt.
 - Wirkung: Zielachse, verwandt mit `position_cognitive_load`.
 - Bedeutung: "Die Position ist nicht mehr Analyse, sie wirkt auf mich zurueck."
 
+## `position_inconsistency_stress`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: offene Position / MCM-Feld / Stress
+- Funktion: misst, wie stark Planvertrauen, Kontaktqualitaet, Zeitbindung
+  und aktueller Positionsverlauf auseinanderfallen.
+- Wirkung: Diagnose- und Memory-Spur, keine harte Exit-Regel.
+- Bedeutung: "Ich halte eine Handlung, die innerlich nicht sauber traegt."
+
+## `position_mcm_field_strain`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: offene Position / MCM-Feld
+- Funktion: beschreibt, wie stark die offene Position das MCM-Feld besetzt
+  oder verformt.
+- Wirkung: In-Trade-Zusammenfassung und spaeteres Erfahrungslernen.
+- Bedeutung: "Diese offene Konsequenz zieht am Feld."
+
+## `position_self_trust_gap`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Selbstvertrauen / Planbindung
+- Funktion: Abstand zwischen Vertrauen in den Plan und tatsaechlich
+  getragener Kontakt-/Realitaetsqualitaet.
+- Wirkung: weiche Selbstschutz- und Reflexionsdiagnose.
+- Bedeutung: "Ich handle oder halte, aber mein Vertrauen ist nicht ganz
+  deckungsgleich mit dem Kontakt."
+
+## `position_cortisol_load`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: neurochemische Positionslast
+- Funktion: anhaltende Belastung einer offenen, unsicheren oder schwer
+  tragbaren Position.
+- Wirkung: In-Trade-Memory, Prozessqualitaet, spaetere Reorganisation.
+- Bedeutung: "Die offene Konsequenz erzeugt dauerhaften Stress."
+
+## `position_noradrenaline_arousal`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: neurochemische Alarm-/Aktivierungsschicht
+- Funktion: akute Erregung durch Gegenbewegung, Giveback, Exitdruck oder
+  ueberkoppelten Kontakt.
+- Wirkung: Diagnose, keine unmittelbare Motorikregel.
+- Bedeutung: "Die Position macht mich wach und druckvoll."
+
+## `position_protective_distance`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Selbstschutz / Reflexion
+- Funktion: zeigt, wie stark DIO Abstand zur eigenen Positionsinnenlage
+  braucht.
+- Wirkung: weicher Hinweis fuer Beobachtung, Reflexion, Replay.
+- Bedeutung: "Ich brauche Distanz, bevor ich mich von diesem Gefuehl leiten
+  lasse."
+
+## `position_held_risk_discomfort`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: offene Position / Risikokoerper
+- Funktion: beschreibt das unangenehme Tragen von Risiko bei negativer
+  Bewegung, Giveback und Selbstvertrauensluecke.
+- Wirkung: Konsequenzspur fuer Memory.
+- Bedeutung: "Das gehaltene Risiko fuehlt sich belastend an."
+
+## `position_process_quality`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: offene Position / Reife
+- Funktion: bewertet nicht Gewinn/Verlust, sondern ob DIO eine offene
+  Handlung geordnet, tragfaehig und realitaetsnah verarbeitet.
+- Wirkung: daempft unverdiente Entlastung und staerkt tragfaehige Erfahrung.
+- Bedeutung: "War mein Umgang mit dieser Position reif?"
+
+## `position_experience_label`
+
+- Typ: String
+- Ebene: offene Position / semantische Verdichtung
+- Funktion: benennt die erlebte Positionslage verdichtet.
+- Moegliche Werte: `carried_position_contact`, `unearned_relief_watch`,
+  `protective_stress_contact`, `self_trust_gap_contact`,
+  `protective_distance_watch`, `open_position_feel`.
+- Bedeutung: "Wie nennt DIO den inneren Zustand dieser offenen Konsequenz?"
+
 ## `outcome_consequence_integration`
 
 - Bereich: `0.0 - 1.0`
@@ -2697,6 +2781,60 @@ erlebt.
   - `new_unmapped_contact`
   - `unlocated_contact`
 
+## `spacetime_unlocated_pressure`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Regulation / Raumzeit-Selbstverortung
+- Funktion: beschreibt, wie stark DIO einen Kontakt noch nicht sauber im
+  inneren Raumzeitfeld verorten kann.
+- Bedeutung: "Ich weiss noch nicht genau, wo dieser Eindruck in meiner
+  inneren Zeit liegt."
+
+## `spacetime_memory_bearing`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Memory / Erfahrungstragfaehigkeit
+- Funktion: beschreibt, wie tragend die Erinnerungstiefe fuer die aktuelle
+  Wahrnehmung ist.
+- Bedeutung: "Meine Erinnerung hat tragende zeitliche Tiefe."
+
+## `spacetime_future_bearing`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Hypothese / Zukunftstragfaehigkeit
+- Funktion: beschreibt, wie tragend die Zukunftstiefe einer Wahrnehmung
+  wirkt.
+- Bedeutung: "Aus diesem Kontakt kann eine tragende Moeglichkeit entstehen."
+
+## `spacetime_reflection_need`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Regulation / Reflexion
+- Funktion: uebersetzt flache oder unklare Raumzeit-Verortung in
+  Reflexionsbedarf.
+- Bedeutung: "Ich sollte erst verorten, bevor ich handle."
+
+## `spacetime_regulation_support`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Regulation / Tragfaehigkeit
+- Funktion: beschreibt, wie stark Memory-, Zukunfts- und Gegenwartstiefe
+  Regulation und Integration stuetzen.
+- Bedeutung: "Meine Raumzeit-Wahrnehmung traegt meine innere Lage."
+
+## `spacetime_regulation_state`
+
+- Typ: Textlabel
+- Ebene: Regulation / Raumzeitlage
+- Funktion: benennt, wie die Raumzeit-Wahrnehmung regulatorisch wirkt.
+- Moegliche Werte:
+  - `spacetime_open`
+  - `spacetime_unlocated_reflection`
+  - `afterimage_reframe`
+  - `memory_depth_bearing`
+  - `future_depth_watch`
+  - `present_depth_bearing`
+
 ## `temporal_self_consistency`
 
 - Bereich: `0.0 - 1.0`
@@ -2803,6 +2941,94 @@ erlebt.
   - `overcoupled_context`
 - Bedeutung: "Mein Zeit-/Kontextfaden ist vorhanden, aber seine gefuehlte
   Sicherheit kann nervlich gefaerbt sein."
+
+## `area_temporal_contact_mode`
+
+- Bereich: Textzustand
+- Ebene: strategisches Fenster / MCM-Raumzeitkontakt
+- Funktion: beschreibt, wie ein betrachteter Preis-/Strukturbereich
+  zeitlich im MCM-Feld liegt.
+- Moegliche Werte:
+  - `present_area_contact`
+  - `future_area_watch`
+  - `memory_area_recall`
+  - `unlocated_area_probe`
+  - `afterimage_area_reframe`
+  - `open_time_contact`
+- Bedeutung: "Ist dieser Bereich Gegenwartskontakt, Zukunftsraum,
+  Erinnerung oder noch unverorteter Druck?"
+
+## `area_spacetime_fit`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: strategisches Fenster / Raumzeit-Tragfaehigkeit
+- Funktion: verdichtet aktuelle Naehe, Zukunftsmoeglichkeit,
+  Erinnerungstiefe und MCM-Raumzeit-Support eines Bereichs.
+- Bedeutung: "Passt dieser sichtbare Bereich zeitlich zu meiner inneren
+  Lage?"
+
+## `contact_temporal_mode`
+
+- Bereich: Textzustand
+- Ebene: aktiver MCM-Kontakt
+- Funktion: beschreibt, wie DIO den gerade aktiven Kontakt zeitlich
+  erlebt.
+- Moegliche Werte:
+  - `present_contact_touch`
+  - `future_contact_watch`
+  - `memory_contact_recall`
+  - `unlocated_contact_probe`
+  - `afterimage_contact_reframe`
+  - `open_time_contact`
+- Bedeutung: "Beruehre ich gerade Gegenwart, beobachte ich Zukunftsraum,
+  rufe ich Erinnerung auf oder muss ich den Kontakt erst verorten?"
+
+## `contact_temporal_bearing`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: aktiver MCM-Kontakt / zeitliche Tragfaehigkeit
+- Funktion: beschreibt, ob der aktive Kontakt durch Gegenwart,
+  Zukunftsmoeglichkeit, Erinnerung und Raumzeit-Fit getragen wird.
+- Bedeutung: "Dieser Kontakt hat zeitliche Tiefe und traegt eher."
+
+## `contact_unlocated_pressure`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: aktiver MCM-Kontakt / unverorteter Druck
+- Funktion: beschreibt, ob ein Kontakt zwar reizvoll oder spuerbar ist,
+  aber zeitlich noch nicht sauber in Gegenwart, Erinnerung oder Zukunft
+  verortet wurde.
+- Bedeutung: "Ich spuere etwas, aber ich weiss noch nicht, wo es in meiner
+  Raumzeit liegt."
+
+## `contact_future_watch` / `contact_memory_depth` / `contact_presentness`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: aktiver MCM-Kontakt / zeitliche Teilachsen
+- Funktion:
+  - `contact_presentness`: Gegenwartsnaehe des Kontakts
+  - `contact_future_watch`: beobachteter Moeglichkeitsraum
+  - `contact_memory_depth`: erinnerte Erfahrungstiefe
+- Bedeutung: DIO bekommt keine Regel, sondern mehr innere Sprache fuer die
+  zeitliche Lage eines Kontakts.
+
+## `area_future_to_present_readiness`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: strategisches Fenster / Uebergangsreife
+- Funktion: beschreibt, ob ein Bereich aus Zukunftsbeobachtung in
+  gegenwaertigen Kontakt reifen kann.
+- Bedeutung: "Dieser Bereich war Zukunftsraum, koennte aber jetzt
+  beruehrbar werden."
+
+## `contact_future_to_present_readiness`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: aktiver MCM-Kontakt / Uebergangsreife
+- Funktion: beschreibt, ob DIO aus `future_contact_watch` organisch in
+  `maturing_present_contact` wechseln kann.
+- Bedeutung: "Meine Beobachtung wird tragfaehig genug, um als Gegenwart
+  geprueft zu werden."
 
 ---
 

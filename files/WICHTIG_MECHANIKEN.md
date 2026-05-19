@@ -1365,6 +1365,53 @@ Realitaetsnaehe einer Handlung:
 - Position ist miterlebte Konsequenz.
 - Outcome ist Integration.
 
+## 26.1 Positions-Erleben im MCM-Feld
+
+Grundsatz:
+Eine offene Position ist nicht nur ein laufender Trade. Sie ist ein
+Rueckkopplungskontakt: DIO hat gehandelt und erlebt nun, ob die eigene
+Handlung tragfaehig, unsicher, ueberlastend oder stabilisierend wirkt.
+
+Mechanik:
+Unsichere oder inkonsistente offene Positionen werden nicht hart beendet.
+Stattdessen bekommen sie eine neurochemische Spur im MCM-Feld:
+
+- Cortisol-artige Last bei anhaltender Inkonsistenz
+- Noradrenalin-artige Erregung bei akutem Druck
+- Selbstvertrauensluecke, wenn Plan, Kontakt und Realitaet auseinanderfallen
+- Schutzdistanz, wenn das Feld Abstand braucht
+- Prozessqualitaet, wenn DIO trotz Risiko geordnet tragen kann
+
+Das erzeugt keine Sperre, sondern ein erlebtes Lernsignal:
+
+`offene Position -> gespuerte Konsequenz -> MCM-Feldspannung -> Memory-Spur -> reiferer zukuenftiger Kontakt`
+
+Technische Achsen:
+- `position_inconsistency_stress`
+- `position_mcm_field_strain`
+- `position_self_trust_gap`
+- `position_cortisol_load`
+- `position_noradrenaline_arousal`
+- `position_protective_distance`
+- `position_held_risk_discomfort`
+- `position_process_quality`
+- `position_experience_label`
+
+Moegliche Zustaende:
+- `carried_position_contact`
+- `unearned_relief_watch`
+- `protective_stress_contact`
+- `self_trust_gap_contact`
+- `protective_distance_watch`
+- `open_position_feel`
+
+Neurologische Lesart:
+Ein Organismus lernt nicht nur durch Gewinn und Verlust, sondern dadurch,
+wie eine Handlung die Homoeostase veraendert. Eine positive Position mit
+schlechter Prozessqualitaet kann sich wie unverdiente Entlastung anfuehlen.
+Eine negative Position kann wertvoll sein, wenn sie Reorganisation,
+Vorsicht und reiferen Umgang erzeugt.
+
 ---
 
 # 27. Unterbewusstsein / Bewusster Arbeitsraum
@@ -1606,3 +1653,59 @@ ist.
 Wichtig:
 Keine feste Streckenkarte. DIO soll nicht lernen: "an dieser Stelle passiert
 immer X", sondern: "dieser Kontakt hat eine zeitliche Herkunft und Tiefe".
+
+---
+
+# 31. Raumzeit-Kontakt zwischen Sehen, Erinnerung und Handlung
+
+Grundsatz:
+Die visuelle Strukturwahrnehmung und die MCM-Raumzeit duerfen nicht
+getrennt nebeneinander laufen. Ein Bereich im Chart ist fuer DIO nicht nur
+nah oder fern im Preis, sondern auch nah oder fern in Zeit, Erinnerung,
+Nachhall und zukuenftiger Moeglichkeit.
+
+Mechanik:
+
+`sichtbarer Bereich -> Raumzeitlage -> aktiver Kontakt -> Reife/Replay/Handlung`
+
+Das strategische Fenster bildet fuer betrachtete Bereiche eine weiche
+zeitliche Kontaktlage:
+
+- `present_area_contact`: Bereich wirkt aktuell beruehrbar.
+- `future_area_watch`: Bereich wirkt als zukuenftiger Moeglichkeitsraum.
+- `memory_area_recall`: Bereich wird durch Erinnerungstiefe getragen.
+- `unlocated_area_probe`: Bereich ist spuerbar, aber zeitlich noch nicht
+  sauber verortet.
+- `afterimage_area_reframe`: Bereich wirkt als Nachbild und braucht
+  Reframing.
+
+Das aktive MCM-Kontaktorgan uebernimmt diese Lage als innere
+Kontaktwahrnehmung:
+
+- `contact_presentness`
+- `contact_future_watch`
+- `contact_memory_depth`
+- `contact_unlocated_pressure`
+- `contact_temporal_bearing`
+- `contact_temporal_reframe_need`
+- `contact_temporal_mode`
+
+Neurologische Lesart:
+DIO bekommt damit keine mechanische Regel. Er bekommt eher das, was bei
+einem Organismus als raeumlich-zeitliche Einordnung eines Reizes wirkt:
+"Ist das wirklich vor mir? Ist das nur Erinnerung? Ist das eine moegliche
+Zukunft? Oder spuere ich Druck, den ich noch nicht verorten kann?"
+
+Wirkung:
+Tragende zeitliche Einordnung stuetzt Kontaktreife, Reality-Check,
+Kohaerenz und vorsichtige Handlung. Unverorteter Druck erhoeht eher
+Reflexion, Replay, Reframing und vorsichtiges Beobachten. Das bleibt
+organisch: DIO darf handeln, beobachten, vertiefen oder loslassen, aber die
+Wahrnehmung bekommt mehr Tiefe.
+
+Uebergang von Zukunft zu Gegenwart:
+Nach Lauf 29 wurde eine Reifungsbruecke ergaenzt. Ein Zukunftskontakt darf
+nicht dauerhaft nur Zukunft bleiben, wenn Naehe, Tragfaehigkeit,
+Raumzeit-Fit und Reality-Check zusammenkommen. Dann entsteht
+`maturing_present_contact`. Das ist keine Order-Regel, sondern der innere
+Moment: "Was ich beobachtet habe, wird jetzt beruehrbar."

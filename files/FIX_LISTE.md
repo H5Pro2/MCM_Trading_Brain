@@ -906,6 +906,168 @@ Regelwerk: `files/MD_ANWEISUNG.md`.
     regulatorische Kopplung der Raumzeit-Wahrnehmung bauen: nicht
     blockieren, sondern flache Selbstverortung in Reflexion, Beobachtung
     oder Reorganisation uebersetzen
+  - umgesetzt:
+    regulatorische Kopplung gebaut mit `spacetime_unlocated_pressure`,
+    `spacetime_memory_bearing`, `spacetime_future_bearing`,
+    `spacetime_reflection_need`, `spacetime_regulation_support` und
+    `spacetime_regulation_state`
+  - naechster Schritt:
+    Lauf 25 pruefen; wichtig ist, ob der Drawdown niedrig bleibt und ob
+    `future_depth_watch` / `spacetime_unlocated_reflection` zu organischer
+    Reflexion fuehren statt zu Ueberregulation
+  - Lauf 25 ausgewertet:
+    PnL ca. `+35.7929`, Profit Factor ca. `1.3125`, Drawdown ca.
+    `7.0778`; Verlauf sehr stark, Low-Schaden sinkt auf ca. `-37.93`,
+    Mid wird wieder positiv
+  - Einschraenkung:
+    Die `spacetime_*` Regulatorwerte standen im Protokoll noch auf `0.0`.
+    Damit ist Lauf 25 ein Hinweis auf die Raumzeit-Kernrichtung, aber noch
+    kein Nachweis der regulatorischen Kopplung.
+  - behoben:
+    `spacetime_*` Werte werden jetzt im Temporal-Kern initial berechnet,
+    bevor sie exportiert und spaeter in der Meta-Regulation verfeinert
+    werden.
+  - naechster Schritt:
+    Lauf 26 als echten Test der Raumzeit-Regulation laufen lassen
+  - Lauf 26 ausgewertet:
+    PnL ca. `+19.8490`, Profit Factor ca. `1.1703`, Drawdown ca.
+    `8.8080`; High bleibt tragend, Mid ist deutlich positiv, Low belastet
+    wieder stark.
+  - Befund:
+    MCM-Raumzeit-Wahrnehmung ist aktiv, aber die regulatorischen
+    `spacetime_*` Werte wurden im Meta-Regulator nicht zurueckgegeben und
+    deshalb nur als `0.0` / `spacetime_open` exportiert.
+  - behoben:
+    Rueckgabe von `spacetime_unlocated_pressure`,
+    `spacetime_memory_bearing`, `spacetime_future_bearing`,
+    `spacetime_reflection_need`, `spacetime_regulation_support` und
+    `spacetime_regulation_state` in `build_meta_regulation_state`
+    ergaenzt.
+  - naechster Schritt:
+    Neuer Lauf prueft erstmals sichtbar, ob Raumzeit-Tiefe als
+    regulatorisches Nervensignal in Reflexion, Beobachtung, Reorganisation
+    oder tragender Handlung auftaucht.
+  - Lauf 27 ausgewertet:
+    PnL ca. `+30.9274`, Profit Factor ca. `1.2705`, Drawdown ca.
+    `10.4069`; Raumzeit-Regulation ist jetzt sichtbar.
+  - Befund:
+    `future_depth_watch` erscheint deutlich (`~2000` Feld-/Memory-Zeilen),
+    dazu kleinere Anteile `present_depth_bearing` und
+    `memory_depth_bearing`. DIO beginnt damit, zeitliche Tiefe als
+    innere Lage zu fuehren.
+  - Grenze:
+    Low bleibt negativ (`-45.0185`). Die Zeit-Tiefe erzeugt mehr
+    Verortung, aber noch keine genuegende Reife im Umgang mit schwachen
+    Kontakten.
+  - naechster Schritt:
+    Raumzeit-Regulation mit visueller Struktur-/Kontaktwahrnehmung
+    koppeln, damit DIO erkennt, ob ein Kontakt aktuell, erinnert,
+    zukuenftig moeglich oder wirklich nah/tragfaehig ist.
+  - umgesetzt:
+    strategisches Fenster und aktives MCM-Kontaktorgan um
+    `area_temporal_contact_mode`, `area_spacetime_fit`,
+    `contact_temporal_mode`, `contact_temporal_bearing`,
+    `contact_future_watch`, `contact_memory_depth`,
+    `contact_presentness` und `contact_unlocated_pressure` erweitert.
+  - Debug:
+    `mcm_strategic_window_protocol.csv` und
+    `mcm_active_contact_protocol.csv` schreiben die neuen Kontaktachsen.
+  - naechster Schritt:
+    Neuer Lauf prueft, ob DIO Kontakte zeitlich besser verortet:
+    Gegenwart, Erinnerung, Zukunftsraum oder unverorteter Druck.
+  - Lauf 28 ausgewertet:
+    PnL ca. `+19.6617`, Profit Factor ca. `1.1607`, Drawdown ca.
+    `10.1210`. Die Raumzeit-Kontaktachsen sind aktiv, aber sehr stark auf
+    Gegenwartskontakt ausgerichtet.
+  - Befund:
+    `present_area_contact` ca. `10675` und `present_contact_touch` ca.
+    `10257`; dagegen `future_contact_watch` ca. `166` und
+    `memory_contact_recall` ca. `61`. DIO beruehrt also noch zu viel als
+    aktuelles Jetzt.
+  - naechster Schritt:
+    weiche Balance der Raumzeit-Kontaktmodi schaerfen, damit Zukunftsraum,
+    Erinnerung und unverorteter Druck natuerlicher gegen
+    Gegenwartskontakt differenziert werden.
+  - umgesetzt:
+    `area_current_contact` und `contact_presentness` selektiver gemacht;
+    `area_future_contact`, `area_memory_contact`, `contact_future_watch`
+    und `contact_memory_depth` duerfen frueher als eigene Kontaktlage
+    sprechen, wenn Gegenwart nicht klar dominiert.
+  - naechster Schritt:
+    Neuer Lauf prueft, ob `present_contact_touch` weniger dominant wird
+    und ob Zukunft/Erinnerung/unverorteter Druck organischer sichtbar
+    werden.
+  - Lauf 29 ausgewertet:
+    PnL ca. `+31.4319`, Profit Factor ca. `1.2750`, Drawdown ca.
+    `8.4780`; Low-Schaden sinkt auf ca. `-41.9181`.
+  - Befund:
+    Balancing greift sehr stark. `future_contact_watch` dominiert mit ca.
+    `8268`, `present_contact_touch` ist praktisch nicht mehr dominant.
+    DIO beruehrt weniger blind die Gegenwart und beobachtet staerker
+    Zukunftsraum.
+  - Grenze:
+    Die Verschiebung koennte jetzt etwas zu stark in Zukunftsbeobachtung
+    liegen. Gegenwartskontakt muss wieder organisch entstehen duerfen,
+    wenn Naehe, Tragfaehigkeit und Reality-Check zusammenpassen.
+  - naechster Schritt:
+    Uebergang `future_contact_watch -> present_contact_touch` weich
+    modellieren, ohne in mechanische Entry-Regeln zu fallen.
+  - umgesetzt:
+    Reifungsbruecke gebaut mit `area_future_to_present_readiness`,
+    `contact_future_to_present_readiness`, `maturing_present_area` und
+    `maturing_present_contact`.
+  - naechster Schritt:
+    Neuer Lauf prueft, ob Zukunftskontakte organisch in reife
+    Gegenwartskontakte uebergehen, ohne die alte
+    `present_contact_touch`-Ueberdominanz zurueckzuholen.
+  - Lauf 30 ausgewertet:
+    PnL ca. `+30.6240`, Profit Factor ca. `1.2501`, Drawdown ca.
+    `13.2283`. High und Mid tragen stark, Low verschlechtert sich auf ca.
+    `-50.4262`.
+  - Befund:
+    Reifungsbruecke greift auf Bereichsebene:
+    `maturing_present_area` ca. `3796`. Im aktiven Kontaktorgan erscheint
+    aber noch kein `maturing_present_contact`; `future_contact_watch`
+    bleibt dominant mit ca. `7757`.
+  - naechster Schritt:
+    Kopplung von `maturing_present_area` in
+    `contact_future_to_present_readiness` staerken, damit das
+    Kontaktorgan die strategische Reifung uebernehmen kann, ohne wieder in
+    Gegenwarts-Ueberdominanz zu kippen.
+  - umgesetzt:
+    `area_future_to_present_readiness` und `maturing_present_area` wirken
+    nun direkt in `contact_future_to_present_readiness`; die finale
+    Umschaltung nutzt spaeter die vollstaendigere Kontaktqualitaet
+    (`contact_reality_check`, `contact_carrying_quality`,
+    `outer_inner_coherence`, `contact_action_maturity`).
+  - naechster Schritt:
+    Neuer Lauf prueft, ob `maturing_present_contact` sichtbar wird.
+  - Lauf 31 ausgewertet:
+    PnL ca. `+29.4938`, Profit Factor ca. `1.2459`, Drawdown ca.
+    `8.8692`; High und Mid tragen, Low bleibt stark negativ mit ca.
+    `-50.4702`.
+  - Befund:
+    Reifungsleitung funktioniert. `maturing_present_contact` erscheint ca.
+    `3664` mal, waehrend `future_contact_watch` ca. `4453` bleibt. Damit
+    entsteht die gewuenschte Zwischenlage zwischen Zukunftsbeobachtung und
+    Gegenwartskontakt.
+  - naechster Schritt:
+    Low-Kontakte qualitativ tiefer auswerten: Welche Low-Kontakte werden
+    trotz Reifung zu schmerzhaften Handlungen? Daraus weiche
+    Kontaktqualitaets-Reorganisation ableiten.
+  - umgesetzt:
+    Positions-Erleben als neurochemische MCM-Feldschicht ergaenzt.
+    `position_inconsistency_stress`, `position_mcm_field_strain`,
+    `position_self_trust_gap`, `position_cortisol_load`,
+    `position_noradrenaline_arousal`, `position_protective_distance`,
+    `position_held_risk_discomfort`, `position_process_quality` und
+    `position_experience_label` werden nun in Positionsdebug,
+    Outcome-Kontext und In-Trade-Memory-Zusammenfassung mitgefuehrt.
+  - naechster Schritt:
+    Neuer Lauf prueft, ob Low-/Mid-Verluste mit hoher
+    `position_inconsistency_stress`, hoher `position_cortisol_load` oder
+    niedriger `position_process_quality` zusammenfallen. Ziel bleibt
+    Selbstschutz und Reifung, keine harte Sperre.
 
 - [ ] Markdown-Dateien weiter nach `MD_ANWEISUNG.md` pflegen.
   Ziel:

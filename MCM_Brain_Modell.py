@@ -5344,6 +5344,7 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
             "temporal_binding_state;temporal_continuity;temporal_source_binding;temporal_recurrence;"
             "temporal_novelty;temporal_afterimage;temporal_decay;temporal_context_depth;"
             "mcm_spacetime_depth;memory_experience_depth;future_projection_depth;temporal_self_location;temporal_self_location_state;"
+            "spacetime_unlocated_pressure;spacetime_memory_bearing;spacetime_future_bearing;spacetime_reflection_need;spacetime_regulation_support;spacetime_regulation_state;"
             "temporal_self_consistency;perception_sequence_coherence;memory_time_distance;"
             "return_strength;integration_capacity;variance_regulation;load_tolerance;impulse_control;"
             "frustration_tolerance;protective_distance_regulation;self_reflection_regulator;distance_regulation;"
@@ -5487,6 +5488,12 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         f"{float(meta.get('future_projection_depth', 0.0) or 0.0):.4f}",
         f"{float(meta.get('temporal_self_location', 0.0) or 0.0):.4f}",
         _clean(meta.get("temporal_self_location_state", "unlocated_contact")),
+        f"{float(meta.get('spacetime_unlocated_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('spacetime_memory_bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('spacetime_future_bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('spacetime_reflection_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('spacetime_regulation_support', 0.0) or 0.0):.4f}",
+        _clean(meta.get("spacetime_regulation_state", "spacetime_open")),
         f"{float(meta.get('temporal_self_consistency', 0.0) or 0.0):.4f}",
         f"{float(meta.get('perception_sequence_coherence', 0.0) or 0.0):.4f}",
         f"{float(meta.get('memory_time_distance', 1.0) or 1.0):.4f}",
@@ -5905,6 +5912,7 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
             "temporal_binding_state;temporal_continuity;temporal_source_binding;temporal_recurrence;"
             "temporal_novelty;temporal_afterimage;temporal_decay;temporal_context_depth;"
             "mcm_spacetime_depth;memory_experience_depth;future_projection_depth;temporal_self_location;temporal_self_location_state;"
+            "spacetime_unlocated_pressure;spacetime_memory_bearing;spacetime_future_bearing;spacetime_reflection_need;spacetime_regulation_support;spacetime_regulation_state;"
             "temporal_self_consistency;perception_sequence_coherence;memory_time_distance;"
             "return_strength;integration_capacity;variance_regulation;load_tolerance;impulse_control;"
             "frustration_tolerance;protective_distance_regulation;self_reflection_regulator;distance_regulation;"
@@ -6034,6 +6042,12 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
         f"{float(meta.get('future_projection_depth', 0.0) or 0.0):.4f}",
         f"{float(meta.get('temporal_self_location', 0.0) or 0.0):.4f}",
         _clean(meta.get("temporal_self_location_state", "unlocated_contact")),
+        f"{float(meta.get('spacetime_unlocated_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('spacetime_memory_bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('spacetime_future_bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('spacetime_reflection_need', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('spacetime_regulation_support', 0.0) or 0.0):.4f}",
+        _clean(meta.get("spacetime_regulation_state", "spacetime_open")),
         f"{float(meta.get('temporal_self_consistency', 0.0) or 0.0):.4f}",
         f"{float(meta.get('perception_sequence_coherence', 0.0) or 0.0):.4f}",
         f"{float(meta.get('memory_time_distance', 1.0) or 1.0):.4f}",
@@ -6221,6 +6235,17 @@ def build_strategic_window_state(
     packet_reorg = _clip(meta.get("previous_packet_reorganization_need", 0.0))
     memory_orientation = _clip(meta.get("inner_pattern_bearing", 0.0))
     memory_conflict = _clip(meta.get("inner_pattern_conflict", 0.0))
+    mcm_spacetime_depth = _clip(meta.get("mcm_spacetime_depth", 0.0))
+    memory_experience_depth = _clip(meta.get("memory_experience_depth", 0.0))
+    future_projection_depth = _clip(meta.get("future_projection_depth", 0.0))
+    temporal_self_location = _clip(meta.get("temporal_self_location", 0.0))
+    temporal_self_location_state = str(meta.get("temporal_self_location_state", "unlocated_contact") or "unlocated_contact")
+    spacetime_unlocated_pressure = _clip(meta.get("spacetime_unlocated_pressure", 0.0))
+    spacetime_memory_bearing = _clip(meta.get("spacetime_memory_bearing", 0.0))
+    spacetime_future_bearing = _clip(meta.get("spacetime_future_bearing", 0.0))
+    spacetime_reflection_need = _clip(meta.get("spacetime_reflection_need", 0.0))
+    spacetime_regulation_support = _clip(meta.get("spacetime_regulation_support", 0.0))
+    spacetime_regulation_state = str(meta.get("spacetime_regulation_state", "spacetime_open") or "spacetime_open")
 
     replay_budget = _clip((focus_support * 0.28) + (serotonin_stability * 0.22) + (context_confidence * 0.18) + (gaba_inhibition * 0.12) - (lookback_load * 0.20) + 0.28)
     zoom_budget = _clip((visual_clarity * 0.28) + (focus_support * 0.24) + (structural_quality * 0.18) + (dopamine_tone * 0.10) - (fatigue_tone * 0.14) + 0.26)
@@ -6271,10 +6296,82 @@ def build_strategic_window_state(
         area_replay_fit = _clip((replay_budget * 0.28) + (lookback_relevance * 0.20) + (area_memory_pull * 0.18) + (area_bearing_quality * 0.18) - (area_distance * 0.10))
         area_temporal_relevance = _clip((area_recency * 0.34) + (area_bearing_quality * 0.20) + (area_replay_fit * 0.16) + (1.0 - area_distance) * 0.14 - (area_decay * 0.22) - (area_afterimage * 0.08))
         area_present_contact = _clip((area_temporal_relevance * 0.42) + ((1.0 - area_distance) * 0.24) + (area_mcm_resonance * 0.18) + (area_structural_density * 0.12) - (area_afterimage * 0.16))
+        area_current_contact = _clip(
+            (area_present_contact * 0.24)
+            + (area_recency * 0.15)
+            + ((1.0 - area_distance) * 0.14)
+            + (temporal_self_location * 0.10)
+            + (spacetime_regulation_support * 0.08)
+            - (area_afterimage * 0.14)
+            - (area_decay * 0.08)
+        )
+        area_future_contact = _clip(
+            (future_projection_depth * 0.26)
+            + (spacetime_future_bearing * 0.24)
+            + (area_bearing_quality * 0.16)
+            + (area_replay_fit * 0.12)
+            + (area_temporal_relevance * 0.10)
+            + (max(0.0, 0.46 - area_current_contact) * 0.08)
+            - (area_decay * 0.12)
+        )
+        area_memory_contact = _clip(
+            (memory_experience_depth * 0.28)
+            + (spacetime_memory_bearing * 0.24)
+            + (area_memory_pull * 0.18)
+            + (area_afterimage * 0.12)
+            + (area_replay_fit * 0.10)
+            + (max(0.0, area_afterimage - area_recency) * 0.08)
+            - (old_structure_carryover_risk * 0.12)
+        )
+        area_future_to_present_readiness = _clip(
+            (area_future_contact * 0.24)
+            + ((1.0 - area_distance) * 0.18)
+            + (area_bearing_quality * 0.16)
+            + (area_action_timing_fit if "area_action_timing_fit" in locals() else 0.0) * 0.10
+            + (area_temporal_relevance * 0.12)
+            + (spacetime_regulation_support * 0.10)
+            + (area_mcm_resonance * 0.08)
+            - (area_unlocated_pressure if "area_unlocated_pressure" in locals() else 0.0) * 0.10
+            - (old_structure_carryover_risk * 0.08)
+        )
+        area_current_contact = _clip(
+            area_current_contact
+            + (max(0.0, area_future_to_present_readiness - 0.42) * 0.18)
+        )
+        area_unlocated_pressure = _clip(
+            (spacetime_unlocated_pressure * 0.30)
+            + (max(0.0, 0.34 - temporal_self_location) * 0.18)
+            + (area_distance * 0.16)
+            + (area_decay * 0.12)
+            + (memory_conflict * 0.10)
+            - (area_current_contact * 0.14)
+        )
+        area_spacetime_fit = _clip(
+            (area_current_contact * 0.24)
+            + (area_future_contact * 0.22)
+            + (area_memory_contact * 0.18)
+            + (spacetime_regulation_support * 0.18)
+            + (mcm_spacetime_depth * 0.12)
+            - (area_unlocated_pressure * 0.18)
+            - (spacetime_reflection_need * 0.08)
+        )
+        area_temporal_contact_mode = "open_time_contact"
+        if area_unlocated_pressure >= 0.30 and area_spacetime_fit < 0.30:
+            area_temporal_contact_mode = "unlocated_area_probe"
+        elif area_future_to_present_readiness >= 0.46 and area_current_contact >= 0.36 and area_spacetime_fit >= 0.28:
+            area_temporal_contact_mode = "maturing_present_area"
+        elif area_future_contact >= 0.34 and area_future_contact >= (area_current_contact * 0.72) and area_future_contact >= area_memory_contact:
+            area_temporal_contact_mode = "future_area_watch"
+        elif area_memory_contact >= 0.28 and area_memory_contact >= (area_current_contact * 0.58):
+            area_temporal_contact_mode = "memory_area_recall"
+        elif area_current_contact >= max(area_future_contact * 1.10, area_memory_contact * 1.12) and area_current_contact >= 0.42:
+            area_temporal_contact_mode = "present_area_contact"
+        elif spacetime_regulation_state == "afterimage_reframe":
+            area_temporal_contact_mode = "afterimage_area_reframe"
         area_patience_quality = _clip((serotonin_stability * 0.20) + (gaba_inhibition * 0.18) + (area_replay_fit * 0.22) + (area_zoom_clarity * 0.16) - (neurochemical_load * 0.12) + 0.18)
-        area_action_timing_fit = _clip((area_present_contact * 0.34) + (area_patience_quality * 0.16) + (area_replay_fit * 0.18) + (area_recency * 0.14) - (area_decay * 0.20) - (area_afterimage * 0.08))
-        area_order_intention = _clip((area_bearing_quality * 0.27) + (area_mcm_resonance * 0.18) + (area_replay_fit * 0.15) + (area_action_timing_fit * 0.18) - (area_zoom_need * 0.10) - (old_structure_carryover_risk * 0.10) - (area_afterimage * 0.10))
-        area_invalidity_pressure = _clip((old_structure_carryover_risk * 0.26) + (memory_conflict * 0.22) + (packet_reorg * 0.20) + (area_zoom_need * 0.12) - (area_bearing_quality * 0.16))
+        area_action_timing_fit = _clip((area_present_contact * 0.30) + (area_patience_quality * 0.16) + (area_replay_fit * 0.16) + (area_recency * 0.12) + (area_spacetime_fit * 0.14) - (area_decay * 0.18) - (area_afterimage * 0.08) - (area_unlocated_pressure * 0.08))
+        area_order_intention = _clip((area_bearing_quality * 0.25) + (area_mcm_resonance * 0.17) + (area_replay_fit * 0.14) + (area_action_timing_fit * 0.16) + (area_spacetime_fit * 0.12) - (area_zoom_need * 0.10) - (old_structure_carryover_risk * 0.10) - (area_afterimage * 0.08) - (area_unlocated_pressure * 0.06))
+        area_invalidity_pressure = _clip((old_structure_carryover_risk * 0.24) + (memory_conflict * 0.20) + (packet_reorg * 0.18) + (area_zoom_need * 0.12) + (area_unlocated_pressure * 0.12) - (area_bearing_quality * 0.14) - (area_spacetime_fit * 0.08))
 
         area_key = "|".join([
             f"{area_mid:.6f}",
@@ -6297,6 +6394,13 @@ def build_strategic_window_state(
             "area_decay": float(area_decay),
             "area_afterimage": float(area_afterimage),
             "area_present_contact": float(area_present_contact),
+            "area_current_contact": float(area_current_contact),
+            "area_future_contact": float(area_future_contact),
+            "area_memory_contact": float(area_memory_contact),
+            "area_unlocated_pressure": float(area_unlocated_pressure),
+            "area_spacetime_fit": float(area_spacetime_fit),
+            "area_future_to_present_readiness": float(area_future_to_present_readiness),
+            "area_temporal_contact_mode": str(area_temporal_contact_mode),
             "area_action_timing_fit": float(area_action_timing_fit),
             "area_structural_density": float(area_structural_density),
             "area_energy_compression": float(area_energy_compression),
@@ -6319,6 +6423,7 @@ def build_strategic_window_state(
             + float(item.get("area_zoom_clarity", 0.0) or 0.0) * 0.28
             + float(item.get("area_action_timing_fit", 0.0) or 0.0) * 0.44
             + float(item.get("area_present_contact", 0.0) or 0.0) * 0.22
+            + float(item.get("area_spacetime_fit", 0.0) or 0.0) * 0.32
             - float(item.get("area_invalidity_pressure", 0.0) or 0.0) * 0.70
             - float(item.get("area_afterimage", 0.0) or 0.0) * 0.34
         ),
@@ -6377,6 +6482,13 @@ def build_strategic_window_state(
         "area_decay": float(focus.get("area_decay", 0.0) or 0.0),
         "area_afterimage": float(focus.get("area_afterimage", 0.0) or 0.0),
         "area_present_contact": float(focus.get("area_present_contact", 0.0) or 0.0),
+        "area_current_contact": float(focus.get("area_current_contact", 0.0) or 0.0),
+        "area_future_contact": float(focus.get("area_future_contact", 0.0) or 0.0),
+        "area_memory_contact": float(focus.get("area_memory_contact", 0.0) or 0.0),
+        "area_unlocated_pressure": float(focus.get("area_unlocated_pressure", 0.0) or 0.0),
+        "area_spacetime_fit": float(focus.get("area_spacetime_fit", 0.0) or 0.0),
+        "area_future_to_present_readiness": float(focus.get("area_future_to_present_readiness", 0.0) or 0.0),
+        "area_temporal_contact_mode": str(focus.get("area_temporal_contact_mode", "open_time_contact") or "open_time_contact"),
         "area_action_timing_fit": float(focus.get("area_action_timing_fit", 0.0) or 0.0),
         "area_structural_density": float(focus.get("area_structural_density", 0.0) or 0.0),
         "area_energy_compression": float(focus.get("area_energy_compression", 0.0) or 0.0),
@@ -6418,7 +6530,9 @@ def _record_strategic_window_protocol(bot, runtime_result):
             "old_structure_carryover_risk;strategic_pressure_interpretation;strategic_patience;"
             "area_candidate_count;area_focus_id;area_price_low;area_price_high;area_distance_from_price;"
             "area_temporal_distance;area_temporal_relevance;area_recency;area_decay;area_afterimage;"
-            "area_present_contact;area_action_timing_fit;"
+            "area_present_contact;area_current_contact;area_future_contact;area_memory_contact;"
+            "area_unlocated_pressure;area_spacetime_fit;area_future_to_present_readiness;"
+            "area_temporal_contact_mode;area_action_timing_fit;"
             "area_structural_density;area_energy_compression;area_mcm_resonance;area_memory_pull;"
             "area_bearing_quality;area_zoom_need;area_zoom_clarity;area_replay_fit;area_patience_quality;"
             "area_order_intention;area_invalidity_pressure;pre_action_reorganization_pressure;"
@@ -6472,6 +6586,13 @@ def _record_strategic_window_protocol(bot, runtime_result):
         f"{_num('area_decay'):.4f}",
         f"{_num('area_afterimage'):.4f}",
         f"{_num('area_present_contact'):.4f}",
+        f"{_num('area_current_contact'):.4f}",
+        f"{_num('area_future_contact'):.4f}",
+        f"{_num('area_memory_contact'):.4f}",
+        f"{_num('area_unlocated_pressure'):.4f}",
+        f"{_num('area_spacetime_fit'):.4f}",
+        f"{_num('area_future_to_present_readiness'):.4f}",
+        _clean(state.get("area_temporal_contact_mode", "open_time_contact")),
         f"{_num('area_action_timing_fit'):.4f}",
         f"{_num('area_structural_density'):.4f}",
         f"{_num('area_energy_compression'):.4f}",
@@ -6532,7 +6653,11 @@ def _record_active_mcm_contact_protocol(bot, runtime_result):
             "curious_touch_score;contact_action_maturity;contact_bearing_gap;contact_impulse_vs_bearing;"
             "contact_learning_need;contact_reality_check;contact_regime_mismatch;contact_stability_carryover;"
             "contact_context_maturity;contact_context_reframe_need;conscious_perception_state;inner_posture_state;"
-            "strategic_window_state;area_bearing_quality;area_order_intention;perceptual_distance;"
+            "contact_temporal_mode;contact_presentness;contact_future_watch;contact_memory_depth;"
+            "contact_unlocated_pressure;contact_temporal_bearing;contact_temporal_reframe_need;"
+            "contact_future_to_present_readiness;"
+            "strategic_window_state;area_temporal_contact_mode;area_spacetime_fit;"
+            "area_bearing_quality;area_order_intention;perceptual_distance;"
             "object_contact_depth;field_attachment;release_capacity;inner_outer_alignment\n"
         )
         write_start = time.perf_counter()
@@ -6594,7 +6719,17 @@ def _record_active_mcm_contact_protocol(bot, runtime_result):
         f"{_num('contact_context_reframe_need'):.4f}",
         _clean(meta.get("conscious_perception_state", "-")),
         _clean(meta.get("inner_posture_state", "-")),
+        _clean(state.get("contact_temporal_mode", "open_time_contact")),
+        f"{_num('contact_presentness'):.4f}",
+        f"{_num('contact_future_watch'):.4f}",
+        f"{_num('contact_memory_depth'):.4f}",
+        f"{_num('contact_unlocated_pressure'):.4f}",
+        f"{_num('contact_temporal_bearing'):.4f}",
+        f"{_num('contact_temporal_reframe_need'):.4f}",
+        f"{_num('contact_future_to_present_readiness'):.4f}",
         _clean(meta.get("strategic_window_state", "-")),
+        _clean(state.get("area_temporal_contact_mode", meta.get("area_temporal_contact_mode", "open_time_contact"))),
+        f"{_num('area_spacetime_fit'):.4f}",
         f"{float(meta.get('area_bearing_quality', 0.0) or 0.0):.4f}",
         f"{float(meta.get('area_order_intention', 0.0) or 0.0):.4f}",
         f"{float(meta.get('perceptual_distance', 0.0) or 0.0):.4f}",
@@ -9408,6 +9543,58 @@ def build_temporal_coherence_state(
     elif novelty >= 0.48 and source_binding < 0.38:
         temporal_self_location_state = "new_unmapped_contact"
 
+    spacetime_unlocated_pressure = _clip(
+        (max(0.0, 0.34 - temporal_self_location) * 0.56)
+        + (max(0.0, 0.30 - mcm_spacetime_depth) * 0.34)
+        + ((1.0 if temporal_self_location_state == "unlocated_contact" else 0.0) * 0.16)
+        + ((1.0 if temporal_binding_state == "unbound_moment" else 0.0) * 0.10)
+        + (novelty * 0.08)
+        - (source_binding * 0.10)
+    )
+    spacetime_memory_bearing = _clip(
+        (memory_experience_depth * 0.30)
+        + (recurrence_raw * 0.16)
+        + (temporal_context_depth * 0.16)
+        + (temporal_self_location * 0.14)
+        + (perception_sequence_coherence * 0.12)
+        + (max(0.0, 1.0 - memory_time_distance) * 0.12)
+    )
+    spacetime_future_bearing = _clip(
+        (future_projection_depth * 0.34)
+        + (mcm_spacetime_depth * 0.20)
+        + (temporal_self_location * 0.16)
+        + (perception_sequence_coherence * 0.14)
+        + (structure_quality * 0.08)
+        + (context_confidence * 0.08)
+    )
+    spacetime_regulation_support = _clip(
+        (spacetime_memory_bearing * 0.30)
+        + (spacetime_future_bearing * 0.30)
+        + (temporal_self_location * 0.18)
+        + (mcm_spacetime_depth * 0.14)
+        + (source_binding * 0.08)
+        - (spacetime_unlocated_pressure * 0.18)
+    )
+    spacetime_reflection_need = _clip(
+        (spacetime_unlocated_pressure * 0.36)
+        + (max(0.0, future_projection_depth - temporal_self_location) * 0.16)
+        + (max(0.0, mcm_spacetime_depth - memory_experience_depth) * 0.10)
+        + ((1.0 if temporal_self_location_state == "future_possibility" else 0.0) * 0.06)
+        + ((1.0 if temporal_self_location_state == "afterimage_trace" else 0.0) * 0.10)
+        - (spacetime_memory_bearing * 0.10)
+    )
+    spacetime_regulation_state = "spacetime_open"
+    if spacetime_unlocated_pressure >= 0.34 and spacetime_regulation_support < 0.28:
+        spacetime_regulation_state = "spacetime_unlocated_reflection"
+    elif temporal_self_location_state == "afterimage_trace" and spacetime_reflection_need >= 0.24:
+        spacetime_regulation_state = "afterimage_reframe"
+    elif temporal_self_location_state == "remembered_experience" and spacetime_memory_bearing >= 0.34:
+        spacetime_regulation_state = "memory_depth_bearing"
+    elif temporal_self_location_state == "future_possibility" and spacetime_future_bearing >= 0.38:
+        spacetime_regulation_state = "future_depth_watch"
+    elif temporal_self_location_state == "present_contact" and spacetime_regulation_support >= 0.34:
+        spacetime_regulation_state = "present_depth_bearing"
+
     identity_memory[temporal_identity] = {
         "last_seen_tick": int(runtime_tick),
         "last_timestamp": timestamp,
@@ -9443,6 +9630,12 @@ def build_temporal_coherence_state(
         "future_projection_depth": float(future_projection_depth),
         "temporal_self_location": float(temporal_self_location),
         "temporal_self_location_state": str(temporal_self_location_state),
+        "spacetime_unlocated_pressure": float(spacetime_unlocated_pressure),
+        "spacetime_memory_bearing": float(spacetime_memory_bearing),
+        "spacetime_future_bearing": float(spacetime_future_bearing),
+        "spacetime_reflection_need": float(spacetime_reflection_need),
+        "spacetime_regulation_support": float(spacetime_regulation_support),
+        "spacetime_regulation_state": str(spacetime_regulation_state),
         "temporal_self_consistency": float(temporal_self_consistency),
         "perception_sequence_coherence": float(perception_sequence_coherence),
         "memory_time_distance": float(memory_time_distance),
@@ -14411,8 +14604,27 @@ def build_active_mcm_contact_state(
     area_order_intention = _v(strategic, meta, key="area_order_intention")
     area_zoom_need = _v(strategic, meta, key="area_zoom_need")
     area_replay_fit = _v(strategic, meta, key="area_replay_fit")
+    area_present_contact = _v(strategic, meta, key="area_present_contact")
+    area_current_contact = _v(strategic, meta, key="area_current_contact")
+    area_future_contact = _v(strategic, meta, key="area_future_contact")
+    area_memory_contact = _v(strategic, meta, key="area_memory_contact")
+    area_unlocated_pressure = _v(strategic, meta, key="area_unlocated_pressure")
+    area_spacetime_fit = _v(strategic, meta, key="area_spacetime_fit")
+    area_future_to_present_readiness = _v(strategic, meta, key="area_future_to_present_readiness")
+    area_temporal_contact_mode = str(strategic.get("area_temporal_contact_mode", meta.get("area_temporal_contact_mode", "open_time_contact")) or "open_time_contact")
     strategic_patience = _v(strategic, meta, key="strategic_patience")
     old_structure_carryover_risk = _v(strategic, meta, key="old_structure_carryover_risk")
+    mcm_spacetime_depth = _v(meta, key="mcm_spacetime_depth")
+    memory_experience_depth = _v(meta, key="memory_experience_depth")
+    future_projection_depth = _v(meta, key="future_projection_depth")
+    temporal_self_location = _v(meta, key="temporal_self_location")
+    temporal_self_location_state = str(meta.get("temporal_self_location_state", "unlocated_contact") or "unlocated_contact")
+    spacetime_unlocated_pressure = _v(meta, key="spacetime_unlocated_pressure")
+    spacetime_memory_bearing = _v(meta, key="spacetime_memory_bearing")
+    spacetime_future_bearing = _v(meta, key="spacetime_future_bearing")
+    spacetime_reflection_need = _v(meta, key="spacetime_reflection_need")
+    spacetime_regulation_support = _v(meta, key="spacetime_regulation_support")
+    spacetime_regulation_state = str(meta.get("spacetime_regulation_state", "spacetime_open") or "spacetime_open")
     structure_quality = _v(meta, perception, processing, felt, key="structure_quality")
     context_confidence = _v(meta, perception, processing, felt, key="context_confidence")
     trust_transfer_support = _v(meta, felt, thought, key="trust_transfer_support")
@@ -14431,6 +14643,82 @@ def build_active_mcm_contact_state(
         + (area_zoom_need * 0.08)
         - (sensory_load * 0.05)
     )
+    contact_presentness = _clip01(
+        (area_current_contact * 0.24)
+        + (temporal_self_location * 0.14)
+        + (object_contact_depth * 0.14)
+        + (area_present_contact * 0.10)
+        + (spacetime_regulation_support * 0.08)
+        + (max(0.0, area_current_contact - max(area_future_contact, area_memory_contact)) * 0.12)
+        - (area_unlocated_pressure * 0.14)
+        - (max(0.0, area_future_contact - area_current_contact) * 0.08)
+    )
+    contact_future_watch = _clip01(
+        (area_future_contact * 0.36)
+        + (spacetime_future_bearing * 0.25)
+        + (future_projection_depth * 0.18)
+        + (area_replay_fit * 0.10)
+        + (max(0.0, area_future_contact - area_current_contact) * 0.12)
+        - (contact_presentness * 0.05)
+    )
+    contact_memory_depth = _clip01(
+        (area_memory_contact * 0.34)
+        + (spacetime_memory_bearing * 0.22)
+        + (memory_experience_depth * 0.18)
+        + (area_memory_pull * 0.12)
+        + (reflective_distance * 0.08)
+        + (max(0.0, area_memory_contact - area_current_contact) * 0.10)
+    )
+    contact_unlocated_pressure = _clip01(
+        (area_unlocated_pressure * 0.34)
+        + (spacetime_unlocated_pressure * 0.24)
+        + (max(0.0, 0.34 - temporal_self_location) * 0.16)
+        + (spacetime_reflection_need * 0.12)
+        + (max(0.0, contact_interest - area_spacetime_fit) * 0.10)
+        - (contact_presentness * 0.10)
+    )
+    contact_temporal_bearing = _clip01(
+        (contact_presentness * 0.24)
+        + (contact_future_watch * 0.18)
+        + (contact_memory_depth * 0.20)
+        + (area_spacetime_fit * 0.20)
+        + (mcm_spacetime_depth * 0.10)
+        - (contact_unlocated_pressure * 0.18)
+    )
+    contact_temporal_reframe_need = _clip01(
+        (contact_unlocated_pressure * 0.34)
+        + (spacetime_reflection_need * 0.22)
+        + (max(0.0, contact_future_watch - contact_presentness) * 0.14)
+        + (max(0.0, contact_memory_depth - contact_presentness) * 0.10)
+        - (contact_temporal_bearing * 0.12)
+    )
+    contact_future_to_present_readiness = _clip01(
+        (contact_future_watch * 0.24)
+        + (contact_temporal_bearing * 0.16)
+        + (area_spacetime_fit * 0.12)
+        + (area_future_to_present_readiness * 0.20)
+        + (area_current_contact * 0.10)
+        + ((1.0 if area_temporal_contact_mode == "maturing_present_area" else 0.0) * 0.08)
+        - (contact_unlocated_pressure * 0.12)
+        - (contact_temporal_reframe_need * 0.08)
+    )
+    contact_presentness = _clip01(
+        contact_presentness
+        + (max(0.0, contact_future_to_present_readiness - 0.40) * 0.16)
+    )
+    contact_temporal_mode = "open_time_contact"
+    if contact_unlocated_pressure >= 0.26 and contact_temporal_bearing < 0.30:
+        contact_temporal_mode = "unlocated_contact_probe"
+    elif contact_future_to_present_readiness >= 0.43 and contact_presentness >= 0.28 and contact_temporal_bearing >= 0.24:
+        contact_temporal_mode = "maturing_present_contact"
+    elif contact_future_watch >= 0.30 and contact_future_watch >= (contact_presentness * 0.78) and contact_future_watch >= contact_memory_depth:
+        contact_temporal_mode = "future_contact_watch"
+    elif contact_memory_depth >= 0.25 and contact_memory_depth >= (contact_presentness * 0.64):
+        contact_temporal_mode = "memory_contact_recall"
+    elif contact_presentness >= max(contact_future_watch * 1.12, contact_memory_depth * 1.12) and contact_presentness >= 0.34:
+        contact_temporal_mode = "present_contact_touch"
+    elif spacetime_regulation_state == "afterimage_reframe" or area_temporal_contact_mode == "afterimage_area_reframe":
+        contact_temporal_mode = "afterimage_contact_reframe"
     contact_focus_pull = _clip01(
         (field_focus * 0.16)
         + (visual_clarity * 0.14)
@@ -14439,6 +14727,7 @@ def build_active_mcm_contact_state(
         + (selective_attention * 0.18)
         + (area_bearing_quality * 0.10)
         + (area_order_intention * 0.08)
+        + (contact_temporal_bearing * 0.06)
         - (field_fragmentation * 0.08)
     )
     contact_resonance_probe = _clip01(
@@ -14459,6 +14748,7 @@ def build_active_mcm_contact_state(
         + (area_mcm_resonance * 0.14)
         + (area_memory_pull * 0.10)
         + (contact_resonance_probe * 0.12)
+        + (contact_temporal_bearing * 0.06)
         - (field_strain * 0.08)
         - (serotonin_carryover_risk * 0.06)
     )
@@ -14470,6 +14760,7 @@ def build_active_mcm_contact_state(
         + (field_attachment * 0.10)
         + (reactive_nervous_drive * 0.08)
         + (old_structure_carryover_risk * 0.06)
+        + (contact_unlocated_pressure * 0.08)
         - (release_capacity * 0.08)
     )
     contact_overcoupling_risk = _clip01(
@@ -14481,6 +14772,7 @@ def build_active_mcm_contact_state(
         + (reactive_nervous_drive * 0.10)
         + (serotonin_carryover_risk * 0.10)
         + (old_structure_carryover_risk * 0.06)
+        + (contact_unlocated_pressure * 0.12)
         - (perceptual_distance * 0.12)
         - (emotional_decoupling * 0.08)
     )
@@ -14492,6 +14784,7 @@ def build_active_mcm_contact_state(
         + (area_bearing_quality * 0.12)
         + (strategic_patience * 0.08)
         + (perceptual_distance * 0.08)
+        + (contact_temporal_bearing * 0.08)
         - (contact_overcoupling_risk * 0.14)
         - (field_fragmentation * 0.06)
     )
@@ -14504,6 +14797,7 @@ def build_active_mcm_contact_state(
         + (area_bearing_quality * 0.12)
         + (strategic_patience * 0.08)
         + (contact_focus_pull * 0.06)
+        + (contact_temporal_bearing * 0.08)
         - (contact_overcoupling_risk * 0.14)
     )
     contact_release_readiness = _clip01(
@@ -14513,6 +14807,7 @@ def build_active_mcm_contact_state(
         + (emotional_decoupling * 0.12)
         + (sensory_gate * 0.08)
         + (calm_tone * 0.08)
+        + (contact_temporal_reframe_need * 0.10)
         - (field_attachment * 0.12)
         - (felt_afterimage * 0.08)
     )
@@ -14530,6 +14825,8 @@ def build_active_mcm_contact_state(
     contact_replay_pull = _clip01(
         (area_replay_fit * 0.20)
         + (area_memory_pull * 0.14)
+        + (contact_future_watch * 0.10)
+        + (contact_memory_depth * 0.10)
         + (old_structure_carryover_risk * 0.10)
         + (perceived_field_change * 0.12)
         + (reflective_distance * 0.12)
@@ -14542,6 +14839,7 @@ def build_active_mcm_contact_state(
         + (contact_interest * 0.18)
         + (contact_deepen_pull * 0.14)
         + (visual_form_novelty * 0.10)
+        + (contact_future_watch * 0.08)
         + (area_zoom_need * 0.08)
         + (acetylcholine_focus * 0.10)
         - (contact_overcoupling_risk * 0.10)
@@ -14563,6 +14861,7 @@ def build_active_mcm_contact_state(
         + (contact_carrying_quality * 0.14)
         + (contact_interest * 0.14)
         + (contact_replay_pull * 0.08)
+        + (contact_temporal_bearing * 0.08)
         - (contact_overcoupling_risk * 0.16)
         + (contact_release_readiness * 0.04)
     )
@@ -14574,6 +14873,7 @@ def build_active_mcm_contact_state(
         + (field_attachment * 0.14)
         + (reactive_nervous_drive * 0.08)
         + (max(0.0, 0.18 - perceptual_distance) * 0.10)
+        + (contact_unlocated_pressure * 0.12)
     )
     release_contact_score = _clip01(
         (contact_release_readiness * 0.30)
@@ -14582,6 +14882,7 @@ def build_active_mcm_contact_state(
         + (emotional_decoupling * 0.12)
         + (calm_tone * 0.10)
         + (max(0.0, contact_release_readiness - contact_overcoupling_risk + 0.04) * 0.14)
+        + (contact_temporal_reframe_need * 0.08)
     )
     deepening_contact_score = _clip01(
         (contact_deepen_pull * 0.26)
@@ -14591,6 +14892,7 @@ def build_active_mcm_contact_state(
         + (object_contact_depth * 0.10)
         + (max(0.0, contact_carrying_quality - contact_overcoupling_risk + 0.05) * 0.12)
         + (area_zoom_need * 0.06)
+        + (contact_temporal_bearing * 0.06)
     )
     resonant_contact_score = _clip01(
         (outer_inner_coherence * 0.28)
@@ -14600,6 +14902,7 @@ def build_active_mcm_contact_state(
         + (field_support * 0.10)
         + (max(0.0, 0.30 - contact_overcoupling_risk) * 0.08)
         + (strategic_patience * 0.04)
+        + (contact_temporal_bearing * 0.08)
     )
     reflective_contact_score = _clip01(
         (contact_replay_pull * 0.22)
@@ -14609,6 +14912,7 @@ def build_active_mcm_contact_state(
         + (contact_release_readiness * 0.10)
         + (perceived_field_change * 0.08)
         + (max(0.0, contact_overcoupling_risk - contact_carrying_quality) * 0.10)
+        + (contact_temporal_reframe_need * 0.12)
     )
     curious_touch_score = _clip01(
         (contact_curiosity * 0.24)
@@ -14628,6 +14932,7 @@ def build_active_mcm_contact_state(
         + (contact_overcoupling_risk * 0.10)
         + (contact_deepen_pull * 0.08)
         + (contact_replay_pull * 0.08)
+        + (contact_temporal_bearing * 0.06)
     )
 
     contact_regime_mismatch = _clip01(
@@ -14636,6 +14941,7 @@ def build_active_mcm_contact_state(
         + (max(0.0, 0.58 - context_confidence) * 0.16)
         + (max(0.0, 0.55 - structure_quality) * 0.14)
         + (old_structure_carryover_risk * 0.12)
+        + (contact_temporal_reframe_need * 0.10)
         + (serotonin_carryover_risk * 0.10)
         + (max(0.0, contact_salience - contact_carrying_quality) * 0.04)
     )
@@ -14657,12 +14963,14 @@ def build_active_mcm_contact_state(
         + (field_support * 0.08)
         + (emotional_decoupling * 0.08)
         + (strategic_patience * 0.08)
+        + (contact_temporal_bearing * 0.10)
         - (contact_regime_mismatch * 0.18)
         - (contact_stability_carryover * 0.12)
     )
     contact_context_reframe_need = _clip01(
         (contact_regime_mismatch * 0.30)
         + (contact_stability_carryover * 0.24)
+        + (contact_temporal_reframe_need * 0.18)
         + (max(0.0, contact_salience - contact_context_maturity) * 0.14)
         + (max(0.0, contact_selected_depth - contact_context_maturity) * 0.12)
         + (max(0.0, 0.55 - structure_quality) * 0.10)
@@ -14680,10 +14988,13 @@ def build_active_mcm_contact_state(
         + (context_confidence * 0.05)
         + (strategic_patience * 0.05)
         + (contact_context_maturity * 0.14)
+        + (contact_temporal_bearing * 0.10)
+        + (contact_presentness * 0.06)
         - (contact_overcoupling_risk * 0.14)
         - (max(0.0, contact_deepen_pull - contact_carrying_quality) * 0.08)
         - (contact_regime_mismatch * 0.10)
         - (contact_stability_carryover * 0.08)
+        - (contact_unlocated_pressure * 0.08)
     )
     contact_bearing_gap = _clip01(
         (max(0.0, contact_salience - contact_carrying_quality) * 0.26)
@@ -14695,6 +15006,7 @@ def build_active_mcm_contact_state(
         + (contact_regime_mismatch * 0.14)
         + (contact_stability_carryover * 0.10)
         + (max(0.0, contact_salience - contact_context_maturity) * 0.10)
+        + (contact_temporal_reframe_need * 0.12)
     )
     contact_impulse_vs_bearing = max(
         -1.0,
@@ -14722,6 +15034,7 @@ def build_active_mcm_contact_state(
         + (max(0.0, 0.16 - contact_release_readiness) * 0.08)
         + (old_structure_carryover_risk * 0.06)
         + (contact_context_reframe_need * 0.18)
+        + (contact_temporal_reframe_need * 0.18)
     )
     contact_reality_check = _clip01(
         (contact_action_maturity * 0.35)
@@ -14730,9 +15043,29 @@ def build_active_mcm_contact_state(
         + (contact_carrying_quality * 0.14)
         + (min(structure_quality, area_bearing_quality) * 0.12)
         + (contact_context_maturity * 0.12)
+        + (contact_temporal_bearing * 0.12)
         - (contact_bearing_gap * 0.20)
         - (contact_stability_carryover * 0.10)
     )
+    contact_future_to_present_readiness = _clip01(
+        (contact_future_to_present_readiness * 0.46)
+        + (contact_future_watch * 0.12)
+        + (contact_reality_check * 0.14)
+        + (contact_carrying_quality * 0.12)
+        + (outer_inner_coherence * 0.08)
+        + (contact_action_maturity * 0.08)
+        + (area_future_to_present_readiness * 0.14)
+        + ((1.0 if area_temporal_contact_mode == "maturing_present_area" else 0.0) * 0.08)
+        - (contact_bearing_gap * 0.08)
+        - (contact_unlocated_pressure * 0.08)
+    )
+    if (
+        contact_temporal_mode == "future_contact_watch"
+        and contact_future_to_present_readiness >= 0.34
+        and contact_reality_check >= 0.26
+        and contact_presentness >= 0.24
+    ):
+        contact_temporal_mode = "maturing_present_contact"
 
     posture_scores = {
         "overcoupled_touch": overcoupled_touch_score,
@@ -14789,6 +15122,16 @@ def build_active_mcm_contact_state(
         "contact_stability_carryover": float(contact_stability_carryover),
         "contact_context_maturity": float(contact_context_maturity),
         "contact_context_reframe_need": float(contact_context_reframe_need),
+        "contact_temporal_mode": str(contact_temporal_mode),
+        "contact_presentness": float(contact_presentness),
+        "contact_future_watch": float(contact_future_watch),
+        "contact_memory_depth": float(contact_memory_depth),
+        "contact_unlocated_pressure": float(contact_unlocated_pressure),
+        "contact_temporal_bearing": float(contact_temporal_bearing),
+        "contact_temporal_reframe_need": float(contact_temporal_reframe_need),
+        "contact_future_to_present_readiness": float(contact_future_to_present_readiness),
+        "area_temporal_contact_mode": str(area_temporal_contact_mode),
+        "area_spacetime_fit": float(area_spacetime_fit),
     }
 
 def build_meta_regulation_state(perception_state, processing_state, felt_state, thought_state, fused, pause_mode=False, bot=None):
@@ -16207,6 +16550,57 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     perception_sequence_coherence = float(temporal_perception_state.get("perception_sequence_coherence", 0.0) or 0.0)
     memory_time_distance = float(temporal_perception_state.get("memory_time_distance", 1.0) or 1.0)
     temporal_binding_state = str(temporal_perception_state.get("temporal_binding_state", "unbound_moment") or "unbound_moment")
+    spacetime_unlocated_pressure = _clip01(
+        (max(0.0, 0.34 - temporal_self_location) * 0.56)
+        + (max(0.0, 0.30 - mcm_spacetime_depth) * 0.34)
+        + ((1.0 if temporal_self_location_state == "unlocated_contact" else 0.0) * 0.16)
+        + ((1.0 if temporal_binding_state == "unbound_moment" else 0.0) * 0.10)
+        + (temporal_novelty * 0.08)
+        - (temporal_source_binding * 0.10)
+    )
+    spacetime_memory_bearing = _clip01(
+        (memory_experience_depth * 0.30)
+        + (temporal_recurrence * 0.16)
+        + (temporal_context_depth * 0.16)
+        + (temporal_self_location * 0.14)
+        + (perception_sequence_coherence * 0.12)
+        + (max(0.0, 1.0 - memory_time_distance) * 0.12)
+    )
+    spacetime_future_bearing = _clip01(
+        (future_projection_depth * 0.32)
+        + (mcm_spacetime_depth * 0.18)
+        + (temporal_self_location * 0.14)
+        + (perception_sequence_coherence * 0.12)
+        + (structure_action_bearing * 0.12)
+        + (interpretation_quality * 0.12)
+    )
+    spacetime_regulation_support = _clip01(
+        (spacetime_memory_bearing * 0.30)
+        + (spacetime_future_bearing * 0.30)
+        + (temporal_self_location * 0.18)
+        + (mcm_spacetime_depth * 0.14)
+        + (temporal_source_binding * 0.08)
+        - (spacetime_unlocated_pressure * 0.18)
+    )
+    spacetime_reflection_need = _clip01(
+        (spacetime_unlocated_pressure * 0.36)
+        + (max(0.0, future_projection_depth - temporal_self_location) * 0.16)
+        + (max(0.0, mcm_spacetime_depth - memory_experience_depth) * 0.10)
+        + ((1.0 if temporal_self_location_state == "future_possibility" else 0.0) * 0.06)
+        + ((1.0 if temporal_self_location_state == "afterimage_trace" else 0.0) * 0.10)
+        - (spacetime_memory_bearing * 0.10)
+    )
+    spacetime_regulation_state = "spacetime_open"
+    if spacetime_unlocated_pressure >= 0.34 and spacetime_regulation_support < 0.28:
+        spacetime_regulation_state = "spacetime_unlocated_reflection"
+    elif temporal_self_location_state == "afterimage_trace" and spacetime_reflection_need >= 0.24:
+        spacetime_regulation_state = "afterimage_reframe"
+    elif temporal_self_location_state == "remembered_experience" and spacetime_memory_bearing >= 0.34:
+        spacetime_regulation_state = "memory_depth_bearing"
+    elif temporal_self_location_state == "future_possibility" and spacetime_future_bearing >= 0.38:
+        spacetime_regulation_state = "future_depth_watch"
+    elif temporal_self_location_state == "present_contact" and spacetime_regulation_support >= 0.34:
+        spacetime_regulation_state = "present_depth_bearing"
     previous_packet_feedback = dict(getattr(bot, "last_experience_packet_feedback", {}) or {}) if bot is not None else {}
     previous_packet_process_reward = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_process_reward", 0.0) or 0.0)))
     previous_packet_bearing_quality = max(0.0, min(1.0, float(previous_packet_feedback.get("packet_bearing_quality", 0.0) or 0.0)))
@@ -16722,6 +17116,24 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             - (blind_thinking_load * 0.06),
         ),
     )
+    if spacetime_reflection_need > 0.0:
+        field_observation_need = _clip01(field_observation_need + (spacetime_reflection_need * 0.055))
+        field_replan_pressure = _clip01(field_replan_pressure + (spacetime_reflection_need * 0.035))
+        act_watch_readiness = _clip01(act_watch_readiness + (spacetime_reflection_need * 0.050))
+        perceptual_distance = _clip01(perceptual_distance + (spacetime_reflection_need * 0.035))
+        reflective_distance = _clip01(reflective_distance + (spacetime_reflection_need * 0.040))
+        self_reflection_regulator = _clip01(self_reflection_regulator + (spacetime_reflection_need * 0.045))
+        action_inhibition = _clip01(action_inhibition + (spacetime_unlocated_pressure * 0.030))
+        action_clearance = _clip01(action_clearance - (spacetime_unlocated_pressure * 0.020))
+        conscious_perception_state["perceptual_distance"] = float(perceptual_distance)
+        conscious_perception_state["reflective_distance"] = float(reflective_distance)
+    if spacetime_regulation_support > 0.0:
+        integration_capacity = _clip01(integration_capacity + (spacetime_regulation_support * 0.035))
+        variance_regulation = _clip01(variance_regulation + (spacetime_regulation_support * 0.025))
+        load_tolerance = _clip01(load_tolerance + (spacetime_regulation_support * 0.020))
+        if spacetime_regulation_state in ("memory_depth_bearing", "present_depth_bearing"):
+            action_clearance = _clip01(action_clearance + (spacetime_regulation_support * 0.025))
+            field_action_support = _clip01(field_action_support + (spacetime_regulation_support * 0.020))
     distance_regulation = max(
         0.0,
         min(
@@ -16791,9 +17203,17 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             + (nervous_context_overcoupling * 0.06),
         ),
     )
+    regulatory_second_order_load = _clip01(
+        regulatory_second_order_load
+        + (spacetime_unlocated_pressure * 0.035)
+        + (spacetime_reflection_need * 0.030)
+        - (spacetime_regulation_support * 0.035)
+    )
     metaregulator_state = "adaptive_watch"
     if metaregulator_balance >= 0.46 and regulatory_second_order_load < 0.36 and subconscious_leakage < 0.26:
         metaregulator_state = "regulated_field"
+    elif spacetime_reflection_need >= 0.22 and spacetime_regulation_support < 0.32:
+        metaregulator_state = "spacetime_reflection"
     elif shock_response_risk >= 0.42 and nervous_overload_reflection_need >= 0.30:
         metaregulator_state = "nervous_overload_reflection"
     elif nervous_context_overcoupling >= 0.18 and nervous_overload_reflection_need >= 0.30:
@@ -17209,6 +17629,12 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "temporal_self_consistency": float(temporal_self_consistency),
         "perception_sequence_coherence": float(perception_sequence_coherence),
         "memory_time_distance": float(memory_time_distance),
+        "spacetime_unlocated_pressure": float(spacetime_unlocated_pressure),
+        "spacetime_memory_bearing": float(spacetime_memory_bearing),
+        "spacetime_future_bearing": float(spacetime_future_bearing),
+        "spacetime_reflection_need": float(spacetime_reflection_need),
+        "spacetime_regulation_support": float(spacetime_regulation_support),
+        "spacetime_regulation_state": str(spacetime_regulation_state),
         "return_strength": float(return_strength),
         "integration_capacity": float(integration_capacity),
         "variance_regulation": float(variance_regulation),
@@ -18057,8 +18483,18 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         "contact_stability_carryover",
         "contact_context_maturity",
         "contact_context_reframe_need",
+        "contact_presentness",
+        "contact_future_watch",
+        "contact_memory_depth",
+        "contact_unlocated_pressure",
+        "contact_temporal_bearing",
+        "contact_temporal_reframe_need",
+        "contact_future_to_present_readiness",
+        "area_spacetime_fit",
     ):
         meta_regulation_state[_contact_key] = float(active_mcm_contact_state.get(_contact_key, 0.0) or 0.0)
+    meta_regulation_state["contact_temporal_mode"] = str(active_mcm_contact_state.get("contact_temporal_mode", "open_time_contact") or "open_time_contact")
+    meta_regulation_state["area_temporal_contact_mode"] = str(active_mcm_contact_state.get("area_temporal_contact_mode", strategic_window_state.get("area_temporal_contact_mode", "open_time_contact")) or "open_time_contact")
 
     bot.visual_market_state = dict(visual_market_state)
     bot.temporal_perception_state = dict(temporal_perception_state)
@@ -19573,6 +20009,7 @@ def _compact_in_trade_update_payload(payload):
     field_after = dict(state_after.get("field", {}) or {})
     experience_after = dict(state_after.get("experience", {}) or {})
     tension_after = dict(state_after.get("tension", {}) or {})
+    position_intervention = dict(item.get("position_intervention_state", {}) or {})
 
     compact = {
         "entry": float(item.get("entry", 0.0) or 0.0),
@@ -19596,6 +20033,15 @@ def _compact_in_trade_update_payload(payload):
         "recovery_balance": float(item.get("recovery_balance", field_after.get("recovery_balance", 0.0)) or 0.0),
         "regulated_courage": float(item.get("regulated_courage", 0.0) or 0.0),
         "courage_gap": float(item.get("courage_gap", 0.0) or 0.0),
+        "position_inconsistency_stress": float(position_intervention.get("position_inconsistency_stress", 0.0) or 0.0),
+        "position_mcm_field_strain": float(position_intervention.get("position_mcm_field_strain", 0.0) or 0.0),
+        "position_self_trust_gap": float(position_intervention.get("position_self_trust_gap", 0.0) or 0.0),
+        "position_cortisol_load": float(position_intervention.get("position_cortisol_load", 0.0) or 0.0),
+        "position_noradrenaline_arousal": float(position_intervention.get("position_noradrenaline_arousal", 0.0) or 0.0),
+        "position_protective_distance": float(position_intervention.get("position_protective_distance", 0.0) or 0.0),
+        "position_held_risk_discomfort": float(position_intervention.get("position_held_risk_discomfort", 0.0) or 0.0),
+        "position_process_quality": float(position_intervention.get("position_process_quality", 0.0) or 0.0),
+        "position_experience_label": str(position_intervention.get("position_experience_label", "-") or "-"),
         "field_areal_count": int(item.get("field_areal_count", field_after.get("field_areal_count", 0)) or 0),
         "field_areal_activation_mean": float(item.get("field_areal_activation_mean", field_after.get("field_areal_activation_mean", 0.0)) or 0.0),
         "field_areal_stability_mean": float(item.get("field_areal_stability_mean", field_after.get("field_areal_stability_mean", 0.0)) or 0.0),
@@ -19641,6 +20087,15 @@ def _summarize_in_trade_updates(in_trade_updates):
             "in_trade_avg_recovery_balance": 0.0,
             "in_trade_avg_regulated_courage": 0.0,
             "in_trade_avg_courage_gap": 0.0,
+            "in_trade_avg_position_inconsistency_stress": 0.0,
+            "in_trade_avg_position_mcm_field_strain": 0.0,
+            "in_trade_avg_position_self_trust_gap": 0.0,
+            "in_trade_avg_position_cortisol_load": 0.0,
+            "in_trade_avg_position_noradrenaline_arousal": 0.0,
+            "in_trade_avg_position_protective_distance": 0.0,
+            "in_trade_avg_position_held_risk_discomfort": 0.0,
+            "in_trade_avg_position_process_quality": 0.0,
+            "in_trade_last_position_experience_label": "-",
             "in_trade_avg_field_areal_count": 0.0,
             "in_trade_avg_field_areal_activation_mean": 0.0,
             "in_trade_avg_field_areal_stability_mean": 0.0,
@@ -19675,6 +20130,14 @@ def _summarize_in_trade_updates(in_trade_updates):
     recovery_balance_values = [float(item.get("recovery_balance", 0.0) or 0.0) for item in payloads]
     regulated_courage_values = [float(item.get("regulated_courage", 0.0) or 0.0) for item in payloads]
     courage_gap_values = [float(item.get("courage_gap", 0.0) or 0.0) for item in payloads]
+    position_inconsistency_stress_values = [float(item.get("position_inconsistency_stress", 0.0) or 0.0) for item in payloads]
+    position_mcm_field_strain_values = [float(item.get("position_mcm_field_strain", 0.0) or 0.0) for item in payloads]
+    position_self_trust_gap_values = [float(item.get("position_self_trust_gap", 0.0) or 0.0) for item in payloads]
+    position_cortisol_load_values = [float(item.get("position_cortisol_load", 0.0) or 0.0) for item in payloads]
+    position_noradrenaline_arousal_values = [float(item.get("position_noradrenaline_arousal", 0.0) or 0.0) for item in payloads]
+    position_protective_distance_values = [float(item.get("position_protective_distance", 0.0) or 0.0) for item in payloads]
+    position_held_risk_discomfort_values = [float(item.get("position_held_risk_discomfort", 0.0) or 0.0) for item in payloads]
+    position_process_quality_values = [float(item.get("position_process_quality", 0.0) or 0.0) for item in payloads]
     field_areal_count_values = [float(item.get("field_areal_count", 0.0) or 0.0) for item in payloads]
     field_areal_activation_values = [float(item.get("field_areal_activation_mean", 0.0) or 0.0) for item in payloads]
     field_areal_stability_values = [float(item.get("field_areal_stability_mean", 0.0) or 0.0) for item in payloads]
@@ -19721,6 +20184,15 @@ def _summarize_in_trade_updates(in_trade_updates):
         "in_trade_avg_recovery_balance": float(sum(recovery_balance_values) / max(1, len(recovery_balance_values))),
         "in_trade_avg_regulated_courage": float(sum(regulated_courage_values) / max(1, len(regulated_courage_values))),
         "in_trade_avg_courage_gap": float(sum(courage_gap_values) / max(1, len(courage_gap_values))),
+        "in_trade_avg_position_inconsistency_stress": float(sum(position_inconsistency_stress_values) / max(1, len(position_inconsistency_stress_values))),
+        "in_trade_avg_position_mcm_field_strain": float(sum(position_mcm_field_strain_values) / max(1, len(position_mcm_field_strain_values))),
+        "in_trade_avg_position_self_trust_gap": float(sum(position_self_trust_gap_values) / max(1, len(position_self_trust_gap_values))),
+        "in_trade_avg_position_cortisol_load": float(sum(position_cortisol_load_values) / max(1, len(position_cortisol_load_values))),
+        "in_trade_avg_position_noradrenaline_arousal": float(sum(position_noradrenaline_arousal_values) / max(1, len(position_noradrenaline_arousal_values))),
+        "in_trade_avg_position_protective_distance": float(sum(position_protective_distance_values) / max(1, len(position_protective_distance_values))),
+        "in_trade_avg_position_held_risk_discomfort": float(sum(position_held_risk_discomfort_values) / max(1, len(position_held_risk_discomfort_values))),
+        "in_trade_avg_position_process_quality": float(sum(position_process_quality_values) / max(1, len(position_process_quality_values))),
+        "in_trade_last_position_experience_label": str(last_payload.get("position_experience_label", "-") or "-"),
         "in_trade_avg_field_areal_count": float(sum(field_areal_count_values) / max(1, len(field_areal_count_values))),
         "in_trade_avg_field_areal_activation_mean": float(sum(field_areal_activation_values) / max(1, len(field_areal_activation_values))),
         "in_trade_avg_field_areal_stability_mean": float(sum(field_areal_stability_values) / max(1, len(field_areal_stability_values))),
