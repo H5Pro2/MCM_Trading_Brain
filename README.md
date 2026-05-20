@@ -1,4 +1,4 @@
-﻿# MCM Trading Brain
+# MCM Trading Brain
 
 ![alt text](files/BILDER/SYSTEMÜBERBLICK.PNG)
 
@@ -68,6 +68,21 @@ Sie sind Angebote, Spannungsachsen und Erfahrungsräume.
 Feste Parameter bleiben Leitplanken.
 Sie sollen den Entwicklungsraum schützen, aber nicht die innere Entwicklung
 ersetzen.
+
+Kern der MCM-/DIO-Idee:
+
+**Emergenz wird nicht programmiert.**
+
+DIO bekommt keinen fertigen emergenten Gedanken und keine fertige
+Gewinnlogik. DIO bekommt einen MCM-Raum, in dem sich aus stabiler Varianz,
+Wahrnehmung, Rückkopplung, Erinnerung, Kontakt, Reflexion und Reife
+emergentes Verhalten bilden kann.
+
+Profit, PnL und gute Trades sind in diesem Verständnis nicht der Kern des
+Systems, sondern mögliche Nebenprodukte einer tragfähigen inneren
+Organisation. Das eigentliche Forschungsziel ist ein Möglichkeitsraum, in
+dem DIO Struktur, Handlung, Nicht-Handlung, Vertrauen und Vorsicht selbst
+entwickeln kann.
 
 ---
 
@@ -159,6 +174,8 @@ tragfähig zu interagieren.
 ---
 
 ## Wie die MCM in DIO arbeitet
+
+![alt text](files/BILDER/WIE_DIE_MCM_IN_DIO_ARBEITET.png)
 
 Die MCM ist in DIO der innere Wahrnehmungsraum.
 Sie ist nicht nur Speicher, Signalfilter oder Rechenmodul, sondern der Ort,
@@ -253,6 +270,8 @@ Die Neurochemie moduliert, wie dieser Körper gerade reagiert.
 
 ## DIOs Sehen
 
+![alt text](files/BILDER/DIOs_SEHEN.png)
+
 DIOs Sehen ist nicht nur äußere Chartansicht.
 Es ist eine mehrdimensionale Wahrnehmung, in der Form, Zeit, Quelle,
 Raumlage, MCM-Kontakt, Tragfähigkeit und Reorganisation zusammenwirken.
@@ -315,6 +334,8 @@ Ein zentraler Gedanke dieses Projekts ist:
 
 **Die MCM ist im Kern ein Spannungsraum.**
 
+![alt text](files/BILDER/MCM_ALS_SPANNUNGSRAUM.png)
+
 Ein Chart wird in diesem Modell nicht nur als Zahlenreihe oder Preisverlauf
 verstanden, sondern als äußerer Spannungsverlauf. Preis, Volumen, Bewegung,
 Impuls, Rückzug, Stau, Bruch, Erholung und Überdehnung bilden eine Art
@@ -373,7 +394,7 @@ sondern eine mögliche Folge einer funktionierenden MCM-Mechanik.
 
 ## Zeit in Sicht der MCM
 
-![alt text](files/BILDER/Zeit_in_Sicht_der_MCM.png)
+![alt text](files/BILDER/ZEIT_IN_SICHT_DER_MCM.png)
 
 Zeit wird in der MCM nicht nur als Uhr oder Timestamp verstanden.
 
@@ -410,7 +431,7 @@ Gegenwart zu behandeln.
 
 ### MCM-Raumzeit-Tiefe
 
-![alt text](files/BILDER/MCM_Raumzeit_Tiefe.png)
+![alt text](files/BILDER/MCM_RAUMZEIT_TIEFE.png)
 
 Für DIO entsteht räumliche Tiefe nicht nur aus Preisabstand oder
 Chartposition. Tiefe entsteht aus dem Zusammenspiel von Entfernung, Energie
@@ -550,23 +571,23 @@ Reorganisation regulieren lernt.
 ## Neurochemische Lesbarkeit
 
 Viele DIO-Variablen wirken bereits wie technische neurochemische Achsen.
-Das Projekt soll diese Achsen lesbar buendeln, ohne echte Biologie zu
+Das Projekt soll diese Achsen lesbar bündeln, ohne echte Biologie zu
 behaupten und ohne bestehende Mechanik hart umzubenennen.
 
 Geplante Alias-Schicht:
 
-- `dopamine_tone`: Erwartung, Lernwert, Prozessqualitaet
+- `dopamine_tone`: Erwartung, Lernwert, Prozessqualität
 - `gaba_inhibition`: Hemmung, `act_watch`, Reifebremse
 - `noradrenaline_arousal`: Druck, Wachheit, Salienz
 - `acetylcholine_focus`: sensorischer Zoom, Formklarheit
-- `serotonin_stability`: Geduld, Stabilitaet, Tragfaehigkeit
+- `serotonin_stability`: Geduld, Stabilität, Tragfähigkeit
 - `cortisol_load`: Belastung, Denk-/Memory-/Positionslast
 - `endorphin_relief`: Entlastung, Prozesswohlbefinden
 - `glutamate_activation`: Aktivierung, Feldenergie, Handlungsenergie
 
 Diese Namen sind technische Funktionsachsen.
 Sie sollen helfen, DIOs innere Lage neurologisch zu lesen:
-Ist DIO gerade uebererregt, gehemmt, fokussiert, stabil, belastet,
+Ist DIO gerade übererregt, gehemmt, fokussiert, stabil, belastet,
 entlastet oder lernoffen?
 
 ---
@@ -703,7 +724,7 @@ Die reifere Reaktion kann sein:
 
 - Das wirkt unsicher, ich beobachte erst einmal.
 
-Wie ein Mensch etwas Heisses nicht jedes Mal anfassen muss,
+Wie ein Mensch etwas Heißes nicht jedes Mal anfassen muss,
 um daraus zu lernen,
 soll das MCM Trading Brain unsichere Marktbereiche beobachten,
 den weiteren Verlauf speichern und später auswerten,
@@ -724,7 +745,7 @@ Reife bedeutet dann:
 Eine offene Position erzeugt eine andere Art von Last als ein Entry.
 
 Nach dem Einstieg muss das System nicht nur den Markt sehen,
-sondern auch den eigenen Umgang mit laufendem Gewinn, Rueckgabe, Verlustnaehe,
+sondern auch den eigenen Umgang mit laufendem Gewinn, Rückgabe, Verlustnähe,
 Zweifel und Eingriffsdruck mitwahrnehmen.
 
 Dieses laufende Neubewerten ist kognitive und regulatorische Last.
@@ -732,19 +753,19 @@ Ein fester TP/SL ist deshalb nicht nur eine technische Regel,
 sondern auch eine Entlastungsstruktur:
 Der Plan wurde vorher gesetzt und muss nicht bei jeder Kerze neu verhandelt werden.
 
-Fuer die MCM ist daraus wichtig:
+Für die MCM ist daraus wichtig:
 
 - hohe Exit-Spannung bedeutet nicht automatisch reifen Exit
 - hohe innere Belastung kann bedeuten,
-  dass das System gerade keine tragfaehige neue Entscheidung treffen sollte
+  dass das System gerade keine tragfähige neue Entscheidung treffen sollte
 - Nicht-Intervention kann reifer sein als Eingriff
-- der vorher gesetzte Plan kann als aeussere Haltestruktur dienen
+- der vorher gesetzte Plan kann als äußere Haltestruktur dienen
 
 Damit entsteht eine eigene Lage:
 
 `intervention_unfit_state`
 
-Das System sieht etwas und fuehlt Belastung,
+Das System sieht etwas und fühlt Belastung,
 aber es erkennt zugleich,
 dass diese Belastung keine gute Entscheidungsbasis ist.
 
@@ -753,10 +774,10 @@ sofort schliessen.
 
 Reife bedeutet:
 den Handlungsdruck wahrnehmen,
-die eigene Entscheidungsfaehigkeit pruefen
+die eigene Entscheidungsfähigkeit prüfen
 und nur dann aktiv eingreifen,
-wenn Strukturverlust, Rueckgabe, Druck/Kapazitaets-Konflikt und innere
-Tragfaehigkeit gemeinsam fuer einen neuen Exit sprechen.
+wenn Strukturverlust, Rückgabe, Druck/Kapazitäts-Konflikt und innere
+Tragfähigkeit gemeinsam für einen neuen Exit sprechen.
 
 ---
 
@@ -773,30 +794,30 @@ Er ist eine Handlung mit innerer Erwartung.
 Der Einstieg sagt sinngemaess:
 
 - Ich erkenne eine Struktur.
-- Diese Struktur traegt eine Richtung.
+- Diese Struktur trägt eine Richtung.
 - Der gesetzte Zielraum wirkt erreichbar.
-- Der Plan hat genug innere und aeussere Tragfaehigkeit.
+- Der Plan hat genug innere und äußere Tragfähigkeit.
 
 Der TP ist damit nicht einfach ein Belohnungspunkt.
-Er ist der Zielraum der urspruenglichen Erwartung.
+Er ist der Zielraum der ursprünglichen Erwartung.
 
 Der SL ist nicht einfach Strafe.
-Er ist die Grenze, an der die urspruengliche Tragfaehigkeit als gebrochen
+Er ist die Grenze, an der die ursprüngliche Tragfähigkeit als gebrochen
 angenommen wird.
 
-Die offene Position prueft laufend:
+Die offene Position prüft laufend:
 
 - Ist mein Ziel noch erreichbar?
 - Ist der Weg zum Ziel noch strukturell intakt?
-- Ist die Gegenbewegung nur Rueckatmung?
-- Oder ist meine urspruengliche Erwartung wirklich gebrochen?
+- Ist die Gegenbewegung nur Rückatmung?
+- Oder ist meine ursprüngliche Erwartung wirklich gebrochen?
 
 Damit entsteht eine wichtige semantische Trennung:
 
-- `exit_decision_pressure`: Es fuehlt sich belastend an.
-- `expectation_break_pressure`: Die urspruengliche Zielerwartung verliert
-  wirklich Tragfaehigkeit.
-- `expectation_hold_support`: Der Plan traegt trotz innerem Druck weiter.
+- `exit_decision_pressure`: Es fühlt sich belastend an.
+- `expectation_break_pressure`: Die ursprüngliche Zielerwartung verliert
+  wirklich Tragfähigkeit.
+- `expectation_hold_support`: Der Plan trägt trotz innerem Druck weiter.
 
 Diese Ebene verhindert,
 dass reine Exit-Nervositaet mit echter Exit-Reife verwechselt wird.
@@ -809,10 +830,10 @@ Er erkennt einen plausiblen Zielraum,
 in dem der Preis eher abgeholt werden kann,
 bevor die Struktur bricht.
 
-Auf DIO uebertragen bedeutet das:
-Die MCM soll spaeter nicht nur sagen:
+Auf DIO übertragen bedeutet das:
+Die MCM soll später nicht nur sagen:
 
-- Ich fuehle Druck.
+- Ich fühle Druck.
 
 Sondern auch:
 
@@ -820,7 +841,7 @@ Sondern auch:
 - Diese Erwartung ist noch tragend.
 - Oder: Diese Erwartung bricht gerade strukturell.
 
-Moegliche Diagnosefelder fuer diese Schicht:
+Mögliche Diagnosefelder für diese Schicht:
 
 - `target_expectation_context`
 - `tp_reachability`
@@ -833,9 +854,9 @@ Moegliche Diagnosefelder fuer diese Schicht:
 
 Beispiel:
 
-Eine Long-Position laeuft stark an und atmet danach zurueck.
-Das innere Feld spuert Exit-Druck.
-Solange Zielraum, Pfad und Planvertrauen noch tragfaehig sind,
+Eine Long-Position läuft stark an und atmet danach zurück.
+Das innere Feld spürt Exit-Druck.
+Solange Zielraum, Pfad und Planvertrauen noch tragfähig sind,
 ist das kein reifer Exit, sondern `exit_pullback_observe`.
 Erst wenn die Zielerwartung selbst bricht,
 also der Weg zum TP nicht mehr tragend wirkt,
@@ -1273,7 +1294,7 @@ Aktuelle operative Priorität:
 
 ## Kollektive MCM-Erweiterung
 
-Eine moegliche spaetere Erweiterung ist ein DIO-Studienraum:
+Eine mögliche spätere Erweiterung ist ein DIO-Studienraum:
 
 Mehrere getrennte MCM-Brains laufen mit eigener Wahrnehmung,
 eigener Formsprache, eigenem Speicher und eigener Entwicklung.
@@ -1283,8 +1304,8 @@ und sollen nicht einfach Signale mitteln.
 
 Interessant ist die Forschungsfrage:
 
-- Entwickeln getrennte DIO-Systeme bei gleichen oder aehnlichen Formen
-  eigene, moeglicherweise variierende Begriffe?
+- Entwickeln getrennte DIO-Systeme bei gleichen oder ähnlichen Formen
+  eigene, möglicherweise variierende Begriffe?
 - Bleibt die wahrgenommene Form vergleichbar,
   auch wenn die interne Sprache unterschiedlich ist?
 - Kann ein System die Erfahrung eines anderen Systems aufnehmen,
@@ -1293,9 +1314,9 @@ Interessant ist die Forschungsfrage:
 
 Die vorsichtige Zielformulierung lautet:
 
-**Uebersetzung gleicher Formen bei eventuell variierender Sprache.**
+**Übersetzung gleicher Formen bei eventuell variierender Sprache.**
 
-Die kollektive Schicht wuerde nicht fragen:
+Die kollektive Schicht würde nicht fragen:
 
 - Wer hat recht?
 
@@ -1308,12 +1329,12 @@ Sondern:
 - Welches Outcome hatte diese Deutung?
 - Gibt es Resonanz, Differenz oder eine neue gemeinsame Verdichtung?
 
-Damit waere Kommunikation nicht Kopieren,
+Damit wäre Kommunikation nicht Kopieren,
 sondern Entwicklung durch Vergleich, Aufnahme und Reflexion.
 
-Diese Ebene gehoert nicht vor die Stabilisierung des Einzel-DIO.
-Sie ist ein spaeterer Forschungszweig fuer soziale Semantik,
-kollektive Auswertung und gemeinsame Lernraeume mehrerer MCM-Brains.
+Diese Ebene gehört nicht vor die Stabilisierung des Einzel-DIO.
+Sie ist ein späterer Forschungszweig für soziale Semantik,
+kollektive Auswertung und gemeinsame Lernräume mehrerer MCM-Brains.
 
 ---
 
@@ -1326,7 +1347,7 @@ Es prüft nur technische Mindestbedingungen wie:
 - Preisgeometrie
 - Risiko
 - Reward
-- RR
+- Mindest-RR als technische Sicherheitsuntergrenze
 
 Es ist damit eine technische Absicherung,
 nicht die eigentliche Denklogik des Systems.

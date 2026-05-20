@@ -3,13 +3,13 @@
 Ziel dieser Datei:
 - klare Funktion jeder Markdown-Datei festlegen
 - Dopplungen vermeiden
-- verhindern, dass Gespraechsnotizen technische Dokumentation aufblaehen
+- verhindern, dass Gesprächsnotizen technische Dokumentation aufblähen
 - festlegen, wo Laufanalysen, Fixes, Mechaniken und Architektur hingehören
 
 Grundsatz:
 Jede Information hat genau einen Hauptort.
-Andere Dateien duerfen darauf verweisen, aber nicht dieselbe Auswertung oder
-dieselbe Erklaerung erneut ausformulieren.
+Andere Dateien dürfen darauf verweisen, aber nicht dieselbe Auswertung oder
+dieselbe Erklärung erneut ausformulieren.
 
 ---
 
@@ -17,13 +17,13 @@ dieselbe Erklaerung erneut ausformulieren.
 
 Status:
 - heiliger Bauplan
-- nur mit ausdruecklicher Zustimmung des Nutzers aendern
+- nur mit ausdrücklicher Zustimmung des Nutzers aendern
 
 Aufgabe:
 - Zielarchitektur
 - Systemphilosophie
 - erlaubte und verbotene Entwicklungsrichtungen
-- grosse Mechanikbloecke
+- große Mechanikbloecke
 - langfristige Ausbaustufen
 
 Darf enthalten:
@@ -31,13 +31,13 @@ Darf enthalten:
 - Zielmechaniken
 - wichtige Architekturentscheidungen
 - Begruendungen, warum eine Mechanik existiert
-- technische Zielachsen, wenn sie zur Systemmechanik gehoeren
+- technische Zielachsen, wenn sie zur Systemmechanik gehören
 
 Darf nicht enthalten:
 - detaillierte einzelne Laufanalysen
 - Tagesprotokolle
 - kleine Bugfix-Historie
-- Rohdaten aus Debug-Laeufen
+- Rohdaten aus Debug-Läufen
 - doppelte Kopien aus `AKTUELLER_STAND.md`
 
 Regel:
@@ -49,12 +49,12 @@ Er beschreibt nicht jeden Schritt, der bereits passiert ist.
 # 2. README.md
 
 Status:
-- fachlicher Einstieg fuer Menschen
+- fachlicher Einstieg für Menschen
 
 Aufgabe:
-- Projekt verstaendlich erklaeren
+- Projekt verständlich erklären
 - MCM-Gedanken fachlich sauber einordnen
-- zentrale Begriffe einfuehren
+- zentrale Begriffe einführen
 - Leser orientieren, ohne jede Mechanik voll auszuformulieren
 
 Darf enthalten:
@@ -85,7 +85,7 @@ Status:
 Aufgabe:
 - wichtige Mechaniken technisch verdichten
 - alte Denkspuren bereinigt in brauchbare Mechanikform bringen
-- erklaeren, wie Mechaniken funktionieren
+- erklären, wie Mechaniken funktionieren
 - nur dauerhaft relevante Konzepte behalten
 
 Darf enthalten:
@@ -102,12 +102,12 @@ Darf nicht enthalten:
 - lange philosophische Prosa
 - Laufberichte
 - doppelte Fixlistenpunkte
-- historische Aussagen, die inzwischen technisch ueberholt sind, ohne klare
+- historische Aussagen, die inzwischen technisch überholt sind, ohne klare
   Kennzeichnung
 
 Regel:
 Wenn eine Idee aus dem Gespraech wichtig ist, wird sie hier **technisch
-uebersetzt**, nicht wortnah archiviert.
+übersetzt**, nicht wortnah archiviert.
 
 ---
 
@@ -118,7 +118,7 @@ Status:
 
 Aufgabe:
 - zentrale Variablen benennen
-- Wertebereich, Ebene, Funktion und Wirkung klaeren
+- Wertebereich, Ebene, Funktion und Wirkung klären
 - verhindern, dass Variablen als harte Trading-Regeln missverstanden werden
 
 Darf enthalten:
@@ -142,6 +142,38 @@ Diese Datei beantwortet:
 
 ---
 
+# 4b. MCM_REZEPTOR_MATRIX.md
+
+Status:
+- Wirkpfad- und Rezeptorübersicht
+
+Aufgabe:
+- Variablen nach Rezeptorfamilie und Zielregler einordnen
+- organisch erlaubte Überlappung von stoerender Doppelwirkung trennen
+- sichtbar machen, ob Signale diagnostisch, weich regulierend oder
+  persistent lernend wirken
+- verhindern, dass dieselbe Last mehrfach auf denselben Zielregler drückt
+
+Darf enthalten:
+- Rezeptorfamilien
+- Zielregler
+- Speicherpfade
+- prüfpflichtige Kaskaden
+- Arbeitsregeln für neue Variablen
+
+Darf nicht enthalten:
+- Laufanalysen
+- philosophische Langtexte
+- komplette Variablenlexika
+- Fix-Historie
+
+Regel:
+Diese Datei beantwortet:
+"Wirkt diese Variable auf einen eigenen Rezeptor oder doppelt auf denselben
+Regler?"
+
+---
+
 # 5. AKTUELLER_STAND.md
 
 Status:
@@ -150,14 +182,14 @@ Status:
 Aufgabe:
 - realen Codezustand zusammenfassen
 - wichtigste aktuelle Debug-Erkenntnisse festhalten
-- aktuelle Engpaesse und naechste Pruefpunkte benennen
+- aktuelle Engpässe und nächste Prüfpunkte benennen
 
 Darf enthalten:
 - zuletzt relevante Laufzusammenfassung
 - kompakte Tabellen oder Stichpunkte zu den wichtigsten Runs
 - aktuelle technische Ist-Mechaniken
 - bekannte Risiken
-- naechste sinnvolle Pruefpunkte
+- nächste sinnvolle Prüfpunkte
 
 Darf nicht enthalten:
 - jede einzelne alte Laufanalyse voll ausgeschrieben
@@ -171,8 +203,8 @@ Regel:
 "Was ist jetzt real und was wissen wir aktuell?"
 
 Laufregel:
-- Nur die letzten oder fachlich wichtigsten Laeufe ausfuehrlich.
-- Aeltere Laeufe werden zu einer kurzen Vergleichstabelle verdichtet oder
+- Nur die letzten oder fachlich wichtigsten Läufe ausfuehrlich.
+- Aeltere Läufe werden zu einer kurzen Vergleichstabelle verdichtet oder
   ausgelagert.
 - Keine komplette Wiederholung in der Fixliste.
 
@@ -185,7 +217,7 @@ Status:
 
 Aufgabe:
 - offene Aufgaben
-- naechste konkrete Pruefpunkte
+- nächste konkrete Prüfpunkte
 - kurze Statusmarkierung
 
 Darf enthalten:
@@ -199,15 +231,15 @@ Darf nicht enthalten:
 - Ergebnisberichte mit vielen Zahlen
 - Forschungsprosa
 - Mechanikerlaeuterungen
-- erledigte Altaufgaben ueber lange Zeit
+- erledigte Altaufgaben über lange Zeit
 
 Regel:
 `FIX_LISTE.md` beantwortet:
-"Was ist als naechstes zu tun?"
+"Was ist als nächstes zu tun?"
 
 Erledigte Punkte:
 - nur kurz behalten
-- spaeter nach `FIX_LISTE_ARCHIV.md` verschieben oder entfernen
+- später nach `FIX_LISTE_ARCHIV.md` verschieben oder entfernen
 
 ---
 
@@ -227,18 +259,18 @@ Darf enthalten:
 
 Darf nicht enthalten:
 - neue aktive Aufgaben
-- aktuelle Prioritaeten
+- aktuelle Prioritäten
 
 ---
 
 # 8. GUI_KONSTRUKTION.md
 
 Status:
-- Konzeptdatei fuer spaetere Web-Oberflaeche
+- Konzeptdatei für spätere Web-Oberflaeche
 
 Aufgabe:
 - GUI-Idee technisch und gestalterisch sammeln
-- Beobachtungsfenster fuer MCM, neuronale Aktivitaet, Aussenwahrnehmung und
+- Beobachtungsfenster für MCM, neuronale Aktivität, Außenwahrnehmung und
   Neurochemie beschreiben
 - verhindern, dass GUI-Ideen in Brain-/Fix-Dateien verstreut werden
 
@@ -246,8 +278,8 @@ Darf enthalten:
 - Panel-/Fensterkonzepte
 - Datenquellen
 - Darstellungsprinzipien
-- technische Richtung fuer spaetere Umsetzung
-- Abgrenzung gegen ueberladene Variablenoberflaechen
+- technische Richtung für spätere Umsetzung
+- Abgrenzung gegen überladene Variablenoberflaechen
 
 Darf nicht enthalten:
 - aktive Brain-Fixpunkte
@@ -260,10 +292,10 @@ Die GUI ist Beobachtungsraum, nicht Entscheidungsmechanik.
 
 ---
 
-# 9. Laufanalysen / Debug-Laeufe
+# 9. Laufanalysen / Debug-Läufe
 
 Grundregel:
-Laufanalysen gehoeren primaer in `AKTUELLER_STAND.md`, aber nur kompakt.
+Laufanalysen gehören primaer in `AKTUELLER_STAND.md`, aber nur kompakt.
 
 Empfohlene Struktur:
 
@@ -279,9 +311,9 @@ Nicht erlaubt:
 - dieselbe Laufanalyse in `FIX_LISTE.md` erneut ausschreiben
 - lange psychologische Deutung in mehreren Dateien doppeln
 
-Optionaler spaeterer Ausbau:
+Optionaler späterer Ausbau:
 - `LAUF_ANALYSEN.md` oder `DEBUG_LAUF_ARCHIV.md`
-  fuer historische Laufdetails, wenn `AKTUELLER_STAND.md` zu gross wird.
+  für historische Laufdetails, wenn `AKTUELLER_STAND.md` zu groß wird.
 
 ---
 
@@ -289,11 +321,11 @@ Optionaler spaeterer Ausbau:
 
 Wenn im Gespraech eine wichtige Idee entsteht:
 
-1. Pruefen:
-   Gehoert sie in den Umsetzungsplan?
+1. Prüfen:
+   Gehört sie in den Umsetzungsplan?
    Falls ja, nur mit Zustimmung.
 
-2. Technisch uebersetzen:
+2. Technisch übersetzen:
    Keine langen Zitate, sondern:
    - Mechanikname
    - Zweck
@@ -301,7 +333,7 @@ Wenn im Gespraech eine wichtige Idee entsteht:
    - Wirkung
    - Abgrenzung gegen harte Regeln
 
-3. Zielort waehlen:
+3. Zielort wählen:
    - Architekturziel: `UMSETZUNGSPLAN.md`
    - technische Mechanik: `WICHTIG_MECHANIKEN.md`
    - Variable: `MCM_VARIABLEN_MECHANIK.md`
@@ -325,6 +357,6 @@ Ab jetzt gilt:
 - `README.md` bleibt Einstieg
 - `UMSETZUNGSPLAN.md` bleibt Bauplan
 
-Naechster sinnvoller Aufraeumschritt:
+Nächster sinnvoller Aufraeumschritt:
 `FIX_LISTE.md` auf aktive Punkte reduzieren und alte erledigte Punkte nach
 `FIX_LISTE_ARCHIV.md` verschieben.

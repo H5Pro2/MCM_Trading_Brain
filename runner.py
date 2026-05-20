@@ -235,9 +235,7 @@ if __name__ == "__main__":
 
     print("-------------------------------------------------------")
     print("RISK MANAGEMENT")
-    print(f"  RR: {Config.RR}")
     print(f"  MIN_RR: {Config.MIN_RR}")
-    print(f"  MAX_RR: {Config.MAX_RR}")
     print(f"  BASE_RISK_PCT: {Config.BASE_RISK_PCT}")
     print(f"  MAX_SL_DISTANCE: {Config.MAX_SL_DISTANCE}")
     print(f"  MIN_TP_DISTANCE: {Config.MIN_TP_DISTANCE}")

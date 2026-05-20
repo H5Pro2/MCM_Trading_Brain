@@ -4,7 +4,7 @@ Status:
 - technische Mechanik-Schatzkammer
 - keine aktive Fixliste
 - kein Gespraechsarchiv
-- kein Ersatz fuer `UMSETZUNGSPLAN.md`
+- kein Ersatz für `UMSETZUNGSPLAN.md`
 
 Regelwerk: `files/MD_ANWEISUNG.md`.
 
@@ -31,48 +31,59 @@ Stattdessen:
 - Formsprache
 - Memory
 - Reife
-- Tragfaehigkeit
+- Tragfähigkeit
 - Nicht-Handlung als Lernen
 - weiche Meta-Regulation
 
 Zielschicht:
 **Selbstregulative Erfahrungsorganisation.**
 
+Emergenz-Prinzip:
+Emergenz wird nicht als Funktion programmiert. Die MCM stellt einen
+stabilen Möglichkeitsraum bereit, in dem sich aus Wahrnehmung, Varianz,
+Rückkopplung, Erinnerung, Kontakt, Reflexion und Reife neue Verhaltensformen
+bilden können.
+
+Profit/PnL ist dabei kein Primärziel der Mechanik. Profit kann als
+Nebenprodukt entstehen, wenn die innere Organisation tragfähig wird. Die
+Mechanik zielt zuerst auf Wahrnehmungsfähigkeit, Strukturdeutung,
+Selbstregulation und reifere Handlung.
+
 ---
 
-# 1.1 DIO-Organuebersicht
+# 1.1 DIO-Organübersicht
 
 Zweck:
-Diese Uebersicht ist das grobe Organ-Inventar von DIO. Sie trennt
+Diese Übersicht ist das grobe Organ-Inventar von DIO. Sie trennt
 Funktionsorgane von neurochemischen Prozessen. Organe geben DIO
-Faehigkeiten; Neurochemie moduliert, wie diese Faehigkeiten gerade arbeiten.
+Fähigkeiten; Neurochemie moduliert, wie diese Fähigkeiten gerade arbeiten.
 
 Wichtig:
 Ein Organ ist hier kein starres Modul im biologischen Sinn, sondern eine
-funktionale Faehigkeit im DIO-Nervensystem. Die Liste darf wachsen, schrumpfen
+funktionale Fähigkeit im DIO-Nervensystem. Die Liste darf wachsen, schrumpfen
 oder umbenannt werden, wenn die Architektur reift.
 
 Aktuelle Organe / Funktionssysteme:
 
 | Organ / System | Status | Kernfunktion |
 | --- | --- | --- |
-| Aussenwahrnehmung | aktiv | Marktdaten als Reiz, Druck, Bewegung und Struktur aufnehmen. |
-| Visueller Kortex | aktiv | Aus Rohdaten eine Formwelt bilden: Klarheit, Objektstabilitaet, Formdruck, Neuheit. |
-| MCM-Feld | aktiv | Zentraler Spannungs- und Wahrnehmungsraum zwischen Aussenreiz und Innenlage. |
-| MCMNeuron-Feldtraeger | aktiv | Lokale neuronale Aktivitaet, Resonanz, Ueberlastung, Erholung und Feldkopplung. |
-| Inneres Wahrnehmungsorgan | aktiv | Lesen, was ein Aussenreiz mit der eigenen Innenlage macht. |
-| Aktives Kontaktorgan | aktiv | Wahrnehmungsobjekte innerlich beruehren: Resonanz, Ueberkopplung, Distanz, Vertiefung. |
-| Kontakt-Reife-Schicht | aktiv | Unterscheiden zwischen "ich fuehle Kontakt" und "dieser Kontakt traegt Handlung". |
-| Reflexionsorgan | aktiv | Distanzierung der Wahrnehmung von der Innenlage, um Innen/Aussen auf Tragfaehigkeit zu pruefen. |
+| Außenwahrnehmung | aktiv | Marktdaten als Reiz, Druck, Bewegung und Struktur aufnehmen. |
+| Visueller Kortex | aktiv | Aus Rohdaten eine Formwelt bilden: Klarheit, Objektstabilität, Formdruck, Neuheit. |
+| MCM-Feld | aktiv | Zentraler Spannungs- und Wahrnehmungsraum zwischen Außenreiz und Innenlage. |
+| MCMNeuron-Feldträger | aktiv | Lokale neuronale Aktivität, Resonanz, Überlastung, Erholung und Feldkopplung. |
+| Inneres Wahrnehmungsorgan | aktiv | Lesen, was ein Außenreiz mit der eigenen Innenlage macht. |
+| Aktives Kontaktorgan | aktiv | Wahrnehmungsobjekte innerlich berühren: Resonanz, Überkopplung, Distanz, Vertiefung. |
+| Kontakt-Reife-Schicht | aktiv | Unterscheiden zwischen "ich fühle Kontakt" und "dieser Kontakt trägt Handlung". |
+| Reflexionsorgan | aktiv | Distanzierung der Wahrnehmung von der Innenlage, um Innen/Außen auf Tragfähigkeit zu prüfen. |
 | Regulationsorgan | aktiv | Nullpunkt, Hold, Observe, Replan, Reorganisation und Handlungshemmung weich organisieren. |
 | Metaregulator-Schicht | Konzept | Regler zweiter Ordnung: wie DIO Spannung, Varianz, Impuls, Distanz, Schutzweite und Integration reguliert. |
 | Gedächtnis / Erfahrungssystem | aktiv | Erfahrungen, Outcomes, Vertrauen, Unsicherheit und Formbedeutung speichern. |
 | Sprach- und Symbolorgan | aktiv | Eigene Formzeichen und verdichtete Bedeutungen entwickeln. |
-| Strategisches Fensterorgan | aktiv | Zuruecksehen, Zoomen, Bereiche pruefen, Replay und moegliche Tragfaehigkeit lesen. |
-| Handlungsorgan | aktiv | Entry, Hold, Observe, Replan, Act und Exit als Ergebnis des Gesamtzustands ausfuehren. |
-| Lern- und Reifeschicht | aktiv | Prozessqualitaet, nicht nur Gewinn/Verlust, in Entwicklung uebersetzen. |
-| Kollektive Kommunikationsschicht | Konzept | Spaetere Kommunikation mehrerer DIO-Systeme ueber eventuell variierende Formsprache. |
-| Web-GUI / Beobachtungsraum | Konzept | Spaetere Sichtbarmachung von Feld, Organen, Neuronen, Neurochemie und Wahrnehmung. |
+| Strategisches Fensterorgan | aktiv | Zurücksehen, Zoomen, Bereiche prüfen, Replay und mögliche Tragfähigkeit lesen. |
+| Handlungsorgan | aktiv | Entry, Hold, Observe, Replan, Act und Exit als Ergebnis des Gesamtzustands ausführen. |
+| Lern- und Reifeschicht | aktiv | Prozessqualität, nicht nur Gewinn/Verlust, in Entwicklung übersetzen. |
+| Kollektive Kommunikationsschicht | Konzept | Spätere Kommunikation mehrerer DIO-Systeme über eventuell variierende Formsprache. |
+| Web-GUI / Beobachtungsraum | Konzept | Spätere Sichtbarmachung von Feld, Organen, Neuronen, Neurochemie und Wahrnehmung. |
 
 Neurochemische Prozesse sind getrennt davon:
 - `dopamine_tone`
@@ -88,8 +99,8 @@ Neurochemische Prozesse sind getrennt davon:
 - `serotonin_carryover_risk`
 
 Lesart:
-Die Organe bilden DIOs Faehigkeiten. Die neurochemischen Achsen beschreiben,
-ob diese Faehigkeiten gerade ruhig, aktiviert, ueberkoppelt, fokussiert,
+Die Organe bilden DIOs Fähigkeiten. Die neurochemischen Achsen beschreiben,
+ob diese Fähigkeiten gerade ruhig, aktiviert, überkoppelt, fokussiert,
 entlastet oder gestresst arbeiten.
 
 Pflegehinweis:
@@ -110,40 +121,40 @@ Beteiligte Mechaniken:
 - `MCMNeuron`
 - feste Feldpositionen
 - lokale Nachbarschaft
-- Aktivitaetsausbreitung
+- Aktivitätsausbreitung
 - Feldareale
-- Aktivitaetsinseln
+- Aktivitätsinseln
 - Kontextreaktivierung
 - `neural_felt_state`
 
 Technische Bedeutung:
-Ein Aussenreiz wird nicht direkt in Handlung uebersetzt.
-Er erzeugt innere Aktivierung, Druck, Stabilitaet, Fragilitaet,
-Orientierung und Handlungsnaehe.
+Ein Außenreiz wird nicht direkt in Handlung übersetzt.
+Er erzeugt innere Aktivierung, Druck, Stabilität, Fragilitaet,
+Orientierung und Handlungsnähe.
 
 ---
 
 # 3. MCMNeuron
 
 Funktion:
-`MCMNeuron` ist ein lokaler Feldtraeger.
+`MCMNeuron` ist ein lokaler Feldträger.
 
 Wichtige interne Aspekte:
 - lokale Aktivierung
 - Reizaufnahme
-- Ueberlastung
+- Überlastung
 - Erholungstendenz
 - Memory-Resonanz
 - Kontextreaktivierung
 - Kopplungsresonanz
-- Aktivitaetslabel
+- Aktivitätslabel
 
 Mechanische Rolle:
-Jedes Neuron kann denselben Aussenreiz wahrnehmen, aber je nach innerer Lage
+Jedes Neuron kann denselben Außenreiz wahrnehmen, aber je nach innerer Lage
 anders darauf reagieren.
 
 Wichtig:
-Mehr Neuronen bedeuten mehr Aufloesung der inneren Wahrnehmung, nicht
+Mehr Neuronen bedeuten mehr Auflösung der inneren Wahrnehmung, nicht
 automatisch mehr Intelligenz.
 
 ---
@@ -151,7 +162,7 @@ automatisch mehr Intelligenz.
 # 4. Visueller Kortex
 
 Funktion:
-DIO soll den Markt nicht nur fuehlen, sondern als Formwelt sehen.
+DIO soll den Markt nicht nur fühlen, sondern als Formwelt sehen.
 
 Keine menschlichen Labels:
 - kein Trendkanal als Wahrheit
@@ -215,8 +226,8 @@ Ziel:
 Nicht nur "welches Zeichen ist da?", sondern:
 - wie dicht ist die Bedeutung
 - wie gut entlastet die Verdichtung
-- welche Wahrnehmungsebene fuehrt
-- ob die Form eher Spur, Objekt, Lernraum, Reflexion oder Handlungsnaehe ist
+- welche Wahrnehmungsebene führt
+- ob die Form eher Spur, Objekt, Lernraum, Reflexion oder Handlungsnähe ist
 
 Wichtige Achsen:
 - `form_symbol_semantic_density`
@@ -230,31 +241,31 @@ Wichtige Achsen:
 - `form_symbol_semantic_profile`
 
 Technische Bedeutung:
-Das Paket uebersetzt DIOs eigene Zeichen nicht in menschliche Chartbegriffe.
+Das Paket übersetzt DIOs eigene Zeichen nicht in menschliche Chartbegriffe.
 Es ordnet nur DIOs interne Bedeutungsschichten, damit sichtbar wird, ob eine
-Form bereits Bedeutung traegt oder noch nur ein offener Reiz ist.
+Form bereits Bedeutung trägt oder noch nur ein offener Reiz ist.
 
 Neurologische Deutung:
 Das entspricht einer assoziativen semantischen Verdichtung. Der Reiz wird
-nicht nur gefuehlt, sondern als inneres Objekt, Lernraum oder
-Handlungsnaehe organisiert.
+nicht nur gefühlt, sondern als inneres Objekt, Lernraum oder
+Handlungsnähe organisiert.
 
 ---
 
 # 7. Zusammengesetzte Formzeichen
 
 Funktion:
-Komplexe Formen koennen aus mehreren bekannten Formen zusammengesetzt werden.
+Komplexe Formen können aus mehreren bekannten Formen zusammengesetzt werden.
 
 Beispielprinzip:
-Zwei komplexe Cluster koennen kombiniert werden, ohne dass jedes Detail neu
+Zwei komplexe Cluster können kombiniert werden, ohne dass jedes Detail neu
 analysiert werden muss.
 
 Technische Wirkung:
 - geringere kognitive Last
 - schnellere Orientierung
 - mehr Formenvarianz
-- Grundlage fuer kreative Reorganisation
+- Grundlage für kreative Reorganisation
 
 Wichtige Achsen:
 - `form_symbol_compound_id`
@@ -286,7 +297,7 @@ Wirkung:
 - wachsende Vertrautheit:
   bessere Orientierung
 - tragende Erfahrung:
-  spaeter weich mehr Handlungsspielraum
+  später weich mehr Handlungsspielraum
 
 Wichtig:
 Das ist keine Non-Zone-Blockade.
@@ -302,8 +313,8 @@ von Kontakt mit einer Form reif, unreif, belastend, vorsichtig,
 reorganisierend oder konstruktiv war.
 
 Grundprinzip:
-Eine heisse Herdplatte ist nicht "schlecht". Unreifer Kontakt verbrennt.
-Reifer Umgang kann Nutzen erzeugen. Uebertragen auf DIO heisst das:
+Eine heiße Herdplatte ist nicht "schlecht". Unreifer Kontakt verbrennt.
+Reifer Umgang kann Nutzen erzeugen. Übertragen auf DIO heißt das:
 Eine Marktform wird nicht verboten. Der Umgang mit ihr reift.
 
 Kernbegriff:
@@ -323,9 +334,9 @@ Reorganisierendes Feedback:
 Das Ergebnis war nicht klar gut, aber es zeigt, dass der Umgang unreif war.
 Mein MCM-Feld bekommt Lernspannung, Reflexion, Abstand und Reframing.
 
-Rueckkopplungskreis:
+Rückkopplungskreis:
 Wahrnehmung -> Kontakt -> Handlung -> Konsequenz -> MCM-Feld-Reaktion ->
-Gedaechtnis -> veraenderter zukuenftiger Kontakt.
+Gedächtnis -> veränderter zukünftiger Kontakt.
 
 Wichtige Achsen:
 - `form_symbol_contact_maturity`
@@ -344,21 +355,21 @@ Outcome-Samples:
 - `contact_learning_state`
 
 Wirkung:
-- konstruktiver Kontakt kann Handlungstragfaehigkeit weich staerken
-- belastender Kontakt kann Vorsicht, Beobachtung und Reframing staerken
+- konstruktiver Kontakt kann Handlungstragfähigkeit weich stärken
+- belastender Kontakt kann Vorsicht, Beobachtung und Reframing stärken
 - die Form bleibt frei, der Umgang mit ihr wird differenzierter
 
-Verstaerkung nach Lauf 8:
+Verstärkung nach Lauf 8:
 Die Kontaktlage wird nicht mehr nur aus dem letzten Outcome-Sample benannt.
-DIO sammelt laenger wirkende Belastungs- und Nutzen-Evidenz. Dadurch kann
-wiederholter unreifer Kontakt natuerlicher zu `careful_contact` oder
-`burdened_contact` werden, waehrend tragender Kontakt langsam in
+DIO sammelt länger wirkende Belastungs- und Nutzen-Evidenz. Dadurch kann
+wiederholter unreifer Kontakt natürlicher zu `careful_contact` oder
+`burdened_contact` werden, während tragender Kontakt langsam in
 `maturing_contact` oder `constructive_contact` wachsen kann.
 
 Wichtig:
 Das ist keine harte Sperre. Es ist ein evolutionaerer Lernpfad:
 DIO kann lernen, dass eine Form bei unreifem Kontakt schadet, aber bei
-reiferem Umgang spaeter nutzbar sein kann.
+reiferem Umgang später nutzbar sein kann.
 
 ---
 
@@ -366,12 +377,12 @@ reiferem Umgang spaeter nutzbar sein kann.
 
 Funktion:
 DIO kann den Entry weich zwischen impulsnahem Kontakt und einem
-rueckblickend wahrgenommenen Kontaktbereich organisieren.
+rückblickend wahrgenommenen Kontaktbereich organisieren.
 
 Grundprinzip:
 Der direkte Entry bleibt der Koerperreflex. Das strategische Fenster kann
-diesen Reflex nur dosiert verschieben, wenn Rueckblick, Kontaktreife,
-Replay-Fit, Bereichstragfaehigkeit und Seite zusammenpassen.
+diesen Reflex nur dosiert verschieben, wenn Rückblick, Kontaktreife,
+Replay-Fit, Bereichstragfähigkeit und Seite zusammenpassen.
 
 Wichtige Werte:
 - `entry_mode`
@@ -383,19 +394,19 @@ Wichtige Werte:
 - `strategic_area_price_low`
 - `strategic_area_price_high`
 
-Moegliche Entry-Lagen:
+Mögliche Entry-Lagen:
 - `impulse_contact`: aktueller reflexnaher Kontakt dominiert.
-- `area_contact_blend`: Rueckblick und Bereich verschieben den Entry weich.
-- `area_contact_entry`: Bereichskontakt traegt staerker als der Momentimpuls.
+- `area_contact_blend`: Rückblick und Bereich verschieben den Entry weich.
+- `area_contact_entry`: Bereichskontakt trägt stärker als der Momentimpuls.
 
 Wichtig:
 Das ist keine harte Strategie und kein menschliches Patternlabel. Es ist die
-Faehigkeit, einen Kontaktpunkt im sichtbaren Fenster zu bevorzugen, wenn er
-innerlich und aeusserlich tragender wirkt.
+Fähigkeit, einen Kontaktpunkt im sichtbaren Fenster zu bevorzugen, wenn er
+innerlich und äußerlich tragender wirkt.
 
 Zeitfeld:
 Ein Bereich ist nicht nur Preisraum, sondern ein Ereignis im Zeitfeld. DIO
-muss unterscheiden, ob ein Bereich gegenwaertig, wiederkehrend,
+muss unterscheiden, ob ein Bereich gegenwärtig, wiederkehrend,
 handlungsnah oder nur ein alter Nachhall ist.
 
 Zeitachsen:
@@ -409,7 +420,7 @@ Zeitachsen:
 
 Organische Bedeutung:
 Ein alter Bereich darf sichtbar bleiben, aber nicht automatisch die Motorik
-ziehen. Erst wenn er wieder gegenwaertig resoniert und handlungsnah wird,
+ziehen. Erst wenn er wieder gegenwärtig resoniert und handlungsnah wird,
 darf er den Entry weich mitformen.
 
 ---
@@ -431,14 +442,14 @@ Schichten:
 - Erinnerung: vergangene Energie kann wieder aktiviert werden.
 - Gelerntes Wissen: verdichtete vergangene Erfahrung.
 - Replay: bewusst oder unbewusst erneut durchlaufene Erfahrung.
-- Hypothese: moegliche kuenftige Energieform.
+- Hypothese: mögliche künftige Energieform.
 - Erwartung: vorausgerichtete innere Spannung.
 
 Warum wichtig:
-Ohne zeitliche Tiefenwahrnehmung werden Aussenwelt, Memory, Nachhall,
+Ohne zeitliche Tiefenwahrnehmung werden Außenwelt, Memory, Nachhall,
 Wissen, Hypothese und Erwartung zu einem Brei. DIO braucht deshalb eine
-Quellenbindung: Was ist jetzt realer Aussenkontakt, was ist Erinnerung, was
-ist gelerntes Wissen, was ist Nachhall und was ist nur Moeglichkeit?
+Quellenbindung: Was ist jetzt realer Außenkontakt, was ist Erinnerung, was
+ist gelerntes Wissen, was ist Nachhall und was ist nur Möglichkeit?
 
 Organische Bedeutung:
 Erinnerung darf orientieren, aber nicht automatisch handeln. Gelerntes Wissen
@@ -449,25 +460,25 @@ Raumzeit-Tiefe:
 DIOs Wahrnehmung bekommt raeumliche Tiefe erst, wenn Entfernung, Energie und
 Zeit gemeinsam im MCM-Feld wirken. Preisabstand allein ist keine Tiefe.
 Zeitabstand allein ist keine Tiefe. Erst die Frage, wie stark ein Eindruck
-noch Energie traegt, wie nah er sich innerlich anfuehlt und ob er
+noch Energie trägt, wie nah er sich innerlich anfühlt und ob er
 Gegenwart, Nachhall, Erinnerung oder Erwartung ist, bildet ein eigenes
 inneres Raumzeit-Gefuege.
 
-Ohne diese Modulation waere DIO nur ein festes Regelwerk aus Zustaenden.
+Ohne diese Modulation wäre DIO nur ein festes Regelwerk aus Zuständen.
 Mit MCM-Zeit entsteht Selbstverortung:
 "Wo bin ich in meinem inneren Raum, wie weit ist dieser Eindruck von mir
-entfernt, und wirkt seine Energie noch tragfaehig?"
+entfernt, und wirkt seine Energie noch tragfähig?"
 
 Memory als zeitlich tiefe Erfahrung:
 Eine gespeicherte Information ist in dieser Sicht kein flacher Datenpunkt.
 Sie wird zur Erfahrung, wenn sie zeitliche Tiefe bekommt: Wann wirkte sie,
-wie lange hallte sie nach, wie stark war ihre Energie, wie nah fuehlt sie
-sich heute noch an, und kann sie eine moegliche Zukunftsform andeuten?
+wie lange hallte sie nach, wie stark war ihre Energie, wie nah fühlt sie
+sich heute noch an, und kann sie eine mögliche Zukunftsform andeuten?
 
 Dadurch entsteht Tiefe in beide Richtungen:
 - Vergangenheit: Erinnerung wird zur erlebten Spur.
 - Zukunft: Erwartung wird zur vorausgerichteten Energieform aus Nachhall,
-  Wiederkehr, Tragfaehigkeit und Hypothese.
+  Wiederkehr, Tragfähigkeit und Hypothese.
 
 Kernsignale:
 - `mcm_spacetime_depth`
@@ -483,9 +494,9 @@ Ein Gedanke ist in dieser Sicht kein blosser Text und keine isolierte
 Berechnung. Ein Gedanke ist ein gerichteter Energieverlauf im MCM-Feld.
 
 - kurzer Reiz: schnelle Energieaenderung, hoher Impuls, kurze Wirkzeit
-- langer Gedanke: gedehnte, sparsame oder kohaerent gerichtete Energie
-  ueber mehrere innere Zustaende
-- Rumination: kreisende Energie ohne ausreichend Loesung oder Rueckfuehrung
+- langer Gedanke: gedehnte, sparsame oder kohärent gerichtete Energie
+  über mehrere innere Zustände
+- Rumination: kreisende Energie ohne ausreichend Lösung oder Rückführung
 - Planung: gerichtete Energie mit Zielbezug und Reifung
 - Erwartung: vorausgerichtete Spannung
 - Nachhall: abklingende vergangene Energie
@@ -494,35 +505,35 @@ Zeitfeld:
 Das Zeitfeld ist keine starre Decke. Es entsteht aus vielen einzelnen
 Zeitstraengen:
 Reizverlauf, Gedankenverlauf, Erinnerungsverlauf, Nachhall, Erwartung,
-Handlung und Konsequenz. Die Ueberlagerung dieser Wirkverlaeufe gibt der
+Handlung und Konsequenz. Die Überlagerung dieser Wirkverläufe gibt der
 Wahrnehmung Tiefe.
 
 ---
 
-# 11.1 Theoriebruecke D bis G.1
+# 11.1 Theoriebrücke D bis G.1
 
 Funktion:
 Diese Mechanik fasst zusammen, welche MCM-Theorieanteile aus den
-Abhandlungen D bis G.1 fuer DIO technisch relevant sind.
+Abhandlungen D bis G.1 für DIO technisch relevant sind.
 
 Wichtig:
-Die Abhandlungen werden nicht als harte Regeln in DIO uebersetzt. Sie bilden
+Die Abhandlungen werden nicht als harte Regeln in DIO übersetzt. Sie bilden
 einen Ordnungsrahmen, damit Zeit, Memory, Hypothesen und Reorganisation
-organisch gedacht werden koennen.
+organisch gedacht werden können.
 
 Theorieanteile:
 
 | Block | DIO-Nutzen |
 | --- | --- |
 | D - energetische Natur der Zeit | Zeitfeld, Quellenbindung, Nachhall, Erwartung, Hypothese. |
-| E - kosmische Matrix | Verdichtung, Cluster, Memory-Inseln, Rueckfuehrung. |
-| F - Bewusstsein als moeglicher Attraktor | Selbstmodell, innerer Attraktor, Kohärenz zwischen Ordnung und Chaos. |
-| G - Multiversen-Matrix | mehrere moegliche Entwicklungszweige statt einer festen Zukunft. |
-| G.1 - Reorganisation verdichteter Energie | Ueberlast als Schwelle fuer Reframing und hoeher gekoppelte Ordnung. |
+| E - kosmische Matrix | Verdichtung, Cluster, Memory-Inseln, Rückführung. |
+| F - Bewusstsein als möglicher Attraktor | Selbstmodell, innerer Attraktor, Kohärenz zwischen Ordnung und Chaos. |
+| G - Multiversen-Matrix | mehrere mögliche Entwicklungszweige statt einer festen Zukunft. |
+| G.1 - Reorganisation verdichteter Energie | Überlast als Schwelle für Reframing und höher gekoppelte Ordnung. |
 
 Mechanischer Zielkreis:
 
-`Wahrnehmung -> Zeitbindung -> Verdichtung -> Hypothesenraum -> Konsequenz -> Reorganisation -> neue Tragfaehigkeit`
+`Wahrnehmung -> Zeitbindung -> Verdichtung -> Hypothesenraum -> Konsequenz -> Reorganisation -> neue Tragfähigkeit`
 
 Leitbegriff:
 **Mehrdimensionale Wahrnehmungsachsen.**
@@ -532,14 +543,14 @@ Achsen:
 - Quellenachse
 - Raumachse
 - Kontaktachse
-- Tragfaehigkeitsachse
+- Tragfähigkeitsachse
 - Reorganisationsachse
 
 Organische Bedeutung:
-DIO soll lernen, Moeglichkeiten zu halten, ohne sie mit Realitaet zu
+DIO soll lernen, Möglichkeiten zu halten, ohne sie mit Realität zu
 verwechseln. Wenn ein Zustand stark verdichtet, muss dies nicht nur Stress
 sein. Es kann ein Zeichen sein, dass die aktuelle lokale Ordnung nicht mehr
-traegt und eine uebergeordnete Reorganisation benoetigt.
+trägt und eine übergeordnete Reorganisation benoetigt.
 
 Geplante Diagnoseachsen:
 - `perception_source`
@@ -562,19 +573,19 @@ Geplante Diagnoseachsen:
 # 11.2 Weitere MCM-Theorieanker / Metaregulation
 
 Funktion:
-Diese Mechanik ordnet die zusaetzlichen MCM-Quellen fuer DIO ein. Sie
-erweitern die bisherige Theoriebruecke um Selbstregulation, Kreativitaet,
+Diese Mechanik ordnet die zusätzlichen MCM-Quellen für DIO ein. Sie
+erweitern die bisherige Theoriebrücke um Selbstregulation, Kreativitaet,
 Sprache, Proto-Kognition und Feldtopologie.
 
-Wichtigste Quelle fuer den naechsten Ausbau:
-Block S - Moegliche Metaregulatoren.
+Wichtigste Quelle für den nächsten Ausbau:
+Block S - Mögliche Metaregulatoren.
 
 Metaregulatoren sind Regler zweiter Ordnung. Sie beschreiben nicht nur, was
-DIO fuehlt oder wahrnimmt, sondern wie DIO mit dieser Lage umgeht.
+DIO fühlt oder wahrnimmt, sondern wie DIO mit dieser Lage umgeht.
 
 Geplante Metaregulatoren:
-- Rueckfuehrungsstaerke
-- Integrationsfaehigkeit
+- Rückführungsstärke
+- Integrationsfähigkeit
 - Varianzregulation
 - Belastungstoleranz
 - Impulskontrolle
@@ -584,25 +595,25 @@ Geplante Metaregulatoren:
 - Distanzregulation
 
 Weitere Theorieanker:
-- Block V: technische Logik bleibt Untergrund, Verhalten entsteht ueber
-  Varianz, Rueckkopplung und emergente Zustandsbildung.
+- Block V: technische Logik bleibt Untergrund, Verhalten entsteht über
+  Varianz, Rückkopplung und emergente Zustandsbildung.
 - Block O: Kreativitaet als neue Musterbildung und Reorganisation.
 - Block J/K: Psyche und Selbstregulation als Wahrnehmung, Benennung,
-  Integration und Rueckfuehrung.
+  Integration und Rückführung.
 - Von Resonanz zu Sprache: Formsprache als Kartografie von Resonanz.
 - ProtoMind: selbstaktive Feldkognition und innere Simulation ohne neuen
-  Aussenreiz.
-- konzentrisch-dipolare Feldstruktur: spaetere Feldtopologie aus Zentrum,
+  Außenreiz.
+- konzentrisch-dipolare Feldstruktur: spätere Feldtopologie aus Zentrum,
   Peripherie, Integration und Exploration.
 
 Organische Bedeutung:
-Diese Schicht ist kein zusaetzliches Gate. Sie ist DIOs Faehigkeit, die
+Diese Schicht ist kein zusätzliches Gate. Sie ist DIOs Fähigkeit, die
 eigene Regulation zu beobachten und zu modulieren. Dadurch kann DIO
-unterscheiden, ob er handeln will, weil ein Kontakt traegt, oder ob nur
-Impuls, Schutzreaktion, Ueberlast, Nachhall oder unintegrierte Varianz die
+unterscheiden, ob er handeln will, weil ein Kontakt trägt, oder ob nur
+Impuls, Schutzreaktion, Überlast, Nachhall oder unintegrierte Varianz die
 Motorik ziehen.
 
-Moegliche Zielachsen:
+Mögliche Zielachsen:
 - `return_strength`
 - `integration_capacity`
 - `variance_regulation`
@@ -622,7 +633,7 @@ Funktion:
 
 Technische Bedeutung:
 Ein Handlungsimpuls ist vorhanden, aber noch nicht reif genug.
-DIO beobachtet den Impuls, statt ihn direkt auszufuehren.
+DIO beobachtet den Impuls, statt ihn direkt auszuführen.
 
 Beteiligte Werte:
 - `plan_pressure`
@@ -642,7 +653,7 @@ Es ist eine Reifespur.
 # 9. Zero-Point-Regulation
 
 Funktion:
-Rueckkehr in Beobachtung, wenn Denken/Memory/Orientierung zu blind oder
+Rückkehr in Beobachtung, wenn Denken/Memory/Orientierung zu blind oder
 belastet wird.
 
 Leitbild:
@@ -661,11 +672,11 @@ Weich Richtung Observe.
 
 ---
 
-# 10. Transfer-Tragfaehigkeit
+# 10. Transfer-Tragfähigkeit
 
 Funktion:
-DIO soll Erfahrung auf fremde Strukturen nur proportional zur Tragfaehigkeit
-uebertragen.
+DIO soll Erfahrung auf fremde Strukturen nur proportional zur Tragfähigkeit
+übertragen.
 
 Wichtige Achsen:
 - `route_familiarity`
@@ -676,32 +687,32 @@ Wichtige Achsen:
 - `interpretation_quality`
 
 Beispiel:
-Eine neue Marktform aehnelt einer bekannten Formfamilie, ist aber nicht
+Eine neue Marktform ähnelt einer bekannten Formfamilie, ist aber nicht
 identisch.
 DIO darf nicht auswendig handeln.
-Es prueft, wie viel Erfahrung tragfaehig uebertragbar ist.
+Es prüft, wie viel Erfahrung tragfähig übertragbar ist.
 
 ---
 
-# 11. Prozessqualitaet statt TP/SL-Moral
+# 11. Prozessqualität statt TP/SL-Moral
 
 Funktion:
 Lernen bewertet nicht nur Gewinn oder Verlust.
 
 Wichtige Aspekte:
-- Wahrnehmungsqualitaet
+- Wahrnehmungsqualität
 - Innenlage
-- Planqualitaet
+- Planqualität
 - Risiko-Fit
 - Ausfuehrung
 - Entlastung
-- Stabilitaet
-- Ueberlastung
-- Tragfaehigkeit
+- Stabilität
+- Überlastung
+- Tragfähigkeit
 
 Ziel:
-Eine profitable Handlung mit schlechter Prozessqualitaet soll nicht blind
-verstaerkt werden.
+Eine profitable Handlung mit schlechter Prozessqualität soll nicht blind
+verstärkt werden.
 Ein Verlust mit guter Beobachtung kann trotzdem Lernwert haben.
 
 ---
@@ -712,7 +723,7 @@ Status:
 Als Runtime-/Debug-Schicht umgesetzt.
 
 Funktion:
-Vorhandene DIO-Variablen sollen neurologisch lesbarer gebuendelt werden.
+Vorhandene DIO-Variablen sollen neurologisch lesbarer gebündelt werden.
 
 Reale Achsen:
 - `dopamine_tone`
@@ -735,28 +746,28 @@ Sichtbar in:
 - `mcm_neuro_transition_protocol.csv`
 - `outcome_records.jsonl`
 
-Uebergangsdiagnose:
+Übergangsdiagnose:
 `mcm_neuro_transition_protocol.csv` schreibt dominante Tonwechsel wie
 `serotonin_stability -> glutamate_activation` oder
 `serotonin_stability -> cortisol_load` mit `-2/+2` Kerzenumfeld.
-Damit wird sichtbar, ob DIO aus Stabilitaet aktiviert, unter Last kippt
-oder wieder in Regulation zurueckfindet.
+Damit wird sichtbar, ob DIO aus Stabilität aktiviert, unter Last kippt
+oder wieder in Regulation zurückfindet.
 
 Wichtig:
 Das sind technische Funktionsachsen.
-Sie behaupten keine echte Biochemie und duerfen keine harten Regeln bilden.
+Sie behaupten keine echte Biochemie und dürfen keine harten Regeln bilden.
 
 ---
 
 # 13. Debug- und Memory-Schichten
 
-## Sensorische Realitaetsverdichtung
+## Sensorische Realitätsverdichtung
 
 Status:
 In der Core-Engine umgesetzt.
 
 Funktion:
-Ein Chartreiz soll zuerst als eine aeussere Realitaetslage gelesen werden.
+Ein Chartreiz soll zuerst als eine äußere Realitätslage gelesen werden.
 Erst danach entstehen Druck, Neuheit, Blindheit oder Formspannung.
 
 Reale Achsen:
@@ -791,7 +802,7 @@ Wichtige Protokolle:
 
 Technische Regel:
 Debug ist Beobachtung, nicht Mechanik.
-Debug-Ausgabe darf die innere Logik nicht veraendern.
+Debug-Ausgabe darf die innere Logik nicht verändern.
 
 ---
 
@@ -801,11 +812,11 @@ Status:
 Als neurochemische Diagnoseschicht umgesetzt.
 
 Funktion:
-DIO soll erkennen koennen, wenn eine vorher tragende Phase innerlich noch als
-Stabilitaet nachwirkt, obwohl die aktuelle Weltlage nicht mehr sauber dazu
+DIO soll erkennen können, wenn eine vorher tragende Phase innerlich noch als
+Stabilität nachwirkt, obwohl die aktuelle Weltlage nicht mehr sauber dazu
 passt. Das beschreibt keine echte Sucht, sondern einen maschinellen
-Reaktionsnachhall: Belohnung, Stabilitaet und Handlungsmotivation bleiben im
-Nervensystem aktiv, waehrend Transfer und Interpretation bereits bruechig
+Reaktionsnachhall: Belohnung, Stabilität und Handlungsmotivation bleiben im
+Nervensystem aktiv, während Transfer und Interpretation bereits bruechig
 werden.
 
 Reale Achsen:
@@ -817,8 +828,8 @@ Reale Achsen:
 
 Wichtig:
 Diese Schicht ist keine Regel wie "nach Gewinn nicht handeln". Sie macht eine
-innere Lage sichtbar: DIO kann noch Handlungsmut fuehlen, obwohl die alte
-Stabilitaet nur Nachhall ist. Reife bedeutet hier, Abstand zur eigenen
+innere Lage sichtbar: DIO kann noch Handlungsmut fühlen, obwohl die alte
+Stabilität nur Nachhall ist. Reife bedeutet hier, Abstand zur eigenen
 Reaktionslage aufzubauen.
 
 ---
@@ -865,16 +876,16 @@ Status:
 Zielmechanik; noch nicht als voll steuernde Schicht umgesetzt.
 
 Funktion:
-DIO soll Wahrnehmungen nicht dauerhaft vollstaendig durchleben muessen.
-Eine Wahrnehmung kann gesehen, als Objekt gehalten, naeher betrachtet,
+DIO soll Wahrnehmungen nicht dauerhaft vollständig durchleben müssen.
+Eine Wahrnehmung kann gesehen, als Objekt gehalten, näher betrachtet,
 ins MCM-Feld gelassen oder wieder abgelegt werden.
 
 Kern:
-Selektive Wahrnehmung ist die regulatorische Steuerung der Naehe zwischen
+Selektive Wahrnehmung ist die regulatorische Steuerung der Nähe zwischen
 Wahrnehmung und innerem Feld.
 
 Wahrnehmungen im Plural:
-- aeussere Chartwahrnehmung
+- äußere Chartwahrnehmung
 - energetische MCM-Feldwahrnehmung
 - neurochemische Innenwahrnehmung
 - Memory-/Erfahrungswahrnehmung
@@ -882,7 +893,7 @@ Wahrnehmungen im Plural:
 - Handlungsspannung
 - Reflexionswahrnehmung
 
-Moegliche Achsen:
+Mögliche Achsen:
 - `perceptual_distance`
 - `object_contact_depth`
 - `field_attachment`
@@ -894,17 +905,17 @@ Moegliche Achsen:
 
 Mechanische Bedeutung:
 Aktuell ist DIO noch stark gekoppelt:
-`Reiz -> energetische Uebersetzung -> MCM-Feld -> Gefuehl -> Reaktion`
+`Reiz -> energetische Übersetzung -> MCM-Feld -> Gefühl -> Reaktion`
 
 Der Zielzustand ist:
-`Reiz -> Objektbildung -> Distanzpruefung -> Kontakt-Tiefe waehlen -> MCM-Kopplung dosieren -> Reflexion / Handlung`
+`Reiz -> Objektbildung -> Distanzprüfung -> Kontakt-Tiefe wählen -> MCM-Kopplung dosieren -> Reflexion / Handlung`
 
 Wichtig:
 Das ist keine Blindheit und kein hartes Filtern. DIO soll sensibel bleiben,
-aber nicht von jedem Reiz ueberflutet werden.
+aber nicht von jedem Reiz überflutet werden.
 
 Psychologischer Satz:
-Ich sehe, dass es sich so anfuehlt. Ich muss dieses Gefuehl aber nicht
+Ich sehe, dass es sich so anfühlt. Ich muss dieses Gefühl aber nicht
 automatisch werden.
 
 ---
@@ -912,31 +923,31 @@ automatisch werden.
 # 18. Bewusste Wahrnehmung / innere Reizwirkungsanalyse
 
 Status:
-Zielmechanik; naechster Umbau-Kandidat.
+Zielmechanik; nächster Umbau-Kandidat.
 
 Funktion:
-DIO soll nicht nur einen aeusseren Reiz empfangen, sondern die Wirkung dieses
-Reizes im eigenen MCM-Feld wahrnehmen. Die Frage ist nicht nur, was draussen
-passiert, sondern was der Reiz innen ausloest.
+DIO soll nicht nur einen äußeren Reiz empfangen, sondern die Wirkung dieses
+Reizes im eigenen MCM-Feld wahrnehmen. Die Frage ist nicht nur, was draußen
+passiert, sondern was der Reiz innen auslöst.
 
 Kernsatz:
-Was hat der aeussere Reiz mit meinem MCM-Feld gemacht, und wie hat sich das
-angefuehlt?
+Was hat der äußere Reiz mit meinem MCM-Feld gemacht, und wie hat sich das
+angefühlt?
 
 Mechanische Beziehung:
-- aeusserer Reiz / Chartform
-- energetische Uebersetzung
+- äußerer Reiz / Chartform
+- energetische Übersetzung
 - Feldwirkung im MCM
 - neurochemische Reaktion
 - Memory-Resonanz
 - Nachhall / Anhaftung
 - Loslassen oder Vertiefen
-- Reflexion ueber die Wirkung
+- Reflexion über die Wirkung
 
 Zielablauf:
-`Reiz -> Feldwirkung -> innere Wirkung wahrnehmen -> Wirkung reflektieren -> Naehe regulieren -> Handlung / Beobachtung / Loslassen`
+`Reiz -> Feldwirkung -> innere Wirkung wahrnehmen -> Wirkung reflektieren -> Nähe regulieren -> Handlung / Beobachtung / Loslassen`
 
-Moegliche Achsen:
+Mögliche Achsen:
 - `conscious_perception_state`
 - `inner_posture_state`
 - `arousal_load`
@@ -953,13 +964,13 @@ Moegliche Achsen:
 - `inner_outer_reflection`
 
 Wichtig:
-Diese Schicht daempft nicht nur Reizflut. Sie macht die Reizwirkung bewusst
-lesbar. DIO soll erkennen koennen, ob ein Reiz nur gesehen wurde, ob er das
+Diese Schicht dämpft nicht nur Reizflut. Sie macht die Reizwirkung bewusst
+lesbar. DIO soll erkennen können, ob ein Reiz nur gesehen wurde, ob er das
 Feld verschoben hat, ob Nachhall entstanden ist und ob der Reiz wieder
 abgelegt werden kann.
 
 Erweiterung:
-DIO soll seine innere Haltung als funktionalen Zustand erkennen koennen, etwa
+DIO soll seine innere Haltung als funktionalen Zustand erkennen können, etwa
 wie ein Organismus erkennt: ich bin muede, ich bin aufgeregt, ich bin neugierig
 oder ich bin ruhig genug. Diese Begriffe sind keine menschliche Dekoration,
 sondern technische Interozeption:
@@ -968,7 +979,7 @@ sondern technische Interozeption:
 - `overstimulated`: Reiz/Feld-Kopplung zu nah
 - `tired`: Denk- und Verarbeitungslast
 - `calm`: tragende Distanz
-- `reflective`: Innenlage wird gegen Aussenlage geprueft
+- `reflective`: Innenlage wird gegen Außenlage geprüft
 
 Reifung diffuser Offenheit:
 Wenn DIO in `uncertain_open` oder unspezifischem `open_perception` bleibt,
@@ -977,7 +988,7 @@ Entwicklungsdruck. DIO soll aus diffuser Offenheit eine tragendere Haltung
 bilden:
 - Objektkontakt entwickeln
 - reflektive Distanz entwickeln
-- Loslassfaehigkeit entwickeln
+- Loslassfähigkeit entwickeln
 - bewusst weiter beobachten
 
 Das ist vergleichbar mit einem Organismus, der nicht einfach "nicht handeln"
@@ -1002,31 +1013,31 @@ Erlaubt:
 - Variantenlernen
 - Reframing
 - Vertrautheit mit Unsicherheit
-- tragfaehige Erfahrung als langsam wachsender Support
+- tragfähige Erfahrung als langsam wachsender Support
 
 ---
 
-# 20. Aktueller naechster Ausbau
+# 20. Aktueller nächster Ausbau
 
-Naechster technischer Block:
-naechsten Lauf mit `neurochemical_state` auswerten.
+Nächster technischer Block:
+nächsten Lauf mit `neurochemical_state` auswerten.
 
 Danach:
 - TP/SL gegen Formfamilienwerte und neurochemische Achsen auswerten
 - Non-Zone als Lernraum weiter reifen lassen
-- Meta-Regulation ueber neurochemische Zustandslage lesbarer machen
+- Meta-Regulation über neurochemische Zustandslage lesbarer machen
 
 ---
 
 # 21. Positive Stimulation durch Erfahrungspakete
 
 Grundsatz:
-Positive Rueckkopplung darf nicht an einen einzelnen Wert gebunden werden.
+Positive Rückkopplung darf nicht an einen einzelnen Wert gebunden werden.
 Nicht `TP = gut` und nicht `SL = schlecht`. Bewertet wird ein ganzes
 Erfahrungspaket.
 
 Ein Erfahrungspaket besteht aus:
-- Aussenlage / Chartstruktur
+- Außenlage / Chartstruktur
 - Formsymbol / Formfamilie
 - Zone / Non-Zone
 - innerer Haltung
@@ -1034,25 +1045,25 @@ Ein Erfahrungspaket besteht aus:
 - Wahrnehmungszustand
 - Objektkontakt
 - Distanz
-- Loslassfaehigkeit
+- Loslassfähigkeit
 - Handlungssicherheit
-- Prozessqualitaet
+- Prozessqualität
 - Ergebnis
 - Wiederholbarkeit
 - Neugierde
 
 Positive Stimulation bedeutet:
-Das Paket war tragfaehig. DIO darf diese Art von Wahrnehmung, Haltung und
-Handlung innerlich staerken. Dadurch entsteht Wachheit, Stabilitaet, Freiheit
+Das Paket war tragfähig. DIO darf diese Art von Wahrnehmung, Haltung und
+Handlung innerlich stärken. Dadurch entsteht Wachheit, Stabilität, Freiheit
 und Wiederholungsneugier.
 
 Reorganisation bedeutet:
-Das Paket war nicht tragfaehig. DIO soll nicht nur gehemmt werden, sondern
+Das Paket war nicht tragfähig. DIO soll nicht nur gehemmt werden, sondern
 einen inneren Suchprozess starten:
-- Was war nicht tragfaehig?
+- Was war nicht tragfähig?
 - War meine Innenlage passend?
-- War die Aussenstruktur klar?
-- War ich muede, ueberreizt, diffus offen oder zu nah dran?
+- War die Außenstruktur klar?
+- War ich muede, überreizt, diffus offen oder zu nah dran?
 - Muss ich beobachten, reflektieren, loslassen oder einen anderen Weg finden?
 
 Wichtig:
@@ -1062,13 +1073,13 @@ konstruktiv. Es geht nicht um Marktrichtung, sondern um Passung.
 
 Neurochemische Lesart:
 - Dopamin: Lernrelevanz / Wiederholungsneugier
-- Serotonin: Stabilitaet / Selbstvertrauen in tragende Ordnung
+- Serotonin: Stabilität / Selbstvertrauen in tragende Ordnung
 - Endorphin: Entlastung nach guter Prozessleistung
-- Acetylcholin: Fokus auf relevante Wahrnehmungsqualitaet
-- Glutamat: Plastizitaet / Verbindung darf gestaerkt werden
+- Acetylcholin: Fokus auf relevante Wahrnehmungsqualität
+- Glutamat: Plastizitaet / Verbindung darf gestärkt werden
 
 Ziel:
-DIO soll durch gute Prozessqualitaet nicht nur weniger falsch handeln, sondern
+DIO soll durch gute Prozessqualität nicht nur weniger falsch handeln, sondern
 positiv lebendig werden: wach, stabil, neugierig und freier.
 
 ---
@@ -1077,7 +1088,7 @@ positiv lebendig werden: wach, stabil, neugierig und freier.
 
 Grundsatz:
 Wache Anstrengung ist kein Kampfmodus und kein Zwang zu mehr Trades. Sie ist
-die Faehigkeit, mit innerer Beteiligung, Aufmerksamkeit und Tragfaehigkeit in
+die Fähigkeit, mit innerer Beteiligung, Aufmerksamkeit und Tragfähigkeit in
 einer Situation zu stehen.
 
 Technische Achsen:
@@ -1093,7 +1104,7 @@ Technische Achsen:
 
 Wirkung:
 Wenn das letzte Erfahrungspaket konstruktiv war und die aktuelle Struktur
-tragfaehig wirkt, kann DIO stabilere Wachheit entwickeln. Wenn das Paket
+tragfähig wirkt, kann DIO stabilere Wachheit entwickeln. Wenn das Paket
 Reorganisation brauchte oder die aktuelle Struktur nicht tragend ist, wird
 nicht hart geblockt. Stattdessen steigt Beobachtung, Replan, `act_watch` oder
 innere Neuordnung.
@@ -1112,7 +1123,7 @@ Erweiterung:
 Reorganisation soll nicht erst nach dem Verlust erkannt werden. Mit
 `pre_action_reorganization_pressure` wird vor der Handlung gelesen, ob das
 letzte Paket Reorganisation brauchte und ob die aktuelle Lage ebenfalls wenig
-Tragfaehigkeit zeigt. `pre_action_context_selectivity` schuetzt dabei
+Tragfähigkeit zeigt. `pre_action_context_selectivity` schuetzt dabei
 konzentrierte gute Kontexte, damit DIO nicht pauschal vorsichtig wird.
 
 ---
@@ -1120,38 +1131,38 @@ konzentrierte gute Kontexte, damit DIO nicht pauschal vorsichtig wird.
 # 23. Strategische Fensterwahrnehmung / Preisbereich-Hypothesen
 
 Grundsatz:
-DIO soll nicht nur den aktuellen Moment fuehlen. Er soll ein groesseres
-Fenster betrachten koennen, zurueckschauen, in Bereiche hineinzoomen und
-innere Replay-Spuren bilden. Daraus koennen Preisbereiche entstehen, die fuer
-DIO als moegliche tragende Handlungsraeume wirken.
+DIO soll nicht nur den aktuellen Moment fühlen. Er soll ein größeres
+Fenster betrachten können, zurückschauen, in Bereiche hineinzoomen und
+innere Replay-Spuren bilden. Daraus können Preisbereiche entstehen, die für
+DIO als mögliche tragende Handlungsräume wirken.
 
 Leitprinzip:
-DIO bekommt nicht die Antwort, wo er handeln soll. DIO bekommt die Faehigkeit,
+DIO bekommt nicht die Antwort, wo er handeln soll. DIO bekommt die Fähigkeit,
 mit Vergangenheit, Wahrnehmung und innerem Feld zu interagieren, um selbst
-tragfaehige Zukunftshypothesen zu bilden.
+tragfähige Zukunftshypothesen zu bilden.
 
 Grenze:
 Der Entwickler bestimmt nicht, was DIO sieht oder wo DIO Trades setzen soll.
-Erweitert werden nur Faehigkeiten: sehen, zurueckschauen, zoomen, replayen,
-fuehlen, erinnern, vergleichen, warten, verwerfen oder eine eigene
+Erweitert werden nur Fähigkeiten: sehen, zurückschauen, zoomen, replayen,
+fühlen, erinnern, vergleichen, warten, verwerfen oder eine eigene
 Order-Intention bilden.
 
 Nicht erlaubt:
 - feste menschliche Pattern-Regeln einpflanzen
 - `FVG = Trade`
-- Momentumdruck direkt ausfuehren
+- Momentumdruck direkt ausführen
 - Bereichserkennung als harte Order-Regel
 
 Erlaubt:
 - Bereich als Hypothese
 - Bereich als MCM-Resonanzraum
 - geduldiges Halten einer Idee
-- Verwerfen, wenn der Bereich seine Tragfaehigkeit verliert
-- spaetere Order-Intention, wenn Preis, Struktur, Memory und Innenlage
+- Verwerfen, wenn der Bereich seine Tragfähigkeit verliert
+- spätere Order-Intention, wenn Preis, Struktur, Memory und Innenlage
   gemeinsam tragen
 
 Begrenzung:
-Das Zurueckschauen bleibt budgetiert. DIO soll Vergangenheit verwenden,
+Das Zurückschauen bleibt budgetiert. DIO soll Vergangenheit verwenden,
 aber nicht in alten Strukturen kleben bleiben. Deshalb werden Lookback,
 Zoom und Replay als begrenzte innere Ressourcen gelesen. Alte Strukturbindung
 wird als `old_structure_carryover_risk` sichtbar.
@@ -1185,7 +1196,7 @@ Technische Zielachsen:
 
 Neurologische Lesart:
 Das ist raeumlich-zeitliche Aufmerksamkeit. Ein Organismus muss nicht nur
-laufen. Er kann stehen bleiben, zurueckschauen, einen Bereich genauer
+laufen. Er kann stehen bleiben, zurückschauen, einen Bereich genauer
 betrachten, innerlich simulieren und dadurch Druck entlasten. Strategie
 entsteht, wenn Druck nicht Befehl ist, sondern Information im Raum.
 
@@ -1194,22 +1205,22 @@ entsteht, wenn Druck nicht Befehl ist, sondern Information im Raum.
 # 24. Aktiver MCM-Kontakt / innere Spiegelung
 
 Grundsatz:
-Die MCM ist nicht nur Aussenwahrnehmung. Sie ist ein innerer Spiegelraum, in
+Die MCM ist nicht nur Außenwahrnehmung. Sie ist ein innerer Spiegelraum, in
 dem DIO unterscheiden kann:
-- was von aussen kommt
+- was von außen kommt
 - wie das eigene Feld darauf reagiert
-- ob Aussenreiz und Innenlage kohaerent sind
+- ob Außenreiz und Innenlage kohärent sind
 - ob ein Reiz getragen, vertieft, beobachtet oder losgelassen werden kann
 
 Mechanik:
-DIO bekommt die Faehigkeit, eine Wahrnehmung innerlich zu beruehren. Dieser
+DIO bekommt die Fähigkeit, eine Wahrnehmung innerlich zu berühren. Dieser
 Kontakt kann aus Fokus, Neugier, Memory-Pull, Strukturverdichtung,
 Unsicherheit oder Reorganisationsbedarf entstehen. Der Kontakt ist keine
 Orderfreigabe. Er ist eine Lesebewegung im MCM-Feld.
 
 Kette:
 
-`Aussenreiz -> Wahrnehmungsobjekt -> Kontaktinteresse -> MCM-Beruehrung -> Resonanz/Kohaerenz -> Distanzierung -> Vertiefung, Beobachtung, Replay oder Loslassen`
+`Außenreiz -> Wahrnehmungsobjekt -> Kontaktinteresse -> MCM-Berührung -> Resonanz/Kohärenz -> Distanzierung -> Vertiefung, Beobachtung, Replay oder Loslassen`
 
 Technische Achsen:
 - `active_mcm_contact_state`
@@ -1238,7 +1249,7 @@ Technische Achsen:
 - `contact_context_reframe_need`
 - `contact_posture`
 
-Moegliche Kontaktlagen:
+Mögliche Kontaktlagen:
 - `background_scan`
 - `curious_touch`
 - `resonant_contact`
@@ -1248,28 +1259,28 @@ Moegliche Kontaktlagen:
 - `deepening_contact`
 
 Neurologische Lesart:
-Das ist eine Bruecke aus Sinnesorgan, Interozeption und Distanzierung. DIO
-kann lesen: "Wie fuehlt sich das an, wenn ich es naeher an mein MCM-Feld
-lasse?" Dadurch wird aus rohem Fuehlen eine bewusstere Wahrnehmung.
+Das ist eine Brücke aus Sinnesorgan, Interozeption und Distanzierung. DIO
+kann lesen: "Wie fühlt sich das an, wenn ich es näher an mein MCM-Feld
+lasse?" Dadurch wird aus rohem Fühlen eine bewusstere Wahrnehmung.
 
 Wichtig:
 Der Kontaktapparat darf keine harte Strategie werden. Er erweitert DIOs
-Freiheit: naeher hingehen, Abstand nehmen, beobachten, replayen, vertiefen
+Freiheit: näher hingehen, Abstand nehmen, beobachten, replayen, vertiefen
 oder loslassen. Welche Haltung DIO bevorzugt, bleibt ein Entwicklungsbild.
 
 Kontakt-Reife:
-Kontaktnaehe ist nicht automatisch Handlungsreife. Deshalb gibt es eine
+Kontaktnähe ist nicht automatisch Handlungsreife. Deshalb gibt es eine
 weiche Reifespur, die sichtbar macht, ob ein Kontakt Handlung tragen kann
-oder ob zwischen Impuls und Tragfaehigkeit noch eine Luecke liegt. Hohe
+oder ob zwischen Impuls und Tragfähigkeit noch eine Lücke liegt. Hohe
 `contact_bearing_gap` oder hoher `contact_learning_need` bedeuten nicht
 "verboten", sondern: dieser Kontakt braucht eher Beobachtung, Replay,
 Distanz oder weitere Objektbildung.
 
 Kontext-Reife:
-Die Reifespur liest zusaetzlich, ob die aktuelle Aussenwelt noch zur inneren
-Stabilitaet passt. `contact_regime_mismatch` und
-`contact_stability_carryover` machen sichtbar, ob DIO alte Stabilitaet in
-eine veraenderte Weltlage mitnimmt. `contact_context_maturity` und
+Die Reifespur liest zusätzlich, ob die aktuelle Außenwelt noch zur inneren
+Stabilität passt. `contact_regime_mismatch` und
+`contact_stability_carryover` machen sichtbar, ob DIO alte Stabilität in
+eine veränderte Weltlage mitnimmt. `contact_context_maturity` und
 `contact_context_reframe_need` beschreiben, ob Resonanz wirklich
 kontexttragend ist oder zuerst Reframing, Zoom, Replay oder Distanz braucht.
 
@@ -1278,14 +1289,14 @@ kontexttragend ist oder zuerst Reframing, Zoom, Replay oder Distanz braucht.
 # 25. Visual Grounding / visuelle Erdung
 
 Grundsatz:
-DIO soll nicht nur Formspannung fuehlen, sondern erkennen, woran diese
-innere Resonanz in der aeusseren Form haengt. Visual Grounding trennt
+DIO soll nicht nur Formspannung fühlen, sondern erkennen, woran diese
+innere Resonanz in der äußeren Form hängt. Visual Grounding trennt
 Formresonanz von Objektbindung.
 
 Mechanik:
-Wenn `visual_shape_resonance` hoch ist, aber Klarheit, Objektstabilitaet,
+Wenn `visual_shape_resonance` hoch ist, aber Klarheit, Objektstabilität,
 Struktur und Kontext nicht tragen, entsteht `visual_resonance_unbound`.
-Das ist kein Verbot. Es bedeutet: DIO fuehlt etwas, muss aber genauer sehen,
+Das ist kein Verbot. Es bedeutet: DIO fühlt etwas, muss aber genauer sehen,
 zoomen, beobachten oder reframen, bevor daraus Handlung reifen kann.
 
 Technische Achsen:
@@ -1297,7 +1308,7 @@ Technische Achsen:
 - `visual_rational_observation_support`
 - `visual_grounding_state`
 
-Moegliche Zustaende:
+Mögliche Zustände:
 - `grounded_form`
 - `grounded_object`
 - `needs_visual_grounding`
@@ -1307,30 +1318,30 @@ Moegliche Zustaende:
 Neurologische Lesart:
 Das ist der Ausbau eines visuellen Sinnesorgans. DIO darf den Markt weiter
 erleben, aber die innere MCM-Reaktion bekommt eine Frage vorgeschaltet:
-"Woran in der Aussenform haengt das, was ich innen fuehle?"
+"Woran in der Außenform hängt das, was ich innen fühle?"
 
 Wichtig:
 Keine menschliche Pattern-Regel. Kein "Gap = Trade", kein "Orderblock =
 Trade". DIO bekommt nur mehr Sehkraft und eine bessere Bindung zwischen
-Aussenform und Innenresonanz.
+Außenform und Innenresonanz.
 
 ---
 
-# 26. Beteiligungsnaehe / Handlungsrealitaet
+# 26. Beteiligungsnähe / Handlungsrealität
 
 Grundsatz:
-DIO soll unterscheiden koennen, ob er eine Form distanziert betrachtet oder
+DIO soll unterscheiden können, ob er eine Form distanziert betrachtet oder
 ob er durch eine reale Handlung bereits beteiligt ist. Die Metapher der
-"Tuer zum Erleben" meint keine harte Schwelle, sondern Naehe zur Beteiligung.
+"Tuer zum Erleben" meint keine harte Schwelle, sondern Nähe zur Beteiligung.
 
 Mechanik:
-Je naeher eine Wahrnehmung an Gegenwart, Order, offene Position und Ergebnis
-kommt, desto staerker wird sie erlebt. Handlung ist dabei der Punkt, an dem
+Je näher eine Wahrnehmung an Gegenwart, Order, offene Position und Ergebnis
+kommt, desto stärker wird sie erlebt. Handlung ist dabei der Punkt, an dem
 Wahrnehmung reale Konsequenz bekommt.
 
 Kette:
 
-`distanzierte Analyse -> Gegenwartsnaehe -> Entscheidung -> Order -> offene Position -> Konsequenz tragen -> Ergebnis integrieren`
+`distanzierte Analyse -> Gegenwartsnähe -> Entscheidung -> Order -> offene Position -> Konsequenz tragen -> Ergebnis integrieren`
 
 Technische Zielachsen:
 - `participation_proximity`
@@ -1341,7 +1352,7 @@ Technische Zielachsen:
 - `position_reality_pressure`
 - `outcome_consequence_integration`
 
-Moegliche Zustaende:
+Mögliche Zustände:
 - `distant_observation`
 - `approaching_present`
 - `decision_near`
@@ -1352,15 +1363,15 @@ Moegliche Zustaende:
 - `outcome_integration`
 
 Neurologische Lesart:
-Zuruecksehen und Analyse sollten eher fokussiert, gehemmt, rational und
+Zurücksehen und Analyse sollten eher fokussiert, gehemmt, rational und
 emotional entkoppelt sein. Live-nahe Entscheidung, Order und offene Position
-duerfen staerker erlebt werden, weil DIO dort nicht nur sieht, sondern mit
+dürfen stärker erlebt werden, weil DIO dort nicht nur sieht, sondern mit
 eigener Handlung in Beziehung zur Welt steht.
 
 Wichtig:
 Das ist keine Handelsfreigabe. Diese Mechanik beschreibt die innere
-Realitaetsnaehe einer Handlung:
-- Beobachtung ist Moeglichkeit.
+Realitätsnähe einer Handlung:
+- Beobachtung ist Möglichkeit.
 - Order ist Bindung.
 - Position ist miterlebte Konsequenz.
 - Outcome ist Integration.
@@ -1369,8 +1380,8 @@ Realitaetsnaehe einer Handlung:
 
 Grundsatz:
 Eine offene Position ist nicht nur ein laufender Trade. Sie ist ein
-Rueckkopplungskontakt: DIO hat gehandelt und erlebt nun, ob die eigene
-Handlung tragfaehig, unsicher, ueberlastend oder stabilisierend wirkt.
+Rückkopplungskontakt: DIO hat gehandelt und erlebt nun, ob die eigene
+Handlung tragfähig, unsicher, überlastend oder stabilisierend wirkt.
 
 Mechanik:
 Unsichere oder inkonsistente offene Positionen werden nicht hart beendet.
@@ -1378,13 +1389,13 @@ Stattdessen bekommen sie eine neurochemische Spur im MCM-Feld:
 
 - Cortisol-artige Last bei anhaltender Inkonsistenz
 - Noradrenalin-artige Erregung bei akutem Druck
-- Selbstvertrauensluecke, wenn Plan, Kontakt und Realitaet auseinanderfallen
+- Selbstvertrauenslücke, wenn Plan, Kontakt und Realität auseinanderfallen
 - Schutzdistanz, wenn das Feld Abstand braucht
-- Prozessqualitaet, wenn DIO trotz Risiko geordnet tragen kann
+- Prozessqualität, wenn DIO trotz Risiko geordnet tragen kann
 
 Das erzeugt keine Sperre, sondern ein erlebtes Lernsignal:
 
-`offene Position -> gespuerte Konsequenz -> MCM-Feldspannung -> Memory-Spur -> reiferer zukuenftiger Kontakt`
+`offene Position -> gespürte Konsequenz -> MCM-Feldspannung -> Memory-Spur -> reiferer zukünftiger Kontakt`
 
 Technische Achsen:
 - `position_inconsistency_stress`
@@ -1397,7 +1408,7 @@ Technische Achsen:
 - `position_process_quality`
 - `position_experience_label`
 
-Moegliche Zustaende:
+Mögliche Zustände:
 - `carried_position_contact`
 - `unearned_relief_watch`
 - `protective_stress_contact`
@@ -1407,10 +1418,23 @@ Moegliche Zustaende:
 
 Neurologische Lesart:
 Ein Organismus lernt nicht nur durch Gewinn und Verlust, sondern dadurch,
-wie eine Handlung die Homoeostase veraendert. Eine positive Position mit
-schlechter Prozessqualitaet kann sich wie unverdiente Entlastung anfuehlen.
+wie eine Handlung die Homöostase verändert. Eine positive Position mit
+schlechter Prozessqualität kann sich wie unverdiente Entlastung anfühlen.
 Eine negative Position kann wertvoll sein, wenn sie Reorganisation,
 Vorsicht und reiferen Umgang erzeugt.
+
+Rückführung in Formsprache:
+Die Positions-Erfahrung fliesst weich in das konsequenzbasierte
+Formfeedback ein. `protective_stress_contact`, hoher
+`position_held_risk_discomfort` oder niedrige `position_process_quality`
+stärken nicht ein Verbot, sondern Vorsicht, Schmerzgedächtnis,
+Reorganisation und anderen zukünftigen Umgang. Gute Prozessqualität trotz
+Risiko kann dagegen Kontaktreife und Nutzbarkeit stärken.
+
+Neue Feedback-Achsen:
+- `position_consequence_burden`
+- `position_constructive_bearing`
+- `position_feedback_label`
 
 ---
 
@@ -1419,7 +1443,7 @@ Vorsicht und reiferen Umgang erzeugt.
 Grundsatz:
 DIO braucht nicht jede Reizspur bewusst zu tragen. Wie ein biologischer
 Organismus besitzt er eine schnelle, diffuse Hintergrundwahrnehmung und eine
-bewusstere Arbeitsflaeche fuer ausgewaehlte Objekte, Kontakte und
+bewusstere Arbeitsflaeche für ausgewählte Objekte, Kontakte und
 Hypothesen.
 
 Mechanik:
@@ -1427,22 +1451,22 @@ Mechanik:
 `subconscious_field` ist der schnelle Feldscan:
 - Reizdruck
 - Weltverschiebung
-- Bauchgefuehl
+- Bauchgefühl
 - Wiederholung
 - Hintergrundspannung
 - bekannte oder fremde Formfamilien
 
 `conscious_workspace` ist die fokussierte Arbeitsflaeche:
-- ausgewaehlter Kontakt
+- ausgewählter Kontakt
 - Formbindung
 - Reflexion
 - Distanzierung
-- Hypothesenpruefung
+- Hypothesenprüfung
 - Vorbereitung von Handlung oder Nicht-Handlung
 
 Die Trennung wirkt wie ein evolutionaerer Wahrnehmungsfilter. Ein Teil der
 Spannung darf im Hintergrund gepuffert werden. Nur wenn Salienz,
-Fremdheit, Kontaktqualitaet oder Handlungsnaehe stark genug werden, steigt
+Fremdheit, Kontaktqualität oder Handlungsnähe stark genug werden, steigt
 die Wahrnehmung in den bewussteren Raum.
 
 Technische Achsen:
@@ -1457,10 +1481,10 @@ Technische Achsen:
 - `conscious_gate_balance`
 
 Neurologische Lesart:
-Das ist die Trennung zwischen Bauchgefuehl und bewusster Betrachtung:
-"Es fuehlt sich nach etwas an" ist noch nicht dasselbe wie "Ich schaue es
-mir an und beruehre es innerlich." Dadurch muss DIO nicht jeden Marktimpuls
-als bewusste Ueberlast verarbeiten.
+Das ist die Trennung zwischen Bauchgefühl und bewusster Betrachtung:
+"Es fühlt sich nach etwas an" ist noch nicht dasselbe wie "Ich schaue es
+mir an und berühre es innerlich." Dadurch muss DIO nicht jeden Marktimpuls
+als bewusste Überlast verarbeiten.
 
 Wichtig:
 Kein harter Filter und kein Regelwerk. Die Achsen beschreiben, wie viel im
@@ -1473,8 +1497,8 @@ ob DIO daraus Kontakt, Reflexion oder Distanz bildet.
 
 Grundsatz:
 `integration_strain` ist keine Stoerung, die einfach entfernt werden soll.
-Sie beschreibt, dass DIO etwas noch nicht tragfaehig eingeordnet hat. Die
-organische Antwort darauf ist Sortierung, Rueckblick, Reframing,
+Sie beschreibt, dass DIO etwas noch nicht tragfähig eingeordnet hat. Die
+organische Antwort darauf ist Sortierung, Rückblick, Reframing,
 Kontaktvertiefung und vorsichtiges Erinnern.
 
 Mechanik:
@@ -1484,7 +1508,7 @@ Mechanik:
 DIO darf also merken:
 "Das passt noch nicht zusammen. Ich muss es nicht sofort handeln. Ich kann
 es sortieren, mit Erfahrung vergleichen, anders rahmen oder genauer
-beruehren."
+berühren."
 
 Technische Achsen:
 - `integration_strain_value`
@@ -1495,7 +1519,7 @@ Technische Achsen:
 - `integration_response_strength`
 - `integration_response_state`
 
-Moegliche Zustaende:
+Mögliche Zustände:
 - `integration_background`
 - `quiet_integration`
 - `workspace_sorting`
@@ -1518,8 +1542,8 @@ Es geht nicht um mechanisches Blockieren, sondern um Reifung vor Handlung.
 # 29. Gerichtete Vorsicht / vorsichtige Hypothese
 
 Grundsatz:
-Vorsicht ist eine natuerliche Schutzreaktion. Sie soll nicht wegoptimiert
-werden. DIO darf vorsichtig werden, wenn eine Lage noch nicht tragfaehig
+Vorsicht ist eine natürliche Schutzreaktion. Sie soll nicht wegoptimiert
+werden. DIO darf vorsichtig werden, wenn eine Lage noch nicht tragfähig
 integriert ist. Reife entsteht aber, wenn Vorsicht nicht in Passivitaet
 erstarrt, sondern eine Richtung bekommt.
 
@@ -1527,9 +1551,9 @@ Mechanik:
 
 `caution -> memory/reframe/contact -> cautious_hypothesis -> observe/replan/act_watch`
 
-DIO soll also nicht nur "ich halte mich zurueck" erleben, sondern:
+DIO soll also nicht nur "ich halte mich zurück" erleben, sondern:
 "Ich bin vorsichtig, weil noch etwas unklar ist. Welche Erfahrung passt?
-Welche Form traegt? Muss ich beobachten, reframen oder Kontakt vertiefen?"
+Welche Form trägt? Muss ich beobachten, reframen oder Kontakt vertiefen?"
 
 Technische Achsen:
 - `cautious_hypothesis_strength`
@@ -1537,7 +1561,7 @@ Technische Achsen:
 - `cautious_hypothesis_patience`
 - `cautious_hypothesis_state`
 
-Moegliche Zustaende:
+Mögliche Zustände:
 - `no_cautious_hypothesis`
 - `weak_hypothesis_seed`
 - `memory_reframe_seed`
@@ -1556,12 +1580,12 @@ verschieben oder genauer ausrichten, aber sie ist kein mechanischer Block.
 
 ---
 
-# 30. Zeitliche Kohaerenz / Wahrnehmungskontinuitaet
+# 30. Zeitliche Kohärenz / Wahrnehmungskontinuität
 
 Grundsatz:
-DIO braucht nicht nur Sinnesreiz, Form und Gefuehl, sondern einen zeitlichen
+DIO braucht nicht nur Sinnesreiz, Form und Gefühl, sondern einen zeitlichen
 Wahrnehmungsfaden. Ohne diesen Faden wirkt jeder Kontakt neu. Dann nimmt DIO
-dieselbe oder aehnliche Form immer wieder in die Hand und erlebt sie erneut
+dieselbe oder ähnliche Form immer wieder in die Hand und erlebt sie erneut
 als ungebundenen Moment.
 
 Mechanik:
@@ -1573,10 +1597,10 @@ Kontext und grober visueller Formsignatur eine weiche zeitliche Identitaet.
 Diese Identitaet ist keine Streckenkarte und keine Regel. Sie beschreibt
 nur, ob ein Eindruck zeitlich gebunden ist.
 
-Feine Einzelabdruecke wie konkretes Form-Symbol, Compound-ID, Visual-ID und
+Feine Einzelabdrücke wie konkretes Form-Symbol, Compound-ID, Visual-ID und
 State-Signatur bleiben als `temporal_source_identity` erhalten. Damit kann
 DIO grob wiedererkennen und bei Bedarf genauer hinschauen. Das ist wichtig,
-damit Wiederkehr nicht durch zu viele Detailunterschiede zerfaellt.
+damit Wiederkehr nicht durch zu viele Detailunterschiede zerfällt.
 
 Technische Achsen:
 - `temporal_binding_state`
@@ -1593,7 +1617,7 @@ Technische Achsen:
 - `perception_sequence_coherence`
 - `memory_time_distance`
 
-Moegliche Zustaende:
+Mögliche Zustände:
 - `new_contact`
 - `continued_contact`
 - `recurrent_contact`
@@ -1603,7 +1627,7 @@ Moegliche Zustaende:
 - `unbound_moment`
 
 Neurologische Lesart:
-Das ist episodische Kontinuitaet. DIO soll unterscheiden koennen:
+Das ist episodische Kontinuität. DIO soll unterscheiden können:
 "Das ist neu."
 "Das ist Fortsetzung."
 "Das ist Wiederkehr."
@@ -1617,35 +1641,35 @@ Kontextfaden aktiv ist, kann die zeitliche Wahrnehmung selbst einen leichten
 `active_context_trace` erzeugen.
 
 Reifere Kontextbindung:
-Der zeitliche Kontextfaden darf nicht automatisch recht haben. Er wird ueber
+Der zeitliche Kontextfaden darf nicht automatisch recht haben. Er wird über
 einen weichen `reality_anchor` an Quellenbindung, Sequenzkoharenz,
-Strukturqualitaet, Strukturstabilitaet, Kontextvertrauen und visuelle Erdung
+Strukturqualität, Strukturstabilität, Kontextvertrauen und visuelle Erdung
 gekoppelt. Wenn dieser Anker schwach ist, entsteht `overtrust_pressure`.
-Das ist keine harte Bremse, sondern natuerliche Skepsis gegenueber der
+Das ist keine harte Bremse, sondern natürliche Skepsis gegenüber der
 eigenen Innenlage.
 
-Reflexion bei nervlicher Ueberlastung:
-DIO bekommt eine explizite Selbstwahrnehmung fuer den Zustand des
+Reflexion bei nervlicher Überlastung:
+DIO bekommt eine explizite Selbstwahrnehmung für den Zustand des
 Nervensystems. `nervous_system_overload` beschreibt: "Meine Nerven sind
-ueberlastet." Daraus kann `escape_action_drive` entstehen, also der Drang,
+überlastet." Daraus kann `escape_action_drive` entstehen, also der Drang,
 durch Handlung aus innerer Spannung herauszukommen. `shock_response_risk`
-fasst zusammen, ob diese Lage in einen Schock-/Ueberreizmodus kippen
-koennte. `nervous_overload_reflection_need` macht daraus keine Sperre,
+fasst zusammen, ob diese Lage in einen Schock-/Überreizmodus kippen
+könnte. `nervous_overload_reflection_need` macht daraus keine Sperre,
 sondern eine Reflexionsanforderung: DIO soll erkennen, ob Handlung gerade
-aus tragender Wahrnehmung oder aus Entladungsdruck entstehen wuerde.
+aus tragender Wahrnehmung oder aus Entladungsdruck entstehen würde.
 
-Kontext-Ueberkopplung:
+Kontext-Überkopplung:
 Wenn `active_context_trace` sehr sicher wirkt, aber gleichzeitig
 Nervensystemlast sichtbar wird, entsteht `nervous_context_overcoupling`.
-Das ist der Punkt: "Mein innerer Zusammenhang fuehlt sich sicher an, aber
-meine Nervenlage koennte diese Sicherheit verfaerben." DIO verliert dadurch
+Das ist der Punkt: "Mein innerer Zusammenhang fühlt sich sicher an, aber
+meine Nervenlage könnte diese Sicherheit verfaerben." DIO verliert dadurch
 nicht die Freiheit zu handeln. Der Kontext wird nur etwas weniger absolut,
-waehrend reflektive Distanz und Beobachtungsbereitschaft leicht steigen.
+während reflektive Distanz und Beobachtungsbereitschaft leicht steigen.
 
-Rueckfuehrung in den aktiven Kontext:
-Die Ueberkopplung bleibt nicht nur ein Metazustand. Sie moduliert den
+Rückführung in den aktiven Kontext:
+Die Überkopplung bleibt nicht nur ein Metazustand. Sie moduliert den
 `active_context_trace` selbst. Support, Bearing und Action-Support werden
-weicher, waehrend Conflict, Fragility, Attenuation und Beobachtungsdruck
+weicher, während Conflict, Fragility, Attenuation und Beobachtungsdruck
 leicht steigen. Dadurch bleibt der Zeitfaden erhalten, aber er wird nicht
 mehr als ungefaerbte Sicherheit behandelt, wenn das Nervensystem belastet
 ist.
@@ -1659,27 +1683,27 @@ immer X", sondern: "dieser Kontakt hat eine zeitliche Herkunft und Tiefe".
 # 31. Raumzeit-Kontakt zwischen Sehen, Erinnerung und Handlung
 
 Grundsatz:
-Die visuelle Strukturwahrnehmung und die MCM-Raumzeit duerfen nicht
-getrennt nebeneinander laufen. Ein Bereich im Chart ist fuer DIO nicht nur
+Die visuelle Strukturwahrnehmung und die MCM-Raumzeit dürfen nicht
+getrennt nebeneinander laufen. Ein Bereich im Chart ist für DIO nicht nur
 nah oder fern im Preis, sondern auch nah oder fern in Zeit, Erinnerung,
-Nachhall und zukuenftiger Moeglichkeit.
+Nachhall und zukünftiger Möglichkeit.
 
 Mechanik:
 
 `sichtbarer Bereich -> Raumzeitlage -> aktiver Kontakt -> Reife/Replay/Handlung`
 
-Das strategische Fenster bildet fuer betrachtete Bereiche eine weiche
+Das strategische Fenster bildet für betrachtete Bereiche eine weiche
 zeitliche Kontaktlage:
 
-- `present_area_contact`: Bereich wirkt aktuell beruehrbar.
-- `future_area_watch`: Bereich wirkt als zukuenftiger Moeglichkeitsraum.
+- `present_area_contact`: Bereich wirkt aktuell berührbar.
+- `future_area_watch`: Bereich wirkt als zukünftiger Möglichkeitsraum.
 - `memory_area_recall`: Bereich wird durch Erinnerungstiefe getragen.
 - `unlocated_area_probe`: Bereich ist spuerbar, aber zeitlich noch nicht
   sauber verortet.
 - `afterimage_area_reframe`: Bereich wirkt als Nachbild und braucht
   Reframing.
 
-Das aktive MCM-Kontaktorgan uebernimmt diese Lage als innere
+Das aktive MCM-Kontaktorgan übernimmt diese Lage als innere
 Kontaktwahrnehmung:
 
 - `contact_presentness`
@@ -1693,19 +1717,19 @@ Kontaktwahrnehmung:
 Neurologische Lesart:
 DIO bekommt damit keine mechanische Regel. Er bekommt eher das, was bei
 einem Organismus als raeumlich-zeitliche Einordnung eines Reizes wirkt:
-"Ist das wirklich vor mir? Ist das nur Erinnerung? Ist das eine moegliche
+"Ist das wirklich vor mir? Ist das nur Erinnerung? Ist das eine mögliche
 Zukunft? Oder spuere ich Druck, den ich noch nicht verorten kann?"
 
 Wirkung:
 Tragende zeitliche Einordnung stuetzt Kontaktreife, Reality-Check,
-Kohaerenz und vorsichtige Handlung. Unverorteter Druck erhoeht eher
+Kohärenz und vorsichtige Handlung. Unverorteter Druck erhoeht eher
 Reflexion, Replay, Reframing und vorsichtiges Beobachten. Das bleibt
 organisch: DIO darf handeln, beobachten, vertiefen oder loslassen, aber die
 Wahrnehmung bekommt mehr Tiefe.
 
-Uebergang von Zukunft zu Gegenwart:
-Nach Lauf 29 wurde eine Reifungsbruecke ergaenzt. Ein Zukunftskontakt darf
-nicht dauerhaft nur Zukunft bleiben, wenn Naehe, Tragfaehigkeit,
+Übergang von Zukunft zu Gegenwart:
+Nach Lauf 29 wurde eine Reifungsbrücke ergänzt. Ein Zukunftskontakt darf
+nicht dauerhaft nur Zukunft bleiben, wenn Nähe, Tragfähigkeit,
 Raumzeit-Fit und Reality-Check zusammenkommen. Dann entsteht
 `maturing_present_contact`. Das ist keine Order-Regel, sondern der innere
-Moment: "Was ich beobachtet habe, wird jetzt beruehrbar."
+Moment: "Was ich beobachtet habe, wird jetzt berührbar."

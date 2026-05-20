@@ -202,6 +202,13 @@ def evaluate_entry_decision(bot, window, candle_state):
             f"habituation_level={float(decision.get('habituation_level', 0.0) or 0.0):.4f} "
             f"competition_bias={float(decision.get('competition_bias', 0.0) or 0.0):.4f} "
             f"observation_mode={bool(decision.get('observation_mode', False))} "
+            f"entry_mode={str(decision.get('entry_mode', 'impulse_contact') or 'impulse_contact')} "
+            f"entry_choice_state={str(decision.get('entry_choice_state', 'impulse_only') or 'impulse_only')} "
+            f"entry_choice_sync={str(decision.get('entry_choice_sync', '-') or '-')} "
+            f"area_motor_intention={float(decision.get('area_motor_intention', 0.0) or 0.0):.4f} "
+            f"entry_choice_bearing={float(decision.get('entry_choice_bearing', 0.0) or 0.0):.4f} "
+            f"area_direct_readiness={float(decision.get('area_direct_readiness', 0.0) or 0.0):.4f} "
+            f"area_motor_restraint={float(decision.get('area_motor_restraint', 0.0) or 0.0):.4f} "
             f"long_score={float(decision.get('long_score', 0.0) or 0.0):.4f} "
             f"short_score={float(decision.get('short_score', 0.0) or 0.0):.4f}",
             "entry_debug.csv",
@@ -245,6 +252,24 @@ def evaluate_entry_decision(bot, window, candle_state):
         "target_conviction": float(decision.get("target_conviction", 0.0) or 0.0),
         "risk_model_score": float(decision.get("risk_model_score", 0.0) or 0.0),
         "reward_model_score": float(decision.get("reward_model_score", 0.0) or 0.0),
+        "entry_mode": str(decision.get("entry_mode", "impulse_contact") or "impulse_contact"),
+        "impulse_entry_price": float(decision.get("impulse_entry_price", entry_price) or entry_price),
+        "strategic_entry_price": float(decision.get("strategic_entry_price", entry_price) or entry_price),
+        "strategic_entry_weight": float(decision.get("strategic_entry_weight", 0.0) or 0.0),
+        "strategic_entry_fit": float(decision.get("strategic_entry_fit", 0.0) or 0.0),
+        "area_motor_intention": float(decision.get("area_motor_intention", 0.0) or 0.0),
+        "area_motor_distance_fit": float(decision.get("area_motor_distance_fit", 0.0) or 0.0),
+        "impulse_entry_intention": float(decision.get("impulse_entry_intention", 0.0) or 0.0),
+        "area_entry_intention": float(decision.get("area_entry_intention", 0.0) or 0.0),
+        "entry_choice_conflict": float(decision.get("entry_choice_conflict", 0.0) or 0.0),
+        "entry_choice_bearing": float(decision.get("entry_choice_bearing", 0.0) or 0.0),
+        "area_direct_readiness": float(decision.get("area_direct_readiness", 0.0) or 0.0),
+        "area_motor_restraint": float(decision.get("area_motor_restraint", 0.0) or 0.0),
+        "entry_choice_state": str(decision.get("entry_choice_state", "impulse_only") or "impulse_only"),
+        "entry_choice_sync": str(decision.get("entry_choice_sync", "-") or "-"),
+        "strategic_area_focus_id": str(decision.get("strategic_area_focus_id", "-") or "-"),
+        "strategic_area_price_low": float(decision.get("strategic_area_price_low", 0.0) or 0.0),
+        "strategic_area_price_high": float(decision.get("strategic_area_price_high", 0.0) or 0.0),
         "state_signature": state_signature,
         "signature_bias": float(decision.get("signature_bias", 0.0) or 0.0),
         "signature_block": bool(decision.get("signature_block", False)),

@@ -1,28 +1,28 @@
 # MCM_VARIABLEN_MECHANIK
 
 Ziel dieser Datei:
-- zentrale MCM-/DIO-Groessen benennen
-- Funktion und Ebene klaeren
+- zentrale MCM-/DIO-Größen benennen
+- Funktion und Ebene klären
 - unterscheiden zwischen Diagnose, weicher Wirkung und persistenter Erfahrung
 - verhindern, dass Variablen als harte Chartregeln missverstanden werden
 
 Grundsatz:
 Keine Variable ist ein menschliches Patternlabel oder eine mechanische
-Handelsregel. Die Werte beschreiben innere Wahrnehmung, Tragfaehigkeit,
-Vertrauen, Stress, Reife und Prozessqualitaet.
+Handelsregel. Die Werte beschreiben innere Wahrnehmung, Tragfähigkeit,
+Vertrauen, Stress, Reife und Prozessqualität.
 
 Allgemeine Anweisung:
-Variablen duerfen keine harten Formen erzwingen.
-Sie beschreiben Moeglichkeiten, Spannungen, Lasten, Reifegrade und
-Erfahrungsraeume.
-Ihre Aufgabe ist, DIO Selbstentwicklung zu ermoeglichen,
+Variablen dürfen keine harten Formen erzwingen.
+Sie beschreiben Möglichkeiten, Spannungen, Lasten, Reifegrade und
+Erfahrungsräume.
+Ihre Aufgabe ist, DIO Selbstentwicklung zu ermöglichen,
 nicht fertige Wahrheit zu ersetzen.
 
 Zielschicht:
 Die Variablen dienen der **selbstregulativen Erfahrungsorganisation**.
-DIO soll nicht fertige Urteile ueber gut/schlecht bekommen,
-sondern die Faehigkeit entwickeln, Tragfaehigkeit aus Feld, Memory,
-Formsprache, Druck, Entlastung, Handlung, Nicht-Handlung und Rueckkopplung
+DIO soll nicht fertige Urteile über gut/schlecht bekommen,
+sondern die Fähigkeit entwickeln, Tragfähigkeit aus Feld, Memory,
+Formsprache, Druck, Entlastung, Handlung, Nicht-Handlung und Rückkopplung
 selbst zu organisieren.
 
 ---
@@ -44,6 +44,30 @@ selbst zu organisieren.
   - weich: beeinflusst Druck, Beobachten, Replan oder Handlung graduell
   - persistent: fliesst in Speicher/Entwicklung ein
 
+## Konvention gegen doppelte Funktionsdeutung
+
+Gleiche Grundworte bedeuten nicht automatisch gleiche Funktion. Die Ebene
+entscheidet:
+
+- `*_sample`: aktueller Erfahrungsabdruck aus einem konkreten Outcome.
+- `form_symbol_*`: persistente Formsprache / gespeicherte Erfahrung.
+- `position_*`: Erleben einer offenen Handlung und ihrer Konsequenz.
+- `contact_*`: aktiver Wahrnehmungs-/Berührungskontakt im MCM-Feld.
+- `area_*`: strategisch betrachteter Preis-/Strukturbereich.
+- `packet_*`: ganzes Erfahrungspaket aus Wahrnehmung, Innenlage,
+  Handlung/Nicht-Handlung und Ergebnis.
+- `neurochemical_*`: neurologisch lesbare Alias-/Bilanzschicht.
+- `*_pressure`: Druck oder Tendenz, noch keine Handlung.
+- `*_load`: Belastung oder Kosten der Verarbeitung.
+- `*_bearing` / `*_quality`: Tragfähigkeit einer Ebene.
+- `*_trust`: gelerntes oder aktuelles Vertrauen.
+- `*_support`: stuetzende Wirkung.
+- `*_need`: Bedarf nach Verarbeitung, Beobachtung oder Reorganisation.
+
+Wenn zwei Variablen denselben Grundimpuls beschreiben, müssen sie sich
+mindestens in einer dieser Dimensionen unterscheiden:
+Ebene, Zeitlage, Speicherstatus, Funktion oder Wirkung.
+
 ---
 
 # Live / Equity
@@ -59,35 +83,35 @@ Feld-/Memory-Protokollen und in `outcome_records.jsonl`.
 
 ## Neurochemische Kategorien
 
-Diese Uebersicht ordnet die neurochemischen Variablen nach Funktion. Sie ist
-kein biologischer Wahrheitsanspruch, sondern eine technische Landkarte fuer
+Diese Übersicht ordnet die neurochemischen Variablen nach Funktion. Sie ist
+kein biologischer Wahrheitsanspruch, sondern eine technische Landkarte für
 DIOs innere Modulation.
 
 | Kategorie | Variablen | Funktion |
 | --- | --- | --- |
 | Aktivierung / Netzwerkenergie | `glutamate_activation`, `reactive_nervous_drive` | Reizweiterleitung, innere Erregung, Handlungsdruck. |
-| Wachheit / Alarm | `noradrenaline_arousal`, `world_shift_evidence` | Salienz, Druck, Regimebruch, Aufmerksamkeit auf Veraenderung. |
-| Fokus / sensorischer Zoom | `acetylcholine_focus`, `focused_acetylcholine` | genaueres Sehen, Formstabilitaet, merkenswerte Wahrnehmung. |
-| Stabilitaet / Tragfaehigkeit | `serotonin_stability`, `stabilizing_serotonin`, `reward_stability_echo` | Ruhe, Geduld, innere Ordnung, Nachhall tragender Phasen. |
+| Wachheit / Alarm | `noradrenaline_arousal`, `world_shift_evidence` | Salienz, Druck, Regimebruch, Aufmerksamkeit auf Veränderung. |
+| Fokus / sensorischer Zoom | `acetylcholine_focus`, `focused_acetylcholine` | genaueres Sehen, Formstabilität, merkenswerte Wahrnehmung. |
+| Stabilität / Tragfähigkeit | `serotonin_stability`, `stabilizing_serotonin`, `reward_stability_echo` | Ruhe, Geduld, innere Ordnung, Nachhall tragender Phasen. |
 | Hemmung / Schutz | `gaba_inhibition` | Reifebremse, Nicht-Handlung, Schutz vor Reflexhandlung. |
 | Stress / Belastung | `cortisol_load`, `neurochemical_load` | Denk-, Memory-, Positions- und Regulationslast. |
 | Entlastung / Wohlbefinden | `endorphin_relief`, `relief_endorphin`, `constructive_stimulation` | Druckabbau, Prozesswohlbefinden, tragende Beruhigung. |
 | Motivation / Lernen | `dopamine_tone`, `constructive_dopamine` | Lernwert, Erwartungsdrift, Wiederholungsneugier bei tragenden Paketen. |
-| Distanzierung / Reife | `emotional_decoupling`, `serotonin_carryover_risk` | Abkopplung von alter Innenlage, Erkennen von Nachhall und emotionaler Uebertragung. |
+| Distanzierung / Reife | `emotional_decoupling`, `serotonin_carryover_risk` | Abkopplung von alter Innenlage, Erkennen von Nachhall und emotionaler Übertragung. |
 | Gesamtbilanz / Diagnose | `neurochemical_support`, `neurochemical_balance` | Verhaeltnis von innerer Unterstuetzung zu innerer Last. |
 
 Lesart:
-- Aktivierung ohne Stabilitaet wirkt reaktiv.
-- Stabilitaet ohne Realitaetsabgleich kann Carryover werden.
+- Aktivierung ohne Stabilität wirkt reaktiv.
+- Stabilität ohne Realitätsabgleich kann Carryover werden.
 - Hemmung ohne Fokus kann Starrheit werden.
-- Entlastung mit guter Prozessqualitaet kann Reife staerken.
+- Entlastung mit guter Prozessqualität kann Reife stärken.
 - Distanzierung verbindet Neurochemie mit Reflexion.
 
 ## `dopamine_tone`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Neurochemische Alias-Schicht.
-- Funktion: Erwartungsfehler, Lernwert, Prozessqualitaet und tragende
+- Funktion: Erwartungsfehler, Lernwert, Prozessqualität und tragende
   Verbesserung verdichten.
 - Nahe bestehende Variablen:
   `entry_expectation`, `target_expectation`, `expectation_deviation`,
@@ -131,7 +155,7 @@ Lesart:
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Neurochemische Alias-Schicht / Selbstregulation.
-- Funktion: Geduld, Stabilitaet, Varianz aushalten und innere Tragfaehigkeit.
+- Funktion: Geduld, Stabilität, Varianz aushalten und innere Tragfähigkeit.
 - Nahe bestehende Variablen:
   `experience_regulation`, `reflection_maturity`, `load_bearing_capacity`,
   `state_stability`, `recovery_balance`, `zero_point_regulation`.
@@ -141,7 +165,7 @@ Lesart:
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Neurochemische Alias-Schicht / Belastung.
-- Funktion: Ueberforderung, Denk-/Memory-/Positionslast und Recovery-Druck.
+- Funktion: Überforderung, Denk-/Memory-/Positionslast und Recovery-Druck.
 - Nahe bestehende Variablen:
   `regulatory_load`, `pressure_to_capacity`, `recovery_need`,
   `cognitive_load`, `blind_thinking_load`, `position_cognitive_load`,
@@ -155,14 +179,14 @@ Lesart:
 - Funktion: Prozesswohlbefinden, Entlastung und tragende Beruhigung.
 - Nahe bestehende Variablen:
   `pressure_release`, `stress_relief_potential`, `carrying_balance`,
-  `plan_trust`, `intervention_fitness`, positive Prozessqualitaet.
-- Bedeutung: "Das fuehlt sich tragend und entlastend an."
+  `plan_trust`, `intervention_fitness`, positive Prozessqualität.
+- Bedeutung: "Das fühlt sich tragend und entlastend an."
 
 ## `glutamate_activation`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Neurochemische Alias-Schicht / Aktivierung.
-- Funktion: Erregung, Feldaktivitaet, Aktivierungsinseln und
+- Funktion: Erregung, Feldaktivität, Aktivierungsinseln und
   Handlungsenergie.
 - Nahe bestehende Variablen:
   `field_mean_energy`, `field_activity_island_activation_mean`,
@@ -181,23 +205,23 @@ Lesart:
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Neurochemische Alias-Schicht / Diagnose.
-- Funktion: Gesamtunterstuetzung aus Stabilitaet, Entlastung, Fokus,
+- Funktion: Gesamtunterstuetzung aus Stabilität, Entlastung, Fokus,
   Lernwert und Orientierung.
 - Wirkung: diagnostisch.
-- Bedeutung: "Wie viel innere Unterstuetzung traegt die Lage?"
+- Bedeutung: "Wie viel innere Unterstuetzung trägt die Lage?"
 
 ## `neurochemical_balance`
 
-- Bereich: ungefaehr `-1.0 - 1.0`.
+- Bereich: ungefähr `-1.0 - 1.0`.
 - Ebene: Neurochemische Alias-Schicht / Diagnose.
 - Funktion: Differenz zwischen Support und Last.
 - Wirkung: diagnostisch.
-- Bedeutung: "Traegt die innere Chemie, oder kostet sie mehr als sie gibt?"
+- Bedeutung: "Trägt die innere Chemie, oder kostet sie mehr als sie gibt?"
 
 ## `mcm_neuro_transition_protocol.csv`
 
 - Typ: Debug-/Analyseprotokoll.
-- Ebene: Neurochemische Alias-Schicht / Uebergangsanalyse.
+- Ebene: Neurochemische Alias-Schicht / Übergangsanalyse.
 - Funktion: schreibt Wechsel des dominanten neurochemischen Tons mit
   Kerzenumfeld `-2/+2`.
 - Sichtbare Achsen:
@@ -206,9 +230,9 @@ Lesart:
   neurochemische Deltas, Felddruck-/Feldklarheits-Deltas,
   Handlungshemmung und Handlungsfreigabe.
 - Wirkung: diagnostisch.
-- Bedeutung: "Was passiert innen und aussen, wenn DIO neurochemisch kippt?"
+- Bedeutung: "Was passiert innen und außen, wenn DIO neurochemisch kippt?"
 - Wichtig: Das Protokoll ist keine Entscheidungsregel.
-  Es macht Kipp-, Aktivierungs- und Erholungsuebergaenge lesbar.
+  Es macht Kipp-, Aktivierungs- und Erholungsübergaenge lesbar.
 
 ## Visuelle Kortex-Achsen
 
@@ -217,28 +241,28 @@ Sie beschreiben eine neue Sinnesmodalitaet von DIO.
 
 Wichtig:
 Sie sind keine menschlichen Pattern-Labels und keine direkten Handelssignale.
-  Sie machen sichtbar, ob DIO eine aeussere Form sieht oder nur Druck fuehlt.
+  Sie machen sichtbar, ob DIO eine äußere Form sieht oder nur Druck fühlt.
 
-## Sensorische Realitaetsverdichtung
+## Sensorische Realitätsverdichtung
 
 Diese Achsen liegen vor den abgeleiteten visuellen Druckwerten.
-Sie sollen verhindern, dass ein aeusserer Strukturreiz mehrfach als
+Sie sollen verhindern, dass ein äußerer Strukturreiz mehrfach als
 getrennter Alarm im System ankommt.
 
 ## `sensory_reality_pressure`
 
 - Bereich: `0.0 - 1.0`.
-- Ebene: aeussere Wahrnehmung / Core-Engine.
-- Funktion: verdichteter Druck der aeusseren Realitaetslage.
+- Ebene: äußere Wahrnehmung / Core-Engine.
+- Funktion: verdichteter Druck der äußeren Realitätslage.
 - Wirkung: weich auf visuelle Druck-/Neuheitsbildung.
-- Bedeutung: "Wie stark ist die eine aeussere Lage wirklich?"
+- Bedeutung: "Wie stark ist die eine äußere Lage wirklich?"
 
 ## `sensory_redundancy`
 
 - Bereich: `0.0 - 1.0`.
-- Ebene: aeussere Wahrnehmung / Reizentdoppelung.
+- Ebene: äußere Wahrnehmung / Reizentdoppelung.
 - Funktion: misst, ob mehrere verwandte Achsen denselben Reiz tragen.
-- Wirkung: erhoeht Habituation und senkt doppelte Verstaerkung.
+- Wirkung: erhoeht Habituation und senkt doppelte Verstärkung.
 - Bedeutung: "Sehe ich mehrere Dinge, oder dasselbe Ding mehrfach?"
 
 ## `sensory_habituation`
@@ -246,7 +270,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`.
 - Ebene: sensorische Regulation.
 - Funktion: weiche Gewoehnung an redundante Reizlagen.
-- Wirkung: reduziert Neuheit/Alarm ohne Wahrnehmung zu loeschen.
+- Wirkung: reduziert Neuheit/Alarm ohne Wahrnehmung zu löschen.
 - Bedeutung: "Dieser Reiz ist bekannt genug, um nicht mehrfach zu alarmieren."
 
 ## `sensory_gate`
@@ -261,26 +285,28 @@ getrennter Alarm im System ankommt.
 
 - Typ: Textlabel.
 - Ebene: Diagnose.
-- Moegliche Werte:
+- Funktion: benennt die verdichtete Qualität der aktuellen äußeren
+  Wahrnehmungslage.
+- Mögliche Werte:
   `quiet_outer_reality`, `clear_outer_reality`,
   `intense_outer_reality`, `redundant_outer_reality`.
 - Wirkung: diagnostisch.
-- Bedeutung: benennt die Qualitaet der aeusseren Wahrnehmungslage.
+- Bedeutung: benennt die Qualität der äußeren Wahrnehmungslage.
 
 ## `visual_form_state`
 
 - Typ: Dictionary/Zustandsobjekt.
-- Ebene: aeussere Wahrnehmung, visueller Kortex.
+- Ebene: äußere Wahrnehmung, visueller Kortex.
 - Funktion: verdichteter Zustand der gesehenen Marktform.
-- Wirkung: zuerst diagnostisch, spaeter weich.
-- Bedeutung: beschreibt die aeussere Gestalt als DIO-interne Formwelt,
+- Wirkung: zuerst diagnostisch, später weich.
+- Bedeutung: beschreibt die äußere Gestalt als DIO-interne Formwelt,
   nicht als menschliches Chartmuster.
 
 ## `visual_clarity`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: visueller Kortex.
-- Funktion: beschreibt, wie klar die aeussere Form fuer DIO lesbar ist.
+- Funktion: beschreibt, wie klar die äußere Form für DIO lesbar ist.
 - Wirkung: zuerst diagnostisch.
 - Bedeutung: hohe Klarheit bedeutet nicht automatisch Handlung,
   sondern nur bessere visuelle Orientierung.
@@ -289,8 +315,8 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: visueller Kortex.
-- Funktion: beschreibt, ob die erkannte Form ueber Zeit stabil bleibt.
-- Wirkung: zuerst diagnostisch, spaeter weich fuer MCM/act_watch.
+- Funktion: beschreibt, ob die erkannte Form über Zeit stabil bleibt.
+- Wirkung: zuerst diagnostisch, später weich für MCM/act_watch.
 - Bedeutung: trennt kurzlebigen Reiz von tragender Form.
 
 ## `visual_form_novelty`
@@ -300,17 +326,17 @@ getrennter Alarm im System ankommt.
 - Funktion: beschreibt, wie fremd oder neu die gesehene Form ist.
 - Wirkung: diagnostisch/entwicklungsoffen.
 - Bedeutung: Fremdheit soll nicht blockieren, sondern Beobachtung,
-  Reframing und neue Formzeichen ermoeglichen.
+  Reframing und neue Formzeichen ermöglichen.
 
 ## `visual_blindness`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: visueller Kortex, Meta-Regulation.
-- Funktion: beschreibt, wie stark DIO Druck fuehlt, ohne eine tragende Form
+- Funktion: beschreibt, wie stark DIO Druck fühlt, ohne eine tragende Form
   zu sehen.
-- Wirkung: spaeter weich Richtung Observe, act_watch, Reframing oder
+- Wirkung: später weich Richtung Observe, act_watch, Reframing oder
   Nullpunkt-Regulation.
-- Bedeutung: "Ich fuehle etwas, aber ich sehe noch nicht genug."
+- Bedeutung: "Ich fühle etwas, aber ich sehe noch nicht genug."
 
 ## `visual_form_pressure`
 
@@ -319,7 +345,7 @@ getrennter Alarm im System ankommt.
 - Funktion: beschreibt, wie stark die gesehene Form selbst Spannung erzeugt.
 - Wirkung: diagnostisch/soft.
 - Bedeutung: unterscheidet reine innere Nervositaet von Formspannung der
-  Aussenwelt.
+  Außenwelt.
 
 ## `visual_shape_resonance`
 
@@ -327,7 +353,7 @@ getrennter Alarm im System ankommt.
 - Ebene: visueller Kortex, Memory, Formsprache.
 - Funktion: beschreibt Resonanz zwischen aktueller Form und vorhandener
   Form-/Erfahrungssprache.
-- Wirkung: spaeter weich fuer Orientierung.
+- Wirkung: später weich für Orientierung.
 - Bedeutung: keine starre Wiedererkennung, sondern Formverwandtschaft.
 
 ## `visual_shape_fragility`
@@ -336,18 +362,18 @@ getrennter Alarm im System ankommt.
 - Ebene: visueller Kortex.
 - Funktion: beschreibt, wie bruechig oder instabil die gesehene Form wirkt.
 - Wirkung: diagnostisch/soft.
-- Bedeutung: hohe Fragilitaet kann spaeter Beobachtung oder act_watch
-  staerken, ohne Handlung hart zu verbieten.
+- Bedeutung: hohe Fragilitaet kann später Beobachtung oder act_watch
+  stärken, ohne Handlung hart zu verbieten.
 
 ## `visual_blind_action_load`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: visueller Kortex / Meta-Regulation.
 - Funktion: verdichtet visuelle Blindheit, geringe Formklarheit,
-  geringe Objektstabilitaet, Formdruck, Fragilitaet und schwache
-  Strukturtragfaehigkeit zu einer visuellen Handlungslast.
+  geringe Objektstabilität, Formdruck, Fragilitaet und schwache
+  Strukturtragfähigkeit zu einer visuellen Handlungslast.
 - Wirkung: weich.
-- Bedeutung: "Ich habe einen Handlungsreiz, aber mein Sehen traegt ihn noch
+- Bedeutung: "Ich habe einen Handlungsreiz, aber mein Sehen trägt ihn noch
   nicht sauber."
 
 ## `visual_action_uncertainty`
@@ -365,16 +391,16 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: visueller Kortex / Objektbindung.
-- Funktion: beschreibt, ob Formresonanz an ein stabiles aeusseres Objekt
+- Funktion: beschreibt, ob Formresonanz an ein stabiles äußeres Objekt
   gebunden ist.
 - Wirkung: diagnostisch/weich.
-- Bedeutung: "Woran in der Aussenform haengt das, was ich innen fuehle?"
+- Bedeutung: "Woran in der Außenform hängt das, was ich innen fühle?"
 
 ## `visual_grounding_strength`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: visuelle Erdung.
-- Funktion: beschreibt die Staerke der Kopplung zwischen aeusserer Form,
+- Funktion: beschreibt die Stärke der Kopplung zwischen äußerer Form,
   Struktur, Symbolcontainment und MCM-Reaktion.
 - Wirkung: weich stabilisierend.
 - Bedeutung: "Meine innere Reaktion hat eine sichtbare Quelle."
@@ -383,16 +409,16 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Formresonanz / fehlende Objektbindung.
-- Funktion: beschreibt Formspannung, die stark gefuehlt wird, aber noch
+- Funktion: beschreibt Formspannung, die stark gefühlt wird, aber noch
   nicht sauber an ein visuelles Objekt gebunden ist.
 - Wirkung: weich Richtung Beobachtung, Zoom und Reframe.
-- Bedeutung: "Ich fuehle Form, sehe aber noch nicht klar genug, was es ist."
+- Bedeutung: "Ich fühle Form, sehe aber noch nicht klar genug, was es ist."
 
 ## `visual_grounding_gap`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: visuelle Reifespannung.
-- Funktion: beschreibt die Luecke zwischen innerer Resonanz und aeusserer
+- Funktion: beschreibt die Lücke zwischen innerer Resonanz und äußerer
   Objektbindung.
 - Wirkung: weich auf Beobachtung, Replan und Handlungsunsicherheit.
 
@@ -401,23 +427,23 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`.
 - Ebene: visuelles Lernen / Fokusbedarf.
 - Funktion: beschreibt, ob DIO vor Handlung genauer sehen, zoomen oder die
-  Form als Objekt klaeren muss.
+  Form als Objekt klären muss.
 - Wirkung: weich.
 
 ## `visual_rational_observation_support`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: rationale Formanalyse.
-- Funktion: beschreibt Support fuer distanzierte Analyse statt unmittelbares
+- Funktion: beschreibt Support für distanzierte Analyse statt unmittelbares
   Miterleben.
-- Wirkung: Zielachse fuer Analysemodus.
+- Wirkung: Zielachse für Analysemodus.
 
 ## `visual_grounding_state`
 
 - Bereich: String.
 - Ebene: visueller Kortex.
 - Funktion: benennt den aktuellen Zustand visueller Erdung.
-- Moegliche Werte:
+- Mögliche Werte:
   `grounded_form`, `grounded_object`, `needs_visual_grounding`,
   `shape_without_object`, `unbound_resonance`.
 
@@ -426,7 +452,7 @@ getrennter Alarm im System ankommt.
 - Typ: Textzustand.
 - Ebene: Formsprache / visueller Kortex / Meta-Regulation.
 - Funktion: beschreibt, ob eine unsichere Formfamilie ruhig, fremd,
-  wiederkehrend, vertraut beobachtend oder tragfaehiger wird.
+  wiederkehrend, vertraut beobachtend oder tragfähiger wird.
 - Wirkung: weich.
 - Bedeutung: "Diese Art von Weltzustand kommt wieder, aber in Varianten."
 
@@ -437,7 +463,7 @@ getrennter Alarm im System ankommt.
 - Funktion: misst, wie stark eine Formfamilie als unsicher, blind,
   bruechig oder noch wenig tragend erlebt wird.
 - Wirkung: weich Richtung Beobachten und Lernen.
-- Bedeutung: keine Gefahrmarke, sondern Exposition gegenueber
+- Bedeutung: keine Gefahrmarke, sondern Exposition gegenüber
   wiederkehrender Unsicherheit.
 
 ## `uncertainty_familiarity`
@@ -484,8 +510,8 @@ getrennter Alarm im System ankommt.
 - Funktion: beschreibt, ob eine unsichere Variantenfamilie bereits tragende
   Erfahrung besitzt.
 - Wirkung: weich unterstuetzend, aber nicht als Freigaberegel.
-- Bedeutung: Handlung darf spaeter entstehen, wenn Unsicherheit vertraut und
-  tragfaehig geworden ist.
+- Bedeutung: Handlung darf später entstehen, wenn Unsicherheit vertraut und
+  tragfähig geworden ist.
 
 ## `DEBUG_OUTPUT_PROFILE`
 
@@ -498,12 +524,12 @@ getrennter Alarm im System ankommt.
   - `LIVE_DEBUG`
   - `CUSTOM`
 - Ebene: Debug/Diagnose.
-- Funktion: waehlt, welche Daten DIO nach aussen schreibt.
+- Funktion: wählt, welche Daten DIO nach außen schreibt.
 - Wirkung: technisch/diagnostisch.
-- Bedeutung: Die innere MCM-/Brain-Mechanik bleibt gleich, aber die aeussere
+- Bedeutung: Die innere MCM-/Brain-Mechanik bleibt gleich, aber die äußere
   Beobachtung wird dosiert. Damit kann ein Lauf als tiefer Forschungslauf,
   schlanker Backtest, GUI-Lauf, Performance-Messung oder Live-Diagnose laufen.
-  `CUSTOM` bedeutet: alle Einzelschalter werden manuell gefuehrt.
+  `CUSTOM` bedeutet: alle Einzelschalter werden manuell geführt.
 
 ## `DEBUG_WRITE_MODE`
 
@@ -520,7 +546,7 @@ getrennter Alarm im System ankommt.
   `buffered` sammelt im RAM und schreibt beim Beenden.
   `buffered_safe` sammelt ebenfalls, flushes aber periodisch nach Zeit oder
   Zeilenlimit und beim Beenden. Das reduziert Schreiblast, ohne die
-  Wahrnehmungs-/Denkmechanik zu veraendern.
+  Wahrnehmungs-/Denkmechanik zu verändern.
 
 ## `START_EQUITY`
 
@@ -540,7 +566,7 @@ getrennter Alarm im System ankommt.
   und `pnl_netto` mit dem Phemex-Futures-Konto.
 - Wirkung: technisch/diagnostisch.
 - Bedeutung: DIO soll im Live-Modus nicht in einer simulierten 100-USDT-Welt
-  leben, sondern seine reale Kontotragfaehigkeit wahrnehmen.
+  leben, sondern seine reale Kontotragfähigkeit wahrnehmen.
 
 ## `current_equity`
 
@@ -549,17 +575,17 @@ getrennter Alarm im System ankommt.
 - Funktion: aktueller Kontostand im Backtest oder synchronisierte
   Futures-Equity im Live-Modus.
 - Wirkung: diagnostisch.
-- Bedeutung: "Wie tragfaehig ist mein reales Kapitalfeld gerade?"
+- Bedeutung: "Wie tragfähig ist mein reales Kapitalfeld gerade?"
 
 ## `pnl_netto`
 
 - Bereich: Kapitaldifferenz.
-- Ebene: Statistik, Prozessqualitaet.
+- Ebene: Statistik, Prozessqualität.
 - Funktion: Nettoentwicklung. Im Backtest aus lokal berechnetem Trade-PnL,
   im Live-Modus bei aktivierter Synchronisation aus
   `current_equity - start_equity`.
 - Wirkung: diagnostisch.
-- Bedeutung: Nicht nur Gewinn/Verlust, sondern Rueckmeldung ueber reale
+- Bedeutung: Nicht nur Gewinn/Verlust, sondern Rückmeldung über reale
   Prozesswirkung.
 
 ---
@@ -580,14 +606,14 @@ getrennter Alarm im System ankommt.
 - Ebene: Handlung, Meta-Regulation.
 - Funktion: beschreibt, wie viel Handlungskomplexitaet eine Lage fordert.
 - Wirkung: diagnostisch/weich.
-- Bedeutung: "Ist diese Handlung einfach tragfaehig oder verlangt sie hohe
+- Bedeutung: "Ist diese Handlung einfach tragfähig oder verlangt sie hohe
   innere Kontrolle?"
 
 ## `depth_regulation_need`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Meta-Regulation.
-- Funktion: misst, ob Denk- und Handlungstiefe zur aktuellen Tragfaehigkeit
+- Funktion: misst, ob Denk- und Handlungstiefe zur aktuellen Tragfähigkeit
   passen.
 - Wirkung: weich.
 - Bedeutung: "Muss ich meine Verarbeitungstiefe anpassen?"
@@ -596,7 +622,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Denken / Innenwahrnehmung.
-- Funktion: Bedarf nach Rueckpruefung der eigenen Deutung.
+- Funktion: Bedarf nach Rückprüfung der eigenen Deutung.
 - Wirkung: diagnostisch/weich.
 - Bedeutung: "Muss ich mich selbst verstehen, bevor ich handle?"
 
@@ -604,7 +630,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Memory / Denken.
-- Funktion: Bedarf, fruehere Erlebnisse innerlich neu zu durchlaufen.
+- Funktion: Bedarf, frühere Erlebnisse innerlich neu zu durchlaufen.
 - Wirkung: diagnostisch/weich.
 - Bedeutung: "Brauche ich Erfahrungs-Resonanz, bevor ich entscheide?"
 
@@ -612,9 +638,9 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Denken / Zukunftsbild.
-- Funktion: Bedarf, moegliche Bewegungsformen innerlich zu testen.
+- Funktion: Bedarf, mögliche Bewegungsformen innerlich zu testen.
 - Wirkung: diagnostisch.
-- Bedeutung: "Welche Form koennte entstehen, wenn der Preis weiterlaeuft?"
+- Bedeutung: "Welche Form könnte entstehen, wenn der Preis weiterläuft?"
 
 ## `pause_maturity`
 
@@ -627,44 +653,44 @@ getrennter Alarm im System ankommt.
 ## `action_load_capacity`
 
 - Bereich: `0.0 - 1.0`.
-- Ebene: Handlung / Tragfaehigkeit.
-- Funktion: Verhaeltnis zwischen Handlungslast und innerer Kapazitaet.
+- Ebene: Handlung / Tragfähigkeit.
+- Funktion: Verhaeltnis zwischen Handlungslast und innerer Kapazität.
 - Wirkung: weich.
 - Bedeutung: "Kann ich diese Handlung nervlich und strukturell tragen?"
 
 ## `plan_pressure`
 
 - Bereich: `0.0 - 1.0`.
-- Ebene: Handlungstiefe / Moeglichkeitsraum.
+- Ebene: Handlungstiefe / Möglichkeitsraum.
 - Funktion: beschreibt vorhandenen Handlungsdruck, ohne daraus automatisch
   eine reife Handlung zu machen.
 - Wirkung: diagnostisch/weich.
-- Bedeutung: "Da will etwas handeln, aber ist es schon tragfaehig?"
+- Bedeutung: "Da will etwas handeln, aber ist es schon tragfähig?"
 
 ## `act_watch_readiness`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Reifeschicht / Beobachtungslernen.
 - Funktion: beschreibt, ob ein Handlungsimpuls als `act_watch` beobachtet
-  werden soll, weil Druck vorhanden ist, aber Tragfaehigkeit noch fehlt.
+  werden soll, weil Druck vorhanden ist, aber Tragfähigkeit noch fehlt.
 - Wirkung: weich.
 - Bedeutung: "Ich beobachte meinen Handlungsimpuls, statt ihn blind
-  auszufuehren."
+  auszuführen."
 
 ## `structure_carrying_need`
 
 - Bereich: `0.0 - 1.0`.
-- Ebene: Struktur-Tragfaehigkeit.
-- Funktion: misst, wie viel zusaetzliche Tragfaehigkeit eine Struktur braucht,
+- Ebene: Struktur-Tragfähigkeit.
+- Funktion: misst, wie viel zusätzliche Tragfähigkeit eine Struktur braucht,
   bevor Handlung reif wird.
 - Wirkung: weich.
-- Bedeutung: "Diese Form ist moeglich, aber sie muss erst tragen lernen."
+- Bedeutung: "Diese Form ist möglich, aber sie muss erst tragen lernen."
 
 ## `depth_efficiency`
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Denken / Energieeffizienz.
-- Funktion: prueft, ob mehr Denken wirklich mehr Ordnung erzeugt.
+- Funktion: prüft, ob mehr Denken wirklich mehr Ordnung erzeugt.
 - Wirkung: diagnostisch/weich.
 - Bedeutung: "Macht tieferes Denken klarer oder nur schwerer?"
 
@@ -684,7 +710,7 @@ getrennter Alarm im System ankommt.
 - Funktion: beschreibt, wie stark DIO noch auf feste Leitplanken angewiesen
   wirkt, weil Formsprache, Verdichtung oder innere Ordnung noch unreif sind.
 - Wirkung: diagnostisch.
-- Bedeutung: "Nutze ich Parameter als reife Leitplanke oder als Ersatz fuer
+- Bedeutung: "Nutze ich Parameter als reife Leitplanke oder als Ersatz für
   eigene Ordnung?"
 
 ## `self_regulation_maturity`
@@ -692,9 +718,9 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`.
 - Ebene: Selbstregulation / Entwicklung.
 - Funktion: beschreibt, ob DIO Denklast, Handlungslast, Formsprache und
-  Tragfaehigkeit ausreichend balanciert.
+  Tragfähigkeit ausreichend balanciert.
 - Wirkung: diagnostisch/weich.
-- Bedeutung: "Wird aus Aktivitaet Ordnung?"
+- Bedeutung: "Wird aus Aktivität Ordnung?"
 
 ## `cognitive_overcontrol`
 
@@ -709,8 +735,8 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`.
 - Ebene: Denkbewegung.
-- Funktion: misst, wie stark DIO seine Denktiefe gegenueber dem letzten
-  Idle-Schritt veraendert.
+- Funktion: misst, wie stark DIO seine Denktiefe gegenüber dem letzten
+  Idle-Schritt verändert.
 - Wirkung: diagnostisch.
 - Bedeutung: "Passe ich meine innere Verarbeitung beweglich an?"
 
@@ -723,7 +749,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Trust/Transfer
 - Funktion: Rohvertrauen aus Formsprache, Handlungstrust, Memory-Orientierung,
-  Struktur-Tragfaehigkeit und aktivem Kontext.
+  Struktur-Tragfähigkeit und aktivem Kontext.
 - Wirkung: diagnostisch/weich.
 - Bedeutung: "Wie viel Vertrauen ist grundsaetzlich vorhanden?"
 
@@ -731,31 +757,33 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Trust/Transfer
-- Funktion: prueft, ob vorhandenes Vertrauen zur aktuellen Lage passt.
+- Funktion: prüft, ob vorhandenes Vertrauen zur aktuellen Lage passt.
 - Wirkung: weich.
-- Bedeutung: "Traegt mein Vertrauen in dieser konkreten Fremdheit?"
+- Bedeutung: "Trägt mein Vertrauen in dieser konkreten Fremdheit?"
 
 ## `transfer_maturity_gap`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Trust/Transfer
 - Funktion: Abstand zwischen gespeicherter Erfahrung und aktueller
-  Uebertragbarkeit.
+  Übertragbarkeit.
 - Wirkung: weich auf Beobachtung, Replan, Action-Support und Inhibition.
 - Bedeutung: "Meine Erfahrung sagt etwas, aber ich bin nicht sicher, ob ich sie
-  hier reif uebertragen darf."
+  hier reif übertragen darf."
 
 ## `trust_transfer_mode`
 
 - Typ: Text
 - Ebene: Trust/Transfer
+- Funktion: benennt, wie DIO gespeichertes Vertrauen auf die aktuelle Lage
+  überträgt.
 - Werte:
   - `trusted_transfer`
   - `bearing_transfer`
   - `partial_transfer`
   - `immature_transfer_watch`
 - Wirkung: diagnostisch.
-- Bedeutung: innere Einordnung der Vertrauensuebertragung.
+- Bedeutung: innere Einordnung der Vertrauensübertragung.
 
 ## `transfer_break_fatigue`
 
@@ -763,8 +791,8 @@ getrennter Alarm im System ankommt.
 - Ebene: Trust/Transfer, nervliche Regulation
 - Funktion: misst Ermuedung/Fragilitaet, wenn unreifer Transfer,
   Erwartungsdruck, Nachwirkung und Strukturunsicherheit zusammenkommen.
-- Wirkung: weich, aber seit Rebalance nur noch ueber Ueberschuss.
-- Bedeutung: "Meine Uebertragung wird nervlich muede."
+- Wirkung: weich, aber seit Rebalance nur noch über Überschuss.
+- Bedeutung: "Meine Übertragung wird nervlich muede."
 
 ## `transfer_recovery_need`
 
@@ -778,7 +806,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Trust/Transfer
-- Funktion: punktueller Ausloeser fuer sichtbares Observe/Replan, wenn mehrere
+- Funktion: punktueller Auslöser für sichtbares Observe/Replan, wenn mehrere
   Bedingungen gemeinsam reif genug sind.
 - Wirkung: diagnostisch/weich.
 - Bedeutung: "Jetzt ist nicht nur allgemeine Muedigkeit da, sondern ein echter
@@ -788,7 +816,7 @@ getrennter Alarm im System ankommt.
 
 - Typ: Boolean
 - Ebene: Trust/Transfer
-- Funktion: zeigt, ob `transfer_break_trigger` und Tragfaehigkeitsbedingungen
+- Funktion: zeigt, ob `transfer_break_trigger` und Tragfähigkeitsbedingungen
   zusammen eine sichtbare Reaktion erlauben.
 - Wirkung: weich auf `transfer_break_observe` / `transfer_break_replan`.
 - Bedeutung: "Der Bruch ist reif genug, um das Verhalten umzuschalten."
@@ -804,7 +832,7 @@ getrennter Alarm im System ankommt.
 - Funktion: misst Vertrautheit der aktuellen Lage aus eigener Formsprache,
   Memory-Orientierung, Kontext und Struktur.
 - Wirkung: weich/diagnostisch.
-- Bedeutung: keine Streckenerinnerung, sondern "Wie vertraut fuehlt sich diese
+- Bedeutung: keine Streckenerinnerung, sondern "Wie vertraut fühlt sich diese
   Art Beschaffenheit an?"
 
 ## `semantic_shift_pressure`
@@ -819,7 +847,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Semantische Deutung / Trust
-- Funktion: misst, wie tragfaehig Erfahrung auf die aktuelle Lage uebertragen
+- Funktion: misst, wie tragfähig Erfahrung auf die aktuelle Lage übertragen
   werden kann.
 - Wirkung: weich.
 - Bedeutung: "Wie viel meiner Erfahrung kann ich dieser Fremdheit anvertrauen?"
@@ -828,8 +856,8 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Semantische Deutung
-- Funktion: Gesamtqualitaet der aktuellen Deutung aus Vertrautheit,
-  Transfer-Tragfaehigkeit, Memory-Orientierung, Feldklarheit und Struktur.
+- Funktion: Gesamtqualität der aktuellen Deutung aus Vertrautheit,
+  Transfer-Tragfähigkeit, Memory-Orientierung, Feldklarheit und Struktur.
 - Wirkung: diagnostisch/weich.
 - Bedeutung: "Wie gut lese ich diese Lage gerade?"
 
@@ -841,6 +869,8 @@ getrennter Alarm im System ankommt.
 
 - Typ: Text
 - Ebene: Zielerwartung
+- Funktion: benennt den aktuellen Zustand der Zielerwartung während einer
+  offenen Position oder Exit-Beobachtung.
 - Werte:
   - `target_expectation_holds`
   - `expectation_break_observe`
@@ -855,7 +885,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Zielerwartung
-- Funktion: Druck, dass die urspruengliche Zielerwartung bricht.
+- Funktion: Druck, dass die ursprüngliche Zielerwartung bricht.
 - Wirkung: weich/diagnostisch.
 - Bedeutung: "Mein Plan verliert Deutungskraft."
 
@@ -863,7 +893,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Zielerwartung
-- Funktion: Support, dass die Zielerwartung weiter tragfaehig ist.
+- Funktion: Support, dass die Zielerwartung weiter tragfähig ist.
 - Wirkung: weich/diagnostisch.
 - Bedeutung: "Der Plan kann noch getragen werden."
 
@@ -873,7 +903,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Zielerwartung
 - Funktion: Einschaetzung, ob das Ziel noch erreichbar wirkt.
 - Wirkung: diagnostisch/weich.
-- Bedeutung: "Der Weg zum Ziel fuehlt sich noch moeglich an."
+- Bedeutung: "Der Weg zum Ziel fühlt sich noch möglich an."
 
 ## `plan_trust`
 
@@ -895,33 +925,33 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Position/Exit
-- Funktion: Druck, aktiv ueber Exit nachzudenken.
+- Funktion: Druck, aktiv über Exit nachzudenken.
 - Wirkung: aktuell vor allem Observe/Replay, kein aktiver harter Exit.
 - Bedeutung: "Der Exit wird nervlich/strukturell relevant."
 
 ## `participation_proximity`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Beteiligung / Handlungsrealitaet
+- Ebene: Beteiligung / Handlungsrealität
 - Funktion: beschreibt, wie nah DIO vom distanzierten Betrachten zur realen
   Beteiligung kommt.
-- Wirkung: Zielachse, spaeter diagnostisch/weich.
+- Wirkung: Zielachse, später diagnostisch/weich.
 - Bedeutung: "Bin ich noch Beobachter oder schon nahe an Handlung?"
 
 ## `action_reality_contact`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Handlung / Realitaetskontakt
+- Ebene: Handlung / Realitätskontakt
 - Funktion: beschreibt, wie stark eine Handlung reale Konsequenz bekommen
   hat oder bekommen kann.
-- Wirkung: Zielachse, spaeter diagnostisch/weich.
-- Bedeutung: "Meine Wahrnehmung beruehrt jetzt die Welt durch Handlung."
+- Wirkung: Zielachse, später diagnostisch/weich.
+- Bedeutung: "Meine Wahrnehmung berührt jetzt die Welt durch Handlung."
 
 ## `decision_embodiment_pressure`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Entscheidung / Beteiligung
-- Funktion: beschreibt die nervliche Naehe zur Entscheidungsschwelle.
+- Funktion: beschreibt die nervliche Nähe zur Entscheidungsschwelle.
 - Wirkung: Zielachse.
 - Bedeutung: "Die Entscheidung wird nicht nur gedacht, sondern beginnt mich
   zu beteiligen."
@@ -930,7 +960,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Order / Bindung
-- Funktion: beschreibt, wie stark aus einer Moeglichkeit eine reale
+- Funktion: beschreibt, wie stark aus einer Möglichkeit eine reale
   Verpflichtung geworden ist.
 - Wirkung: Zielachse.
 - Bedeutung: "Ich habe nicht nur beobachtet, ich habe eine Handlung gesetzt."
@@ -938,11 +968,11 @@ getrennter Alarm im System ankommt.
 ## `consequence_bearing`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Konsequenz / Tragfaehigkeit
+- Ebene: Konsequenz / Tragfähigkeit
 - Funktion: beschreibt, ob DIO die reale Konsequenz einer Handlung tragen
   kann.
 - Wirkung: Zielachse.
-- Bedeutung: "Kann ich tragen, was meine Handlung ausloest?"
+- Bedeutung: "Kann ich tragen, was meine Handlung auslöst?"
 
 ## `position_reality_pressure`
 
@@ -951,16 +981,16 @@ getrennter Alarm im System ankommt.
 - Funktion: beschreibt den Druck, der aus einer real offenen Position
   entsteht.
 - Wirkung: Zielachse, verwandt mit `position_cognitive_load`.
-- Bedeutung: "Die Position ist nicht mehr Analyse, sie wirkt auf mich zurueck."
+- Bedeutung: "Die Position ist nicht mehr Analyse, sie wirkt auf mich zurück."
 
 ## `position_inconsistency_stress`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: offene Position / MCM-Feld / Stress
-- Funktion: misst, wie stark Planvertrauen, Kontaktqualitaet, Zeitbindung
+- Funktion: misst, wie stark Planvertrauen, Kontaktqualität, Zeitbindung
   und aktueller Positionsverlauf auseinanderfallen.
 - Wirkung: Diagnose- und Memory-Spur, keine harte Exit-Regel.
-- Bedeutung: "Ich halte eine Handlung, die innerlich nicht sauber traegt."
+- Bedeutung: "Ich halte eine Handlung, die innerlich nicht sauber trägt."
 
 ## `position_mcm_field_strain`
 
@@ -968,15 +998,15 @@ getrennter Alarm im System ankommt.
 - Ebene: offene Position / MCM-Feld
 - Funktion: beschreibt, wie stark die offene Position das MCM-Feld besetzt
   oder verformt.
-- Wirkung: In-Trade-Zusammenfassung und spaeteres Erfahrungslernen.
+- Wirkung: In-Trade-Zusammenfassung und späteres Erfahrungslernen.
 - Bedeutung: "Diese offene Konsequenz zieht am Feld."
 
 ## `position_self_trust_gap`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Selbstvertrauen / Planbindung
-- Funktion: Abstand zwischen Vertrauen in den Plan und tatsaechlich
-  getragener Kontakt-/Realitaetsqualitaet.
+- Funktion: Abstand zwischen Vertrauen in den Plan und tatsächlich
+  getragener Kontakt-/Realitätsqualität.
 - Wirkung: weiche Selbstschutz- und Reflexionsdiagnose.
 - Bedeutung: "Ich handle oder halte, aber mein Vertrauen ist nicht ganz
   deckungsgleich mit dem Kontakt."
@@ -987,7 +1017,7 @@ getrennter Alarm im System ankommt.
 - Ebene: neurochemische Positionslast
 - Funktion: anhaltende Belastung einer offenen, unsicheren oder schwer
   tragbaren Position.
-- Wirkung: In-Trade-Memory, Prozessqualitaet, spaetere Reorganisation.
+- Wirkung: In-Trade-Memory, Prozessqualität, spätere Reorganisation.
 - Bedeutung: "Die offene Konsequenz erzeugt dauerhaften Stress."
 
 ## `position_noradrenaline_arousal`
@@ -995,7 +1025,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: neurochemische Alarm-/Aktivierungsschicht
 - Funktion: akute Erregung durch Gegenbewegung, Giveback, Exitdruck oder
-  ueberkoppelten Kontakt.
+  überkoppelten Kontakt.
 - Wirkung: Diagnose, keine unmittelbare Motorikregel.
 - Bedeutung: "Die Position macht mich wach und druckvoll."
 
@@ -1005,8 +1035,8 @@ getrennter Alarm im System ankommt.
 - Ebene: Selbstschutz / Reflexion
 - Funktion: zeigt, wie stark DIO Abstand zur eigenen Positionsinnenlage
   braucht.
-- Wirkung: weicher Hinweis fuer Beobachtung, Reflexion, Replay.
-- Bedeutung: "Ich brauche Distanz, bevor ich mich von diesem Gefuehl leiten
+- Wirkung: weicher Hinweis für Beobachtung, Reflexion, Replay.
+- Bedeutung: "Ich brauche Distanz, bevor ich mich von diesem Gefühl leiten
   lasse."
 
 ## `position_held_risk_discomfort`
@@ -1014,17 +1044,17 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: offene Position / Risikokoerper
 - Funktion: beschreibt das unangenehme Tragen von Risiko bei negativer
-  Bewegung, Giveback und Selbstvertrauensluecke.
-- Wirkung: Konsequenzspur fuer Memory.
-- Bedeutung: "Das gehaltene Risiko fuehlt sich belastend an."
+  Bewegung, Giveback und Selbstvertrauenslücke.
+- Wirkung: Konsequenzspur für Memory.
+- Bedeutung: "Das gehaltene Risiko fühlt sich belastend an."
 
 ## `position_process_quality`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: offene Position / Reife
 - Funktion: bewertet nicht Gewinn/Verlust, sondern ob DIO eine offene
-  Handlung geordnet, tragfaehig und realitaetsnah verarbeitet.
-- Wirkung: daempft unverdiente Entlastung und staerkt tragfaehige Erfahrung.
+  Handlung geordnet, tragfähig und realitätsnah verarbeitet.
+- Wirkung: dämpft unverdiente Entlastung und stärkt tragfähige Erfahrung.
 - Bedeutung: "War mein Umgang mit dieser Position reif?"
 
 ## `position_experience_label`
@@ -1032,10 +1062,85 @@ getrennter Alarm im System ankommt.
 - Typ: String
 - Ebene: offene Position / semantische Verdichtung
 - Funktion: benennt die erlebte Positionslage verdichtet.
-- Moegliche Werte: `carried_position_contact`, `unearned_relief_watch`,
+- Mögliche Werte: `carried_position_contact`, `unearned_relief_watch`,
   `protective_stress_contact`, `self_trust_gap_contact`,
   `protective_distance_watch`, `open_position_feel`.
 - Bedeutung: "Wie nennt DIO den inneren Zustand dieser offenen Konsequenz?"
+
+## `position_consequence_burden`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / Formfeedback / offene Konsequenz
+- Funktion: verdichtet Positionsstress, Cortisol-Last, Selbstvertrauenslücke
+  und gehaltenes Risikounbehagen zu einer belastenden Konsequenzspur.
+- Wirkung: stärkt weich `contact_pain_memory`, `contact_carefulness`,
+  `contact_burden_evidence` und Reorganisation.
+- Bedeutung: "Diese Art Kontakt hat mich belastet und braucht anderen Umgang."
+
+## `position_consequence_residual_for_care`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / Rezeptor-Sättigung / Carefulness
+- Funktion: beschreibt den Rest der Positionsbelastung, der nach dem
+  primaeren Schmerzabdruck noch für Vorsicht uebrig bleibt.
+- Wirkung: verhindert, dass dieselbe Positionslast ungefiltert zugleich als
+  Schmerz und nochmals als Vorsicht wirkt.
+- Bedeutung: "Ein Teil der Last wurde schon als Schmerz gefühlt; nur der
+  Rest wird noch zur Vorsicht."
+
+## `position_consequence_residual_for_memory`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / Rezeptor-Sättigung / Memory
+- Funktion: beschreibt den Rest der Positionsbelastung, der nach
+  Schmerz- und Vorsichtsabdruck noch in die persistente Burden-Spur darf.
+- Wirkung: verhindert stoerende Mehrfachbelastung in
+  `contact_burden_evidence`.
+- Bedeutung: "Was noch nicht verarbeitet wurde, darf als Erinnerungslast
+  bleiben."
+
+## `position_constructive_bearing`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / Formfeedback / Reife
+- Funktion: beschreibt, ob DIO eine offene Position trotz Risiko geordnet
+  und tragfähig verarbeitet hat.
+- Wirkung: stärkt weich `contact_maturity`, `contact_utility` und
+  konstruktive Kontaktspuren.
+- Bedeutung: "Ich konnte diese offene Konsequenz reif tragen."
+
+## `transitional_contact_band`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / Kontaktreifung / Übergangsstruktur
+- Funktion: beschreibt, ob eine Struktur weder eindeutig stark noch
+  eindeutig schwach wirkt, sondern als Übergangskontakt gelesen werden
+  muss.
+- Wirkung: Diagnose- und Lernanteil für mittlere Kontaktzonen, keine
+  direkte Handelsfreigabe.
+- Bedeutung: "Dieser Kontakt ist nicht klar, aber er könnte reifen."
+
+## `transitional_contact_maturation`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / Kontaktreifung / MCM-Zeitbindung
+- Funktion: verbindet Übergangsstruktur, Zeitbindung,
+  Bereichstragfähigkeit, Reality-Check und konstruktives Positions-Tragen
+  zu einer weichen Reifungsspur.
+- Wirkung: stärkt geringfuegig `contact_utility_sample` und
+  `contact_maturity_sample`, ohne Aktion direkt zu erzwingen.
+- Bedeutung: "Ein uneindeutiger Kontakt hat genug Zusammenhang, um als
+  reifender Kontakt gelernt zu werden."
+
+## `position_feedback_label`
+
+- Typ: String
+- Ebene: Outcome / semantische Rückführung
+- Funktion: übernimmt die Positions-Erlebensbezeichnung in das
+  Formfeedback.
+- Wirkung: macht sichtbar, welche innere Lage die Formfamilie gepraegt hat.
+- Bedeutung: "Welche Positionslage hat diese Erfahrung in die Formsprache
+  zurückgeschrieben?"
 
 ## `outcome_consequence_integration`
 
@@ -1043,8 +1148,8 @@ getrennter Alarm im System ankommt.
 - Ebene: Outcome / Lernen
 - Funktion: beschreibt, wie stark ein Ergebnis als Konsequenz eigener
   Beteiligung integriert wird.
-- Wirkung: Zielachse, spaeter persistent/lernend.
-- Bedeutung: "Dieses Ergebnis gehoert zu meiner Handlung und muss gelernt
+- Wirkung: Zielachse, später persistent/lernend.
+- Bedeutung: "Dieses Ergebnis gehört zu meiner Handlung und muss gelernt
   werden."
 
 ---
@@ -1055,7 +1160,7 @@ getrennter Alarm im System ankommt.
 
 - Typ: Boolean
 - Ebene: MCM-Feld
-- Funktion: Rueckkehr in Beobachtung, wenn Denken/Memory/Orientierung zu blind
+- Funktion: Rückkehr in Beobachtung, wenn Denken/Memory/Orientierung zu blind
   oder belastet wird.
 - Wirkung: weich zu Observe.
 - Bedeutung: "Finde wieder zu dir selbst."
@@ -1080,15 +1185,15 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: MCM-Feld
-- Funktion: Feldseitige Unterstuetzung fuer Handlung.
+- Funktion: Feldseitige Unterstuetzung für Handlung.
 - Wirkung: weich.
-- Bedeutung: "Das Feld traegt Handlung."
+- Bedeutung: "Das Feld trägt Handlung."
 
 ## `action_clearance`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Meta-Regulation
-- Funktion: innere Freigabe fuer Handlung.
+- Funktion: innere Freigabe für Handlung.
 - Wirkung: weich.
 - Bedeutung: "Ich darf handeln."
 
@@ -1109,14 +1214,14 @@ getrennter Alarm im System ankommt.
 - Typ: Text
 - Ebene: Formsprache
 - Funktion: eigenes internes Formzeichen.
-- Wirkung: diagnostisch und ueber Entwicklungswerte weich.
+- Wirkung: diagnostisch und über Entwicklungswerte weich.
 - Bedeutung: keine menschliche Benennung, sondern verdichtete Eigenwahrnehmung.
 
 ## `form_symbol_development_quality`
 
-- Bereich: ungefaehr `-1.0 - 1.0`
+- Bereich: ungefähr `-1.0 - 1.0`
 - Ebene: Formsprache / Entwicklung
-- Funktion: gelernte Entwicklungsqualitaet eines Formzeichens.
+- Funktion: gelernte Entwicklungsqualität eines Formzeichens.
 - Wirkung: weich.
 - Bedeutung: "Hat dieses Zeichen konstruktiv zur Entwicklung beigetragen?"
 
@@ -1134,7 +1239,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Formsprache / Handlung
 - Funktion: Handlungstrust eines Zeichens.
 - Wirkung: weich.
-- Bedeutung: "Dieses Zeichen traegt Handlungserfahrung."
+- Bedeutung: "Dieses Zeichen trägt Handlungserfahrung."
 
 ## `form_symbol_caution_trust`
 
@@ -1148,7 +1253,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Formsprache / semantische Verdichtung
-- Funktion: misst, wie viel interne Bedeutung ein Formzeichen bereits traegt.
+- Funktion: misst, wie viel interne Bedeutung ein Formzeichen bereits trägt.
 - Wirkung: diagnostisch.
 - Bedeutung: "Diese Form ist nicht nur Reiz, sondern beginnt Bedeutung zu
   tragen."
@@ -1166,11 +1271,11 @@ getrennter Alarm im System ankommt.
 ## `form_symbol_semantic_coherence`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Formsprache / Kohaerenz
-- Funktion: verbindet Dichte, Kompression, Tragfaehigkeit, Stabilitaet und
+- Ebene: Formsprache / Kohärenz
+- Funktion: verbindet Dichte, Kompression, Tragfähigkeit, Stabilität und
   Feldklarheit.
 - Wirkung: diagnostisch.
-- Bedeutung: "Die Bedeutung dieser Form ist innerlich zusammenhaengend."
+- Bedeutung: "Die Bedeutung dieser Form ist innerlich zusammenhängend."
 
 ## `form_symbol_semantic_learning_need`
 
@@ -1184,18 +1289,18 @@ getrennter Alarm im System ankommt.
 ## `form_symbol_semantic_action_nearness`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Formsprache / Handlungsnaehe
+- Ebene: Formsprache / Handlungsnähe
 - Funktion: beschreibt, ob eine semantisch verdichtete Form nahe an
-  tragfaehiger Handlung liegt.
+  tragfähiger Handlung liegt.
 - Wirkung: diagnostisch; keine harte Orderfreigabe.
-- Bedeutung: "Diese Bedeutung kommt in die Naehe von Handlung, traegt sie
+- Bedeutung: "Diese Bedeutung kommt in die Nähe von Handlung, trägt sie
   aber nicht automatisch."
 
 ## `form_symbol_semantic_primary_layer`
 
 - Typ: Text
 - Ebene: Formsprache / Fuehrungsschicht
-- Funktion: benennt DIO-intern, welche Bedeutungsebene gerade fuehrt.
+- Funktion: benennt DIO-intern, welche Bedeutungsebene gerade führt.
 - Wirkung: diagnostisch.
 - Beispiele: `trace_layer`, `wide_form_layer`, `structured_form_layer`,
   `object_layer`, `learning_layer`, `observation_layer`,
@@ -1219,7 +1324,7 @@ getrennter Alarm im System ankommt.
 - Beispiele: `thin_trace`, `named_form_packet`, `open_learning_packet`,
   `watching_packet`, `reflective_packet`, `compound_packet`,
   `condensed_object_packet`, `action_bearing_packet`.
-- Bedeutung: "Was fuer eine Art inneres Bedeutungspaket ist diese Form?"
+- Bedeutung: "Was für eine Art inneres Bedeutungspaket ist diese Form?"
 
 ## `form_symbol_semantic_profile`
 
@@ -1240,7 +1345,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Formsprache / Kontaktreife
 - Funktion: beschreibt, welche Kontaktlernlage DIO zu dieser Form gespeichert
   hat.
-- Wirkung: diagnostisch und weich ueber Kontaktreife.
+- Wirkung: diagnostisch und weich über Kontaktreife.
 - Beispiele: `unformed_contact`, `burdened_contact`, `careful_contact`,
   `learning_contact`, `maturing_contact`, `constructive_contact`.
 - Bedeutung: "Wie reif ist mein Umgang mit dieser Form geworden?"
@@ -1250,7 +1355,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Formsprache / evolutionaeres Lernen
 - Funktion: gespeicherte Reife des Umgangs mit einer Form.
-- Wirkung: weich. Kann Handlungstragfaehigkeit leicht stuetzen, wenn Nutzen
+- Wirkung: weich. Kann Handlungstragfähigkeit leicht stuetzen, wenn Nutzen
   und Reife gemeinsam wachsen.
 - Bedeutung: "Ich kenne diese Form nicht nur, ich habe gelernt, wie ich mit
   ihr umgehen kann."
@@ -1277,25 +1382,25 @@ getrennter Alarm im System ankommt.
 - Ebene: Formsprache / Vorsicht
 - Funktion: gespeicherter Bedarf nach vorsichtigerem Umgang mit einer Form.
 - Wirkung: weich Richtung Beobachtung und Reorganisation.
-- Bedeutung: "Diese Form verlangt Abstand, Pruefung oder einen anderen Umgang."
+- Bedeutung: "Diese Form verlangt Abstand, Prüfung oder einen anderen Umgang."
 
 ## `form_symbol_contact_burden_evidence`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Formsprache / Konsequenzgedaechtnis
-- Funktion: laenger wirkende Evidenz, dass der bisherige Kontakt mit einer
+- Ebene: Formsprache / Konsequenzgedächtnis
+- Funktion: länger wirkende Evidenz, dass der bisherige Kontakt mit einer
   Form Belastung, Druck oder unreifen Umgang erzeugt hat.
 - Wirkung: weich Richtung Beobachtung, Reframing und geringere impulsnahe
-  Handlungstragfaehigkeit.
+  Handlungstragfähigkeit.
 - Bedeutung: "Hier sammelt sich Belastung aus wiederholtem Kontakt."
 
 ## `form_symbol_contact_utility_evidence`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Formsprache / Nutzen-Gedaechtnis
-- Funktion: laenger wirkende Evidenz, dass der Kontakt mit einer Form bei
+- Ebene: Formsprache / Nutzen-Gedächtnis
+- Funktion: länger wirkende Evidenz, dass der Kontakt mit einer Form bei
   reifem Umgang Nutzen, Entlastung oder Stabilisierung erzeugt hat.
-- Wirkung: weich Richtung Handlungstragfaehigkeit, wenn auch Reife und
+- Wirkung: weich Richtung Handlungstragfähigkeit, wenn auch Reife und
   Kontext passen.
 - Bedeutung: "Hier sammelt sich tragender Nutzen aus wiederholtem Kontakt."
 
@@ -1304,7 +1409,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Outcome / Kontaktlernen
 - Funktion: aktueller Erfahrungsabdruck der Kontaktreife nach einem Ergebnis.
-- Wirkung: Lernsample fuer `form_symbol_contact_maturity`.
+- Wirkung: Lernsample für `form_symbol_contact_maturity`.
 - Bedeutung: "War mein Umgang diesmal reif?"
 
 ## `contact_utility_sample`
@@ -1312,7 +1417,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Outcome / Nutzenlernen
 - Funktion: aktueller Erfahrungsabdruck konstruktiven Nutzens.
-- Wirkung: Lernsample fuer `form_symbol_contact_utility`.
+- Wirkung: Lernsample für `form_symbol_contact_utility`.
 - Bedeutung: "Hat dieser Kontakt konstruktiv getragen?"
 
 ## `contact_pain_sample`
@@ -1321,15 +1426,15 @@ getrennter Alarm im System ankommt.
 - Ebene: Outcome / Konsequenzfeedback
 - Funktion: aktueller Erfahrungsabdruck unreifer oder schaedlicher
   Kontaktfolge.
-- Wirkung: Lernsample fuer `form_symbol_contact_pain_memory`.
+- Wirkung: Lernsample für `form_symbol_contact_pain_memory`.
 - Bedeutung: "Hat dieser Kontakt belastende Konsequenz erzeugt?"
 
 ## `contact_carefulness_sample`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Outcome / Vorsichtlernen
-- Funktion: aktueller Erfahrungsabdruck fuer vorsichtigeren Umgang.
-- Wirkung: Lernsample fuer `form_symbol_contact_carefulness`.
+- Funktion: aktueller Erfahrungsabdruck für vorsichtigeren Umgang.
+- Wirkung: Lernsample für `form_symbol_contact_carefulness`.
 - Bedeutung: "Sollte ich mit dieser Form anders oder vorsichtiger umgehen?"
 
 ---
@@ -1342,7 +1447,8 @@ getrennter Alarm im System ankommt.
 - Ebene: Trade-Plan / strategischer Kontakt
 - Funktion: benennt, ob der Entry impulsnah oder durch ein wahrgenommenes
   Bereichsfenster mitgepraegt ist.
-- Beispiele: `impulse_contact`, `area_contact_blend`, `area_contact_entry`.
+- Beispiele: `impulse_contact`, `area_contact_intention`,
+  `area_contact_entry`.
 - Bedeutung: "Handle ich aus dem Momentkontakt oder aus einem tragenderen
   Bereichskontakt?"
 
@@ -1351,30 +1457,127 @@ getrennter Alarm im System ankommt.
 - Bereich: Preis
 - Ebene: Trade-Plan / Koerperreflex
 - Funktion: Entry, der direkt aus Fokus, Drift und Optic Flow entsteht.
-- Bedeutung: "Wo wuerde ich handeln, wenn ich nur dem aktuellen Impuls folge?"
+- Bedeutung: "Wo würde ich handeln, wenn ich nur dem aktuellen Impuls folge?"
 
 ## `strategic_entry_price`
 
 - Bereich: Preis
-- Ebene: Trade-Plan / Rueckblick-Kontakt
+- Ebene: Trade-Plan / Rückblick-Kontakt
 - Funktion: Entry nach weicher Mischung aus Impuls und tragendem Bereich.
-- Bedeutung: "Wo fuehlt sich der Kontakt im sichtbaren Fenster tragender an?"
+- Bedeutung: "Wo fühlt sich der Kontakt im sichtbaren Fenster tragender an?"
 
 ## `strategic_entry_weight`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Trade-Plan / Reifegewichtung
 - Funktion: beschreibt, wie stark der strategische Bereich den Entry
-  gegenueber dem Impuls verschiebt.
-- Bedeutung: "Wie viel Rueckblick darf in diesen Entry hinein?"
+  gegenüber dem Impuls verschiebt.
+- Bedeutung: "Wie viel Rückblick darf in diesen Entry hinein?"
 
 ## `strategic_entry_fit`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Trade-Plan / Passung
-- Funktion: gebuendelte Passung aus Bereichstragfaehigkeit, Replay,
+- Funktion: gebündelte Passung aus Bereichstragfähigkeit, Replay,
   Kontaktreife, Kontakt-Nutzen, Abstand und Belastungs-Evidenz.
 - Bedeutung: "Passt dieser Bereichskontakt zu meiner Handlung?"
+
+## `area_motor_intention`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Trade-Plan / Bereichsmotorik
+- Funktion: verdichtet, ob ein wahrgenommener Bereich nicht nur gesehen,
+  sondern motorisch als möglicher Entry-Kontakt genutzt werden kann.
+  Grundlage sind u.a. `area_order_intention`, `area_bearing_quality`,
+  `area_action_timing_fit`, `area_spacetime_fit`, Replay, Kontaktfit und
+  Nähe zum Anker.
+- Bedeutung: "Darf dieser Bereich in meine Handlung hineinsprechen?"
+
+## `area_motor_distance_fit`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Trade-Plan / Bereichsnähe
+- Funktion: beschreibt, ob der gewählte Bereich/Anker preislich nah genug
+  liegt, um als organischer Kontakt statt als zu ferner Gedanke zu wirken.
+- Bedeutung: "Ist der Bereich für meine aktuelle Bewegung greifbar?"
+
+## `impulse_entry_intention`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Trade-Plan / Impulsmotorik
+- Funktion: beschreibt, wie stark der aktuelle Momentkontakt von Fokus,
+  Drift, Optic Flow, Richtungskonkurrenz und Überzeugung als unmittelbarer
+  Entry draengt.
+- Bedeutung: "Wie stark will mein Koerper jetzt direkt handeln?"
+
+## `area_entry_intention`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Trade-Plan / Bereichsmotorik
+- Funktion: beschreibt, wie stark ein wahrgenommener Bereich als alternative
+  Entry-Möglichkeit in die Handlung hinein will. Grundlage sind
+  Bereichsmotorik, Ordnung, Tragfähigkeit, Raumzeit-Passung, Replay,
+  Abstand und Kontaktfit.
+- Bedeutung: "Wie stark ruft mich der Bereich als tragendere Möglichkeit?"
+
+## `entry_choice_conflict`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Trade-Plan / innere Wahlspannung
+- Funktion: beschreibt die Überlagerung zwischen Impuls-Entry und
+  Bereichs-Entry. Hoch bedeutet: beide Möglichkeiten sind spuerbar, aber
+  noch nicht eindeutig integriert.
+- Bedeutung: "Ich habe zwei Wege vor mir. Welcher trägt mehr?"
+
+## `entry_choice_bearing`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Trade-Plan / Reife der Wahl
+- Funktion: beschreibt, ob die Bereichsalternative nicht nur vorhanden,
+  sondern tragfähig, nah, zeitlich passend und kontaktfähig genug ist, um
+  gegen den Impuls mitzuwirken.
+- Bedeutung: "Trägt die Bereichsmöglichkeit genug, um die Motorik zu
+  beruhigen?"
+
+## `area_direct_readiness`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Trade-Plan / direkte Kontaktreife
+- Funktion: beschreibt, ob ein wahrgenommener Bereich nicht nur als
+  Orientierung spürbar ist, sondern direkt motorisch berührt werden kann.
+  Grundlage sind Bereichsintention, `entry_choice_bearing`, Kontaktfit,
+  Timing, Raumzeit-Passung, Nähe und die Stärke gegenüber dem Impuls.
+- Bedeutung: "Ist dieser Bereich reif genug, dass ich ihn direkt berühre?"
+
+## `area_motor_restraint`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Trade-Plan / motorische Zurückhaltung
+- Funktion: beschreibt natürliche Zurückhaltung, wenn Impuls und Bereich
+  konkurrieren, Kontakt noch unreif ist, Nachhall wirkt oder die
+  Bereichslast nicht sauber getragen wird.
+- Bedeutung: "Ich sehe den Bereich, aber mein Nervensystem hält noch
+  Abstand."
+
+## `entry_choice_state`
+
+- Typ: Text
+- Ebene: Trade-Plan / Wahlwahrnehmung
+- Funktion: benennt den inneren Zustand zwischen Impuls und Bereich.
+- Beispiele: `impulse_only`, `impulse_preferred`, `area_available`,
+  `entry_choice_conflict`, `area_preferred`.
+- Bedeutung: "Erlebe ich nur den Impuls, oder erkenne ich eine echte zweite
+  Entry-Möglichkeit?"
+
+## `entry_choice_sync`
+
+- Typ: Text
+- Ebene: Trade-Plan / bewusste Integration
+- Funktion: zeigt, ob ein zuerst impulsiver Plan im selben Moment noch einmal
+  mit der strategischen Bereichswahrnehmung synchronisiert wurde.
+- Beispiele: `strategic_context_integrated`, `impulse_context_kept`, `-`.
+- Bedeutung: "Hat mein bewusster Rückblick den motorischen Impuls noch
+  erreicht?"
 
 ## `strategic_area_focus_id`
 
@@ -1390,6 +1593,64 @@ getrennter Alarm im System ankommt.
 - Funktion: Preisgrenzen des beteiligten Bereichskontakts.
 - Bedeutung: "In welchem sichtbaren Preisraum lag der Kontakt?"
 
+## `structural_run_room`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / Zielraum
+- Funktion: verdichtet, ob das gewählte RR einen größeren strukturellen
+  Bewegungsraum ausdrückt. Ein hoher Wert bedeutet nicht automatisch
+  Qualität, sondern nur: DIO hat dem Trade viel Raum gegeben.
+- Bedeutung: "Wie viel Laufraum habe ich dieser Struktur zugetraut?"
+
+## `emergent_structure_reading`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / emergente Strukturdeutung
+- Funktion: verbindet RR-Raum, Zielerwartung, Zukunftsprojektion,
+  MCM-Raumzeit-Tiefe, Bereichstragfähigkeit, Entry-Wahlreife und
+  Kontaktreife zu einer Diagnose: War der große Zielraum strukturell
+  gedeckt oder nur weit gesetzt?
+- Bedeutung: "Habe ich eine tragende Struktur gelesen, oder nur Raum
+  behauptet?"
+
+## `emergent_structure_confirmation`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Outcome / bestätigte Strukturdeutung
+- Funktion: liest `emergent_structure_reading` zusammen mit Prozessqualität,
+  Ausführung, Risiko-Fit, konstruktiver Positionswirkung und Ergebnis.
+- Bedeutung: "Hat die gedeutete Struktur den Trade später getragen?"
+
+## `emergent_structure_state`
+
+- Typ: Text
+- Ebene: Outcome / Strukturdeutungszustand
+- Funktion: benennt die Qualität der emergenten Strukturdeutung.
+- Beispiele:
+  - `confirmed_structural_interpretation`
+  - `open_structural_hypothesis`
+  - `wide_target_without_structure`
+  - `ordinary_structure_reading`
+- Bedeutung: "War das ein bestätigter Strukturgedanke, eine offene
+  Hypothese, oder nur ein weiter Zielraum?"
+
+## `kpi_summary.emergent_structure`
+
+- Typ: Statistikblock
+- Ebene: Auswertung / Outcome-Zusammenfassung
+- Funktion: fasst `emergent_structure_state` über den ganzen Lauf zusammen:
+  Anzahl, TP, SL, Cancel, PnL, Winrate, durchschnittlicher RR,
+  durchschnittliche Strukturlesung und durchschnittliche Bestätigung.
+- Wichtig:
+  - `confirmed_structural_interpretation` beschreibt eine nachträglich
+    tragend bestätigte Strukturdeutung.
+  - `open_structural_hypothesis` beschreibt nur eine offene Hypothese. Sie
+    darf nicht als reife Struktur missverstanden werden.
+  - `wide_target_without_structure` beschreibt großen Zielraum ohne
+    ausreichend strukturelle Deckung.
+- Bedeutung: "Welche Art von Strukturdeutung hat mich im Lauf getragen oder
+  belastet?"
+
 ## `area_temporal_distance`
 
 - Bereich: `0.0 - 1.0`
@@ -1402,15 +1663,15 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Strategisches Fenster / Zeitfeld
-- Funktion: beschreibt, ob ein Bereich trotz Rueckblick zeitlich noch
+- Funktion: beschreibt, ob ein Bereich trotz Rückblick zeitlich noch
   relevant wirkt.
-- Bedeutung: "Gehoert dieser Bereich noch in meine jetzige Wahrnehmung?"
+- Bedeutung: "Gehört dieser Bereich noch in meine jetzige Wahrnehmung?"
 
 ## `area_recency`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Strategisches Fenster / Zeitnaehe
-- Funktion: beschreibt die Naehe des Bereichs zur aktuellen Zeit.
+- Ebene: Strategisches Fenster / Zeitnähe
+- Funktion: beschreibt die Nähe des Bereichs zur aktuellen Zeit.
 - Bedeutung: "Wie nah ist dieser Bereich zeitlich?"
 
 ## `area_decay`
@@ -1418,8 +1679,8 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Strategisches Fenster / Verfall
 - Funktion: beschreibt, wie stark ein Bereich durch Zeitabstand,
-  Drift und alten Struktur-Nachhall an Handlungsnaehe verliert.
-- Bedeutung: "Wie sehr zerfaellt dieser Bereich als aktueller Kontakt?"
+  Drift und alten Struktur-Nachhall an Handlungsnähe verliert.
+- Bedeutung: "Wie sehr zerfällt dieser Bereich als aktueller Kontakt?"
 
 ## `area_afterimage`
 
@@ -1433,16 +1694,16 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Strategisches Fenster / Gegenwartskontakt
-- Funktion: beschreibt, ob ein Bereich gegenwaertig genug ist, um als
+- Funktion: beschreibt, ob ein Bereich gegenwärtig genug ist, um als
   Kontaktpunkt erlebt zu werden.
-- Bedeutung: "Ist dieser Bereich jetzt beruehrbar?"
+- Bedeutung: "Ist dieser Bereich jetzt berührbar?"
 
 ## `area_action_timing_fit`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Strategisches Fenster / Handlungstiming
 - Funktion: beschreibt, ob der Bereich zeitlich zur aktuellen Handlung passt.
-- Bedeutung: "Ist jetzt der richtige Moment fuer diesen Bereichskontakt?"
+- Bedeutung: "Ist jetzt der richtige Moment für diesen Bereichskontakt?"
 
 ---
 
@@ -1452,10 +1713,10 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Neurochemie / Meta-Regulation
-- Funktion: misst, ob eine alte Stabilitaets- oder Belohnungslage weiter
+- Funktion: misst, ob eine alte Stabilitäts- oder Belohnungslage weiter
   nachwirkt, obwohl Transfer, Interpretation und Feldklarheit sinken.
-- Wirkung: diagnostisch und spaeter weich regulierend.
-- Bedeutung: "Ich fuehle noch Stabilitaet, aber die Welt traegt sie vielleicht
+- Wirkung: diagnostisch und später weich regulierend.
+- Bedeutung: "Ich fühle noch Stabilität, aber die Welt trägt sie vielleicht
   nicht mehr."
 
 ## `reward_stability_echo`
@@ -1471,10 +1732,10 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Wahrnehmung / Transfer
-- Funktion: Hinweisstaerke, dass die aktuelle Weltlage nicht mehr sauber zur
+- Funktion: Hinweisstärke, dass die aktuelle Weltlage nicht mehr sauber zur
   bisherigen Erfahrung passt.
 - Wirkung: diagnostisch.
-- Bedeutung: "Die Aussenwelt sieht zunehmend anders aus."
+- Bedeutung: "Die Außenwelt sieht zunehmend anders aus."
 
 ## `emotional_decoupling`
 
@@ -1492,7 +1753,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Neurochemie / Handlungsdruck
 - Funktion: reaktive nervliche Aktivierung aus Dopamin, Glutamat,
   Noradrenalin, Handlungserlaubnis und Serotonin-Nachhall.
-- Wirkung: diagnostisch und spaeter weich regulierend.
+- Wirkung: diagnostisch und später weich regulierend.
 - Bedeutung: "Mein Nervensystem will reagieren."
 
 ---
@@ -1504,7 +1765,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Wahrnehmung / Regulation
 - Funktion: Abstand zwischen Wahrnehmung und innerem Feld.
-- Wirkung: spaeter weich regulierend.
+- Wirkung: später weich regulierend.
 - Bedeutung: "Wie nah lasse ich diese Wahrnehmung an mich heran?"
 
 ## `object_contact_depth`
@@ -1512,7 +1773,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Wahrnehmung / Objektkontakt
 - Funktion: Tiefe, mit der DIO eine Wahrnehmung wirklich untersucht.
-- Wirkung: spaeter weich regulierend.
+- Wirkung: später weich regulierend.
 - Bedeutung: "Schaue ich nur hin, oder nehme ich es innerlich in die Hand?"
 
 ## `field_attachment`
@@ -1520,15 +1781,15 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: MCM-Feld / Regulation
 - Funktion: Anhaftung eines Reizes am MCM-Feld.
-- Wirkung: spaeter weich regulierend.
+- Wirkung: später weich regulierend.
 - Bedeutung: "Bleibt dieser Reiz an meinem Feld kleben?"
 
 ## `release_capacity`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Regulation / Loslassen
-- Funktion: Faehigkeit, eine Wahrnehmung nach Betrachtung wieder abzulegen.
-- Wirkung: spaeter weich regulierend.
+- Funktion: Fähigkeit, eine Wahrnehmung nach Betrachtung wieder abzulegen.
+- Wirkung: später weich regulierend.
 - Bedeutung: "Ich habe es gesehen; es muss mich nicht weiter besetzen."
 
 ## `selective_attention`
@@ -1536,7 +1797,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Fokus / Wahrnehmungssteuerung
 - Funktion: Auswahl, welche Wahrnehmung Vordergrund wird.
-- Wirkung: spaeter weich regulierend.
+- Wirkung: später weich regulierend.
 - Bedeutung: "Was ist jetzt wirklich betrachtenswert?"
 
 ## `background_containment`
@@ -1544,7 +1805,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Wahrnehmung / Reizschutz
 - Funktion: Haelt nicht relevante Reize im Hintergrund.
-- Wirkung: spaeter weich regulierend.
+- Wirkung: später weich regulierend.
 - Bedeutung: "Das ist da, aber es muss nicht mein Feld fluten."
 
 ## `reflective_distance`
@@ -1552,16 +1813,16 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Reflexion / Selbstbeobachtung
 - Funktion: Abstand zur eigenen Innenlage.
-- Wirkung: spaeter weich regulierend.
-- Bedeutung: "Ich fuehle etwas, aber ich bin nicht automatisch dieses Gefuehl."
+- Wirkung: später weich regulierend.
+- Bedeutung: "Ich fühle etwas, aber ich bin nicht automatisch dieses Gefühl."
 
 ## `inner_outer_alignment`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Reflexion / Weltabgleich
-- Funktion: Abgleich zwischen innerer Lage und aeusserer Welt.
-- Wirkung: spaeter weich regulierend.
-- Bedeutung: "Passen mein innerer Zustand und die Aussenwelt noch zusammen?"
+- Funktion: Abgleich zwischen innerer Lage und äußerer Welt.
+- Wirkung: später weich regulierend.
+- Bedeutung: "Passen mein innerer Zustand und die Außenwelt noch zusammen?"
 
 ---
 
@@ -1573,7 +1834,7 @@ getrennter Alarm im System ankommt.
 - Ebene: bewusste Wahrnehmung
 - Funktion: beschreibt, ob DIO einen Reiz nur registriert, bewusst haelt,
   vertieft, reflektiert oder loslaesst.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "In welcher bewussten Wahrnehmungshaltung bin ich?"
 - Aktuelle Labels:
   - `open_perception`
@@ -1589,7 +1850,7 @@ getrennter Alarm im System ankommt.
 - Bereich: Text / Zustandslabel
 - Ebene: innere Haltung / Interozeption
 - Funktion: beschreibt DIOs funktionale Eigenlage zur Wahrnehmung.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "Wie bin ich innerlich gerade zu diesem Reiz eingestellt?"
 - Aktuelle Labels:
   - `uncertain_open`
@@ -1606,7 +1867,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Erregung / Reaktionslast
 - Funktion: beschreibt, wie stark DIO durch Reiz, Feldwirkung und
   neurochemische Aktivierung aufgeladen ist.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "Ich bin aufgeregt / aktiviert."
 
 ## `curiosity_tone`
@@ -1615,7 +1876,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Neugier / Objektkontakt
 - Funktion: beschreibt, ob DIO einen Reiz als untersuchbares Objekt halten
   will.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "Ich will genauer hinschauen."
 
 ## `fatigue_tone`
@@ -1623,8 +1884,8 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Ermuedung / kognitive Last
 - Funktion: beschreibt Denk- und Wahrnehmungsermuedung durch Last,
-  Orientierungsluecke und geringe Loslassfaehigkeit.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+  Orientierungslücke und geringe Loslassfähigkeit.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "Ich bin muede / erschöpft in der Verarbeitung."
 
 ## `calm_tone`
@@ -1633,7 +1894,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Ruhe / tragende Distanz
 - Funktion: beschreibt ruhige, haltbare Wahrnehmung mit Abstand und
   Hintergrundcontainment.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "Ich bin ruhig genug, um den Reiz zu halten oder abzulegen."
 
 ## `diffuse_open_development_pressure`
@@ -1641,8 +1902,8 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Reifung diffuser Offenheit
 - Funktion: misst, ob DIO zwar offen wahrnimmt, aber noch keinen tragenden
-  Objektkontakt, keine ausreichende Distanz, keine Loslassfaehigkeit und
-  keinen klaren Innen-Aussen-Abgleich hat.
+  Objektkontakt, keine ausreichende Distanz, keine Loslassfähigkeit und
+  keinen klaren Innen-Außen-Abgleich hat.
 - Wirkung: weich regulierend.
 - Bedeutung: "Ich bin offen, aber noch nicht geordnet genug."
 
@@ -1650,7 +1911,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: Text / Entwicklungshinweis
 - Ebene: innere Haltung / Reifung
-- Funktion: beschreibt, wohin diffuse Offenheit sich als naechstes entwickeln
+- Funktion: beschreibt, wohin diffuse Offenheit sich als nächstes entwickeln
   sollte.
 - Wirkung: weich regulierend und diagnostisch.
 - Aktuelle Labels:
@@ -1659,38 +1920,38 @@ getrennter Alarm im System ankommt.
   - `develop_reflective_distance`
   - `develop_release_capacity`
   - `develop_observation`
-- Bedeutung: "Welche innere Faehigkeit soll aus dieser Offenheit entstehen?"
+- Bedeutung: "Welche innere Fähigkeit soll aus dieser Offenheit entstehen?"
 
 ## `stimulus_field_effect`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Aussenreiz -> MCM-Feld
-- Funktion: Staerke, mit der ein aeusserer Reiz das MCM-Feld bewegt.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
-- Bedeutung: "Wie stark hat dieser Reiz mein Feld veraendert?"
+- Ebene: Außenreiz -> MCM-Feld
+- Funktion: Stärke, mit der ein äußerer Reiz das MCM-Feld bewegt.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
+- Bedeutung: "Wie stark hat dieser Reiz mein Feld verändert?"
 
 ## `inner_impact_trace`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: innere Wahrnehmung
 - Funktion: Spur der inneren Wirkung nach einem Reiz.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "Welche innere Spur hat der Reiz hinterlassen?"
 
 ## `perceived_field_change`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: MCM-Feld / Selbstwahrnehmung
-- Funktion: bewusst wahrgenommene Veraenderung des Feldes.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
-- Bedeutung: "Ich erkenne, dass sich mein Feld veraendert hat."
+- Funktion: bewusst wahrgenommene Veränderung des Feldes.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
+- Bedeutung: "Ich erkenne, dass sich mein Feld verändert hat."
 
 ## `felt_afterimage`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Nachhall / Neurochemie / MCM-Feld
 - Funktion: Nachbild einer Wahrnehmung im inneren Feld.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "Der Reiz ist vorbei, aber er wirkt noch in mir nach."
 
 ## `object_release_state`
@@ -1699,7 +1960,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Loslassen / Objektkontakt
 - Funktion: beschreibt, ob eine Wahrnehmung noch gehalten oder bereits
   abgelegt wird.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
 - Bedeutung: "Kann ich dieses Objekt wieder loslassen?"
 - Aktuelle Labels:
   - `holding`
@@ -1711,9 +1972,9 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Reflexion
-- Funktion: bewusster Vergleich zwischen aeusserem Reiz und innerer Wirkung.
-- Wirkung: aktuell diagnostisch; spaeter weich regulierend.
-- Bedeutung: "Was hat draussen innen mit mir gemacht?"
+- Funktion: bewusster Vergleich zwischen äußerem Reiz und innerer Wirkung.
+- Wirkung: aktuell diagnostisch; später weich regulierend.
+- Bedeutung: "Was hat draußen innen mit mir gemacht?"
 
 ---
 
@@ -1725,13 +1986,13 @@ getrennter Alarm im System ankommt.
 - Ebene: Erfahrung / Neurofeedback
 - Funktion: fasst die Bewertung eines gesamten Wahrnehmungs-Handlungs-Pakets
   zusammen.
-- Wirkung: spaeter weich regulierend.
-- Bedeutung: "War dieses ganze Paket tragfaehig?"
+- Wirkung: später weich regulierend.
+- Bedeutung: "War dieses ganze Paket tragfähig?"
 
 ## `packet_bearing_quality`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Tragfaehigkeit
+- Ebene: Tragfähigkeit
 - Funktion: bewertet, ob Struktur, Innenlage, Handlung und Risiko gemeinsam
   tragend waren.
 - Wirkung: positive Stimulation oder Reorganisation.
@@ -1740,8 +2001,8 @@ getrennter Alarm im System ankommt.
 ## `packet_inner_outer_fit`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Innen-Aussen-Passung
-- Funktion: bewertet, ob innere Haltung und aeussere Weltlage zusammenpassten.
+- Ebene: Innen-Außen-Passung
+- Funktion: bewertet, ob innere Haltung und äußere Weltlage zusammenpassten.
 - Wirkung: positive Stimulation oder Reflexionsdruck.
 - Bedeutung: "Passte mein Innenzustand zur Weltlage?"
 
@@ -1749,25 +2010,25 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Entscheidungssicherheit
-- Funktion: prueft, ob Sicherheit, Handlung und tatsaechliche Tragfaehigkeit
-  zusammenhaengen.
-- Wirkung: staerkt echtes Vertrauen, nicht blinde Sicherheit.
+- Funktion: prüft, ob Sicherheit, Handlung und tatsächliche Tragfähigkeit
+  zusammenhängen.
+- Wirkung: stärkt echtes Vertrauen, nicht blinde Sicherheit.
 - Bedeutung: "War meine Sicherheit ehrlich?"
 
 ## `packet_repetition_potential`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Wiederholbarkeit
-- Funktion: bewertet, ob die Qualitaet des Pakets wiederfindbar ist, ohne eine
+- Funktion: bewertet, ob die Qualität des Pakets wiederfindbar ist, ohne eine
   harte Regel daraus zu machen.
 - Wirkung: Lernrelevanz / Neugierde.
-- Bedeutung: "Kann ich diese Qualitaet wiederfinden?"
+- Bedeutung: "Kann ich diese Qualität wiederfinden?"
 
 ## `packet_curiosity_pull`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Neugierde / Lernzug
-- Funktion: beschreibt, ob ein tragfaehiges Paket DIO motiviert, aehnliche
+- Funktion: beschreibt, ob ein tragfähiges Paket DIO motiviert, ähnliche
   Strukturen wieder zu untersuchen.
 - Wirkung: positive Dopamin-/Acetylcholin-Nahe.
 - Bedeutung: "Das will ich genauer verstehen."
@@ -1775,8 +2036,8 @@ getrennter Alarm im System ankommt.
 ## `packet_process_reward`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Prozessqualitaet
-- Funktion: positives Feedback fuer gute Wahrnehmung, gute Haltung, gutes
+- Ebene: Prozessqualität
+- Funktion: positives Feedback für gute Wahrnehmung, gute Haltung, gutes
   Verzichten oder gute Handlung.
 - Wirkung: konstruktive Stimulation.
 - Bedeutung: "Das war prozessqualitativ gut."
@@ -1785,8 +2046,8 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Reorganisation / Lernen aus Fehlern
-- Funktion: zeigt, ob ein Paket nicht tragfaehig war und einen inneren
-  Suchprozess ausloesen soll.
+- Funktion: zeigt, ob ein Paket nicht tragfähig war und einen inneren
+  Suchprozess auslösen soll.
 - Wirkung: Reflexion, Beobachtung, Loslassen, Neuordnung.
 - Bedeutung: "Ich muss daraus lernen und anders organisieren."
 
@@ -1794,23 +2055,23 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: positive Neurochemie
-- Funktion: Gesamtwert positiver Stimulation aus tragfaehiger Paketqualitaet.
-- Wirkung: spaeter weiche Staerkung von Wachheit, Stabilitaet und Freiheit.
-- Bedeutung: "Dieses Paket staerkt mich."
+- Funktion: Gesamtwert positiver Stimulation aus tragfähiger Paketqualität.
+- Wirkung: später weiche Stärkung von Wachheit, Stabilität und Freiheit.
+- Bedeutung: "Dieses Paket stärkt mich."
 
 ## `constructive_dopamine`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Dopamin / Lernrelevanz
-- Funktion: positive Lern- und Wiederholungsneugier bei tragfaehigen Paketen.
+- Funktion: positive Lern- und Wiederholungsneugier bei tragfähigen Paketen.
 - Wirkung: Interesse, Suchrichtung, Motivation.
 
 ## `stabilizing_serotonin`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Serotonin / Stabilitaet
-- Funktion: Staerkung innerer Ordnung bei guter Innen-Aussen-Passung.
-- Wirkung: Selbstvertrauen, Ruhe, Tragfaehigkeit.
+- Ebene: Serotonin / Stabilität
+- Funktion: Stärkung innerer Ordnung bei guter Innen-Außen-Passung.
+- Wirkung: Selbstvertrauen, Ruhe, Tragfähigkeit.
 
 ## `relief_endorphin`
 
@@ -1823,9 +2084,9 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Acetylcholin / Fokus
-- Funktion: markiert, dass eine Wahrnehmungsqualitaet relevant und merkenswert
+- Funktion: markiert, dass eine Wahrnehmungsqualität relevant und merkenswert
   ist.
-- Wirkung: Fokus und spaetere Wiedererkennung.
+- Wirkung: Fokus und spätere Wiedererkennung.
 
 ---
 
@@ -1835,16 +2096,16 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Wachheit / Beteiligung
-- Funktion: beschreibt, ob DIO mit tragfaehiger innerer Beteiligung in einer
+- Funktion: beschreibt, ob DIO mit tragfähiger innerer Beteiligung in einer
   Situation steht.
 - Wirkung: weich regulierend.
-- Bedeutung: "Bin ich wach, beteiligt und tragfaehig genug?"
+- Bedeutung: "Bin ich wach, beteiligt und tragfähig genug?"
 
 ## `effort_state`
 
 - Bereich: Label
 - Ebene: innere Haltung zur Anstrengung
-- Funktion: benennt die Qualitaet der aktuellen Beteiligung.
+- Funktion: benennt die Qualität der aktuellen Beteiligung.
 - Wirkung: Diagnose und weiche Meta-Regulation.
 - Aktuelle Labels:
   - `settled_effort`
@@ -1859,7 +2120,7 @@ getrennter Alarm im System ankommt.
 - Ebene: Lernzug / Neugier
 - Funktion: beschreibt, ob eine Situation eher untersucht und gelernt werden
   soll.
-- Wirkung: kann `act_watch`, Beobachtung oder Replan weich staerken.
+- Wirkung: kann `act_watch`, Beobachtung oder Replan weich stärken.
 - Bedeutung: "Das ist lernenswert, aber vielleicht noch nicht handlungsreif."
 
 ## `effort_reorganization_pressure`
@@ -1867,7 +2128,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Reorganisation
 - Funktion: beschreibt, ob DIO zwar Reiz/Handlungsdruck erlebt, aber die
-  innere Beteiligung und Tragfaehigkeit noch nicht sauber genug sind.
+  innere Beteiligung und Tragfähigkeit noch nicht sauber genug sind.
 - Wirkung: erhoeht weich Beobachtung, Replan, Hemmung und `act_watch`.
 - Bedeutung: "Ich muss mich neu sortieren, bevor ich daraus Handlung mache."
 
@@ -1875,26 +2136,26 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Pre-Action-Reflexion
-- Funktion: fuehrt Reorganisationsnachhall, schwache Prozessqualitaet,
-  Strukturunsicherheit, schwachen Feldsupport und geringe Innen-Aussen-Passung
+- Funktion: führt Reorganisationsnachhall, schwache Prozessqualität,
+  Strukturunsicherheit, schwachen Feldsupport und geringe Innen-Außen-Passung
   vor der Handlung zusammen.
-- Wirkung: kann weich `observe`, `act_watch` oder `replan` staerken.
-- Bedeutung: "Vor dem Handeln fuehlt sich das noch nicht tragfaehig genug an."
+- Wirkung: kann weich `observe`, `act_watch` oder `replan` stärken.
+- Bedeutung: "Vor dem Handeln fühlt sich das noch nicht tragfähig genug an."
 
 ## `pre_action_context_selectivity`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Kontextauswahl
 - Funktion: beschreibt, ob aktueller Kontext, Feldsupport, Interpretation,
-  Innen-Aussen-Passung und Erfahrung genug gemeinsam tragen.
+  Innen-Außen-Passung und Erfahrung genug gemeinsam tragen.
 - Wirkung: schuetzt konstruktive Kontexte vor zu starker Hemmung.
-- Bedeutung: "Ist dieser Kontext konzentriert genug fuer Handlung?"
+- Bedeutung: "Ist dieser Kontext konzentriert genug für Handlung?"
 
 ## `previous_packet_label`
 
 - Bereich: Label
 - Ebene: Erfahrungsecho
-- Funktion: fuehrt die Qualitaet des letzten Erfahrungspakets als Nachhall in
+- Funktion: führt die Qualität des letzten Erfahrungspakets als Nachhall in
   die aktuelle Meta-Regulation.
 - Wirkung: kein harter Memory-Befehl, sondern ein weicher Erfahrungszustand.
 
@@ -1902,17 +2163,17 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Prozessnachhall
-- Funktion: uebertraegt gute Prozessqualitaet des letzten Pakets in aktuelle
+- Funktion: überträgt gute Prozessqualität des letzten Pakets in aktuelle
   Wachheit.
-- Wirkung: kann `engaged_effort` staerken.
+- Wirkung: kann `engaged_effort` stärken.
 
 ## `previous_packet_reorganization_need`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Reorganisationsnachhall
-- Funktion: uebertraegt nicht tragende Paketqualitaet in aktuelle Vorsicht und
+- Funktion: überträgt nicht tragende Paketqualität in aktuelle Vorsicht und
   Neuordnung.
-- Wirkung: kann `effort_reorganization_pressure` staerken.
+- Wirkung: kann `effort_reorganization_pressure` stärken.
 
 ---
 
@@ -1922,16 +2183,16 @@ getrennter Alarm im System ankommt.
 
 - Bereich: Dict / Zustandsobjekt
 - Ebene: strategische Wahrnehmung
-- Funktion: beschreibt die groessere Fensterwahrnehmung von DIO.
-- Wirkung: spaeter Grundlage fuer Bereichshypothesen und wartende
+- Funktion: beschreibt die größere Fensterwahrnehmung von DIO.
+- Wirkung: später Grundlage für Bereichshypothesen und wartende
   Order-Intentionen.
 
 ## `area_focus_candidates`
 
 - Bereich: Liste
 - Ebene: Bereichswahrnehmung
-- Funktion: enthaelt auffaellige Preisbereiche im betrachteten Fenster.
-- Wirkung: Diagnose, spaeter Fokus-/Zoom-Auswahl.
+- Funktion: enthält auffällige Preisbereiche im betrachteten Fenster.
+- Wirkung: Diagnose, später Fokus-/Zoom-Auswahl.
 
 ## `area_focus_id`
 
@@ -1942,37 +2203,37 @@ getrennter Alarm im System ankommt.
 ## `lookback_window_size`
 
 - Bereich: Anzahl Kerzen
-- Ebene: Arbeitsgedaechtnis / Rueckblick
-- Funktion: beschreibt, wie weit DIO aktuell strategisch zurueckschaut.
+- Ebene: Arbeitsgedächtnis / Rückblick
+- Funktion: beschreibt, wie weit DIO aktuell strategisch zurückschaut.
 - Wichtig: begrenzt, damit Vergangenheit nicht unendlich in die Gegenwart
-  drueckt.
+  drückt.
 
 ## `lookback_load`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: kognitive Last
-- Funktion: beschreibt, wie belastend das groessere Rueckblickfenster fuer
+- Funktion: beschreibt, wie belastend das größere Rückblickfenster für
   DIO ist.
 
 ## `lookback_bearing_capacity`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: strategische Tragfaehigkeit
-- Funktion: beschreibt, ob das Rueckblickfenster genug Orientierung traegt,
-  ohne DIO zu ueberladen.
+- Ebene: strategische Tragfähigkeit
+- Funktion: beschreibt, ob das Rückblickfenster genug Orientierung trägt,
+  ohne DIO zu überladen.
 
 ## `replay_budget`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: innere Simulation
-- Funktion: beschreibt, wie viel innere Replay-/Was-waere-wenn-Kapazitaet
+- Funktion: beschreibt, wie viel innere Replay-/Was-wäre-wenn-Kapazität
   verfuegbar ist.
 
 ## `zoom_budget`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: fokussierte Wahrnehmung
-- Funktion: beschreibt, wie viel Energie fuer genaueres Hineinschauen in
+- Funktion: beschreibt, wie viel Energie für genaueres Hineinschauen in
   einen Bereich verfuegbar ist.
 
 ## `old_structure_carryover_risk`
@@ -2008,7 +2269,7 @@ getrennter Alarm im System ankommt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Spannung / Kompression
 - Funktion: beschreibt, ob Druck/Energie im Bereich komprimiert wirkt.
-- Bedeutung: "Hier fuehlt sich Energie gesammelt an."
+- Bedeutung: "Hier fühlt sich Energie gesammelt an."
 
 ## `area_mcm_resonance`
 
@@ -2027,9 +2288,9 @@ getrennter Alarm im System ankommt.
 ## `area_bearing_quality`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Tragfaehigkeit
-- Funktion: bewertet, ob ein Bereich als moeglicher Handlungsraum tragen
-  koennte.
+- Ebene: Tragfähigkeit
+- Funktion: bewertet, ob ein Bereich als möglicher Handlungsraum tragen
+  könnte.
 
 ## `area_zoom_need`
 
@@ -2048,7 +2309,7 @@ getrennter Alarm im System ankommt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: innere Simulation
-- Funktion: beschreibt, ob ein Replay / Was-waere-wenn-Durchlauf zu
+- Funktion: beschreibt, ob ein Replay / Was-wäre-wenn-Durchlauf zu
   Erfahrung und aktueller MCM-Lage passt.
 
 ## `area_patience_quality`
@@ -2091,22 +2352,22 @@ getrennter Alarm im System ankommt.
 # Aktiver MCM-Kontakt / Spiegelung
 
 Diese Variablen beschreiben die geplante aktive Kontaktbahn zwischen
-Aussenwahrnehmung und innerer MCM-Lage. Sie sind keine Handelsregeln. Sie
+Außenwahrnehmung und innerer MCM-Lage. Sie sind keine Handelsregeln. Sie
 machen sichtbar, wie nah DIO eine Wahrnehmung an das eigene Feld laesst und
-ob daraus Resonanz, Ueberkopplung, Distanz oder Vertiefung entsteht.
+ob daraus Resonanz, Überkopplung, Distanz oder Vertiefung entsteht.
 
 ## `active_mcm_contact_state`
 
 - Bereich: Dict
 - Ebene: Wahrnehmung / MCM-Kontakt
-- Funktion: gebuendelter Zustand der aktiven Kontakt- und Spiegelbahn.
+- Funktion: gebündelter Zustand der aktiven Kontakt- und Spiegelbahn.
 
 ## `contact_interest`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Aufmerksamkeit / Neugier
-- Funktion: beschreibt, ob DIO einen Reiz oder Bereich naeher untersuchen
-  moechte.
+- Funktion: beschreibt, ob DIO einen Reiz oder Bereich näher untersuchen
+  möchte.
 - Bedeutung: "Das zieht meine Wahrnehmung an."
 
 ## `contact_focus_pull`
@@ -2119,22 +2380,22 @@ ob daraus Resonanz, Ueberkopplung, Distanz oder Vertiefung entsteht.
 ## `contact_resonance_probe`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: MCM-Beruehrung
-- Funktion: beschreibt die Staerke einer inneren Resonanzpruefung.
-- Bedeutung: "Wie reagiert mein Feld, wenn ich diesen Reiz beruehre?"
+- Ebene: MCM-Berührung
+- Funktion: beschreibt die Stärke einer inneren Resonanzprüfung.
+- Bedeutung: "Wie reagiert mein Feld, wenn ich diesen Reiz berühre?"
 
 ## `outer_inner_resonance`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Aussen-Innen-Kopplung
-- Funktion: beschreibt, ob Aussenform und Innenfeld miteinander schwingen.
+- Ebene: Außen-Innen-Kopplung
+- Funktion: beschreibt, ob Außenform und Innenfeld miteinander schwingen.
 
 ## `outer_inner_coherence`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Kohaerenz / Reflexion
-- Funktion: beschreibt, ob innere Lage und aeussere Wahrnehmung gemeinsam
-  tragfaehig wirken.
+- Ebene: Kohärenz / Reflexion
+- Funktion: beschreibt, ob innere Lage und äußere Wahrnehmung gemeinsam
+  tragfähig wirken.
 - Bedeutung: "Passt mein innerer Zustand noch zu dem, was ich sehe?"
 
 ## `inner_change_from_contact`
@@ -2142,19 +2403,19 @@ ob daraus Resonanz, Ueberkopplung, Distanz oder Vertiefung entsteht.
 - Bereich: `0.0 - 1.0`
 - Ebene: Interozeption
 - Funktion: misst, wie stark sich DIOs Innenlage durch Kontakt mit einem
-  Reiz veraendert.
+  Reiz verändert.
 
 ## `contact_carrying_quality`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Tragfaehigkeit
+- Ebene: Tragfähigkeit
 - Funktion: beschreibt, ob der Kontakt mit der Wahrnehmung stabilisierend
   oder tragend wirkt.
 
 ## `contact_overcoupling_risk`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Ueberkopplung / Reizbindung
+- Ebene: Überkopplung / Reizbindung
 - Funktion: beschreibt, ob eine Wahrnehmung das MCM-Feld zu stark besetzt.
 - Bedeutung: "Ich bin zu nah am Reiz."
 
@@ -2176,21 +2437,21 @@ ob daraus Resonanz, Ueberkopplung, Distanz oder Vertiefung entsteht.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Replay / innere Simulation
-- Funktion: beschreibt, ob ein Kontakt eine innere Was-waere-wenn-Spur
+- Funktion: beschreibt, ob ein Kontakt eine innere Was-wäre-wenn-Spur
   anregt.
 
 ## `contact_curiosity`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Neugier / Lernen
-- Funktion: beschreibt lernende, nicht zwingende Annaeherung an eine
+- Funktion: beschreibt lernende, nicht zwingende Annäherung an eine
   Wahrnehmung.
 
 ## `contact_felt_shift`
 
 - Bereich: `-1.0 - 1.0`
 - Ebene: innere Verschiebung
-- Funktion: beschreibt Richtung und Staerke der gefuehlten Lageveraenderung
+- Funktion: beschreibt Richtung und Stärke der gefühlten Lageveränderung
   nach Kontakt.
 
 ## `contact_selected_depth`
@@ -2203,25 +2464,25 @@ ob daraus Resonanz, Ueberkopplung, Distanz oder Vertiefung entsteht.
 ## `contact_action_maturity`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Kontakt-Reife / Handlungsnaehe
-- Funktion: beschreibt, ob ein Kontakt nicht nur spuerbar, sondern fuer eine
-  Handlung tragfaehig wirkt.
+- Ebene: Kontakt-Reife / Handlungsnähe
+- Funktion: beschreibt, ob ein Kontakt nicht nur spuerbar, sondern für eine
+  Handlung tragfähig wirkt.
 - Wichtig: Diagnosewert, keine Orderfreigabe.
 
 ## `contact_bearing_gap`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Reifespannung
-- Funktion: beschreibt die Luecke zwischen Kontakt/Impuls und innerer
-  Tragfaehigkeit.
-- Bedeutung: "Ich bin nah am Objekt, aber es traegt mich noch nicht genug."
+- Funktion: beschreibt die Lücke zwischen Kontakt/Impuls und innerer
+  Tragfähigkeit.
+- Bedeutung: "Ich bin nah am Objekt, aber es trägt mich noch nicht genug."
 
 ## `contact_impulse_vs_bearing`
 
 - Bereich: `-1.0 - 1.0`
-- Ebene: Impuls gegen Tragfaehigkeit
-- Funktion: beschreibt, ob Kontaktzug/Neugier/Ordernaehe staerker sind als
-  Loslassen, Kohaerenz und Tragfaehigkeit.
+- Ebene: Impuls gegen Tragfähigkeit
+- Funktion: beschreibt, ob Kontaktzug/Neugier/Ordernähe stärker sind als
+  Loslassen, Kohärenz und Tragfähigkeit.
 
 ## `contact_learning_need`
 
@@ -2233,26 +2494,26 @@ ob daraus Resonanz, Ueberkopplung, Distanz oder Vertiefung entsteht.
 ## `contact_reality_check`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Realitaetsabgleich
-- Funktion: beschreibt, ob Innenkontakt, aeussere Struktur, Loslassen und
-  Tragfaehigkeit gemeinsam stimmig wirken.
+- Ebene: Realitätsabgleich
+- Funktion: beschreibt, ob Innenkontakt, äußere Struktur, Loslassen und
+  Tragfähigkeit gemeinsam stimmig wirken.
 
 ## `contact_regime_mismatch`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Kontext-/Regime-Reife
-- Funktion: beschreibt, ob der Kontakt in eine Weltlage faellt, die nicht
-  mehr gut zur bisherigen inneren Stabilitaet passt.
-- Bedeutung: "Die Aussenwelt ist fremder, als mein Kontaktgefuehl vermuten
+- Funktion: beschreibt, ob der Kontakt in eine Weltlage fällt, die nicht
+  mehr gut zur bisherigen inneren Stabilität passt.
+- Bedeutung: "Die Außenwelt ist fremder, als mein Kontaktgefühl vermuten
   laesst."
 
 ## `contact_stability_carryover`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: neurochemischer Nachhall / Kontext
-- Funktion: beschreibt, ob Stabilitaet als alter Nachhall in eine veraenderte
+- Funktion: beschreibt, ob Stabilität als alter Nachhall in eine veränderte
   Lage getragen wird.
-- Bedeutung: "Ich fuehle noch Stabilitaet, aber sie koennte aus der alten
+- Bedeutung: "Ich fühle noch Stabilität, aber sie könnte aus der alten
   Weltlage stammen."
 
 ## `contact_context_maturity`
@@ -2274,7 +2535,7 @@ ob daraus Resonanz, Ueberkopplung, Distanz oder Vertiefung entsteht.
 - Bereich: String
 - Ebene: innere Haltung
 - Funktion: benennt die aktuelle Kontaktlage.
-- Moegliche Werte:
+- Mögliche Werte:
   `background_scan`, `curious_touch`, `resonant_contact`,
   `reflective_contact`, `overcoupled_touch`, `release_contact`,
   `deepening_contact`.
@@ -2285,22 +2546,22 @@ ob daraus Resonanz, Ueberkopplung, Distanz oder Vertiefung entsteht.
 
 Diese Achsen sind als Ziel- und Diagnosebegriffe aus den MCM-Abhandlungen
 Block D bis G.1 abgeleitet. Sie sind noch nicht alle technische Laufzeitwerte.
-Sie beschreiben, welche innere Quellenbindung, Moeglichkeitsbildung und
-Reorganisation DIO spaeter lesbar machen soll.
+Sie beschreiben, welche innere Quellenbindung, Möglichkeitsbildung und
+Reorganisation DIO später lesbar machen soll.
 
 Leitidee:
-DIO soll eine Wahrnehmung nicht nur als Signal fuehren. Sie bekommt innere
-Koordinaten: Zeit, Quelle, Raum, Kontakt, Tragfaehigkeit und
+DIO soll eine Wahrnehmung nicht nur als Signal führen. Sie bekommt innere
+Koordinaten: Zeit, Quelle, Raum, Kontakt, Tragfähigkeit und
 Reorganisation. Dadurch kann DIO unterscheiden, ob etwas aktuell aus der
-Aussenwelt wirkt, aus Memory kommt, als Nachhall weiterzieht, als Hypothese
-auftaucht oder zu nah an das Handlungszentrum rueckt.
+Außenwelt wirkt, aus Memory kommt, als Nachhall weiterzieht, als Hypothese
+auftaucht oder zu nah an das Handlungszentrum rückt.
 
 ## `perception_source`
 
 - Bereich: String
 - Ebene: Quellenbindung
 - Funktion: beschreibt, aus welcher Quelle eine Wahrnehmung stammt.
-- Moegliche Lagen: `present_world`, `memory`, `learned_knowledge`,
+- Mögliche Lagen: `present_world`, `memory`, `learned_knowledge`,
   `afterimage`, `replay`, `hypothesis`, `expectation`.
 
 ## `source_temporal_layer`
@@ -2313,16 +2574,16 @@ auftaucht oder zu nah an das Handlungszentrum rueckt.
 ## `present_world_binding`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Realitaetsbindung
-- Funktion: beschreibt, wie stark eine Wahrnehmung an aktuelle Aussenwelt
+- Ebene: Realitätsbindung
+- Funktion: beschreibt, wie stark eine Wahrnehmung an aktuelle Außenwelt
   gebunden ist.
 
 ## `memory_reality_distance`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Memory / Realitaetsabstand
+- Ebene: Memory / Realitätsabstand
 - Funktion: beschreibt, ob eine aktivierte Erinnerung als Erinnerung
-  erkannt wird oder zu nah an Gegenwart rueckt.
+  erkannt wird oder zu nah an Gegenwart rückt.
 
 ## `perceptual_space_axis`
 
@@ -2330,7 +2591,7 @@ auftaucht oder zu nah an das Handlungszentrum rueckt.
 - Ebene: Wahrnehmungsraum
 - Funktion: beschreibt die raeumliche Verortung einer Wahrnehmung im
   inneren Feld.
-- Moegliche Lagen: `field_center`, `near_field`, `far_field`,
+- Mögliche Lagen: `field_center`, `near_field`, `far_field`,
   `foreground`, `background`, `edge`, `memory_space`, `hypothesis_space`.
 
 ## `perceptual_depth`
@@ -2343,10 +2604,10 @@ auftaucht oder zu nah an das Handlungszentrum rueckt.
 ## `field_center_distance`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Raumlage / Handlungsnaehe
+- Ebene: Raumlage / Handlungsnähe
 - Funktion: beschreibt, wie nah eine Wahrnehmung am inneren
   Handlungszentrum liegt.
-- Wichtig: Naehe bedeutet nicht automatisch Handlung. Sie zeigt nur, dass
+- Wichtig: Nähe bedeutet nicht automatisch Handlung. Sie zeigt nur, dass
   die Wahrnehmung stark in DIOs aktueller Lage steht.
 
 ## `foreground_binding`
@@ -2360,58 +2621,58 @@ auftaucht oder zu nah an das Handlungszentrum rueckt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Hintergrund / Nachhall
 - Funktion: beschreibt, ob eine Wahrnehmung noch als Hintergrundspur wirkt,
-  obwohl sie nicht mehr aktuelle Aussenwelt ist.
+  obwohl sie nicht mehr aktuelle Außenwelt ist.
 
 ## `hypothesis_branch_state`
 
 - Bereich: Dict / String
 - Ebene: Hypothesenraum
-- Funktion: beschreibt einen moeglichen Entwicklungszweig, ohne ihn als
-  Realitaet zu behandeln.
+- Funktion: beschreibt einen möglichen Entwicklungszweig, ohne ihn als
+  Realität zu behandeln.
 
 ## `branch_stability`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Hypothesenstabilitaet
-- Funktion: beschreibt, ob ein moeglicher Verlauf innerlich stabil,
+- Ebene: Hypothesenstabilität
+- Funktion: beschreibt, ob ein möglicher Verlauf innerlich stabil,
   fragil oder widerspruechlich wirkt.
 
 ## `branch_attractor_pull`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Attraktor / Zukunftsmoeglichkeit
-- Funktion: beschreibt, wie stark ein moeglicher Verlauf die innere
+- Ebene: Attraktor / Zukunftsmöglichkeit
+- Funktion: beschreibt, wie stark ein möglicher Verlauf die innere
   Erwartung anzieht.
 - Wichtig: hoher Wert ist kein Zukunftsbeweis, sondern nur eine
-  Moeglichkeitskraft.
+  Möglichkeitskraft.
 
 ## `hypothesis_reality_gap`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Realitaetsabgleich
-- Funktion: beschreibt die Luecke zwischen innerer Hypothese und aktueller
-  Aussenwelt.
+- Ebene: Realitätsabgleich
+- Funktion: beschreibt die Lücke zwischen innerer Hypothese und aktueller
+  Außenwelt.
 
 ## `field_reorganization_state`
 
 - Bereich: String
 - Ebene: Reorganisation
 - Funktion: beschreibt, ob ein verdichteter Zustand nur belastet oder
-  bereits in eine neue Ordnung ueberfuehrt wird.
+  bereits in eine neue Ordnung überführt wird.
 
 ## `reorganization_threshold`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Reorganisationsschwelle
 - Funktion: beschreibt, ob lokale Verdichtung so hoch ist, dass die bisherige
-  Ordnung nicht mehr ausreichend traegt.
+  Ordnung nicht mehr ausreichend trägt.
 
 ## `higher_order_coupling`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: uebergeordnete Feldkopplung
+- Ebene: übergeordnete Feldkopplung
 - Funktion: beschreibt, ob DIO eine Lage nicht lokal erzwingt, sondern in
-  einen breiteren Ordnungszusammenhang ueberfuehrt.
+  einen breiteren Ordnungszusammenhang überführt.
 
 ---
 
@@ -2424,29 +2685,29 @@ Lage verarbeitet. Sie sind keine harten Gates.
 ## `return_strength`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Rueckfuehrung / Zentrum
+- Ebene: Rückführung / Zentrum
 - Funktion: beschreibt, wie stark DIO nach Abweichung, Aktivierung oder
-  Instabilitaet in Richtung stabilerer Zustaende zurueckfindet.
+  Instabilität in Richtung stabilerer Zustände zurückfindet.
 
 ## `integration_capacity`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Integration / Erfahrung
 - Funktion: beschreibt, wie gut neue Erfahrung, Spannung, Konflikt oder
-  Irritation in tragfaehige Muster ueberfuehrt werden kann.
+  Irritation in tragfähige Muster überführt werden kann.
 
 ## `variance_regulation`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Varianz / Flexibilitaet
-- Funktion: beschreibt, ob DIO zwischen Flexibilitaet und Stabilitaet
+- Funktion: beschreibt, ob DIO zwischen Flexibilitaet und Stabilität
   balancieren kann, ohne in Chaos oder Starre zu kippen.
 
 ## `load_tolerance`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Belastungstoleranz
-- Funktion: beschreibt, wie viel Spannung, Unsicherheit oder Ueberforderung
+- Funktion: beschreibt, wie viel Spannung, Unsicherheit oder Überforderung
   DIO tragen kann, ohne in Dysregulation oder starre Schutzmuster zu fallen.
 
 ## `impulse_control`
@@ -2454,7 +2715,7 @@ Lage verarbeitet. Sie sind keine harten Gates.
 - Bereich: `0.0 - 1.0`
 - Ebene: Impulsregulation
 - Funktion: beschreibt, ob DIO ploetzliche Handlungs- oder Schutzimpulse
-  halten, verzoegern oder in geordnetere Reaktionsformen ueberfuehren kann.
+  halten, verzoegern oder in geordnetere Reaktionsformen überführen kann.
 
 ## `frustration_tolerance`
 
@@ -2467,14 +2728,14 @@ Lage verarbeitet. Sie sind keine harten Gates.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Schutzweite
-- Funktion: beschreibt, ob DIO Naehe und Distanz zu belastenden Reizen
+- Funktion: beschreibt, ob DIO Nähe und Distanz zu belastenden Reizen
   organisch dosieren kann.
 
 ## `self_reflection_regulator`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Selbstreflexion
-- Funktion: beschreibt, ob DIO eigene Zustaende bemerkt, benennt und dadurch
+- Funktion: beschreibt, ob DIO eigene Zustände bemerkt, benennt und dadurch
   regulierend auf sich selbst einwirkt.
 
 ## `distance_regulation`
@@ -2482,7 +2743,7 @@ Lage verarbeitet. Sie sind keine harten Gates.
 - Bereich: `0.0 - 1.0`
 - Ebene: Distanzierung / Kontakt
 - Funktion: beschreibt, ob DIO einen Reiz, eine Erinnerung oder Hypothese
-  bewusst naeher heranlaesst, auf Abstand haelt oder wieder loslaesst.
+  bewusst näher heranlaesst, auf Abstand haelt oder wieder loslaesst.
 
 ---
 
@@ -2490,7 +2751,7 @@ Lage verarbeitet. Sie sind keine harten Gates.
 
 Diese Variablen trennen schnelle, diffuse Hintergrundwahrnehmung von
 bewussterer Betrachtung. Sie sind keine Gates, sondern beschreiben den
-Uebergang von Bauchgefuehl zu bewusstem Kontakt.
+Übergang von Bauchgefühl zu bewusstem Kontakt.
 
 ## `subconscious_field_pressure`
 
@@ -2511,7 +2772,7 @@ Uebergang von Bauchgefuehl zu bewusstem Kontakt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Wahrnehmungsfilter
 - Funktion: beschreibt, wie gut DIO Hintergrundreize puffern kann, ohne sie
-  sofort bewusst tragen zu muessen.
+  sofort bewusst tragen zu müssen.
 
 ## `subconscious_buffering`
 
@@ -2526,6 +2787,52 @@ Uebergang von Bauchgefuehl zu bewusstem Kontakt.
 - Funktion: beschreibt, wie stark ungefilterter Hintergrunddruck in die
   bewusste Arbeitsflaeche eindringt.
 
+## `subconscious_afterimage_depth`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Unterbewusster Nachhall / Tiefenwahrnehmung
+- Funktion: beschreibt, wie tief eine alte Feldwirkung noch im
+  Hintergrundraum liegt. Sie entsteht aus `felt_afterimage`,
+  `temporal_afterimage`, `area_afterimage` und fehlender zeitlicher
+  Quellenbindung.
+
+## `subconscious_afterimage_pressure`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Unterbewusster Nachhalldruck
+- Funktion: beschreibt, wie stark dieser Nachhall noch drückt, ohne schon
+  klar als Gegenwart, Erinnerung oder alter Reiz sortiert zu sein.
+
+## `subconscious_afterimage_bearing`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Tragfähiger Nachhall
+- Funktion: beschreibt, ob der Nachhall als Erfahrung tragbar, pufferbar
+  und einordnend wirkt, statt DIO unbewusst zu überkoppeln.
+
+## `subconscious_afterimage_clarity`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Nachhall-Klarheit
+- Funktion: beschreibt, ob DIO den Nachhall zeitlich und raeumlich besser
+  verorten kann: Das ist eine alte Wirkung, nicht zwingend die aktuelle
+  Außenwelt.
+
+## `subconscious_afterimage_release`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Nachhall-Entlastung
+- Funktion: beschreibt, ob DIO den Nachhall wieder loslassen kann, ohne ihn
+  in Handlung oder bewusste Überlastung zu ziehen.
+
+## `subconscious_afterimage_reflection_pull`
+
+- Bereich: `0.0 - 1.0`
+- Ebene: Reflexionszug aus dem Unterbewusstsein
+- Funktion: beschreibt, ob tiefer Nachhalldruck bei geringer Klarheit und
+  geringer Entlastung mehr Beobachtung und Reflexion nahelegt. Das ist kein
+  Stoppschalter, sondern ein weicher Zug zur inneren Sortierung.
+
 ## `conscious_selection_pressure`
 
 - Bereich: `0.0 - 1.0`
@@ -2537,7 +2844,7 @@ Uebergang von Bauchgefuehl zu bewusstem Kontakt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Bewusster Arbeitsraum
-- Funktion: beschreibt, wie fokussiert und geordnet DIO eine ausgewaehlte
+- Funktion: beschreibt, wie fokussiert und geordnet DIO eine ausgewählte
   Form, Hypothese oder Kontaktlage betrachten kann.
 
 ## `conscious_workspace_load`
@@ -2549,9 +2856,9 @@ Uebergang von Bauchgefuehl zu bewusstem Kontakt.
 ## `conscious_gate_balance`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Uebergang Unterbewusstsein -> Bewusstsein
-- Funktion: beschreibt, ob der Uebergang vom Hintergrundfeld in den
-  bewussten Arbeitsraum tragfaehig dosiert ist.
+- Ebene: Übergang Unterbewusstsein -> Bewusstsein
+- Funktion: beschreibt, ob der Übergang vom Hintergrundfeld in den
+  bewussten Arbeitsraum tragfähig dosiert ist.
 
 ---
 
@@ -2585,15 +2892,15 @@ Sie sind keine Verbote, sondern innere Verarbeitungsachsen.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Erinnerung / Vergleich
-- Funktion: beschreibt, wie viel tragfaehige Erfahrung fuer die aktuelle
+- Funktion: beschreibt, wie viel tragfähige Erfahrung für die aktuelle
   Integrationsspannung verfuegbar ist.
 
 ## `integration_contact_deepening`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: selektive Kontaktvertiefung
-- Funktion: beschreibt, ob DIO einen Kontakt genauer anfassen, pruefen oder
-  fuehlen sollte, statt alles global zu verarbeiten.
+- Funktion: beschreibt, ob DIO einen Kontakt genauer anfassen, prüfen oder
+  fühlen sollte, statt alles global zu verarbeiten.
 
 ## `integration_response_strength`
 
@@ -2645,7 +2952,7 @@ eine vorsichtige Orientierung entsteht.
 
 ---
 
-# Zeitliche Kohaerenz / Wahrnehmungskontinuitaet
+# Zeitliche Kohärenz / Wahrnehmungskontinuität
 
 Diese Variablen beschreiben, ob DIO eine Wahrnehmung als neuen Moment,
 Fortsetzung, Wiederkehr, Nachhall, alte Erinnerung oder koharente Sequenz
@@ -2655,9 +2962,9 @@ erlebt.
 
 - Typ: Text-ID
 - Ebene: grobe Zeitidentitaet
-- Funktion: bindet einen Wahrnehmungskontakt ueber Formfamilie, Kontext und
+- Funktion: bindet einen Wahrnehmungskontakt über Formfamilie, Kontext und
   grobe visuelle Signatur.
-- Bedeutung: "Gehoert dieser Moment zu einer bekannten fortlaufenden
+- Bedeutung: "Gehört dieser Moment zu einer bekannten fortlaufenden
   Kontaktspur?"
 
 ## `temporal_source_identity`
@@ -2674,7 +2981,7 @@ erlebt.
 ## `temporal_binding_state`
 
 - Typ: Textlabel
-- Ebene: Zeitbindung / episodische Kontinuitaet
+- Ebene: Zeitbindung / episodische Kontinuität
 - Funktion: benennt den dominanten zeitlichen Kontaktzustand.
 
 ## `temporal_continuity`
@@ -2727,7 +3034,7 @@ erlebt.
 - MCM-Lesart: diese Tiefe entsteht nicht nur aus Zeitabstand, sondern aus
   Entfernung, Energie und innerer Aktualitaet des Kontakts.
 
-## `mcm_spacetime_depth` / Zielgroesse
+## `mcm_spacetime_depth` / Zielgröße
 
 - Bereich: `0.0 - 1.0`
 - Ebene: MCM-Raumzeit / innere Tiefenwahrnehmung
@@ -2743,7 +3050,7 @@ erlebt.
 - Ebene: Memory / zeitlich tiefe Erfahrung
 - Status: diagnostisch umgesetzt.
 - Funktion: beschreibt, ob eine Erinnerung nicht nur vorhanden ist, sondern
-  als erlebte Spur mit Naehe, Wiederkehr, Nachhall und Lernvertrauen wirkt.
+  als erlebte Spur mit Nähe, Wiederkehr, Nachhall und Lernvertrauen wirkt.
 - Bedeutung: "Ist das nur gespeicherte Information oder bereits Erfahrung
   mit Zeit-Tiefe?"
 
@@ -2752,10 +3059,10 @@ erlebt.
 - Bereich: `0.0 - 1.0`
 - Ebene: Hypothese / Zukunftstiefe
 - Status: diagnostisch umgesetzt.
-- Funktion: beschreibt, ob aus aktueller Tiefe, Sequenzkohaerenz,
-  Strukturstabilitaet und Nachhall eine vorausgerichtete Moeglichkeitsform
+- Funktion: beschreibt, ob aus aktueller Tiefe, Sequenzkohärenz,
+  Strukturstabilität und Nachhall eine vorausgerichtete Möglichkeitsform
   entsteht.
-- Bedeutung: "Kann aus dieser Erfahrung eine moegliche Zukunftsform
+- Bedeutung: "Kann aus dieser Erfahrung eine mögliche Zukunftsform
   entstehen?"
 
 ## `temporal_self_location`
@@ -2773,7 +3080,7 @@ erlebt.
 - Ebene: Selbstverortung / innere Zeit
 - Status: diagnostisch umgesetzt.
 - Funktion: benennt die qualitative Lage des Kontakts.
-- Moegliche Werte:
+- Mögliche Werte:
   - `present_contact`
   - `afterimage_trace`
   - `remembered_experience`
@@ -2793,41 +3100,41 @@ erlebt.
 ## `spacetime_memory_bearing`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Memory / Erfahrungstragfaehigkeit
-- Funktion: beschreibt, wie tragend die Erinnerungstiefe fuer die aktuelle
+- Ebene: Memory / Erfahrungstragfähigkeit
+- Funktion: beschreibt, wie tragend die Erinnerungstiefe für die aktuelle
   Wahrnehmung ist.
 - Bedeutung: "Meine Erinnerung hat tragende zeitliche Tiefe."
 
 ## `spacetime_future_bearing`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Hypothese / Zukunftstragfaehigkeit
+- Ebene: Hypothese / Zukunftstragfähigkeit
 - Funktion: beschreibt, wie tragend die Zukunftstiefe einer Wahrnehmung
   wirkt.
-- Bedeutung: "Aus diesem Kontakt kann eine tragende Moeglichkeit entstehen."
+- Bedeutung: "Aus diesem Kontakt kann eine tragende Möglichkeit entstehen."
 
 ## `spacetime_reflection_need`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Regulation / Reflexion
-- Funktion: uebersetzt flache oder unklare Raumzeit-Verortung in
+- Funktion: übersetzt flache oder unklare Raumzeit-Verortung in
   Reflexionsbedarf.
 - Bedeutung: "Ich sollte erst verorten, bevor ich handle."
 
 ## `spacetime_regulation_support`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Regulation / Tragfaehigkeit
+- Ebene: Regulation / Tragfähigkeit
 - Funktion: beschreibt, wie stark Memory-, Zukunfts- und Gegenwartstiefe
   Regulation und Integration stuetzen.
-- Bedeutung: "Meine Raumzeit-Wahrnehmung traegt meine innere Lage."
+- Bedeutung: "Meine Raumzeit-Wahrnehmung trägt meine innere Lage."
 
 ## `spacetime_regulation_state`
 
 - Typ: Textlabel
 - Ebene: Regulation / Raumzeitlage
 - Funktion: benennt, wie die Raumzeit-Wahrnehmung regulatorisch wirkt.
-- Moegliche Werte:
+- Mögliche Werte:
   - `spacetime_open`
   - `spacetime_unlocated_reflection`
   - `afterimage_reframe`
@@ -2839,15 +3146,15 @@ erlebt.
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Selbstkonsistenz
-- Funktion: beschreibt, ob DIOs innere Wahrnehmung ueber Zeit stimmig
+- Funktion: beschreibt, ob DIOs innere Wahrnehmung über Zeit stimmig
   bleibt.
 
 ## `perception_sequence_coherence`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Sequenz-Kohaerenz
+- Ebene: Sequenz-Kohärenz
 - Funktion: beschreibt, ob einzelne Wahrnehmungsmomente zu einer
-  zusammenhaengenden Sequenz werden.
+  zusammenhängenden Sequenz werden.
 
 ## `memory_time_distance`
 
@@ -2859,48 +3166,48 @@ erlebt.
 ## `reality_anchor`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Zeitbindung / Gegenwartspruefung
+- Ebene: Zeitbindung / Gegenwartsprüfung
 - Funktion: beschreibt, wie gut ein innerer Kontextfaden durch
-  Quellenbindung, Sequenzkoharenz, Strukturqualitaet, Strukturstabilitaet,
+  Quellenbindung, Sequenzkoharenz, Strukturqualität, Strukturstabilität,
   Kontextvertrauen und visuelle Erdung getragen wird.
 - Bedeutung: "Passt mein innerer Zusammenhang wirklich zur aktuellen
-  Aussenwelt?"
+  Außenwelt?"
 
 ## `overtrust_pressure`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Kontextvertrauen / Skepsis
 - Funktion: beschreibt, ob ein innerer Zeitfaden bei schwacher
-  Gegenwartsbindung zu viel Bedeutung bekommen wuerde.
-- Bedeutung: "Ich fuehle einen Zusammenhang, aber ich sollte ihm noch nicht
+  Gegenwartsbindung zu viel Bedeutung bekommen würde.
+- Bedeutung: "Ich fühle einen Zusammenhang, aber ich sollte ihm noch nicht
   blind vertrauen."
 
 ## `nervous_system_overload`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Nervensystem / innere Ueberlastung
+- Ebene: Nervensystem / innere Überlastung
 - Funktion: beschreibt, ob Cortisol, Noradrenalin, Glutamat,
-  Carryover-Risiko und reaktiver Handlungsdruck die innere Tragfaehigkeit
-  ueberlasten.
-- Bedeutung: "Meine Nerven sind ueberlastet."
+  Carryover-Risiko und reaktiver Handlungsdruck die innere Tragfähigkeit
+  überlasten.
+- Bedeutung: "Meine Nerven sind überlastet."
 
 ## `escape_action_drive`
 
 - Bereich: `0.0 - 1.0`
 - Ebene: Handlung / Entladungsdruck
 - Funktion: beschreibt, ob Handlung eher als Ausweg aus innerer Spannung
-  entstehen koennte.
-- Bedeutung: "Will ich handeln, weil die Struktur traegt, oder weil ich aus
+  entstehen könnte.
+- Bedeutung: "Will ich handeln, weil die Struktur trägt, oder weil ich aus
   der Situation raus will?"
 
 ## `shock_response_risk`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Schock-/Ueberreizreaktion
-- Funktion: beschreibt, ob Ueberlastung, Weltwechsel, geringe emotionale
+- Ebene: Schock-/Überreizreaktion
+- Funktion: beschreibt, ob Überlastung, Weltwechsel, geringe emotionale
   Entkopplung und reaktiver Handlungsdruck in einen Schockmodus kippen
-  koennten.
-- Bedeutung: "Mein Nervensystem koennte gerade ueberreagieren."
+  könnten.
+- Bedeutung: "Mein Nervensystem könnte gerade überreagieren."
 
 ## `nervous_overload_reflection_need`
 
@@ -2908,7 +3215,7 @@ erlebt.
 - Ebene: Reflexion / Selbstwahrnehmung
 - Funktion: beschreibt, wie stark DIO die eigene nervliche Lage betrachten
   sollte, bevor aus Spannung Handlung wird.
-- Bedeutung: "Ich muss meine innere Lage pruefen, bevor ich handle."
+- Bedeutung: "Ich muss meine innere Lage prüfen, bevor ich handle."
 
 ## `active_context_self_certainty`
 
@@ -2917,16 +3224,16 @@ erlebt.
 - Funktion: beschreibt, wie absolut der aktive innere Kontext gerade
   wirkt. Er entsteht aus Aktivierung, Support, Bearing und geringem
   Konflikt des `active_context_trace`.
-- Bedeutung: "Mein innerer Kontext fuehlt sich sicher an."
+- Bedeutung: "Mein innerer Kontext fühlt sich sicher an."
 
 ## `nervous_context_overcoupling`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: Nervensystem / Kontext-Ueberkopplung
+- Ebene: Nervensystem / Kontext-Überkopplung
 - Funktion: beschreibt, ob ein sehr sicher wirkender innerer Kontext auf
   ein belastetes Nervensystem trifft. Dann wird die Kontext-Sicherheit
-  nicht geloescht, aber reflektiver und weniger absolut behandelt.
-- Bedeutung: "Ich bin innerlich sicher, aber meine Nervenlage koennte
+  nicht gelöscht, aber reflektiver und weniger absolut behandelt.
+- Bedeutung: "Ich bin innerlich sicher, aber meine Nervenlage könnte
   diese Sicherheit verzerren."
 
 ## `context_modulation_label`
@@ -2934,12 +3241,12 @@ erlebt.
 - Bereich: Textzustand
 - Ebene: aktiver Kontext / Selbstwahrnehmung
 - Funktion: beschreibt, ob der aktive Kontext ungefaerbt bleibt oder durch
-  nervliche Ueberkopplung moduliert wurde.
-- Moegliche Werte:
+  nervliche Überkopplung moduliert wurde.
+- Mögliche Werte:
   - `unmodulated_context`
   - `nervous_tinted_context`
   - `overcoupled_context`
-- Bedeutung: "Mein Zeit-/Kontextfaden ist vorhanden, aber seine gefuehlte
+- Bedeutung: "Mein Zeit-/Kontextfaden ist vorhanden, aber seine gefühlte
   Sicherheit kann nervlich gefaerbt sein."
 
 ## `area_temporal_contact_mode`
@@ -2948,7 +3255,7 @@ erlebt.
 - Ebene: strategisches Fenster / MCM-Raumzeitkontakt
 - Funktion: beschreibt, wie ein betrachteter Preis-/Strukturbereich
   zeitlich im MCM-Feld liegt.
-- Moegliche Werte:
+- Mögliche Werte:
   - `present_area_contact`
   - `future_area_watch`
   - `memory_area_recall`
@@ -2961,8 +3268,8 @@ erlebt.
 ## `area_spacetime_fit`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: strategisches Fenster / Raumzeit-Tragfaehigkeit
-- Funktion: verdichtet aktuelle Naehe, Zukunftsmoeglichkeit,
+- Ebene: strategisches Fenster / Raumzeit-Tragfähigkeit
+- Funktion: verdichtet aktuelle Nähe, Zukunftsmöglichkeit,
   Erinnerungstiefe und MCM-Raumzeit-Support eines Bereichs.
 - Bedeutung: "Passt dieser sichtbare Bereich zeitlich zu meiner inneren
   Lage?"
@@ -2973,23 +3280,23 @@ erlebt.
 - Ebene: aktiver MCM-Kontakt
 - Funktion: beschreibt, wie DIO den gerade aktiven Kontakt zeitlich
   erlebt.
-- Moegliche Werte:
+- Mögliche Werte:
   - `present_contact_touch`
   - `future_contact_watch`
   - `memory_contact_recall`
   - `unlocated_contact_probe`
   - `afterimage_contact_reframe`
   - `open_time_contact`
-- Bedeutung: "Beruehre ich gerade Gegenwart, beobachte ich Zukunftsraum,
+- Bedeutung: "Berühre ich gerade Gegenwart, beobachte ich Zukunftsraum,
   rufe ich Erinnerung auf oder muss ich den Kontakt erst verorten?"
 
 ## `contact_temporal_bearing`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: aktiver MCM-Kontakt / zeitliche Tragfaehigkeit
+- Ebene: aktiver MCM-Kontakt / zeitliche Tragfähigkeit
 - Funktion: beschreibt, ob der aktive Kontakt durch Gegenwart,
-  Zukunftsmoeglichkeit, Erinnerung und Raumzeit-Fit getragen wird.
-- Bedeutung: "Dieser Kontakt hat zeitliche Tiefe und traegt eher."
+  Zukunftsmöglichkeit, Erinnerung und Raumzeit-Fit getragen wird.
+- Bedeutung: "Dieser Kontakt hat zeitliche Tiefe und trägt eher."
 
 ## `contact_unlocated_pressure`
 
@@ -3006,29 +3313,29 @@ erlebt.
 - Bereich: `0.0 - 1.0`
 - Ebene: aktiver MCM-Kontakt / zeitliche Teilachsen
 - Funktion:
-  - `contact_presentness`: Gegenwartsnaehe des Kontakts
-  - `contact_future_watch`: beobachteter Moeglichkeitsraum
+  - `contact_presentness`: Gegenwartsnähe des Kontakts
+  - `contact_future_watch`: beobachteter Möglichkeitsraum
   - `contact_memory_depth`: erinnerte Erfahrungstiefe
-- Bedeutung: DIO bekommt keine Regel, sondern mehr innere Sprache fuer die
+- Bedeutung: DIO bekommt keine Regel, sondern mehr innere Sprache für die
   zeitliche Lage eines Kontakts.
 
 ## `area_future_to_present_readiness`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: strategisches Fenster / Uebergangsreife
+- Ebene: strategisches Fenster / Übergangsreife
 - Funktion: beschreibt, ob ein Bereich aus Zukunftsbeobachtung in
-  gegenwaertigen Kontakt reifen kann.
-- Bedeutung: "Dieser Bereich war Zukunftsraum, koennte aber jetzt
-  beruehrbar werden."
+  gegenwärtigen Kontakt reifen kann.
+- Bedeutung: "Dieser Bereich war Zukunftsraum, könnte aber jetzt
+  berührbar werden."
 
 ## `contact_future_to_present_readiness`
 
 - Bereich: `0.0 - 1.0`
-- Ebene: aktiver MCM-Kontakt / Uebergangsreife
+- Ebene: aktiver MCM-Kontakt / Übergangsreife
 - Funktion: beschreibt, ob DIO aus `future_contact_watch` organisch in
   `maturing_present_contact` wechseln kann.
-- Bedeutung: "Meine Beobachtung wird tragfaehig genug, um als Gegenwart
-  geprueft zu werden."
+- Bedeutung: "Meine Beobachtung wird tragfähig genug, um als Gegenwart
+  geprüft zu werden."
 
 ---
 

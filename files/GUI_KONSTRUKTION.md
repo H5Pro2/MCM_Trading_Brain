@@ -1,9 +1,9 @@
 # GUI_KONSTRUKTION
 
 Status:
-- Konzeptdatei fuer eine spaetere Web-Oberflaeche
-- keine aktuelle Prioritaet vor Brain-/MCM-Mechanik
-- kein Ersatz fuer `UMSETZUNGSPLAN.md`
+- Konzeptdatei für eine spätere Web-Oberflaeche
+- keine aktuelle Priorität vor Brain-/MCM-Mechanik
+- kein Ersatz für `UMSETZUNGSPLAN.md`
 
 Regelwerk:
 - `files/MD_ANWEISUNG.md`
@@ -17,15 +17,15 @@ Regelwerk:
 DIO soll nicht als klassische Trading-GUI dargestellt werden.
 
 Die Oberflaeche soll ein Beobachtungsraum sein:
-- aeussere Wahrnehmung
+- äußere Wahrnehmung
 - innere Feldwahrnehmung
-- neuronale Aktivitaet
+- neuronale Aktivität
 - neurochemische Last und Unterstuetzung
 - Handlungstendenz
 - Reife / Observe / Act-Watch / Act
 
 Ziel:
-Der Mensch soll nicht mit Variablen ueberladen werden, sondern sehen koennen,
+Der Mensch soll nicht mit Variablen überladen werden, sondern sehen können,
 wie DIO seine Welt gerade organisiert.
 
 ---
@@ -36,26 +36,26 @@ Bevorzugt:
 **lokale Web-Oberflaeche**
 
 Gruende:
-- gut fuer Backtest-Replay
-- gut fuer spaeteren Live-Monitor
-- Canvas/WebGL fuer Feldvisualisierung moeglich
+- gut für Backtest-Replay
+- gut für späteren Live-Monitor
+- Canvas/WebGL für Feldvisualisierung möglich
 - mehrere Fenster/Panels flexibel anordenbar
-- spaeter leicht mit WebSocket oder Debug-Dateien verbindbar
+- später leicht mit WebSocket oder Debug-Dateien verbindbar
 
-Moegliche technische Richtung:
+Mögliche technische Richtung:
 - Backend liest Runtime-/Debug-Zustand
 - Frontend rendert Panels
 - Backtest zuerst aus Debug-Dateien
-- Live spaeter ueber laufenden State/Stream
+- Live später über laufenden State/Stream
 
 ---
 
 # 3. Hauptfenster
 
-## Aussenwahrnehmungsfenster
+## Außenwahrnehmungsfenster
 
 Funktion:
-Darstellung dessen, was DIO von der Markt-Aussenwelt sieht.
+Darstellung dessen, was DIO von der Markt-Außenwelt sieht.
 
 Nicht als menschliches Chartmuster:
 - kein starres Patternlabel
@@ -65,15 +65,15 @@ Nicht als menschliches Chartmuster:
 Sichtbar machen:
 - Marktform
 - visuelle Klarheit
-- Objektstabilitaet
+- Objektstabilität
 - visuelle Blindheit
 - Formdruck
 - Resonanz / Fragilitaet
 - eventuell DIO-interne Formzeichen
 
-Moegliche Darstellung:
+Mögliche Darstellung:
 - Chart oder vereinfachter Marktverlauf
-- darueber transparente Formzonen
+- darüber transparente Formzonen
 - Fokusbereich / Zoomfenster
 - Formzeichen nur als interne IDs oder abstrakte Symbole
 
@@ -84,8 +84,8 @@ Darstellung des inneren Wahrnehmungsfeldes.
 
 Sichtbar machen:
 - `MCMNeuron`
-- lokale Aktivitaet
-- Aktivitaetsinseln
+- lokale Aktivität
+- Aktivitätsinseln
 - Feldspannung
 - Feldklarheit
 - Fragmentierung
@@ -93,33 +93,33 @@ Sichtbar machen:
 - Informationsbewegung
 - Kontextreaktivierung
 
-Moegliche Darstellung:
+Mögliche Darstellung:
 - Punkte/Neuronen als Feldkarte
-- Linien fuer Kopplung und Informationsfluss
-- Pulsieren fuer Aktivierung
+- Linien für Kopplung und Informationsfluss
+- Pulsieren für Aktivierung
 - Drift/Bewegung als Nachhall
-- Aktivitaetsinseln als Areale
+- Aktivitätsinseln als Areale
 
 Wichtig:
-Mehr Aktivitaet bedeutet nicht automatisch bessere Entscheidung.
-Die GUI muss sichtbar machen, ob Aktivitaet Ordnung oder Last erzeugt.
+Mehr Aktivität bedeutet nicht automatisch bessere Entscheidung.
+Die GUI muss sichtbar machen, ob Aktivität Ordnung oder Last erzeugt.
 
 ## Neurochemisches Feldfenster
 
 Funktion:
 Darstellung der neurologisch lesbaren Innenlage.
 
-Die neurochemische Wirkung kann als Farbfeld ueber dem MCM-Feld liegen.
-Dabei muss nicht angenommen werden, dass "eine Chemie" direkt ueber dem Feld
+Die neurochemische Wirkung kann als Farbfeld über dem MCM-Feld liegen.
+Dabei muss nicht angenommen werden, dass "eine Chemie" direkt über dem Feld
 liegt. Es kann auch sein, dass bestimmte Feldareale eine bestimmte
 neurochemische Faerbung tragen.
 
-Moegliche Farblogik:
-- `cortisol_load`: Last / Stress / Ueberforderung
+Mögliche Farblogik:
+- `cortisol_load`: Last / Stress / Überforderung
 - `gaba_inhibition`: Hemmung / Reifebremse
 - `noradrenaline_arousal`: Wachheit / Alarm / Spannung
 - `acetylcholine_focus`: Fokus / genaues Sehen
-- `serotonin_stability`: Stabilitaet / Geduld / Tragfaehigkeit
+- `serotonin_stability`: Stabilität / Geduld / Tragfähigkeit
 - `endorphin_relief`: Entlastung / Prozesswohlbefinden
 - `dopamine_tone`: Lernwert / Erwartung / Entwicklungston
 - `glutamate_activation`: neuronale Aktivierung / Feldenergie
@@ -143,10 +143,10 @@ Sichtbar machen:
 - `act`
 - dominanter Grund
 - neurochemische Balance
-- Tragfaehigkeit
+- Tragfähigkeit
 - Handlungsspannung
 
-Keine Ueberladung:
+Keine Überladung:
 Diese Leiste soll wenige klare Zustandsworte zeigen, nicht alle Variablen.
 
 ---
@@ -158,8 +158,8 @@ Die GUI sollte zuerst als Backtest-Replay funktionieren.
 Wichtige Modi:
 - Lauf laden
 - Timeline abspielen
-- Schritt vor/zurueck
-- Geschwindigkeit waehlen
+- Schritt vor/zurück
+- Geschwindigkeit wählen
 - Phasenwechsel markieren
 - Trade-Einstiege/Exits markieren
 - Observe-/Act-Watch-Abschnitte sichtbar machen
@@ -167,10 +167,10 @@ Wichtige Modi:
 Warum zuerst Replay:
 - Debug-Daten sind stabil vorhanden
 - kein Live-API-Risiko
-- DIOs Wahrnehmungsentwicklung kann nachtraeglich betrachtet werden
-- Regimewechsel koennen besser verstanden werden
+- DIOs Wahrnehmungsentwicklung kann nachträglich betrachtet werden
+- Regimewechsel können besser verstanden werden
 
-Live-Modus spaeter:
+Live-Modus später:
 - gleiche Fenster
 - laufender State
 - neue Kerzen / neue Wahrnehmung
@@ -188,7 +188,7 @@ Geeignete Quellen:
 - `mcm_position_intervention_protocol.csv`
 - `outcome_records.jsonl`
 - `trade_equity.csv`
-- Runtime-Snapshots spaeter live
+- Runtime-Snapshots später live
 
 Wichtige neue Achsen:
 - `neurochemical_state_label`
@@ -209,12 +209,12 @@ Wichtige neue Achsen:
 
 # 6. Gestaltungsregeln
 
-Die GUI soll nicht kompliziert und ueberladen sein.
+Die GUI soll nicht kompliziert und überladen sein.
 
 Erlaubt:
 - wenige starke Fenster
 - Farbwolken
-- neuronale Aktivitaetskarte
+- neuronale Aktivitätskarte
 - Timeline
 - kompakte Zustandsleiste
 - Detailwerte erst bei Hover/Klick
@@ -225,15 +225,15 @@ Nicht gewuenscht:
 - alle Variablen gleichzeitig zeigen
 - Trading-Dashboard als Hauptform
 - harte Ampellogik
-- "gut/schlecht"-Labels fuer komplexe Zustandslagen
+- "gut/schlecht"-Labels für komplexe Zustandslagen
 
 Leitfrage:
-Kann ein Mensch beim Zuschauen verstehen, ob DIO sieht, fuehlt, ueberlastet
-ist, sich hemmt, reift oder tragfaehig handelt?
+Kann ein Mensch beim Zuschauen verstehen, ob DIO sieht, fühlt, überlastet
+ist, sich hemmt, reift oder tragfähig handelt?
 
 ---
 
-# 7. Moegliche erste Version
+# 7. Mögliche erste Version
 
 Minimal brauchbare Web-GUI:
 
@@ -243,15 +243,15 @@ Minimal brauchbare Web-GUI:
    `observe`, `hold`, `replan`, `act_watch`, `act`.
 4. MCM-Feld als einfache Neuronenkarte darstellen.
 5. Neurochemische Achsen als Farbwolke oder radialer Zustand anzeigen.
-6. Aussenwahrnehmung als Chart plus visuelle Klarheit/Blindheit anzeigen.
+6. Außenwahrnehmung als Chart plus visuelle Klarheit/Blindheit anzeigen.
 7. Klick auf Zeitpunkt zeigt kompakte Innenlage.
 
 Erst danach:
 - Live-Streaming
 - WebSocket
 - interaktive Feldnavigation
-- mehrere Zeitaufloesungen
-- Vergleich zweier Laeufe
+- mehrere Zeitauflösungen
+- Vergleich zweier Läufe
 
 ---
 
@@ -263,7 +263,7 @@ Sie soll nicht sagen:
 "Das ist ein menschliches Muster."
 
 Sie soll zeigen:
-"So organisiert DIO gerade Aussenreiz, Innenfeld, Erfahrung,
+"So organisiert DIO gerade Außenreiz, Innenfeld, Erfahrung,
 neurochemische Last und Handlungstendenz."
 
 Damit wird die GUI ein Fenster in die MCM, nicht nur ein Trading-Frontend.

@@ -6,7 +6,7 @@
 # Prüft ausschließlich:
 # 1) Preisgeometrie von Entry / SL / TP korrekt
 # 2) Risk <= MAX_SL_DISTANCE
-# 3) RR >= MIN_RR oder min_rr_override
+# 3) Mindest-RR >= MIN_RR oder min_rr_override
 # 4) TP-Distanz >= Entry * MIN_TP_DISTANCE
 #
 # Keine Richtungsentscheidung
@@ -96,7 +96,7 @@ class TradeValueGate:
                 }
         
         # --------------------------------------------------
-        # RR MINIMUM
+        # MINDEST-RR ALS TECHNISCHE SICHERHEITSUNTERGRENZE
         # --------------------------------------------------
         rr = reward / risk
         min_rr = float(min_rr_override) if min_rr_override is not None else float(getattr(Config, "MIN_RR", 2.0))

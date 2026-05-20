@@ -299,27 +299,142 @@ class TradeStats:
             "mid": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0},
             "low": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0},
         }
+        emergent_structure_stats = {
+            "confirmed_structural_interpretation": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0, "reading_sum": 0.0, "confirmation_sum": 0.0, "rr_sum": 0.0},
+            "open_structural_hypothesis": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0, "reading_sum": 0.0, "confirmation_sum": 0.0, "rr_sum": 0.0},
+            "wide_target_without_structure": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0, "reading_sum": 0.0, "confirmation_sum": 0.0, "rr_sum": 0.0},
+            "ordinary_structure_reading": {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0, "reading_sum": 0.0, "confirmation_sum": 0.0, "rr_sum": 0.0},
+        }
+
+        def _summary_f(*values, default=0.0):
+            for value in values:
+                try:
+                    if value is None:
+                        continue
+                    return float(value)
+                except Exception:
+                    continue
+            if default is None:
+                return None
+            return float(default)
+
+        def _summary_clip(value):
+            value = _summary_f(value)
+            if value != value:
+                value = 0.0
+            return max(0.0, min(1.0, float(value)))
+
+        def _summary_section(record: dict, name: str) -> dict:
+            context = dict(record.get("context", {}) or {})
+            value = record.get(name, context.get(name, {}))
+            return dict(value or {}) if isinstance(value, dict) else {}
+
+        def _derive_emergent_structure(record: dict) -> dict:
+            plan = _summary_section(record, "trade_plan")
+            meta = _summary_section(record, "meta_regulation_state")
+            contact = _summary_section(record, "active_mcm_contact_state")
+            target = _summary_section(record, "target_expectation_state")
+            decomposition = dict(record.get("outcome_decomposition", {}) or {})
+            if not contact:
+                contact = dict(meta.get("active_mcm_contact", {}) or {})
+
+            rr_value = _summary_f(record.get("rr_value"), plan.get("rr_value"), default=0.0)
+            structural_run_room = _summary_f(record.get("structural_run_room"), _summary_clip((rr_value - 1.6) / 3.2))
+            target_expectation_value = _summary_f(
+                record.get("target_expectation_value"),
+                target.get(
+                    "tp_reachability",
+                    target.get(
+                        "base_target_expectation",
+                        (_summary_section(record, "experience") or {}).get("target_expectation", 0.0),
+                    ),
+                ),
+            )
+            reading = _summary_f(record.get("emergent_structure_reading"), default=None)
+            if reading is None:
+                reading = _summary_clip(
+                    (_summary_clip(structural_run_room) * 0.24)
+                    + (_summary_clip(meta.get("future_projection_depth", record.get("future_projection_depth", 0.0))) * 0.16)
+                    + (_summary_clip(meta.get("mcm_spacetime_depth", record.get("mcm_spacetime_depth", 0.0))) * 0.14)
+                    + (_summary_clip(meta.get("area_bearing_quality", record.get("area_bearing_quality", 0.0))) * 0.14)
+                    + (_summary_clip(plan.get("entry_choice_bearing", record.get("entry_choice_bearing", 0.0))) * 0.12)
+                    + (_summary_clip(contact.get("contact_action_maturity", meta.get("contact_action_maturity", 0.0))) * 0.10)
+                    + (_summary_clip(target_expectation_value) * 0.10)
+                    - (_summary_clip(meta.get("spacetime_unlocated_pressure", record.get("spacetime_unlocated_pressure", 0.0))) * 0.10)
+                    - (_summary_clip(meta.get("contact_regime_mismatch", record.get("contact_regime_mismatch", 0.0))) * 0.08)
+                )
+            confirmation = _summary_f(record.get("emergent_structure_confirmation"), default=None)
+            reason = str(record.get("reason", "") or "").strip().lower()
+            if confirmation is None:
+                confirmation = _summary_clip(
+                    (_summary_clip(reading) * 0.42)
+                    + (_summary_clip(decomposition.get("plan_quality", 0.0)) * 0.16)
+                    + (_summary_clip(decomposition.get("execution_quality", 0.0)) * 0.14)
+                    + (_summary_clip(decomposition.get("risk_fit_quality", 0.0)) * 0.12)
+                    + (_summary_clip(decomposition.get("position_constructive_bearing", 0.0)) * 0.10)
+                    + (0.12 if reason == "tp_hit" and rr_value >= 2.4 else 0.0)
+                    - (0.10 if reason == "sl_hit" and rr_value >= 2.4 else 0.0)
+                )
+            state = str(record.get("emergent_structure_state", "") or "").strip()
+            if not state:
+                if reading >= 0.52 and confirmation >= 0.50:
+                    state = "confirmed_structural_interpretation"
+                elif reading >= 0.44 and rr_value >= 2.4:
+                    state = "open_structural_hypothesis"
+                elif rr_value >= 2.4 and reading < 0.34:
+                    state = "wide_target_without_structure"
+                else:
+                    state = "ordinary_structure_reading"
+            return {
+                "state": state,
+                "rr_value": float(rr_value),
+                "structural_run_room": float(structural_run_room),
+                "target_expectation_value": float(target_expectation_value),
+                "reading": float(reading),
+                "confirmation": float(confirmation),
+            }
 
         for item in outcomes:
             record = dict(item or {})
             band = self._structure_band(record.get("structure_quality", 0.0))
             reason = str(record.get("reason", "") or "").strip().lower()
+            emergent = _derive_emergent_structure(record)
+            emergent_state = str(emergent.get("state", "ordinary_structure_reading") or "ordinary_structure_reading")
+            if emergent_state not in emergent_structure_stats:
+                emergent_structure_stats[emergent_state] = {"count": 0, "tp": 0, "sl": 0, "cancel": 0, "pnl": 0.0, "reading_sum": 0.0, "confirmation_sum": 0.0, "rr_sum": 0.0}
 
             band_stats[band]["count"] += 1
             band_stats[band]["pnl"] += float(record.get("pnl", 0.0) or 0.0)
+            emergent_structure_stats[emergent_state]["count"] += 1
+            emergent_structure_stats[emergent_state]["pnl"] += float(record.get("pnl", 0.0) or 0.0)
+            emergent_structure_stats[emergent_state]["reading_sum"] += float(emergent.get("reading", 0.0) or 0.0)
+            emergent_structure_stats[emergent_state]["confirmation_sum"] += float(emergent.get("confirmation", 0.0) or 0.0)
+            emergent_structure_stats[emergent_state]["rr_sum"] += float(emergent.get("rr_value", 0.0) or 0.0)
 
             if reason == "tp_hit":
                 band_stats[band]["tp"] += 1
+                emergent_structure_stats[emergent_state]["tp"] += 1
             elif reason == "sl_hit":
                 band_stats[band]["sl"] += 1
+                emergent_structure_stats[emergent_state]["sl"] += 1
             else:
                 band_stats[band]["cancel"] += 1
+                emergent_structure_stats[emergent_state]["cancel"] += 1
 
         for band_name, payload in band_stats.items():
             count = int(payload.get("count", 0) or 0)
             tp_count = int(payload.get("tp", 0) or 0)
             payload["winrate"] = float(tp_count / count) if count > 0 else 0.0
             payload["avg_pnl"] = float(payload.get("pnl", 0.0) or 0.0) / count if count > 0 else 0.0
+
+        for state_name, payload in emergent_structure_stats.items():
+            count = int(payload.get("count", 0) or 0)
+            tp_count = int(payload.get("tp", 0) or 0)
+            payload["winrate"] = float(tp_count / count) if count > 0 else 0.0
+            payload["avg_pnl"] = float(payload.get("pnl", 0.0) or 0.0) / count if count > 0 else 0.0
+            payload["avg_reading"] = float(payload.get("reading_sum", 0.0) or 0.0) / count if count > 0 else 0.0
+            payload["avg_confirmation"] = float(payload.get("confirmation_sum", 0.0) or 0.0) / count if count > 0 else 0.0
+            payload["avg_rr"] = float(payload.get("rr_sum", 0.0) or 0.0) / count if count > 0 else 0.0
 
         proof = {
             "attempt_density": float(attempt_feedback.get("attempt_density", 0.0) or 0.0),
@@ -418,6 +533,9 @@ class TradeStats:
                 "high": dict(band_stats["high"]),
                 "mid": dict(band_stats["mid"]),
                 "low": dict(band_stats["low"]),
+            },
+            "emergent_structure": {
+                key: dict(value) for key, value in emergent_structure_stats.items()
             },
             "totals": {
                 "trades": int(trades),
@@ -1214,6 +1332,16 @@ class TradeStats:
                 "strategic_entry_price",
                 "strategic_entry_weight",
                 "strategic_entry_fit",
+                "area_motor_intention",
+                "area_motor_distance_fit",
+                "impulse_entry_intention",
+                "area_entry_intention",
+                "entry_choice_conflict",
+                "entry_choice_bearing",
+                "area_direct_readiness",
+                "area_motor_restraint",
+                "entry_choice_state",
+                "entry_choice_sync",
                 "strategic_area_focus_id",
                 "strategic_area_price_low",
                 "strategic_area_price_high",
@@ -1354,7 +1482,18 @@ class TradeStats:
             side = "LONG" if long_score >= short_score else "SHORT"
 
         risk_pct = max(0.0015, min(0.012, float(getattr(Config, "BASE_RISK_PCT", 0.0045) or 0.0045)))
-        rr_value = max(1.0, min(2.4, float(getattr(Config, "RR", 1.6) or 1.6)))
+        min_rr_floor = max(0.0, float(getattr(Config, "MIN_RR", 1.0) or 1.0))
+        target_expectation = float((ctx.get("experience", {}) or {}).get("target_expectation", 0.0) or 0.0)
+        load_bearing_capacity = float((ctx.get("experience", {}) or {}).get("load_bearing_capacity", 0.0) or 0.0)
+        focus_confidence = float((ctx.get("focus", {}) or {}).get("focus_confidence", 0.0) or 0.0)
+        target_lock = float((ctx.get("focus", {}) or {}).get("target_lock", 0.0) or 0.0)
+        rr_value = min_rr_floor + max(
+            0.0,
+            (target_expectation * 0.22)
+            + (load_bearing_capacity * 0.16)
+            + (focus_confidence * 0.14)
+            + (target_lock * 0.12),
+        )
         risk_distance = max(price * risk_pct, price * 0.0015)
         reward_distance = risk_distance * rr_value
 
@@ -1956,6 +2095,19 @@ class TradeStats:
         normalized_context = self._normalize_record_value(context or {})
         compact_context = self._compact_context(normalized_context)
         normalized_decomposition = self._normalize_record_value(outcome_decomposition or {})
+
+        def _context_section(name: str) -> dict:
+            for source in (
+                normalized_context,
+                compact_context,
+                dict(normalized_context.get("context", {}) or {}),
+                dict(compact_context.get("context", {}) or {}),
+            ):
+                value = source.get(name, {}) if isinstance(source, dict) else {}
+                if isinstance(value, dict) and value:
+                    return dict(value)
+            return {}
+
         exit_candidate_replay = self._record_exit_candidate_replay(
             entry=float(entry),
             side=str(side),
@@ -1988,11 +2140,71 @@ class TradeStats:
 
         structure_quality = self._extract_structure_quality(normalized_context)
         structure_bucket = "zone" if structure_quality >= 0.55 else "non_zone"
-        form_symbol_state = dict(normalized_context.get("form_symbol_state", {}) or {})
-        meta_regulation_state = dict(normalized_context.get("meta_regulation_state", {}) or {})
-        neurochemical_state = dict(normalized_context.get("neurochemical_state", meta_regulation_state.get("neurochemical_state", {}) or {}) or {})
-        active_mcm_contact_state = dict(normalized_context.get("active_mcm_contact_state", meta_regulation_state.get("active_mcm_contact", {}) or {}) or {})
+        form_symbol_state = _context_section("form_symbol_state")
+        meta_regulation_state = _context_section("meta_regulation_state")
+        neurochemical_state = _context_section("neurochemical_state") or dict(meta_regulation_state.get("neurochemical_state", {}) or {})
+        active_mcm_contact_state = _context_section("active_mcm_contact_state") or dict(meta_regulation_state.get("active_mcm_contact", {}) or {})
+        strategic_window_state = _context_section("strategic_window_state")
+        trade_plan_state = _context_section("trade_plan")
+        target_expectation_state = _context_section("target_expectation_state")
+        experience_state = _context_section("experience")
         experience_packet_feedback = dict(normalized_decomposition.get("experience_packet_feedback", {}) or {})
+
+        def _f(*values, default=0.0):
+            for value in values:
+                try:
+                    if value is None:
+                        continue
+                    return float(value)
+                except Exception:
+                    continue
+            return float(default)
+
+        def _clip(value):
+            value = _f(value)
+            if value != value:
+                value = 0.0
+            return max(0.0, min(1.0, float(value)))
+
+        rr_value = _f(trade_plan_state.get("rr_value"), default=0.0)
+        structural_run_room = _clip((rr_value - 1.6) / 3.2)
+        target_expectation_value = _clip(
+            target_expectation_state.get(
+                "tp_reachability",
+                target_expectation_state.get(
+                    "base_target_expectation",
+                    experience_state.get("target_expectation", 0.0),
+                ),
+            )
+        )
+        emergent_structure_reading = _clip(
+            (structural_run_room * 0.24)
+            + (_clip(meta_regulation_state.get("future_projection_depth", 0.0)) * 0.16)
+            + (_clip(meta_regulation_state.get("mcm_spacetime_depth", 0.0)) * 0.14)
+            + (_clip(strategic_window_state.get("area_bearing_quality", meta_regulation_state.get("area_bearing_quality", 0.0))) * 0.14)
+            + (_clip(trade_plan_state.get("entry_choice_bearing", 0.0)) * 0.12)
+            + (_clip(active_mcm_contact_state.get("contact_action_maturity", meta_regulation_state.get("contact_action_maturity", 0.0))) * 0.10)
+            + (target_expectation_value * 0.10)
+            - (_clip(meta_regulation_state.get("spacetime_unlocated_pressure", 0.0)) * 0.10)
+            - (_clip(meta_regulation_state.get("contact_regime_mismatch", 0.0)) * 0.08)
+        )
+        emergent_structure_confirmation = _clip(
+            (emergent_structure_reading * 0.42)
+            + (_clip(normalized_decomposition.get("plan_quality", 0.0)) * 0.16)
+            + (_clip(normalized_decomposition.get("execution_quality", 0.0)) * 0.14)
+            + (_clip(normalized_decomposition.get("risk_fit_quality", 0.0)) * 0.12)
+            + (_clip(normalized_decomposition.get("position_constructive_bearing", 0.0)) * 0.10)
+            + (0.12 if reason == "tp_hit" and rr_value >= 2.4 else 0.0)
+            - (0.10 if reason == "sl_hit" and rr_value >= 2.4 else 0.0)
+        )
+        if emergent_structure_reading >= 0.52 and emergent_structure_confirmation >= 0.50:
+            emergent_structure_state = "confirmed_structural_interpretation"
+        elif emergent_structure_reading >= 0.44 and rr_value >= 2.4:
+            emergent_structure_state = "open_structural_hypothesis"
+        elif rr_value >= 2.4 and emergent_structure_reading < 0.34:
+            emergent_structure_state = "wide_target_without_structure"
+        else:
+            emergent_structure_state = "ordinary_structure_reading"
 
         outcome_record = {
             "event": "trade_exit",
@@ -2005,6 +2217,12 @@ class TradeStats:
             "exit_price": float(exit_price),
             "amount": float(amount),
             "pnl": float(pnl),
+            "rr_value": float(rr_value),
+            "structural_run_room": float(structural_run_room),
+            "emergent_structure_reading": float(emergent_structure_reading),
+            "emergent_structure_confirmation": float(emergent_structure_confirmation),
+            "emergent_structure_state": str(emergent_structure_state),
+            "target_expectation_value": float(target_expectation_value),
             "structure_quality": float(structure_quality),
             "structure_bucket": structure_bucket,
             "form_symbol_id": str(form_symbol_state.get("form_symbol_id", "") or ""),
@@ -2031,6 +2249,8 @@ class TradeStats:
             "position_consequence_residual_for_care": float(normalized_decomposition.get("position_consequence_residual_for_care", 0.0) or 0.0),
             "position_consequence_residual_for_memory": float(normalized_decomposition.get("position_consequence_residual_for_memory", 0.0) or 0.0),
             "position_constructive_bearing": float(normalized_decomposition.get("position_constructive_bearing", 0.0) or 0.0),
+            "transitional_contact_band": float(normalized_decomposition.get("transitional_contact_band", 0.0) or 0.0),
+            "transitional_contact_maturation": float(normalized_decomposition.get("transitional_contact_maturation", 0.0) or 0.0),
             "position_feedback_label": str(normalized_decomposition.get("position_feedback_label", "") or ""),
             "position_process_quality_feedback": float(normalized_decomposition.get("position_process_quality", 0.0) or 0.0),
             "position_held_risk_discomfort_feedback": float(normalized_decomposition.get("position_held_risk_discomfort", 0.0) or 0.0),
@@ -2152,6 +2372,12 @@ class TradeStats:
             "subconscious_filter_strength": float(meta_regulation_state.get("subconscious_filter_strength", 0.0) or 0.0),
             "subconscious_buffering": float(meta_regulation_state.get("subconscious_buffering", 0.0) or 0.0),
             "subconscious_leakage": float(meta_regulation_state.get("subconscious_leakage", 0.0) or 0.0),
+            "subconscious_afterimage_depth": float(meta_regulation_state.get("subconscious_afterimage_depth", 0.0) or 0.0),
+            "subconscious_afterimage_pressure": float(meta_regulation_state.get("subconscious_afterimage_pressure", 0.0) or 0.0),
+            "subconscious_afterimage_bearing": float(meta_regulation_state.get("subconscious_afterimage_bearing", 0.0) or 0.0),
+            "subconscious_afterimage_clarity": float(meta_regulation_state.get("subconscious_afterimage_clarity", 0.0) or 0.0),
+            "subconscious_afterimage_release": float(meta_regulation_state.get("subconscious_afterimage_release", 0.0) or 0.0),
+            "subconscious_afterimage_reflection_pull": float(meta_regulation_state.get("subconscious_afterimage_reflection_pull", 0.0) or 0.0),
             "conscious_selection_pressure": float(meta_regulation_state.get("conscious_selection_pressure", 0.0) or 0.0),
             "conscious_workspace_focus": float(meta_regulation_state.get("conscious_workspace_focus", 0.0) or 0.0),
             "conscious_workspace_load": float(meta_regulation_state.get("conscious_workspace_load", 0.0) or 0.0),

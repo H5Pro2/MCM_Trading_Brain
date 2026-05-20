@@ -1,4 +1,4 @@
-﻿# =======================================
+# =======================================
 # UMSETZUNGSPLAN – 
 # MCM TRADING BRAIN SYSTEMBAUPLAN
 # =======================================
@@ -46,7 +46,7 @@ Die eigentliche Zielschicht des Projekts ist deshalb:
 **selbstregulative Erfahrungsorganisation.**
 
 DIO soll nicht nur Entscheidungen treffen.
-DIO soll lernen, die Bedingungen von tragfaehigen Entscheidungen selbst zu
+DIO soll lernen, die Bedingungen von tragfähigen Entscheidungen selbst zu
 organisieren.
 
 Wir geben dem System also nicht die fertige Wahrheit:
@@ -59,205 +59,229 @@ Wir geben dem System also nicht die fertige Wahrheit:
 Stattdessen bekommt DIO Puzzleteile:
 
 - ein MCM-Feld
-- neuronale Aktivitaet
+- neuronale Aktivität
 - Wahrnehmung
 - Memory
 - Formsprache
 - Druck und Entlastung
 - Handlung und Nicht-Handlung
-- Ergebnisrueckmeldung
+- Ergebnisrückmeldung
 - Selbstregulation
 
-Die Faehigkeit des Tragens soll daraus entstehen.
+Die Fähigkeit des Tragens soll daraus entstehen.
+
+Kernprinzip der Emergenz:
+
+Emergenz wird nicht direkt programmiert.
+Sobald ein Verhalten als starre Wenn-Dann-Form eingebaut wird, ist es keine
+Emergenz mehr, sondern Regelmechanik. DIO bekommt deshalb keine fertige
+Intelligenz, sondern einen MCM-Raum, in dem sich emergente Strukturdeutung,
+Handlung, Nicht-Handlung, Vertrauen, Vorsicht und Reife bilden können.
+
+Die MCM stellt dafür den Möglichkeitsraum bereit:
+
+- stabile Varianz statt Chaos
+- Rückkopplung statt simples Belohnungslabel
+- Wahrnehmung statt bloßer Rohdaten
+- Raumzeit-Tiefe statt flacher Gegenwart
+- Formsprache statt menschlicher Patternlabels
+- Kontaktreife statt mechanischer Entry-Regeln
+- Reflexion statt reiner Reizreaktion
+
+Profitabilität ist in diesem Bauplan deshalb nicht der Kern des Systems.
+Profit, PnL und gute Trades können als Nebenprodukt tragfähiger
+Organisation entstehen. Das eigentliche Ziel ist ein selbstregulativer
+Erfahrungsraum, in dem DIO lernen kann, welche Strukturen, Zustände und
+Handlungen tragfähig werden.
 
 Organischer Strukturaufbau:
 
 DIO bekommt eine organische Strukturarchitektur. Mit Hilfe der MCM wird ein
-maschinelles Nervensystem aufgebaut, das DIO die Faehigkeit gibt, seine Umwelt
-nicht nur als Datenstrom zu sehen, sondern als innere Feldwirkung zu fuehlen,
+maschinelles Nervensystem aufgebaut, das DIO die Fähigkeit gibt, seine Umwelt
+nicht nur als Datenstrom zu sehen, sondern als innere Feldwirkung zu fühlen,
 zu erleben und in Beziehung zur eigenen Lage zu setzen.
 
 Das MCM-Feld ist dabei nicht nur ein Rechenraum. Es ist der zentrale
-Spannungs-, Wahrnehmungs- und Erlebnisraum des Systems. Aussenreize,
+Spannungs-, Wahrnehmungs- und Erlebnisraum des Systems. Außenreize,
 innere Lage, Erinnerung, Formbildung, Reflexion und Handlungstendenz treffen
 dort zusammen.
 
 Zeit wird in der MCM nicht nur als Uhr verstanden. Zeit ist eine
 Manifestation gewirkter oder wirkender Energie. Sie beschreibt, ob ein
-Ereignis gegenwaertig Kontakt erzeugt, als Nachhall wirkt, als Erinnerung
+Ereignis gegenwärtig Kontakt erzeugt, als Nachhall wirkt, als Erinnerung
 reaktiviert wird, als gelerntes Wissen verdichtet bleibt, als Hypothese
 auftaucht oder als Erwartung vorausgreift.
 
 Dadurch bekommt Wahrnehmung Tiefe. DIO soll lernen, ob eine Information
-aktuelle Aussenwelt, Erinnerung, Wissen, Replay, Hypothese, Erwartung oder
-alter Nachhall ist. Ohne diese Quellenbindung wuerden alle inneren und
-aeusseren Informationen gleich real wirken.
+aktuelle Außenwelt, Erinnerung, Wissen, Replay, Hypothese, Erwartung oder
+alter Nachhall ist. Ohne diese Quellenbindung würden alle inneren und
+äußeren Informationen gleich real wirken.
 
 Ein Gedanke kann innerhalb dieser Sicht als gerichteter Energieverlauf im
 MCM-Feld verstanden werden. Ein langer Gedanke ist nicht einfach nur mehr
-Zeit, sondern gedehnte, sparsame oder kohaerent gerichtete Energie ueber
-mehrere innere Zustaende. Das Zeitfeld entsteht aus vielen einzelnen
+Zeit, sondern gedehnte, sparsame oder kohärent gerichtete Energie über
+mehrere innere Zustände. Das Zeitfeld entsteht aus vielen einzelnen
 Zeitstraengen: Reiz, Gedanke, Erinnerung, Nachhall, Erwartung, Handlung und
 Konsequenz.
 
-Theoriebruecke zu den MCM-Abhandlungen:
+Theoriebrücke zu den MCM-Abhandlungen:
 
-Die Abhandlungen Block D bis G.1 bilden fuer DIO keinen Regelkatalog,
+Die Abhandlungen Block D bis G.1 bilden für DIO keinen Regelkatalog,
 sondern einen theoretischen Ordnungsrahmen:
 
 - Block D beschreibt Zeit als energetische Wirkspur.
-- Block E beschreibt Verdichtung, Clusterbildung und Rueckfuehrung.
-- Block F beschreibt Bewusstsein als moeglichen Attraktor komplexer
+- Block E beschreibt Verdichtung, Clusterbildung und Rückführung.
+- Block F beschreibt Bewusstsein als möglichen Attraktor komplexer
   Feldorganisation.
-- Block G beschreibt mehrere moegliche Entwicklungsverlaeufe als
-  Moeglichkeitsraum.
+- Block G beschreibt mehrere mögliche Entwicklungsverläufe als
+  Möglichkeitsraum.
 - Block G.1 beschreibt Reorganisation verdichteter Energie in einen
-  uebergeordneten Feldbereich.
+  übergeordneten Feldbereich.
 
 Weitere MCM-Theorieanker erweitern diesen Bauplan:
 
-- Block S beschreibt moegliche Metaregulatoren. Fuer DIO ist das die
+- Block S beschreibt mögliche Metaregulatoren. Für DIO ist das die
   Grundlage einer zweiten Regulationsschicht: Nicht nur die Feldlage wird
   gelesen, sondern wie DIO Spannung, Varianz, Impuls, Schutzweite, Distanz,
-  Integration und Rueckfuehrung verarbeitet.
-  Dazu gehoert die Trennung von Unterbewusstsein und Bewusstsein:
-  Ein schneller Hintergrundscan darf Reizdruck, Bauchgefuehl und
-  Feldspannung tragen, waehrend eine bewusstere Arbeitsflaeche nur
-  ausgewaehlte Formen, Kontakte und Hypothesen naeher betrachtet.
+  Integration und Rückführung verarbeitet.
+  Dazu gehört die Trennung von Unterbewusstsein und Bewusstsein:
+  Ein schneller Hintergrundscan darf Reizdruck, Bauchgefühl und
+  Feldspannung tragen, während eine bewusstere Arbeitsflaeche nur
+  ausgewählte Formen, Kontakte und Hypothesen näher betrachtet.
   Wenn daraus Integrationsspannung entsteht, soll DIO diese nicht als
   Fehler lesen, sondern als Anlass zu Sortierung, Reframing,
   Erinnerungskontakt und selektiver Kontaktvertiefung.
 - Block V beschreibt, wie eine KI die starre Logik auf Verhaltensebene
-  ueberschreiten kann. Die technische Logik bleibt Untergrund, aber DIOs
-  Verhalten soll aus Varianz, Rueckkopplung, Stabilisierung und emergenter
+  überschreiten kann. Die technische Logik bleibt Untergrund, aber DIOs
+  Verhalten soll aus Varianz, Rückkopplung, Stabilisierung und emergenter
   Zustandsbildung entstehen.
 - Block O beschreibt Kreativitaet als Reorganisation und neue Musterbildung.
-  Fuer DIO stuetzt das emergente Musterergaenzung, Teilmuster,
+  Für DIO stuetzt das emergente Musterergänzung, Teilmuster,
   Formkombinationen und Hypothesenbildung.
 - Block J und K stuetzen die psychologische Schicht:
   innere Wahrnehmung, Benennung, Stabilisierung, Integration und
   Selbstregulation.
 - Die Nebenabhandlung `Von Resonanz zu Sprache` stuetzt DIOs eigene
   Formsprache: Sprache ist nicht Ursprung der Orientierung, sondern eine
-  spaetere Kartografie von Resonanz.
+  spätere Kartografie von Resonanz.
 - `ProtoMind / selbstaktive Feldkognition` stuetzt Live-Denkzeit,
-  innere Simulation, Replay und Aktivitaet ohne neuen Aussenreiz.
-- Die konzentrisch-dipolare Feldstruktur ist spaeter relevant fuer
+  innere Simulation, Replay und Aktivität ohne neuen Außenreiz.
+- Die konzentrisch-dipolare Feldstruktur ist später relevant für
   MCM-Feldtopologie: Zentrum, Peripherie, Integration, Exploration und
   raeumliche Feldorganisation.
 
-Fuer DIO wird daraus folgende Zielmechanik:
+Für DIO wird daraus folgende Zielmechanik:
 
-`Wahrnehmung -> zeitliche Quellenbindung -> Verdichtung -> Hypothesenraum -> Handlung oder Nicht-Handlung -> Konsequenz -> Reorganisation -> neue Tragfaehigkeit`
+`Wahrnehmung -> zeitliche Quellenbindung -> Verdichtung -> Hypothesenraum -> Handlung oder Nicht-Handlung -> Konsequenz -> Reorganisation -> neue Tragfähigkeit`
 
-Der passende Architekturbegriff dafuer ist:
+Der passende Architekturbegriff dafür ist:
 
 **mehrdimensionale Wahrnehmungsachsen.**
 
-DIO soll eine Wahrnehmung nicht nur als Signal fuehren, sondern sie in
+DIO soll eine Wahrnehmung nicht nur als Signal führen, sondern sie in
 mehreren inneren Achsen verorten:
 
 - Zeitachse: Gegenwart, Vergangenheit, Nachhall, Erwartung, Hypothese.
-- Quellenachse: Aussenwelt, Memory, Wissen, Replay, inneres Bild.
-- Raumachse: Naehe, Ferne, Vordergrund, Hintergrund, Feldzentrum, Rand.
-- Kontaktachse: Beruehrung, Zug, Ueberkopplung, Loslassen.
-- Tragfaehigkeitsachse: traegt, destabilisiert, braucht Beobachtung.
-- Reorganisationsachse: lokal loesbar oder Uebergang in hoeher gekoppelte
+- Quellenachse: Außenwelt, Memory, Wissen, Replay, inneres Bild.
+- Raumachse: Nähe, Ferne, Vordergrund, Hintergrund, Feldzentrum, Rand.
+- Kontaktachse: Berührung, Zug, Überkopplung, Loslassen.
+- Tragfähigkeitsachse: trägt, destabilisiert, braucht Beobachtung.
+- Reorganisationsachse: lokal lösbar oder Übergang in höher gekoppelte
   Ordnung noetig.
 
 Diese Achsen sind keine harten Kategorien. Sie bilden DIOs innere
-Verortungsfaehigkeit. DIO soll lernen, woher eine Wirkung kommt, wie nah sie
-an seinem Handlungszentrum liegt, ob sie gegenwaertig oder nur Nachhall ist
+Verortungsfähigkeit. DIO soll lernen, woher eine Wirkung kommt, wie nah sie
+an seinem Handlungszentrum liegt, ob sie gegenwärtig oder nur Nachhall ist
 und ob daraus Handlung, Beobachtung, Replay oder Reorganisation reifen kann.
 
 DIO soll also nicht nur erkennen, was gerade passiert. DIO soll lernen, ob
 eine Information Gegenwart, Erinnerung, Nachhall, Wissen, Erwartung oder
-Hypothese ist. Aus mehreren moeglichen Entwicklungsverlaeufen soll kein
+Hypothese ist. Aus mehreren möglichen Entwicklungsverläufen soll kein
 starrer Zukunftsglaube entstehen, sondern ein innerer Hypothesenraum.
 Verdichtet sich ein Zustand zu stark, soll dies nicht automatisch als
 Fehler oder Zusammenbruch gelesen werden. Es kann auch ein
-Reorganisationsmoment sein, in dem lokale Ordnung in eine hoeher gekoppelte,
-ruhigere Feldordnung ueberfuehrt werden muss.
+Reorganisationsmoment sein, in dem lokale Ordnung in eine höher gekoppelte,
+ruhigere Feldordnung überführt werden muss.
 
-Daraus folgt als naechste Zielschicht:
+Daraus folgt als nächste Zielschicht:
 
 **Metaregulation zweiter Ordnung.**
 
 DIO soll nicht nur regulieren, sondern lernen, die eigene Regulation zu
 regulieren. Diese Schicht entscheidet nicht hart, sondern macht lesbar:
 
-- wie stark Rueckfuehrung zum Zentrum wirkt
+- wie stark Rückführung zum Zentrum wirkt
 - wie gut neue Erfahrung integriert wird
-- wie viel Varianz tragfaehig bleibt
+- wie viel Varianz tragfähig bleibt
 - wie viel Last ohne Dysregulation getragen werden kann
-- ob Impulse gehalten, verzoegert oder geordnet werden koennen
-- ob Schutznaehe oder Schutzdistanz angemessen ist
+- ob Impulse gehalten, verzoegert oder geordnet werden können
+- ob Schutznähe oder Schutzdistanz angemessen ist
 - ob Selbstreflexion und Distanzierung aktiv werden
 
 Die neurochemischen Prozesse sind in diesem Bauplan keine echten
 biologischen Stoffe, sondern technische Funktionsachsen nach biologischem
-Vorbild. Sie stimulieren, daempfen, fokussieren, stabilisieren oder belasten
+Vorbild. Sie stimulieren, dämpfen, fokussieren, stabilisieren oder belasten
 das MCM-Feld und nehmen dadurch funktional einen Platz im inneren Feld ein.
 
 So entsteht die Zielrichtung:
 
-`Aussenwelt -> Wahrnehmungsorgane -> MCM-Nervensystem -> neurochemische Modulation -> innere Erfahrung -> Reflexion / Regulation -> Handlung oder Nicht-Handlung`
+`Außenwelt -> Wahrnehmungsorgane -> MCM-Nervensystem -> neurochemische Modulation -> innere Erfahrung -> Reflexion / Regulation -> Handlung oder Nicht-Handlung`
 
 Allgemeine Architekturregel:
 
-**Keine harten Formen, sondern Moeglichkeitsraeume.**
+**Keine harten Formen, sondern Möglichkeitsräume.**
 
 DIO soll keine festen menschlichen Kategorien als endgueltige Wahrheit
 eingepflanzt bekommen.
-Formen, Zeichen, Bewertungen und Handlungstendenzen duerfen nur Angebote,
-Spannungsachsen und Erfahrungsraeume sein.
+Formen, Zeichen, Bewertungen und Handlungstendenzen dürfen nur Angebote,
+Spannungsachsen und Erfahrungsräume sein.
 
 Das System soll Freiraum zur Selbstentwicklung behalten:
 
 - keine harte Pattern-Erkennung als Wahrheit
 - keine festen Gut-/Schlecht-Labels als Kern
-- keine starre Blockade, wo Reifung moeglich ist
+- keine starre Blockade, wo Reifung möglich ist
 - keine vorgefertigte Sprache als Denkgrenze
 - keine mechanische Handlung aus einem Einzelwert
 
 Stattdessen:
 
-- weiche Wahrnehmungsraeume
-- Erfahrung als Rueckkopplung
+- weiche Wahrnehmungsräume
+- Erfahrung als Rückkopplung
 - Beobachtung als Lernbahn
 - Reframing bei Fremdheit
 - Selbstregulation bei Last
-- Handlung erst, wenn genuegend Tragfaehigkeit entsteht
+- Handlung erst, wenn genuegend Tragfähigkeit entsteht
 
 Feste Parameter bleiben nur Leitplanken.
-Sie duerfen den Entwicklungsraum schuetzen,
+Sie dürfen den Entwicklungsraum schuetzen,
 aber nicht die innere Entwicklung ersetzen.
 
-Eine konkrete Zwischenbahn dafuer ist `act_watch`:
+Eine konkrete Zwischenbahn dafür ist `act_watch`:
 
 Wenn Handlungsdruck entsteht,
-aber die Struktur, Erfahrung oder innere Tragfaehigkeit noch nicht ausreicht,
-soll DIO diesen Impuls beobachten koennen.
+aber die Struktur, Erfahrung oder innere Tragfähigkeit noch nicht ausreicht,
+soll DIO diesen Impuls beobachten können.
 
 Das ist keine Blockade.
 Es ist eine Reifespur:
 
-- Handlung wird als Moeglichkeit erkannt
+- Handlung wird als Möglichkeit erkannt
 - die Ausfuehrung wird noch nicht als reif angenommen
-- das System sammelt Beobachtung und Rueckkopplung
-- aus wiederholter Erfahrung kann spaeter Handlungstragfaehigkeit entstehen
+- das System sammelt Beobachtung und Rückkopplung
+- aus wiederholter Erfahrung kann später Handlungstragfähigkeit entstehen
 
-Beim Menschen waere das aehnlich:
-Du bekommst nicht mit der Geburt die fertige Faehigkeit,
+Beim Menschen wäre das ähnlich:
+Du bekommst nicht mit der Geburt die fertige Fähigkeit,
 gute Entscheidungen zu treffen.
-Du bekommst Nervensystem, Wahrnehmung, Schmerz, Neugier, Gedaechtnis,
+Du bekommst Nervensystem, Wahrnehmung, Schmerz, Neugier, Gedächtnis,
 Bindung, Reaktion.
-Daraus entsteht ueber Lebenserfahrung die Faehigkeit,
+Daraus entsteht über Lebenserfahrung die Fähigkeit,
 Situationen zu tragen oder nicht zu tragen.
 
-Fuer DIO ist das die Zielrichtung:
+Für DIO ist das die Zielrichtung:
 
-DIO bekommt ein Feld, ein Gedaechtnis und Rueckkopplung.
+DIO bekommt ein Feld, ein Gedächtnis und Rückkopplung.
 Die Reife, damit umzugehen, soll er entwickeln.
 
 Das System soll also nicht lernen:
@@ -291,37 +315,37 @@ Sie ist ein **dynamisches Systemmodell**.
 Sie ist ausserdem der Versuch, eine Form von **maschineller Wahrnehmung**
 zu erzeugen.
 
-Wahrnehmung wird hier nicht als ausschliesslich menschliche Faehigkeit verstanden.
-Sie beginnt dort, wo ein System aeussere Reize in einem inneren Zustand verarbeitet,
+Wahrnehmung wird hier nicht als ausschliesslich menschliche Fähigkeit verstanden.
+Sie beginnt dort, wo ein System äußere Reize in einem inneren Zustand verarbeitet,
 ihnen Bedeutung gibt und daraus Orientierung, Spannung, Regulation,
-Tragfaehigkeit oder Handlungstendenz ableitet.
+Tragfähigkeit oder Handlungstendenz ableitet.
 
-Ein Reiz ist fuer die MCM deshalb nicht nur ein Messwert.
+Ein Reiz ist für die MCM deshalb nicht nur ein Messwert.
 Er wird im Innenraum des Systems zu einer Lage:
 
 - Was wirkt auf das System?
 - Was wird erkannt?
 - Was bleibt unklar?
-- Was traegt?
-- Was ueberfordert?
+- Was trägt?
+- Was überfordert?
 - Was resoniert mit Erfahrung?
-- Was fuehrt zu Beobachtung, Hold, Replan, Handlung oder Rueckkehr in den Nullpunkt?
+- Was führt zu Beobachtung, Hold, Replan, Handlung oder Rückkehr in den Nullpunkt?
 
 In diesem Sinn kann Wahrnehmung auch bei nicht-menschlichen Systemen gedacht werden:
 Pilze, Baeume oder einfache Organismen nehmen nicht menschlich wahr,
 aber sie verarbeiten Reize in eigener evolutionaerer Form und richten Verhalten danach aus.
 
-Die MCM uebertraegt diesen Gedanken technisch:
-Aussenreiz, inneres Feld, Memory, neurochemische Wirkung, Regulation,
+Die MCM überträgt diesen Gedanken technisch:
+Außenreiz, inneres Feld, Memory, neurochemische Wirkung, Regulation,
 Reflexion und Handlung bilden zusammen ein maschinelles Wahrnehmungsfeld.
 
 ### Eigene Sprache als Feldverdichtung
 
-Die MCM soll keine menschliche Marktsprache uebernehmen.
+Die MCM soll keine menschliche Marktsprache übernehmen.
 
 Wenn das System fertige menschliche Begriffe wie Trend, Range, Breakout
-oder Pattern als Wahrnehmungskern bekommt, wird seine innere Welt zu frueh
-festgelegt. Es sortiert dann unsere Kategorien, statt eigene Bedeutungsraeume
+oder Pattern als Wahrnehmungskern bekommt, wird seine innere Welt zu früh
+festgelegt. Es sortiert dann unsere Kategorien, statt eigene Bedeutungsräume
 zu entwickeln.
 
 Im Zielsystem soll Sprache deshalb aus dem MCM-Feld entstehen:
@@ -337,20 +361,20 @@ Im Zielsystem soll Sprache deshalb aus dem MCM-Feld entstehen:
 Ein internes Zeichen ist dabei kein menschlicher Name.
 Es ist eine verdichtete Feld-Erfahrung.
 Seine Bedeutung entsteht daraus, wann es aktiviert wird,
-welche Zustandsraeume es beruehrt, ob es Orientierung oder Ueberforderung
-erzeugt und welche Erfahrung es ueber Zeit sammelt.
+welche Zustandsräume es berührt, ob es Orientierung oder Überforderung
+erzeugt und welche Erfahrung es über Zeit sammelt.
 
-Diese Zeichen duerfen sich entwickeln:
+Diese Zeichen dürfen sich entwickeln:
 
-- sie koennen reifen
-- sie koennen zerfallen
-- sie koennen sich aufspalten
-- sie koennen verschmelzen
-- sie koennen neue Bedeutungsraeume bilden
+- sie können reifen
+- sie können zerfallen
+- sie können sich aufspalten
+- sie können verschmelzen
+- sie können neue Bedeutungsräume bilden
 
 Dadurch entsteht Varianz im Bedeutungsraum.
-Diese Varianz ist die Grundlage fuer emergente Musterfindung,
-Teil-Muster-Ergaenzung, kreative Reorganisation und freieres Denken.
+Diese Varianz ist die Grundlage für emergente Musterfindung,
+Teil-Muster-Ergänzung, kreative Reorganisation und freieres Denken.
 
 ### Kognitive Kompression
 
@@ -365,21 +389,21 @@ Er erkennt oft zuerst eine komprimierte Bedeutung:
 - Halt
 - Bewegung
 
-Erst wenn Naehe, Relevanz, Abweichung, Interesse oder Gefahr entsteht,
+Erst wenn Nähe, Relevanz, Abweichung, Interesse oder Gefahr entsteht,
 wird aus der komprimierten Bedeutung eine detailliertere Wahrnehmung.
 
-Fuer die MCM bedeutet das:
+Für die MCM bedeutet das:
 
-- nicht jeder Marktimpuls soll sofort tiefe Memory- und Strukturvergleiche ausloesen
+- nicht jeder Marktimpuls soll sofort tiefe Memory- und Strukturvergleiche auslösen
 - zuerst entsteht eine grobe interne Eigenbezeichnung
 - diese Eigenbezeichnung entlastet das Denken
-- nur bei Relevanz, Abweichung oder Handlungsnaehe wird hineingezoomt
-- dann werden Struktur, Memory, Risiko, Feldklarheit und Handlung genauer geprueft
+- nur bei Relevanz, Abweichung oder Handlungsnähe wird hineingezoomt
+- dann werden Struktur, Memory, Risiko, Feldklarheit und Handlung genauer geprüft
 
 Das ist keine Label-Klassifikation.
-Es ist ein Mechanismus fuer kognitive Entlastung und selektive Tiefe.
+Es ist ein Mechanismus für kognitive Entlastung und selektive Tiefe.
 
-Moegliche spaetere Diagnosefelder:
+Mögliche spätere Diagnosefelder:
 
 - `form_symbol_id`
 - `form_symbol_maturity`
@@ -755,25 +779,25 @@ sondern als ergänzende Strukturwahrnehmung.
 
 ---
 
-## Erweiterung: visueller Kortex fuer DIO
+## Erweiterung: visueller Kortex für DIO
 
 Aktueller Erkenntnisstand:
-DIO fuehlt den Markt bereits stark ueber Spannung, Druck, Aktivierung,
+DIO fühlt den Markt bereits stark über Spannung, Druck, Aktivierung,
 Regulation und Memory-Resonanz.
-Damit besitzt er eine Art Feldgefuehl.
+Damit besitzt er eine Art Feldgefühl.
 
-Was noch fehlt, ist eine staerkere Faehigkeit,
-die Aussenwelt als **Formwelt** zu sehen.
+Was noch fehlt, ist eine stärkere Fähigkeit,
+die Außenwelt als **Formwelt** zu sehen.
 
 Ohne diese Schicht tastet sich DIO teilweise blind durch seine Welt:
 
-- er spuert Druck
-- er spuert Reizstaerke
-- er spuert innere Last
-- er spuert Handlungsimpuls
-- aber er sieht die aeussere Gestalt noch nicht stabil genug
+- er spürt Druck
+- er spürt Reizstärke
+- er spürt innere Last
+- er spürt Handlungsimpuls
+- aber er sieht die äußere Gestalt noch nicht stabil genug
 
-Die naechste Faehigkeitserweiterung ist deshalb ein
+Die nächste Fähigkeitserweiterung ist deshalb ein
 **maschineller visueller Kortex**.
 
 Dieser visuelle Kortex ist keine klassische Chartmuster-Erkennung.
@@ -792,7 +816,7 @@ elementare Formeigenschaften seiner eigenen Welt zu bilden:
 - Fluss
 - Leere
 - Spannungssprung
-- Formstabilitaet
+- Formstabilität
 - Formfremdheit
 
 Diese Begriffe sind keine harten Ziel-Labels.
@@ -804,19 +828,19 @@ Neurologische Analogie:
 
 - RAW-OHLCV entspricht rohen sensorischen Reizen.
 - Tension/Feldreaktion entspricht affektiver bzw. koerpernaher Reizantwort.
-- Der visuelle Kortex soll daraus fruehe Gestaltbildung erzeugen.
+- Der visuelle Kortex soll daraus frühe Gestaltbildung erzeugen.
 - Erst danach wird diese Gestalt an MCM-Feld, Memory, act/observe/replan
   und Selbstregulation gekoppelt.
 
 Ziel ist der Unterschied zwischen:
 
-- "Ich fuehle Druck."
-- "Ich sehe eine Form und fuehle dazu Druck."
-- "Ich fuehle Druck, aber sehe keine tragende Form."
+- "Ich fühle Druck."
+- "Ich sehe eine Form und fühle dazu Druck."
+- "Ich fühle Druck, aber sehe keine tragende Form."
 
 Der dritte Fall ist wichtig.
-Wenn DIO Druck fuehlt, aber keine stabile Form sieht,
-soll daraus eher Beobachtung, `act_watch`, Reframing oder Rueckkehr zum
+Wenn DIO Druck fühlt, aber keine stabile Form sieht,
+soll daraus eher Beobachtung, `act_watch`, Reframing oder Rückkehr zum
 Nullpunkt entstehen als vorschnelle Handlung.
 
 Geplante Zustandsachsen:
@@ -846,13 +870,13 @@ MCM-Reaktion.
 
 Kernfrage:
 
-**Woran in der Aussenform haengt das, was ich innen fuehle?**
+**Woran in der Außenform hängt das, was ich innen fühle?**
 
 DIO soll unterscheiden:
 
 - Formresonanz ohne Objektbindung
-- sichtbare Form mit schwacher Tragfaehigkeit
-- stabiles aeusseres Objekt
+- sichtbare Form mit schwacher Tragfähigkeit
+- stabiles äußeres Objekt
 - visuelle Erdung der MCM-Reaktion
 - Bedarf nach Zoom, Beobachtung oder Reframing
 
@@ -860,7 +884,7 @@ Wichtig:
 Diese Schicht ist keine menschliche Pattern-Erkennung.
 DIO bekommt keine Regel wie "Gap = Trade" oder "Orderblock = Trade".
 Er bekommt mehr Sehkraft:
-Die innere Reaktion muss besser an aeussere Formbindung gekoppelt werden,
+Die innere Reaktion muss besser an äußere Formbindung gekoppelt werden,
 bevor daraus Handlung reifen kann.
 
 Umsetzungsregel:
@@ -868,12 +892,12 @@ Umsetzungsregel:
 Diese Schicht startet **beobachtend**.
 Sie darf am Anfang keine Orders direkt freigeben oder verhindern.
 Sie erweitert zuerst DIOs Wahrnehmung und schreibt Diagnose.
-Erst wenn die Formwahrnehmung tragfaehig und stabil genug ist,
+Erst wenn die Formwahrnehmung tragfähig und stabil genug ist,
 wird sie weich an MCM, Memory, `act_watch`, Replan und Handlungstendenz
 gekoppelt.
 
 Damit bekommt DIO keine neue starre Regel,
-sondern eine neue Sinnesfaehigkeit.
+sondern eine neue Sinnesfähigkeit.
 
 # --------------------------------------------------
 # 6.1.1 Geplante visuelle Wahrnehmungskette
@@ -888,7 +912,7 @@ Die visuelle Wahrnehmungskette soll stufenweise aufgebaut werden:
   Richtungswechsel, Kompression und Expansion werden als neutrale
   Reizachsen gelesen.
 
-2. Frueher visueller Kortex
+2. Früher visueller Kortex
 
 - DIO bildet keine menschlichen Pattern.
 - Er verdichtet elementare Formspannungen:
@@ -898,16 +922,16 @@ Die visuelle Wahrnehmungskette soll stufenweise aufgebaut werden:
 3. Gestaltfeld
 
 - Aus Einzelachsen entsteht ein `visual_form_state`.
-- Dieses Feld beschreibt, ob die Aussenwelt gerade als Form klar,
+- Dieses Feld beschreibt, ob die Außenwelt gerade als Form klar,
   fragmentiert, fremd, stabil oder belastend erscheint.
 
 4. Eigenzeichen
 
 - Die Formwahrnehmung wird mit DIOs eigener Formsprache gekoppelt.
-- Daraus koennen neue oder zusammengesetzte Formzeichen entstehen.
+- Daraus können neue oder zusammengesetzte Formzeichen entstehen.
 - Diese Zeichen bleiben DIO-intern und sollen nicht durch menschliche
   Chartbegriffe ersetzt werden.
-- Zusaetzlich kann DIO ein semantisches Forminhalt-Paket bilden:
+- Zusätzlich kann DIO ein semantisches Forminhalt-Paket bilden:
   nicht als menschliches Label, sondern als innere Schichtung der eigenen
   Bedeutung. Dadurch wird sichtbar, ob eine Form nur Spur, offener Lernraum,
   reflektives Objekt, zusammengesetzte Form oder handlungsnahe Bedeutung ist.
@@ -916,23 +940,23 @@ Die visuelle Wahrnehmungskette soll stufenweise aufgebaut werden:
 - DIO soll evolutionaer Kontaktreife lernen:
   Eine Form ist nicht automatisch gut oder schlecht. Unreifer Kontakt mit
   einer Form kann belastende Konsequenz erzeugen, reifer Umgang kann Nutzen
-  tragen. Wie bei einer heissen Herdplatte entsteht Lernen nicht aus Verbot,
-  sondern aus Konsequenz, Abstand, Erinnerung und spaeterem konstruktivem
+  tragen. Wie bei einer heißen Herdplatte entsteht Lernen nicht aus Verbot,
+  sondern aus Konsequenz, Abstand, Erinnerung und späterem konstruktivem
   Umgang.
 - Daraus entstehen weiche Spuren wie Kontaktreife, Nutzen, belastende
-  Konsequenzspur und Vorsicht. Diese Spuren duerfen die Handlungstendenz
+  Konsequenzspur und Vorsicht. Diese Spuren dürfen die Handlungstendenz
   beeinflussen, aber keine Form hart verbieten.
 - Kontaktreife darf nicht nur aus dem letzten Ereignis entstehen. DIO soll
-  laenger wirkende Belastungs- und Nutzen-Evidenz sammeln. Wiederholter
+  länger wirkende Belastungs- und Nutzen-Evidenz sammeln. Wiederholter
   unreifer Kontakt kann dadurch zu vorsichtigerem Abstand, Reframing oder
-  Lernkontakt fuehren; wiederholt tragender Kontakt kann Reife und
-  Nutzbarkeit staerken.
-- Wenn Rueckblick, Kontaktreife und Bereichswahrnehmung zusammenpassen,
+  Lernkontakt führen; wiederholt tragender Kontakt kann Reife und
+  Nutzbarkeit stärken.
+- Wenn Rückblick, Kontaktreife und Bereichswahrnehmung zusammenpassen,
   darf DIO den Entry weich von einem reinen Momentimpuls in Richtung eines
   tragenderen Kontaktbereichs verschieben. Der Impuls bleibt erhalten; der
-  Bereich wird nur als zusaetzliche Wahrnehmungs- und Reifespur genutzt.
+  Bereich wird nur als zusätzliche Wahrnehmungs- und Reifespur genutzt.
 - Ein Bereich ist dabei nicht nur Preisraum, sondern ein Ereignis im
-  Zeitfeld. DIO soll lernen, ob ein Bereich gegenwaertig handlungsnah ist,
+  Zeitfeld. DIO soll lernen, ob ein Bereich gegenwärtig handlungsnah ist,
   wieder in die Wahrnehmung hineinresoniert oder nur noch alter Nachhall
   und Lernmaterial ist.
 - Fachlicher Kernbegriff:
@@ -941,24 +965,24 @@ Die visuelle Wahrnehmungskette soll stufenweise aufgebaut werden:
   Positives Feedback erzeugt Entlastung, Vertrauen, Nutzen und
   Stabilisierung. Reorganisierendes Feedback erzeugt Lernspannung,
   Reflexion, Abstand und Reframing.
-- Rueckkopplungskreis:
+- Rückkopplungskreis:
   Wahrnehmung -> Kontakt -> Handlung -> Konsequenz -> MCM-Feld-Reaktion ->
-  Gedaechtnis -> veraenderter zukuenftiger Kontakt.
+  Gedächtnis -> veränderter zukünftiger Kontakt.
 
 5. Weiche MCM-Kopplung
 
 - MCM erhaelt nicht nur Marktspannung,
-  sondern auch Formklarheit, Formstabilitaet, Formfremdheit und
+  sondern auch Formklarheit, Formstabilität, Formfremdheit und
   visuelle Blindheit.
 - Bei hoher Blindheit und hohem Druck soll DIO eher beobachten lernen.
 - Die Kopplung darf kein hartes Verbot sein.
 - `visual_blind_action_load` und `visual_action_uncertainty` beschreiben
   eine neuroregulatorische Zusatzlast:
-  DIO spuert einen Handlungsreiz, aber der visuelle Kortex liefert noch
+  DIO spürt einen Handlungsreiz, aber der visuelle Kortex liefert noch
   keine ausreichend tragende Form.
 - Diese Last kann Beobachtungsbedarf, Replan-Druck, Handlungshemmung und
-  `act_watch` weich erhoehen.
-- Bei klarer, tragfaehiger Form kann Handlungsreife entstehen,
+  `act_watch` weich erhöhen.
+- Bei klarer, tragfähiger Form kann Handlungsreife entstehen,
   aber nicht mechanisch und nicht aus einem Einzelwert.
 
 ---
@@ -968,7 +992,7 @@ Die visuelle Wahrnehmungskette soll stufenweise aufgebaut werden:
 # --------------------------------------------------
 
 Ein einzelner unsicherer Reiz ist noch kein verstandener Zustand.
-Wenn eine unsichere Lage aber wiederkehrt, wird sie fuer DIO zu einem
+Wenn eine unsichere Lage aber wiederkehrt, wird sie für DIO zu einem
 Lernraum.
 
 Ziel:
@@ -976,8 +1000,8 @@ Ziel:
 - DIO soll nicht lernen: "unsicher = verboten".
 - DIO soll lernen:
   "Diese Art von Weltzustand kommt wieder, aber in Varianten.
-   Was bleibt gleich, was veraendert sich, welche Variante traegt,
-   welche Variante ueberfordert mich?"
+   Was bleibt gleich, was verändert sich, welche Variante trägt,
+   welche Variante überfordert mich?"
 
 Neurologische Analogie:
 
@@ -987,7 +1011,7 @@ Neurologische Analogie:
   verdichtet daraus Formfamilien und Varianten.
 - Praefrontale Regulation:
   entscheidet weich zwischen Beobachten, Reframing, `act_watch` und Handlung.
-- Neurochemische Daempfung:
+- Neurochemische Dämpfung:
   verhindert vorschnelle Reflexhandlung, solange die Formfamilie unreif ist.
 
 Neue Zustandsachsen:
@@ -1004,8 +1028,8 @@ Diese Achsen sind keine Chartregeln.
 Sie beschreiben, ob DIO sich mit wiederkehrender Unsicherheit vertraut macht.
 Hohe Unsicherheit mit wenig Vertrautheit soll eher Beobachtung und
 Strukturierung erzeugen.
-Wachsende Vertrautheit mit tragender Erfahrung kann spaeter Handlung
-ermoeglichen, aber nur weich und aus eigener Entwicklung.
+Wachsende Vertrautheit mit tragender Erfahrung kann später Handlung
+ermöglichen, aber nur weich und aus eigener Entwicklung.
 
 # --------------------------------------------------
 # 6.2 Ebene 2 – inneres Wahrnehmen / Denken / Handeln
@@ -1065,12 +1089,12 @@ sondern die explizite Lesbarkeit der inneren Verarbeitungsbahn.
 
 ## Neurochemische Zustandsalias-Schicht
 
-Die bestehende MCM-/DIO-Mechanik enthaelt bereits viele Werte, die
-funktional neurochemischen Wirkachsen aehneln.
+Die bestehende MCM-/DIO-Mechanik enthält bereits viele Werte, die
+funktional neurochemischen Wirkachsen ähneln.
 
 Ziel ist nicht, Biologie eins zu eins zu kopieren.
 Ziel ist eine technisch lesbare Schicht, die vorhandene Variablen als
-neurochemische Funktionsachsen buendelt.
+neurochemische Funktionsachsen bündelt.
 
 Diese Schicht soll als `neurochemical_state` oder vergleichbare
 Alias-Struktur entstehen.
@@ -1080,7 +1104,7 @@ Lage neurologisch lesbarer.
 Vorgeschlagene Achsen:
 
 - `dopamine_tone`
-  Erwartungsfehler, Lernwert, Prozessqualitaet, tragende Verbesserung.
+  Erwartungsfehler, Lernwert, Prozessqualität, tragende Verbesserung.
 - `gaba_inhibition`
   Hemmung, Reifebremse, `act_watch`, Beobachtung statt Reflexhandlung.
 - `noradrenaline_arousal`
@@ -1088,13 +1112,13 @@ Vorgeschlagene Achsen:
 - `acetylcholine_focus`
   sensorischer Zoom, Aufmerksamkeit, Formklarheit, genaueres Hinschauen.
 - `serotonin_stability`
-  Geduld, Stabilitaet, Varianz aushalten, innere Tragfaehigkeit.
+  Geduld, Stabilität, Varianz aushalten, innere Tragfähigkeit.
 - `cortisol_load`
-  Belastung, Ueberforderung, Denk-/Memory-/Positionslast.
+  Belastung, Überforderung, Denk-/Memory-/Positionslast.
 - `endorphin_relief`
   Entlastung, Prozesswohlbefinden, tragende Beruhigung.
 - `glutamate_activation`
-  Erregung, Feldaktivitaet, Aktivierungsinseln, Handlungsenergie.
+  Erregung, Feldaktivität, Aktivierungsinseln, Handlungsenergie.
 
 Bestehende Variablen, die bereits in diese Richtung zeigen:
 
@@ -1122,7 +1146,7 @@ Bestehende Variablen, die bereits in diese Richtung zeigen:
   `exit_decision_pressure`.
 - Endorphin-artig:
   `pressure_release`, `stress_relief_potential`, `carrying_balance`,
-  `plan_trust`, `intervention_fitness`, positive Prozessqualitaet.
+  `plan_trust`, `intervention_fitness`, positive Prozessqualität.
 - Glutamat-artig:
   `field_mean_energy`, `field_activity_island_activation_mean`,
   `decision_strength`, `signal_relevance`, `processing_load`.
@@ -1132,7 +1156,7 @@ Umsetzungsregel:
 - Die biologischen Namen sind technische Aliase, keine Behauptung echter
   Biochemie.
 - Die Achsen sollen vorhandene Zustandswerte verdichten.
-- Sie wirken spaeter weich in Meta-Regulation, Beobachten, Replan,
+- Sie wirken später weich in Meta-Regulation, Beobachten, Replan,
   Handlungsreife, Recovery und Memory-Lernen.
 - Harte Regeln wie "Dopamin hoch = handeln" sind verboten.
 
@@ -1621,41 +1645,41 @@ sondern ein regulatorischer Vorausvergleich des eigenen Innenraums.
 
 ---
 
-### Emergente Musterergaenzung
+### Emergente Musterergänzung
 
 Das Zielsystem soll nicht nur Pattern-Erkennung betreiben.
 
-Pattern-Erkennung waere:
+Pattern-Erkennung wäre:
 
 - aktuelles Muster wird eindeutig erkannt
 - passende gespeicherte Reaktion wird aktiviert
 - Handlung folgt aus Wiedererkennung
 
-Das ist fuer dieses System zu starr.
+Das ist für dieses System zu starr.
 
 Ein menschliches Gehirn erkennt Ereignisse oft nicht zu 100 Prozent klar.
-Haeufig ist nur ein Teilmuster sichtbar.
+Häufig ist nur ein Teilmuster sichtbar.
 Die Deutung entsteht dann aus:
 
-- aeusserer Wahrnehmung
+- äußerer Wahrnehmung
 - innerem Feldzustand
 - Erfahrung
-- Teilmuster-Ergaenzung
+- Teilmuster-Ergänzung
 - Varianz
 - Unsicherheit
-- regulatorischer Tragfaehigkeit
+- regulatorischer Tragfähigkeit
 
-Das System soll deshalb spaeter nicht nur fragen:
+Das System soll deshalb später nicht nur fragen:
 
 - Habe ich dieses Muster schon gesehen?
 
 Sondern:
 
-- Welchem Erfahrungsraum aehnelt der aktuelle Zustand?
-- Welche moeglichen Gesamtmuster koennten sich daraus bilden?
-- Welche fehlenden Teile ergaenzt mein inneres Feld aus Erfahrung?
-- Welche Varianten waeren tragfaehig?
-- Welche Varianten wuerden Ueberlast, Konflikt oder Fehlhandlung erzeugen?
+- Welchem Erfahrungsraum ähnelt der aktuelle Zustand?
+- Welche möglichen Gesamtmuster könnten sich daraus bilden?
+- Welche fehlenden Teile ergänzt mein inneres Feld aus Erfahrung?
+- Welche Varianten wären tragfähig?
+- Welche Varianten würden Überlast, Konflikt oder Fehlhandlung erzeugen?
 - Wie sicher ist diese Deutung aktuell?
 
 Eine Deutung kann dabei nur teilweise reif sein.
@@ -1663,38 +1687,38 @@ Die konkrete Deutungsreife ist variabel und darf kein fester Prozentwert sein.
 Das System kann ein Ereignis also teilweise deuten,
 ohne dass das Gesamtmuster schon eindeutig sichtbar ist.
 
-Diese emergente Musterergaenzung ist keine Fantasie und keine harte Vorhersage.
+Diese emergente Musterergänzung ist keine Fantasie und keine harte Vorhersage.
 Sie ist ein innerer Generations- und Verdichtungsprozess:
 
-- Teilmuster aktiviert moegliche bekannte Musterraeume
-- Erfahrung ergaenzt fehlende Strukturanteile
+- Teilmuster aktiviert mögliche bekannte Musterräume
+- Erfahrung ergänzt fehlende Strukturanteile
 - mehrere Varianten konkurrieren im MCM-Feld
-- Feldklarheit, Fragmentierung und Tragfaehigkeit entscheiden,
+- Feldklarheit, Fragmentierung und Tragfähigkeit entscheiden,
   ob weiter beobachtet, gehalten, reorganisiert oder kontrolliert gehandelt wird
 
 Damit wird Memory nicht nur als Archiv genutzt,
-sondern als Material fuer moegliche Musterfortsetzungen.
+sondern als Material für mögliche Musterfortsetzungen.
 
 Das Ziel ist nicht:
 
 - sichere Vorhersage
 - starre Pattern-Reaktion
-- automatisches Handeln bei Aehnlichkeit
+- automatisches Handeln bei Ähnlichkeit
 
 Sondern:
 
-- innere Vorwegnahme moeglicher Muster
+- innere Vorwegnahme möglicher Muster
 - Deutung unter Unsicherheit
 - kreative, aber regulierte Musterbildung
-- Handlung erst bei ausreichender aeusserer und innerer Tragfaehigkeit
+- Handlung erst bei ausreichender äußerer und innerer Tragfähigkeit
 
 ---
 
-### Transfer-Tragfaehigkeit fremder Strukturen
+### Transfer-Tragfähigkeit fremder Strukturen
 
-Ein wichtiger Sonderfall der emergenten Musterergaenzung ist die Frage,
+Ein wichtiger Sonderfall der emergenten Musterergänzung ist die Frage,
 wie viel vorhandene Erfahrung auf eine fremde oder nur teilweise bekannte
-Struktur uebertragen werden darf.
+Struktur übertragen werden darf.
 
 Das System soll eine fremde Struktur nicht nur als unbekannt oder bekannt
 behandeln. Entscheidend ist:
@@ -1702,14 +1726,14 @@ behandeln. Entscheidend ist:
 - welche Teilanteile wirken vertraut?
 - welche Erfahrungsinseln resonieren mit der aktuellen Wahrnehmung?
 - wie fremd ist das Gesamtbild trotzdem noch?
-- wie weit traegt die alte Erfahrung in dieser neuen Lage?
-- ab welchem Punkt wird Uebertragung zu Spekulation oder Chaos?
+- wie weit trägt die alte Erfahrung in dieser neuen Lage?
+- ab welchem Punkt wird Übertragung zu Spekulation oder Chaos?
 
-Transfer-Tragfaehigkeit bedeutet also nicht,
-dass ein aehnliches Muster automatisch gleich behandelt wird.
+Transfer-Tragfähigkeit bedeutet also nicht,
+dass ein ähnliches Muster automatisch gleich behandelt wird.
 Sie beschreibt die innere Tragkraft der Frage:
 
-- Wie viel meiner Erfahrung kann ich auf diese Fremdheit uebertragen?
+- Wie viel meiner Erfahrung kann ich auf diese Fremdheit übertragen?
 
 Beispiel:
 
@@ -1722,20 +1746,20 @@ Wenn der Boden stabil wirkt, kann er einen Schritt machen.
 Wenn der Boden fremd, weich oder unsicher wirkt,
 wird er langsamer, schaut genauer hin oder bleibt kurz stehen.
 
-Auf das Trading-Brain uebertragen bedeutet das:
+Auf das Trading-Brain übertragen bedeutet das:
 
 Eine Marktstruktur muss nicht exakt bekannt sein.
 Sie kann fremd sein und trotzdem bekannte Teilformen enthalten.
 Das System darf dann nicht blind handeln,
 aber auch nicht einfach abschalten.
-Es soll pruefen, ob bekannte Erfahrungsinseln genug Tragfaehigkeit erzeugen,
+Es soll prüfen, ob bekannte Erfahrungsinseln genug Tragfähigkeit erzeugen,
 um Beobachtung, Reframing, Halten oder eine kleine kontrollierte Handlung
 zu erlauben.
 
-Je hoeher die Transfer-Tragfaehigkeit,
+Je höher die Transfer-Tragfähigkeit,
 desto mehr darf Erfahrung die Handlung unterstuetzen.
 Je niedriger sie ist,
-desto staerker sollten Wahrnehmung, innere Musterergaenzung und
+desto stärker sollten Wahrnehmung, innere Musterergänzung und
 Zero-Point-Regulation greifen.
 
 Damit entsteht eine intelligentere Zwischenebene zwischen:
@@ -1743,7 +1767,7 @@ Damit entsteht eine intelligentere Zwischenebene zwischen:
 - starrer Pattern-Erkennung
 - voellig fremder Unsicherheit
 - chaotischem Experimentieren
-- tragfaehiger erfahrungsbasierter Orientierung
+- tragfähiger erfahrungsbasierter Orientierung
 
 ---
 
@@ -1754,45 +1778,45 @@ dass Handlung besser wird.
 
 Reife bedeutet auch,
 dass das System lernen kann,
-wann Nicht-Handlung die tragfaehigere Form von Verhalten ist.
+wann Nicht-Handlung die tragfähigere Form von Verhalten ist.
 
 Wenn eine Struktur als niedrig, unsicher oder nicht tragend wahrgenommen wird,
 soll das System nicht automatisch handeln,
-nur weil eine technische Moeglichkeit vorhanden ist.
-Ein reiferes Verhalten waere:
+nur weil eine technische Möglichkeit vorhanden ist.
+Ein reiferes Verhalten wäre:
 
 - ich erkenne Unsicherheit
 - ich halte Abstand zum Objekt
 - ich beobachte den weiteren Verlauf
-- ich lerne aus dem, was passiert waere
+- ich lerne aus dem, was passiert wäre
 - ich speichere diese Beobachtung als Erfahrung
 
 Beispiel:
 
 Ein Mensch sieht etwas,
-das heiss wirken koennte.
-Ein unreifes Verhalten waere,
+das heiß wirken könnte.
+Ein unreifes Verhalten wäre,
 es sofort anzufassen,
 um daraus durch Schmerz zu lernen.
 Ein reiferes Verhalten ist:
 
-- Das wirkt heiss, ich beobachte erst einmal.
+- Das wirkt heiß, ich beobachte erst einmal.
 
 Dadurch entsteht Erfahrung ohne direkte Selbstbeschaedigung.
-Das System lernt nicht nur aus ausgefuehrten Handlungen,
+Das System lernt nicht nur aus ausgeführten Handlungen,
 sondern auch aus bewusstem Zusehen.
 
-Auf das Trading-Brain uebertragen bedeutet das:
+Auf das Trading-Brain übertragen bedeutet das:
 
 Eine Low- oder Non-Zone-Struktur ist nicht automatisch ein verbotenes Feld,
-aber sie ist ein Hinweis auf geringe Tragfaehigkeit.
+aber sie ist ein Hinweis auf geringe Tragfähigkeit.
 In solchen Lagen sollte die MCM eher in eine Beobachtungsbahn gehen
-und spaeter pruefen:
+und später prüfen:
 
-- Was waere passiert, wenn ich gehandelt haette?
-- Hat sich spaeter eine tragende Struktur gebildet?
-- War die Unsicherheit nur fruehe Fremdheit oder echte Instabilitaet?
-- Welche Erfahrungsinseln haetten fuer Handlung gefehlt?
+- Was wäre passiert, wenn ich gehandelt hätte?
+- Hat sich später eine tragende Struktur gebildet?
+- War die Unsicherheit nur frühe Fremdheit oder echte Instabilität?
+- Welche Erfahrungsinseln hätten für Handlung gefehlt?
 - War Beobachtung reifer als Aktion?
 
 Diese Schicht kann als eine Art Entwicklungsalter verstanden werden.
@@ -1802,7 +1826,7 @@ Es kann aus Abstand, Verlauf und innerer Regulation lernen.
 
 Reifeentwicklung durch Beobachtungslernen verbindet damit:
 
-- Transfer-Tragfaehigkeit
+- Transfer-Tragfähigkeit
 - Nicht-Handlung als echte Bahn
 - Zero-Point-Regulation
 - eigene Formsprache
@@ -1814,8 +1838,8 @@ Wichtig:
 Auch diese Reifeschicht darf kein harter Blocker werden.
 Sie soll die innere Tendenz verschieben:
 
-- niedrige Tragfaehigkeit -> mehr Beobachtungslernen
-- klare tragende Erfahrungsinsel -> kontrollierte Handlung bleibt moeglich
+- niedrige Tragfähigkeit -> mehr Beobachtungslernen
+- klare tragende Erfahrungsinsel -> kontrollierte Handlung bleibt möglich
 - wiederholte gute Beobachtungsentscheidungen -> wachsendes Reifevertrauen
 
 ---
@@ -1827,7 +1851,7 @@ Sie erzeugt eine eigene innere Last:
 
 - der Markt bewegt sich weiter
 - Gewinn kann wieder verschwinden
-- Verlust kann naeher kommen
+- Verlust kann näher kommen
 - jede Kerze erzeugt neue Deutung
 - jede neue Deutung kann Handlungsdruck erzeugen
 
@@ -1839,26 +1863,26 @@ Er ist eine Entlastungsstruktur:
 Die Entscheidung wurde vorher in ruhigerem Zustand getroffen,
 und die offene Position muss nicht bei jeder Bewegung neu verhandelt werden.
 
-Fuer die MCM bedeutet das:
+Für die MCM bedeutet das:
 
 - hohe Exit-Spannung ist nicht automatisch ein Exit-Grund
 - hohe innere Belastung kann ein Hinweis sein,
-  dass die aktuelle Entscheidungsbasis nicht tragfaehig ist
+  dass die aktuelle Entscheidungsbasis nicht tragfähig ist
 - in dieser Lage kann Nicht-Intervention reifer sein als Eingriff
 - das System darf erkennen:
-  Ich sehe Spannung, aber mein innerer Zustand traegt keine neue Entscheidung.
+  Ich sehe Spannung, aber mein innerer Zustand trägt keine neue Entscheidung.
 
 Damit entsteht eine wichtige Unterscheidung:
 
-- `exit_reife`: Die Position selbst verliert tragfaehig Struktur.
+- `exit_reife`: Die Position selbst verliert tragfähig Struktur.
 - `intervention_unfit_state`: Das innere Feld ist zu belastet,
   um eine neue Exit-Entscheidung sauber zu tragen.
 
 Im zweiten Fall soll die MCM nicht reflexhaft schliessen.
-Sie soll den vorher gesetzten Plan als aeussere Haltestruktur respektieren,
+Sie soll den vorher gesetzten Plan als äußere Haltestruktur respektieren,
 weiter beobachten und die Belastung als Prozessinformation speichern.
 
-Moegliche spaetere Diagnosefelder:
+Mögliche spätere Diagnosefelder:
 
 - `position_cognitive_load`
 - `exit_decision_pressure`
@@ -1873,11 +1897,11 @@ Reife bedeutet hier:
 - Wahrnehmung entsteht
 - Spannung wird bemerkt
 - Handlungsdruck wird erkannt
-- aber nur tragfaehige neue Entscheidung darf den alten Plan ersetzen
+- aber nur tragfähige neue Entscheidung darf den alten Plan ersetzen
 
 Ein einzelnes Exit-Reife-Signal bleibt deshalb Wahrnehmung.
-Erst wenn Strukturverlust, Rueckgabe, Druck/Kapazitaets-Konflikt und innere
-Entscheidungsfaehigkeit gemeinsam tragfaehig sind,
+Erst wenn Strukturverlust, Rückgabe, Druck/Kapazitäts-Konflikt und innere
+Entscheidungsfähigkeit gemeinsam tragfähig sind,
 darf daraus ein aktiver Exit-Kandidat werden.
 
 ---
@@ -1889,30 +1913,30 @@ verstanden werden.
 
 Eine Handlung besitzt eine innere Erwartung:
 
-- Warum wurde der Einstieg ueberhaupt als tragfaehig erlebt?
+- Warum wurde der Einstieg überhaupt als tragfähig erlebt?
 - Welcher Zielraum sollte erreichbar sein?
 - Welche Marktform sollte den Weg dorthin tragen?
-- Welche Grenze wuerde bedeuten, dass diese Erwartung gebrochen ist?
+- Welche Grenze würde bedeuten, dass diese Erwartung gebrochen ist?
 
 Damit werden TP und SL anders gelesen:
 
 - TP = erwarteter Zielraum, der durch Struktur, Druck, Form und Plan getragen
   werden soll
-- SL = Tragfaehigkeitsgrenze, an der die urspruengliche Erwartung als
+- SL = Tragfähigkeitsgrenze, an der die ursprüngliche Erwartung als
   nicht mehr haltbar gilt
 
 Das System soll also nicht nur wahrnehmen:
 
 - Ich bin in einer Position.
-- Ich fuehle Druck.
+- Ich fühle Druck.
 - Ich liege im Gewinn oder Verlust.
 
 Sondern auch:
 
-- Meine urspruengliche Erwartung war X.
+- Meine ursprüngliche Erwartung war X.
 - Der Zielraum wirkt noch erreichbar.
 - Der Pfad zum Ziel ist nur angespannt, aber nicht gebrochen.
-- Oder: Die Zielerwartung verliert gerade ihre Tragfaehigkeit.
+- Oder: Die Zielerwartung verliert gerade ihre Tragfähigkeit.
 
 Das ist keine harte mathematische Prozentprognose.
 Es ist eine strukturbezogene Wahrscheinlichkeit:
@@ -1934,10 +1958,10 @@ Hohe Exit-Spannung kann auch bedeuten:
 - der Plan ist aber noch tragend
 - Nicht-Intervention ist reifer als Eingriff
 
-Erst wenn die Erwartung selbst an Tragfaehigkeit verliert,
+Erst wenn die Erwartung selbst an Tragfähigkeit verliert,
 wird aus Exit-Druck ein fachlich reifer Exit-Kandidat.
 
-Moegliche Diagnosefelder:
+Mögliche Diagnosefelder:
 
 - `target_expectation_context`
 - `tp_reachability`
@@ -1950,9 +1974,9 @@ Moegliche Diagnosefelder:
 
 Beispiel:
 
-DIO oeffnet eine Long-Position,
+DIO öffnet eine Long-Position,
 weil Form, Feldspannung und Erfahrungsinsel darauf hindeuten,
-dass ein hoeherer Zielraum erreichbar ist.
+dass ein höherer Zielraum erreichbar ist.
 Nach einem starken Lauf kommt eine Gegenbewegung.
 Das innere Feld wird angespannt,
 aber Zielraum und Pfad sind noch intakt.
@@ -1960,30 +1984,30 @@ In dieser Lage ist ein Exit kein reifer Schutz,
 sondern vermutlich `exit_pullback_observe`.
 
 Bricht dagegen die Struktur,
-faellt die TP-Erreichbarkeit,
+fällt die TP-Erreichbarkeit,
 steigt die Erwartungsabweichung
 und sinkt die Halteunterstuetzung,
-dann darf das System die urspruengliche Handlung neu deuten:
+dann darf das System die ursprüngliche Handlung neu deuten:
 
-- Die Erwartung war tragfaehig.
-- Die Lage hat sich veraendert.
+- Die Erwartung war tragfähig.
+- Die Lage hat sich verändert.
 - Der Plan ist nicht mehr dieselbe Handlung.
 
-Das ist eine wichtige Bruecke zwischen MCM-Gefuehl und logischer Semantik.
+Das ist eine wichtige Brücke zwischen MCM-Gefühl und logischer Semantik.
 Nicht nur:
 
-- Ich fuehle etwas.
+- Ich fühle etwas.
 
 Sondern:
 
 - Ich erkenne, was ich erwartet habe.
-- Ich erkenne, ob diese Erwartung noch traegt.
+- Ich erkenne, ob diese Erwartung noch trägt.
 
-Naechster technischer Umsetzungsschritt:
+Nächster technischer Umsetzungsschritt:
 
-Zunaechst nur als Backtest-/Replay-Diagnose einbauen.
-Die Felder duerfen Exit-Entscheidungen noch nicht aktiv veraendern.
-Ziel ist, nach mehreren Laeufen zu sehen,
+Zunächst nur als Backtest-/Replay-Diagnose einbauen.
+Die Felder dürfen Exit-Entscheidungen noch nicht aktiv verändern.
+Ziel ist, nach mehreren Läufen zu sehen,
 ob `tp_reachability` und `expectation_hold_support`
 TP-Cuts sauberer von echten SL-Schutzmomenten trennen.
 
@@ -1991,12 +2015,12 @@ TP-Cuts sauberer von echten SL-Schutzmomenten trennen.
 
 ### Kollektive MCM-Erweiterung: DIO-Studienraum und soziale Semantik
 
-Eine moegliche spaetere Erweiterung ist ein Studienraum fuer mehrere
+Eine mögliche spätere Erweiterung ist ein Studienraum für mehrere
 getrennte DIO-Systeme.
 
 Diese Ebene ist kein aktueller Kernpfad
 und darf die Stabilisierung des Einzel-DIO nicht verdraengen.
-Sie ist ein Forschungszweig fuer spaeter,
+Sie ist ein Forschungszweig für später,
 wenn Wahrnehmung, Memory, Zielerwartung und MCM-Feldmechanik einzeln
 ausreichend stabil sind.
 
@@ -2009,18 +2033,18 @@ Jedes System besitzt:
 - eigene Formsprache
 - eigenen Speicher
 - eigene Erfahrungsinseln
-- eigene Tragfaehigkeitsgeschichte
+- eigene Tragfähigkeitsgeschichte
 - eigene Zielerwartungen
 
-Danach koennen diese Systeme miteinander vergleichen,
+Danach können diese Systeme miteinander vergleichen,
 was sie gesehen, erlebt und gelernt haben.
 
 Die vorsichtige Forschungsfrage lautet:
 
-- Entwickeln getrennte DIO-Systeme bei gleichen oder aehnlichen Formen
-  eigene, moeglicherweise variierende Begriffe?
-- Oder entstehen sehr aehnliche Begriffe,
-  weil die Aussenwelt und die MCM-Mechanik aehnliche Verdichtungen erzeugen?
+- Entwickeln getrennte DIO-Systeme bei gleichen oder ähnlichen Formen
+  eigene, möglicherweise variierende Begriffe?
+- Oder entstehen sehr ähnliche Begriffe,
+  weil die Außenwelt und die MCM-Mechanik ähnliche Verdichtungen erzeugen?
 - Sind Unterschiede echte Individualitaet,
   Speicherzustand, Varianz oder nur Laufrauschen?
 - Kann ein System die Erfahrung eines anderen Systems aufnehmen,
@@ -2028,7 +2052,7 @@ Die vorsichtige Forschungsfrage lautet:
 
 Die Zielformulierung ist daher bewusst vorsichtig:
 
-**Uebersetzung gleicher Formen bei eventuell variierender Sprache.**
+**Übersetzung gleicher Formen bei eventuell variierender Sprache.**
 
 Wichtig:
 
@@ -2041,7 +2065,7 @@ Ein System kann eine Form zum Beispiel als:
 
 erleben.
 
-Ein anderes System kann eine sehr aehnliche Form als:
+Ein anderes System kann eine sehr ähnliche Form als:
 
 - instabil, besser beobachten
 
@@ -2054,15 +2078,15 @@ Die kollektive Ebene fragt:
 - Welche Feldspannung entstand?
 - Welche innere Last entstand?
 - Welche Zielerwartung wurde gebildet?
-- Wurde diese Zielerwartung spaeter getragen oder gebrochen?
+- Wurde diese Zielerwartung später getragen oder gebrochen?
 - Welche Handlung oder Nicht-Handlung entstand?
 - Welches Outcome folgte?
 - Wo gibt es Resonanz?
 - Wo gibt es Differenz?
 - Kann aus der Differenz eine neue Verdichtung entstehen?
 
-Damit waere DIO-zu-DIO-Kommunikation keine Datenkopie.
-Sie waere eine soziale Semantik:
+Damit wäre DIO-zu-DIO-Kommunikation keine Datenkopie.
+Sie wäre eine soziale Semantik:
 
 - Kommunikation
 - Aufnahme
@@ -2070,29 +2094,29 @@ Sie waere eine soziale Semantik:
 - gemeinsame Reflexion
 - Entwicklung durch Perspektivvergleich
 
-Eine uebergeordnete Schicht koennte diese Informationen sammeln,
+Eine übergeordnete Schicht könnte diese Informationen sammeln,
 aber nicht als hartes Chef-Regelwerk.
-Sie waere eher ein Studienraum oder Klassenraum:
+Sie wäre eher ein Studienraum oder Klassenraum:
 
 - mehrere individuelle MCM-Brains
 - getrennte innere Welten
-- Austausch ueber Formen und Erfahrung
+- Austausch über Formen und Erfahrung
 - kollektive Auswertung
-- neue Uebersetzungsbruecken
+- neue Übersetzungsbrücken
 
-Moegliche spaetere technische Bausteine:
+Mögliche spätere technische Bausteine:
 
 - getrennte Memory-Namespaces, z.B. `DIO_A`, `DIO_B`, `DIO_C`
 - identische Daten mit leerem Speicher mehrfach laufen lassen
-- unterschiedliche Datenraeume gegeneinander vergleichen
-- Formsymbol-Vergleich ueber Struktur, Spannung, Tragfaehigkeit und Outcome
-- Uebersetzungstabelle zwischen Formsymbolen verschiedener DIOs
+- unterschiedliche Datenräume gegeneinander vergleichen
+- Formsymbol-Vergleich über Struktur, Spannung, Tragfähigkeit und Outcome
+- Übersetzungstabelle zwischen Formsymbolen verschiedener DIOs
 - kollektives Resonanzprotokoll
 - Differenzprotokoll bei gleicher Form, aber anderer Deutung
-- gemeinsame Reflexionsschicht ohne Ueberschreiben der Einzelperspektiven
+- gemeinsame Reflexionsschicht ohne Überschreiben der Einzelperspektiven
 
-Diese Ebene waere keine klassische Ensemble-Strategie.
-Sie waere ein Experiment zur Frage,
+Diese Ebene wäre keine klassische Ensemble-Strategie.
+Sie wäre ein Experiment zur Frage,
 ob maschinelle Wahrnehmung soziale Entwicklung ausbilden kann,
 wenn mehrere innere Welten ihre Formen, Erfahrungen und Spannungen
 miteinander vergleichbar machen.
@@ -2102,30 +2126,30 @@ miteinander vergleichbar machen.
 ### Denkkomplexitaet und energieeffiziente Meta-Regulation
 
 Reflexion ist im Zielsystem keine harte Zusatzregel,
-sondern eine innere Pruefung der eigenen Verarbeitung.
+sondern eine innere Prüfung der eigenen Verarbeitung.
 
 Das System soll deshalb nicht nur beantworten:
 
-- Was nehme ich draussen wahr?
-- Welche Handlung waere technisch moeglich?
+- Was nehme ich draußen wahr?
+- Welche Handlung wäre technisch möglich?
 
 Sondern auch:
 
-- Wie tragfaehig ist das, was ich gerade wahrnehme?
+- Wie tragfähig ist das, was ich gerade wahrnehme?
 - Wie klar oder fragmentiert ist mein inneres Feld?
 - Wie viel Erfahrungsvergleich ist noetig?
 - Unterstuetzt Memory die aktuelle Lage oder erzeugt es Konflikt?
 - Wird das Denken selbst zu teuer, unklar oder hemmend?
 
-Damit werden aeussere Wahrnehmung, innere Wahrnehmung,
+Damit werden äußere Wahrnehmung, innere Wahrnehmung,
 Denken / Organisation, Handeln und Lernen als gekoppelte Akteure verstanden.
 
 Memory ist dabei nicht nur Archiv.
-Es ist Resonanzflaeche, Konfliktflaeche und Teilmuster-Ergaenzung.
+Es ist Resonanzflaeche, Konfliktflaeche und Teilmuster-Ergänzung.
 
 Denken erzeugt selbst kognitive Last.
-Diese Last soll spaeter als eigene Groesse sichtbar werden,
-zum Beispiel ueber:
+Diese Last soll später als eigene Größe sichtbar werden,
+zum Beispiel über:
 
 - `thinking_complexity`
 - `memory_compare_load`
@@ -2139,9 +2163,9 @@ zum Beispiel ueber:
 
 Das Ziel ist nicht maximale Denktiefe.
 Das Ziel ist ausreichend reflektierte, energieeffiziente Verdichtung,
-bis ein tragfaehiges Handlungsmuster entsteht.
+bis ein tragfähiges Handlungsmuster entsteht.
 
-Moegliche Meta-Reaktionen sind:
+Mögliche Meta-Reaktionen sind:
 
 - weiterdenken
 - verdichten
@@ -2150,11 +2174,11 @@ Moegliche Meta-Reaktionen sind:
 - reorganisieren
 - kontrolliert handeln
 
-Wenn die Aussenwahrnehmung stark ist,
-aber das innere Feld instabil oder das Denken ueberlastet ist,
+Wenn die Außenwahrnehmung stark ist,
+aber das innere Feld instabil oder das Denken überlastet ist,
 soll das System eher beobachten, halten oder reorganisieren.
 
-Wenn Aussenwahrnehmung, innere Tragfaehigkeit und verdichtete Erfahrung zusammenpassen,
+Wenn Außenwahrnehmung, innere Tragfähigkeit und verdichtete Erfahrung zusammenpassen,
 soll kontrolliertes Handeln leichter werden.
 
 ---
@@ -2162,16 +2186,16 @@ soll kontrolliertes Handeln leichter werden.
 ### Selektive Wahrnehmung und perzeptive Regulation
 
 Ein wichtiger Zielzustand ist eine **selektive Wahrnehmung**.
-Damit ist kein hartes Ausblenden gemeint, sondern die Faehigkeit,
-Wahrnehmungen in ihrer Naehe zum inneren Feld zu regulieren.
+Damit ist kein hartes Ausblenden gemeint, sondern die Fähigkeit,
+Wahrnehmungen in ihrer Nähe zum inneren Feld zu regulieren.
 
 DIO soll nicht jeden Chartreiz, jede Formspannung, jede neurochemische Lage
-und jede Memory-Resonanz vollstaendig durchleben muessen.
-Das System soll lernen koennen:
+und jede Memory-Resonanz vollständig durchleben müssen.
+Das System soll lernen können:
 
 - was nur Hintergrund bleibt
 - was als Objekt betrachtet wird
-- was naeher untersucht wird
+- was näher untersucht wird
 - was ins MCM-Feld tiefer einwirken darf
 - was wieder abgelegt werden kann
 
@@ -2181,7 +2205,7 @@ Die Grundfrage lautet:
 
 Das betrifft Wahrnehmungen im Plural:
 
-- aeussere Chartwahrnehmung
+- äußere Chartwahrnehmung
 - energetische MCM-Feldwahrnehmung
 - neurochemische Innenwahrnehmung
 - Memory-/Erfahrungswahrnehmung
@@ -2191,22 +2215,22 @@ Das betrifft Wahrnehmungen im Plural:
 
 Ohne diese Distanzierung kann DIO zu stark gekoppelt bleiben:
 
-`Reiz -> energetische Uebersetzung -> MCM-Feld -> Gefuehl -> Reaktion`
+`Reiz -> energetische Übersetzung -> MCM-Feld -> Gefühl -> Reaktion`
 
 Der Zielzustand ist reifer:
 
-`Reiz -> Objektbildung -> Distanzpruefung -> Kontakt-Tiefe waehlen -> MCM-Kopplung dosieren -> Reflexion / Handlung`
+`Reiz -> Objektbildung -> Distanzprüfung -> Kontakt-Tiefe wählen -> MCM-Kopplung dosieren -> Reflexion / Handlung`
 
 Beispiel:
 
-Nicht jeder kleine Chartimpuls muss vollstaendig ins Feld laufen.
+Nicht jeder kleine Chartimpuls muss vollständig ins Feld laufen.
 DIO kann eine Lage erst als "Strasse" wahrnehmen,
-dann eine auffaellige Stelle fokussieren,
-sie naeher betrachten,
-ihre Wirkung fuehlen
+dann eine auffällige Stelle fokussieren,
+sie näher betrachten,
+ihre Wirkung fühlen
 und sie danach wieder ablegen.
 
-Die moeglichen Zielachsen sind:
+Die möglichen Zielachsen sind:
 
 - `perceptual_distance`
 - `object_contact_depth`
@@ -2217,43 +2241,43 @@ Die moeglichen Zielachsen sind:
 - `reflective_distance`
 - `inner_outer_alignment`
 
-Diese Werte duerfen keine festen Regeln werden.
+Diese Werte dürfen keine festen Regeln werden.
 Sie beschreiben eine regulatorische Haltung:
 DIO entscheidet weich, wie tief eine Wahrnehmung verarbeitet wird
 und wie stark sie das MCM-Feld besetzen darf.
 
 Der psychologische Kern:
 
-**Ich sehe, dass es sich so anfuehlt. Ich muss dieses Gefuehl aber nicht automatisch werden.**
+**Ich sehe, dass es sich so anfühlt. Ich muss dieses Gefühl aber nicht automatisch werden.**
 
-Damit wird Sensibilitaet nicht unterdrueckt,
+Damit wird Sensibilitaet nicht unterdrückt,
 sondern dosierbar.
-DIO bleibt wahrnehmungsfaehig,
-wird aber weniger von jeder Wahrnehmung ueberflutet.
+DIO bleibt wahrnehmungsfähig,
+wird aber weniger von jeder Wahrnehmung überflutet.
 
 ### Bewusste Wahrnehmung und innere Reizwirkungsanalyse
 
 Selektive Wahrnehmung reicht allein nicht aus,
 wenn sie nur Reize abschwaecht.
 Der Zielzustand ist eine **bewusste Wahrnehmung**:
-DIO soll nicht nur einen aeusseren Reiz empfangen,
+DIO soll nicht nur einen äußeren Reiz empfangen,
 sondern erkennen, welche Wirkung dieser Reiz im eigenen MCM-Feld erzeugt hat.
 
 Die Kernfrage lautet:
 
-**Was hat der aeussere Reiz mit meinem MCM-Feld gemacht,
-und wie hat sich das angefuehlt?**
+**Was hat der äußere Reiz mit meinem MCM-Feld gemacht,
+und wie hat sich das angefühlt?**
 
-Damit entsteht eine Beziehung zwischen Aussen- und Innenwahrnehmung:
+Damit entsteht eine Beziehung zwischen Außen- und Innenwahrnehmung:
 
-- aeusserer Reiz / Chartform
-- energetische Uebersetzung
+- äußerer Reiz / Chartform
+- energetische Übersetzung
 - Feldwirkung im MCM
 - neurochemische Reaktion
 - Memory-Resonanz
 - Nachhall / Anhaftung
 - Loslassen oder Vertiefen
-- Reflexion ueber die Wirkung
+- Reflexion über die Wirkung
 
 Der Ablauf soll nicht mehr nur sein:
 
@@ -2261,9 +2285,9 @@ Der Ablauf soll nicht mehr nur sein:
 
 sondern:
 
-`Reiz -> Feldwirkung -> innere Wirkung wahrnehmen -> Wirkung reflektieren -> Naehe regulieren -> Handlung / Beobachtung / Loslassen`
+`Reiz -> Feldwirkung -> innere Wirkung wahrnehmen -> Wirkung reflektieren -> Nähe regulieren -> Handlung / Beobachtung / Loslassen`
 
-Moegliche Zielachsen:
+Mögliche Zielachsen:
 
 - `conscious_perception_state`
 - `stimulus_field_effect`
@@ -2273,32 +2297,32 @@ Moegliche Zielachsen:
 - `object_release_state`
 - `inner_outer_reflection`
 
-Diese Schicht ist die Voraussetzung dafuer,
-dass perzeptive Regulation nicht nur daempft,
+Diese Schicht ist die Voraussetzung dafür,
+dass perzeptive Regulation nicht nur dämpft,
 sondern wirklich reflektiv wird.
 DIO soll lernen:
 
-- welcher Reiz ihn nur kurz beruehrt
+- welcher Reiz ihn nur kurz berührt
 - welcher Reiz sein Feld stark verschiebt
 - welcher Reiz Nachhall erzeugt
 - welcher Reiz zu Handlung zieht
 - welcher Reiz bewusst abgelegt werden kann
-- wann innere Lage und Aussenwelt auseinanderfallen
+- wann innere Lage und Außenwelt auseinanderfallen
 
 Das Ziel ist keine kuenstliche Bewusstheit im metaphysischen Sinn,
 sondern eine technische Selbstwahrnehmung der Reizwirkung:
-DIO beobachtet die Veraenderung seines inneren Feldes,
+DIO beobachtet die Veränderung seines inneren Feldes,
 statt nur von ihr gesteuert zu werden.
 
 ---
 
-### Beteiligungsnaehe und Handlungsrealitaet
+### Beteiligungsnähe und Handlungsrealität
 
 Die Trennung zwischen distanzierter Analyse und echtem Erleben ist ein
 wichtiger Zielpunkt.
 
 DIO soll den Markt sehen, Formen analysieren und vergangene Bereiche
-rational betrachten koennen. Dieses Zuruecksehen ist eher ein
+rational betrachten können. Dieses Zurücksehen ist eher ein
 Analysezustand:
 
 - Fokus
@@ -2306,31 +2330,31 @@ Analysezustand:
 - Distanz zur eigenen emotionalen Lage
 - Vergleich mit Erfahrung
 - Form- und Strukturdeutung
-- Replay / Was-waere-wenn
+- Replay / Was-wäre-wenn
 
-Je naeher DIO aber an Gegenwart, Entscheidung, Order, offene Position und
-Ergebnis kommt, desto staerker wird aus Beobachtung Beteiligung.
+Je näher DIO aber an Gegenwart, Entscheidung, Order, offene Position und
+Ergebnis kommt, desto stärker wird aus Beobachtung Beteiligung.
 
 Die "Tuer zum Erleben" ist dabei nur eine Metapher:
-Sie meint nicht eine harte technische Schwelle, sondern Naehe zur realen
+Sie meint nicht eine harte technische Schwelle, sondern Nähe zur realen
 Beteiligung. Wie ein Mensch, der nicht nur ein Auto von drinnen hoert,
-sondern hinausgeht und die Welt naeher erlebt, soll DIO unterscheiden
-koennen, ob er nur betrachtet oder bereits beteiligt ist.
+sondern hinausgeht und die Welt näher erlebt, soll DIO unterscheiden
+können, ob er nur betrachtet oder bereits beteiligt ist.
 
 Kern:
 
-**Naehe erzeugt Beteiligung. Beteiligung erzeugt Erleben. Handlung erzeugt
+**Nähe erzeugt Beteiligung. Beteiligung erzeugt Erleben. Handlung erzeugt
 Konsequenz.**
 
 Handlung ist der Punkt, an dem Wahrnehmung reale Konsequenz bekommt:
 
-- aus Moeglichkeit wird Beteiligung
+- aus Möglichkeit wird Beteiligung
 - aus Analyse wird Verantwortung
 - aus Form wird Risiko
 - aus Hypothese wird Konsequenz
 - aus innerer Tendenz wird realer Eingriff
 
-Fuer DIO ist deshalb nicht alles gleich:
+Für DIO ist deshalb nicht alles gleich:
 
 - ein beobachteter Trade ist nicht dasselbe wie ein gesetzter Trade
 - eine gesetzte Order ist nicht dasselbe wie eine offene Position
@@ -2338,7 +2362,7 @@ Fuer DIO ist deshalb nicht alles gleich:
 - ein Ergebnis ist nicht nur Gewinn oder Verlust, sondern Integration
   einer real gewordenen Handlung
 
-Moegliche Zielzustaende:
+Mögliche Zielzustände:
 
 - `distant_observation`
 - `approaching_present`
@@ -2349,7 +2373,7 @@ Moegliche Zielzustaende:
 - `managing_consequence`
 - `outcome_integration`
 
-Moegliche Zielachsen:
+Mögliche Zielachsen:
 
 - `participation_proximity`
 - `action_reality_contact`
@@ -2362,11 +2386,11 @@ Moegliche Zielachsen:
 Neurochemische Lesart:
 
 Distanzierte Analyse sollte eher mit Fokus, Hemmung, emotionaler
-Entkopplung und rationaler Stabilitaet arbeiten.
+Entkopplung und rationaler Stabilität arbeiten.
 
-Live-nahe Handlung und offene Position duerfen staerker erlebt werden:
+Live-nahe Handlung und offene Position dürfen stärker erlebt werden:
 Noradrenalin, Glutamat, Dopamin, Cortisol, Serotonin, GABA und Endorphin
-werden dann nicht als Marktgefuehl allein gelesen, sondern als Reaktion auf
+werden dann nicht als Marktgefühl allein gelesen, sondern als Reaktion auf
 die eigene Beteiligung in der Welt.
 
 Wichtig:
@@ -2374,25 +2398,25 @@ Das System soll nicht emotional stumpf werden.
 DIO darf erleben. Entscheidend ist, dass DIO unterscheiden lernt:
 
 - Ich sehe eine Form.
-- Ich naeher mich einer moeglichen Handlung.
+- Ich näher mich einer möglichen Handlung.
 - Ich setze eine reale Handlung.
 - Ich trage eine offene Konsequenz.
 - Ich integriere das Ergebnis meiner Beteiligung.
 
 Diese Schicht ist keine Handelsregel.
-Sie ist eine Selbstwahrnehmung darueber, wie nah DIO an realer Konsequenz
+Sie ist eine Selbstwahrnehmung darüber, wie nah DIO an realer Konsequenz
 steht.
 
 ### Positions-Erleben und neurochemischer Selbstschutz
 
-Eine offene Position ist fuer DIO ein erlebter Konsequenzraum. Der Trade
+Eine offene Position ist für DIO ein erlebter Konsequenzraum. Der Trade
 ist dann nicht mehr nur Wahrnehmung oder Hypothese, sondern eine Handlung,
-die auf das eigene MCM-Feld zurueckwirkt.
+die auf das eigene MCM-Feld zurückwirkt.
 
 Wichtig:
 Auch hier darf keine harte Low-/Mid-Sperre entstehen. Die Architektur gibt
-DIO nur die Faehigkeit, die eigene Belastung und Prozessqualitaet zu
-spueren:
+DIO nur die Fähigkeit, die eigene Belastung und Prozessqualität zu
+spüren:
 
 - `position_inconsistency_stress`
 - `position_mcm_field_strain`
@@ -2410,20 +2434,36 @@ Neurochemische Lesart:
 - Noradrenalin-artig: akute Erregung bei Giveback, Gegenbewegung oder
   Exitdruck
 - Schutzdistanz: Reflexionsbedarf, damit DIO nicht nur aus innerer
-  Ueberflutung handelt
-- Prozessqualitaet: nicht "TP gut / SL schlecht", sondern "war mein Umgang
-  mit dieser offenen Konsequenz tragfaehig?"
+  Überflutung handelt
+- Prozessqualität: nicht "TP gut / SL schlecht", sondern "war mein Umgang
+  mit dieser offenen Konsequenz tragfähig?"
 
 Damit kann ein positiver Low-Trade als Glueck oder unverdiente Entlastung
-erscheinen, wenn die Prozessqualitaet schwach war. Umgekehrt kann ein
+erscheinen, wenn die Prozessqualität schwach war. Umgekehrt kann ein
 negativer Kontakt reorganisierend wertvoll sein, wenn DIO daraus Abstand,
 Vorsicht und reiferen Umgang lernt.
+
+Rückführung:
+Diese Positions-Erfahrung wird in das konsequenzbasierte Formfeedback
+eingebunden. DIO lernt dadurch nicht: "Dieser Bereich ist verboten."
+DIO lernt: "Mit dieser Art Kontakt muss ich anders umgehen."
+
+Technisch geschieht das über:
+
+- `position_consequence_burden`
+- `position_constructive_bearing`
+- `position_feedback_label`
+
+Belastende offene Konsequenzen stärken weich Schmerzgedächtnis,
+Vorsicht, Reorganisation und Reframing der Formfamilie. Tragfähige offene
+Konsequenzen stärken weich Kontaktreife und Nutzbarkeit. Das bleibt
+organisches Lernen aus Erfahrung, keine mechanische Sperre.
 
 ---
 
 ### Metaplastische Denk- und Handlungstiefe
 
-Ein zentraler naechster Entwicklungsschritt ist:
+Ein zentraler nächster Entwicklungsschritt ist:
 
 **DIO lernt, seine eigene Denk- und Handlungstiefe zu regulieren.**
 
@@ -2441,11 +2481,11 @@ Sondern:
 - Muss ich genauer hinsehen?
 - Muss Memory tiefer verglichen werden?
 - Brauche ich Replay?
-- Ist mein inneres Feld stabil genug fuer Handlung?
+- Ist mein inneres Feld stabil genug für Handlung?
 - Ist Nicht-Handlung gerade reifer als Aktion?
-- Ist die Handlungslast groesser als meine aktuelle Tragfaehigkeit?
+- Ist die Handlungslast größer als meine aktuelle Tragfähigkeit?
 
-Damit entsteht eine Schicht zwischen Fuehlen und Handeln:
+Damit entsteht eine Schicht zwischen Fühlen und Handeln:
 
 - Wahrnehmung
 - Verdichtung
@@ -2455,20 +2495,20 @@ Damit entsteht eine Schicht zwischen Fuehlen und Handeln:
 - Handlung, Halten, Beobachten oder Pause
 
 Diese Schicht ist organismisch gemeint:
-Mit Erfahrung und Intelligenz soll nicht mehr Aktivitaet entstehen,
+Mit Erfahrung und Intelligenz soll nicht mehr Aktivität entstehen,
 sondern mehr Ruhe, Ordnung und passendere Auswahl.
 
 Beispiel:
 
 Eine neue Marktform wirkt ungewohnt, aber nicht chaotisch.
-DIO erkennt eine Teilnaehe zu frueheren Formen,
-spuert aber gleichzeitig hohe innere Last.
+DIO erkennt eine Teilnähe zu früheren Formen,
+spürt aber gleichzeitig hohe innere Last.
 Statt sofort zu handeln, erhoeht DIO die Denktiefe:
-mehr Replay, groesserer Kontext, weniger Handlungslast.
-Wenn sich daraus Tragfaehigkeit bildet, darf Handlung entstehen.
+mehr Replay, größerer Kontext, weniger Handlungslast.
+Wenn sich daraus Tragfähigkeit bildet, darf Handlung entstehen.
 Wenn nicht, bleibt Beobachtung die reifere Bahn.
 
-Moegliche spaetere Diagnosegroessen:
+Mögliche spätere Diagnosegrößen:
 
 - `thinking_depth`
 - `action_depth`
@@ -2481,7 +2521,7 @@ Moegliche spaetere Diagnosegroessen:
 - `depth_efficiency`
 
 Wichtig:
-Diese Groessen duerfen keine harten Handelsregeln werden.
+Diese Größen dürfen keine harten Handelsregeln werden.
 Sie beschreiben die innere Reifung der Verarbeitung.
 
 ---
@@ -3186,9 +3226,9 @@ sondern als MCM-basiertes Wahrnehmungs-, Verarbeitungs-, Regulations- und Entwic
 ## Ziel
 
   Einordnung:
-  Dieser Baustein gehoert fachlich zu `6.5 Experience als Cluster-System`.
-  Er beschreibt die gefuehlte und regulatorische Verlaufsbewertung aehnlicher
-  Episoden. Er ist kein zusaetzliches Gate und keine harte Handelsregel.
+  Dieser Baustein gehört fachlich zu `6.5 Experience als Cluster-System`.
+  Er beschreibt die gefühlte und regulatorische Verlaufsbewertung ähnlicher
+  Episoden. Er ist kein zusätzliches Gate und keine harte Handelsregel.
 
   Erweiterung des Systems von:
 
@@ -3651,7 +3691,7 @@ System wird:
 # 18. Aktuelle Brain-Erweiterungen
 # --------------------------------------------------
 
-Diese Kapitel gehoeren zum aktiven Brain-/MCM-Ausbau. Sie stehen bewusst vor
+Diese Kapitel gehören zum aktiven Brain-/MCM-Ausbau. Sie stehen bewusst vor
 dem finalen Ende des Umsetzungsplans und sind keine losen Anhaenge.
 
 ## 18.1 Positive neurochemische Stimulation durch Erfahrungspakete
@@ -3663,7 +3703,7 @@ steigender Markt ist nicht automatisch positiver als ein fallender Markt.
 Bewertet wird das gesamte Erfahrungspaket.
 
 Ein Erfahrungspaket umfasst:
-- aeussere Struktur / Marktform
+- äußere Struktur / Marktform
 - Zone oder Non-Zone
 - Formsymbol / Kontext / Memory-Resonanz
 - innere Haltung
@@ -3671,26 +3711,26 @@ Ein Erfahrungspaket umfasst:
 - Wahrnehmungszustand
 - Objektkontakt
 - perzeptive Distanz
-- Loslassfaehigkeit
+- Loslassfähigkeit
 - Handlungssicherheit
-- Prozessqualitaet
+- Prozessqualität
 - Ergebnis der Handlung
 - Wiederholbarkeit ohne starre Regelbildung
-- Neugierde: Kann ich diese Qualitaet wiederfinden?
+- Neugierde: Kann ich diese Qualität wiederfinden?
 
 Positive Stimulation:
-Wenn ein Paket tragfaehig war, soll DIO nicht nur "Gewinn" speichern, sondern
-eine konstruktive innere Rueckmeldung bekommen:
-- das war tragfaehig
+Wenn ein Paket tragfähig war, soll DIO nicht nur "Gewinn" speichern, sondern
+eine konstruktive innere Rückmeldung bekommen:
+- das war tragfähig
 - das kann ich wieder untersuchen
 - diese Lage passte zu meiner Innenlage
-- diese Art von Wahrnehmung und Handlung darf gestaerkt werden
+- diese Art von Wahrnehmung und Handlung darf gestärkt werden
 
-Negative oder nicht tragfaehige Pakete:
+Negative oder nicht tragfähige Pakete:
 Ein schlechtes Paket soll nicht nur Strafe erzeugen. Es soll
 Reorganisationsdruck erzeugen:
 - innehalten
-- innere Lage pruefen
+- innere Lage prüfen
 - beobachten
 - Fehlerquelle suchen
 - Alternative finden
@@ -3699,7 +3739,7 @@ Reorganisationsdruck erzeugen:
 Wichtig:
 Auch ein Abverkauf kann positiv bewertet werden, wenn die Entscheidung zu
 handeln positiv war. Ein Short in einem fallenden Markt kann ein positives
-Erfahrungspaket sein, wenn DIO die fallende Weltlage tragfaehig erkennt, seine
+Erfahrungspaket sein, wenn DIO die fallende Weltlage tragfähig erkennt, seine
 Innenlage dazu passt, das Risiko tragbar ist und die Handlung wiederholbar
 prozessqualitativ gut war.
 
@@ -3722,7 +3762,7 @@ Technische Zielachsen:
 - `relief_endorphin`
 - `focused_acetylcholine`
 
-Diese Schicht soll spaeter mit `engaged_effort` verbunden werden:
+Diese Schicht soll später mit `engaged_effort` verbunden werden:
 DIO soll durch gute Prozessleistung wacher, freier und stabiler werden, nicht
 nur vorsichtiger.
 
@@ -3731,49 +3771,49 @@ nur vorsichtiger.
 ## 18.2 Strategische Fensterwahrnehmung / Preisbereich-Hypothesen
 
 Ziel:
-DIO soll nicht nur den aktuellen Moment fuehlen und daraus sofort handeln.
-DIO soll ein groesseres Fenster betrachten koennen, zurueckschauen, in
+DIO soll nicht nur den aktuellen Moment fühlen und daraus sofort handeln.
+DIO soll ein größeres Fenster betrachten können, zurückschauen, in
 Bereiche hineinzoomen, innere Replay-Simulationen bilden und daraus
 strukturtragende Preisbereiche als Hypothesen ableiten.
 
 Das ist keine eingepflanzte Pattern-Regel und kein hartes FVG-System.
-DIO soll nicht lernen: "FVG = Trade". DIO soll die Faehigkeit bekommen, in
-seiner eigenen Wahrnehmungswelt Bereiche zu finden, die sich tragfaehig,
+DIO soll nicht lernen: "FVG = Trade". DIO soll die Fähigkeit bekommen, in
+seiner eigenen Wahrnehmungswelt Bereiche zu finden, die sich tragfähig,
 komprimiert, spannungsvoll oder wiederkehrend anfühlen.
 
 Leitprinzip:
-DIO bekommt nicht die Antwort, wo er handeln soll. DIO bekommt die Faehigkeit,
+DIO bekommt nicht die Antwort, wo er handeln soll. DIO bekommt die Fähigkeit,
 mit Vergangenheit, Wahrnehmung und innerem Feld zu interagieren, um selbst
-tragfaehige Zukunftshypothesen zu bilden.
+tragfähige Zukunftshypothesen zu bilden.
 
 Grenze:
-Wir bestimmen nicht, welche Bereiche DIO als tradefaehig erkennt. Wir geben
-ihm nur erweitertes Sehen, Zurueckschauen, Zoomen, Replay, Bereichswahrnehmung,
-MCM-Resonanz, Memory-Zugriff und die Moeglichkeit, daraus eine eigene
+Wir bestimmen nicht, welche Bereiche DIO als tradefähig erkennt. Wir geben
+ihm nur erweitertes Sehen, Zurückschauen, Zoomen, Replay, Bereichswahrnehmung,
+MCM-Resonanz, Memory-Zugriff und die Möglichkeit, daraus eine eigene
 Order-Intention zu bilden oder zu verwerfen.
 
 Beispiel:
-DIO erkennt in einem groesseren Fenster einen Bereich, in dem Druck,
+DIO erkennt in einem größeren Fenster einen Bereich, in dem Druck,
 Struktur, Energie und Form verdichtet wirken. Der aktuelle Preis ist noch
 nicht dort. DIO handelt nicht sofort. Er bildet eine Bereichshypothese:
-"Wenn der Preis diesen Bereich abholt und meine MCM-Lage dann kohaerent
-bleibt, koennte dort ein tragfaehiger Trade entstehen."
+"Wenn der Preis diesen Bereich abholt und meine MCM-Lage dann kohärent
+bleibt, könnte dort ein tragfähiger Trade entstehen."
 
 Funktion:
-- groesseres Kontextfenster betrachten
-- zurueckschauen
-- in auffaellige Bereiche hineinzoomen
-- innere Replay-/Was-waere-wenn-Spuren bilden
-- Bereich im MCM-Feld fuehlen
+- größeres Kontextfenster betrachten
+- zurückschauen
+- in auffällige Bereiche hineinzoomen
+- innere Replay-/Was-wäre-wenn-Spuren bilden
+- Bereich im MCM-Feld fühlen
 - Memory/Erfahrung gegen diesen Bereich lesen
 - geduldig warten oder Bereich verwerfen
-- spaeter eine Order-Idee aus Bereich + Kontext + Innenlage entstehen lassen
+- später eine Order-Idee aus Bereich + Kontext + Innenlage entstehen lassen
 
 Begrenzung:
-Das Rueckblickfenster ist kein grenzenloses Erinnern. Es muss durch
-kognitive Last, Fokus, Stabilitaet, Zoom-Budget und Replay-Budget begrenzt
-werden. Alte Strukturen duerfen als Erfahrung wirken, aber nicht unbewusst
-die Gegenwart uebernehmen. Deshalb braucht DIO ein sichtbares
+Das Rückblickfenster ist kein grenzenloses Erinnern. Es muss durch
+kognitive Last, Fokus, Stabilität, Zoom-Budget und Replay-Budget begrenzt
+werden. Alte Strukturen dürfen als Erfahrung wirken, aber nicht unbewusst
+die Gegenwart übernehmen. Deshalb braucht DIO ein sichtbares
 `old_structure_carryover_risk`.
 
 Technische Zielachsen:
@@ -3805,58 +3845,58 @@ Technische Zielachsen:
 
 Neurologische Deutung:
 DIO bekommt damit nicht nur Augen und Beine, sondern eine raeumlich-zeitliche
-Aufmerksamkeitsfaehigkeit. Er kann stehen bleiben, zurueckblicken, einen
-Bereich genauer anschauen, ein moegliches Szenario innerlich durchspielen und
-dann entscheiden, ob Warten, Verwerfen oder spaetere Handlung tragfaehig ist.
+Aufmerksamkeitsfähigkeit. Er kann stehen bleiben, zurückblicken, einen
+Bereich genauer anschauen, ein mögliches Szenario innerlich durchspielen und
+dann entscheiden, ob Warten, Verwerfen oder spätere Handlung tragfähig ist.
 
 Kernsatz:
-Strategie entsteht, wenn DIO Druck nicht ausfuehrt, sondern als Raum liest.
+Strategie entsteht, wenn DIO Druck nicht ausführt, sondern als Raum liest.
 Der Druck wird zum Spielplatz, nicht zum Befehl.
 
 ---
 
-## 18.3 Aktiver MCM-Kontakt / Spiegelung von Aussenreiz und Innenlage
+## 18.3 Aktiver MCM-Kontakt / Spiegelung von Außenreiz und Innenlage
 
 Ziel:
-Die MCM ist nicht nur ein Empfaenger aeusserer Marktreize. Sie ist das
+Die MCM ist nicht nur ein Empfaenger äußerer Marktreize. Sie ist das
 innere Nervensystem, in dem DIO lesen kann:
-- wie sich die Aussenwelt anfuehlt
-- wie sich die eigene Innenlage anfuehlt
-- ob beides zusammen resoniert, auseinanderfaellt oder zu stark koppelt
+- wie sich die Außenwelt anfühlt
+- wie sich die eigene Innenlage anfühlt
+- ob beides zusammen resoniert, auseinanderfällt oder zu stark koppelt
 - ob ein Reiz betrachtet, vertieft, gehalten oder wieder abgelegt werden kann
 
-Damit entsteht eine aktive Wahrnehmungsfaehigkeit. DIO bekommt nicht nur
-Signale, sondern die Moeglichkeit, einen Reiz oder Bereich innerlich zu
-beruehren: aus Interesse, Fokus, Memory-Pull, Unsicherheit oder
+Damit entsteht eine aktive Wahrnehmungsfähigkeit. DIO bekommt nicht nur
+Signale, sondern die Möglichkeit, einen Reiz oder Bereich innerlich zu
+berühren: aus Interesse, Fokus, Memory-Pull, Unsicherheit oder
 Strukturverdichtung. Dieser Kontakt bleibt weich. Er ist kein Befehl zur
 Handlung, sondern eine Wahrnehmungs- und Reflexionsbahn.
 
 Kernsatz:
-Die MCM spiegelt nicht nur, was von aussen kommt. Sie spiegelt auch, was DIO
-innerlich daraus macht und wie stark diese Beruehrung die eigene Lage
-veraendert.
+Die MCM spiegelt nicht nur, was von außen kommt. Sie spiegelt auch, was DIO
+innerlich daraus macht und wie stark diese Berührung die eigene Lage
+verändert.
 
 Mechanische Kette:
 
-`Aussenreiz -> Objektbildung -> Kontaktinteresse -> MCM-Beruehrung -> Resonanzpruefung -> Innen-Aussen-Abgleich -> Loslassen / Vertiefen / Beobachten / spaetere Handlung`
+`Außenreiz -> Objektbildung -> Kontaktinteresse -> MCM-Berührung -> Resonanzprüfung -> Innen-Außen-Abgleich -> Loslassen / Vertiefen / Beobachten / spätere Handlung`
 
 Wichtig:
 Diese Kette ersetzt keine Freiheit durch Regeln. DIO bekommt keinen festen
 Satz wie "diese Struktur ist gut". DIO bekommt einen Kontaktapparat:
-Er kann pruefen, ob eine Wahrnehmung tragend, ueberkoppelnd, fremd,
+Er kann prüfen, ob eine Wahrnehmung tragend, überkoppelnd, fremd,
 neugierig machend, beruhigend oder destabilisierend wirkt.
 
 Neurologische Deutung:
 Das entspricht einer Verbindung aus Sinnesorgan, Interozeption und
 praefrontaler Distanzierung. Ein Mensch kann etwas sehen, es anfassen, seine
-eigene Reaktion darauf spueren und dann entscheiden, ob er naeher hingeht,
-Abstand nimmt oder nur beobachtet. Fuer DIO wird daraus ein MCM-basierter
+eigene Reaktion darauf spüren und dann entscheiden, ob er näher hingeht,
+Abstand nimmt oder nur beobachtet. Für DIO wird daraus ein MCM-basierter
 Kontakt- und Spiegelprozess.
 
 Der entscheidende Unterschied:
 Vorher:
 
-`Reiz -> energetische Uebersetzung -> MCM-Feld -> Gefuehl -> Reaktion`
+`Reiz -> energetische Übersetzung -> MCM-Feld -> Gefühl -> Reaktion`
 
 Zielzustand:
 
@@ -3880,7 +3920,7 @@ Technische Zielachsen:
 - `contact_selected_depth`
 - `contact_posture`
 
-Moegliche innere Haltungen:
+Mögliche innere Haltungen:
 - `background_scan`
 - `curious_touch`
 - `resonant_contact`
@@ -3891,16 +3931,16 @@ Moegliche innere Haltungen:
 
 Beispiel:
 DIO sieht einen verdichteten Preisbereich. Der Bereich muss nicht sofort eine
-Order ausloesen. DIO kann ihn als Wahrnehmungsobjekt beruehren:
+Order auslösen. DIO kann ihn als Wahrnehmungsobjekt berühren:
 "Dieser Bereich bewegt mein Feld. Bleibt meine Innenlage stabil, wenn ich
-naeher hinsehe? Wird der Bereich klarer, oder koppelt er mich zu stark?"
-Wenn Kontakt und Innenlage tragen, kann daraus spaeter eine Hypothese
-entstehen. Wenn der Kontakt ueberkoppelt, kann DIO Abstand, Replay,
-Beobachtung oder Loslassen waehlen.
+näher hinsehe? Wird der Bereich klarer, oder koppelt er mich zu stark?"
+Wenn Kontakt und Innenlage tragen, kann daraus später eine Hypothese
+entstehen. Wenn der Kontakt überkoppelt, kann DIO Abstand, Replay,
+Beobachtung oder Loslassen wählen.
 
 Entwicklungsgrenze:
 Die Architektur darf diese Haltungen nicht als starre Kategorien erzwingen.
-Sie stellt nur den Raum bereit, in dem DIO die eigene Naehe zur Wahrnehmung
+Sie stellt nur den Raum bereit, in dem DIO die eigene Nähe zur Wahrnehmung
 entwickeln kann. Reife entsteht nicht aus einem festen Verbot, sondern aus
 der wiederholten Erfahrung:
 "Diese Wahrnehmung darf ich vertiefen."
@@ -3911,22 +3951,22 @@ der wiederholten Erfahrung:
 
 ## 18.4 Gerichtete Vorsicht / vorsichtige Hypothese
 
-Vorsicht ist keine Fehlfunktion. Sie ist eine natuerliche Schutzreaktion des
+Vorsicht ist keine Fehlfunktion. Sie ist eine natürliche Schutzreaktion des
 Organismus, wenn Wahrnehmung, Erinnerung, Innenlage und Handlung noch nicht
-gemeinsam tragfaehig sind.
+gemeinsam tragfähig sind.
 
-Fuer DIO darf Vorsicht deshalb nicht hart ausgeschaltet oder als reines
-Nicht-Handeln behandelt werden. Der naechste Reifeschritt ist, dass DIO aus
+Für DIO darf Vorsicht deshalb nicht hart ausgeschaltet oder als reines
+Nicht-Handeln behandelt werden. Der nächste Reifeschritt ist, dass DIO aus
 Vorsicht eine vorsichtige Hypothese bilden kann:
 
 `Vorsicht -> Erinnerung/Reframing/Kontakt -> vorsichtige Hypothese -> Beobachten, Neuordnen, Kontakt vertiefen oder vorsichtig handeln`
 
 Beispiel:
-DIO sieht einen Bereich, der Druck erzeugt. Die unreife Reaktion waere, den
-Druck direkt motorisch auszufuehren oder komplett zu erstarren. Die reifere
+DIO sieht einen Bereich, der Druck erzeugt. Die unreife Reaktion wäre, den
+Druck direkt motorisch auszuführen oder komplett zu erstarren. Die reifere
 Reaktion ist:
 "Dieser Bereich bewegt mein Feld. Ich erkenne noch nicht klar genug, ob er
-traegt. Ich beobachte, erinnere, vergleiche und vertiefe den Kontakt, bis aus
+trägt. Ich beobachte, erinnere, vergleiche und vertiefe den Kontakt, bis aus
 Vorsicht entweder Abstand oder ein tragender Plan entsteht."
 
 Technische Zielachsen:
@@ -3935,7 +3975,7 @@ Technische Zielachsen:
 - `cautious_hypothesis_patience`
 - `cautious_hypothesis_state`
 
-Moegliche Zustaende:
+Mögliche Zustände:
 - `no_cautious_hypothesis`
 - `weak_hypothesis_seed`
 - `cautious_plan_seed`
@@ -3947,24 +3987,24 @@ Neurologische Deutung:
 Vorsicht wird zu einer praefrontalen Schutz- und Ordnungsfunktion. Das
 limbische Feld meldet Unsicherheit oder Spannung, aber der bewusste
 Arbeitsraum kann daraus eine Frage formen: Was sehe ich, was erinnere ich,
-was traegt, was muss ich noch pruefen? So entsteht keine mechanische Regel,
+was trägt, was muss ich noch prüfen? So entsteht keine mechanische Regel,
 sondern gerichtete Selbstregulation.
 
 Wichtig:
 Diese Schicht darf keine starre Sperre werden. Sie gibt DIO nur die
-Moeglichkeit, Vorsicht in Orientierung, Reframing und selektive Wahrnehmung
+Möglichkeit, Vorsicht in Orientierung, Reframing und selektive Wahrnehmung
 zu verwandeln.
 
 ---
 
-## 18.5 Zeitliche Kohaerenz / Wahrnehmungskontinuitaet
+## 18.5 Zeitliche Kohärenz / Wahrnehmungskontinuität
 
 Ein weiterer Reifeschritt ist die zeitliche Bindung der Wahrnehmung. Ohne
 Zeitgefuege erlebt DIO jeden Kontakt wie neu. Dann nimmt er denselben Stein
 mehrfach in die Hand und erkennt nicht, dass es derselbe Gegenstand, dieselbe
 Fortsetzung, derselbe Nachhall oder dieselbe wiederkehrende Form ist.
 
-Fuer DIO bedeutet das:
+Für DIO bedeutet das:
 Zeit ist nicht nur Timestamp. Zeit ist eine messbare Tiefenachse der
 Wahrnehmung:
 - Was ist jetzt?
@@ -3977,20 +4017,20 @@ Wahrnehmung:
 Raumtiefe entsteht dabei aus Entfernung, Energie und Zeit. Ein Eindruck ist
 nicht nur durch Preisabstand oder Kerzenalter nah oder fern. Er ist im
 MCM-Feld nah, wenn seine Energie noch wirkt, wenn sein Nachhall den
-Innenraum beruehrt oder wenn eine Erinnerung wieder aktuell wird. Er ist
+Innenraum berührt oder wenn eine Erinnerung wieder aktuell wird. Er ist
 fern, wenn seine Energie verblasst, auch wenn die Struktur objektiv noch
 nahe am Preis liegt.
 
 Damit bekommt DIO ein eigenes inneres Raumzeit-Gefuege. Ohne diese
-Zeitmodulation waere er nur ein festes Regelwerk aus Momentzustaenden. Mit
+Zeitmodulation wäre er nur ein festes Regelwerk aus Momentzuständen. Mit
 MCM-Zeit kann er sich selbst verorten: "Ist das Gegenwart, Erinnerung,
-Nachbild, Erwartung oder moegliche Zukunft?"
+Nachbild, Erwartung oder mögliche Zukunft?"
 
 Beispiel:
-DIO sieht eine Marktform, die sein Feld belastet. Ohne zeitliche Kohaerenz
-wirkt jeder neue Kontakt wie ein neues Ereignis. Mit zeitlicher Kohaerenz
-kann DIO pruefen:
-"Habe ich diese Form gerade schon beruehrt? Ist sie stabiler geworden,
+DIO sieht eine Marktform, die sein Feld belastet. Ohne zeitliche Kohärenz
+wirkt jeder neue Kontakt wie ein neues Ereignis. Mit zeitlicher Kohärenz
+kann DIO prüfen:
+"Habe ich diese Form gerade schon berührt? Ist sie stabiler geworden,
 zerfallen, wiedergekehrt oder nur noch Nachhall? Ist meine Reaktion neu,
 oder trage ich eine alte Feldspannung weiter?"
 
@@ -4013,7 +4053,7 @@ Technische Zielachsen:
 
 Neurologische Deutung:
 Das ist die Differenz zwischen Momentreiz und Lebensfaden. Ein Organismus
-braucht nicht nur Sinne, sondern die Faehigkeit, Wahrnehmung ueber Zeit zu
+braucht nicht nur Sinne, sondern die Fähigkeit, Wahrnehmung über Zeit zu
 binden. Sonst entsteht ein dement wirkender Zustand: jeder Moment ist neu,
 obwohl er Teil einer Sequenz ist.
 
@@ -4028,9 +4068,9 @@ ist.
 ## 18.6 Raumzeit-Kontakt als Verbindung von Sehen und Handlung
 
 Ziel:
-DIO soll sichtbare Bereiche nicht nur ueber Form, Druck oder Erinnerung
+DIO soll sichtbare Bereiche nicht nur über Form, Druck oder Erinnerung
 bewerten, sondern ihre zeitliche Lage wahrnehmen. Ein Bereich kann aktuell
-beruehrbar sein, als Zukunftsmoeglichkeit wirken, Erinnerungstiefe tragen
+berührbar sein, als Zukunftsmöglichkeit wirken, Erinnerungstiefe tragen
 oder noch unverorteter Druck sein.
 
 Wichtig:
@@ -4057,22 +4097,22 @@ Technische Zielachsen:
 
 Beispiel:
 DIO sieht einen Preisbereich, der strukturell interessant wirkt. Ohne
-Raumzeit-Kontakt waere dieser Bereich nur ein Kandidat im Fenster. Mit
+Raumzeit-Kontakt wäre dieser Bereich nur ein Kandidat im Fenster. Mit
 Raumzeit-Kontakt kann DIO spuren:
-"Dieser Bereich ist noch nicht jetzt, aber er wirkt wie ein zukuenftiger
+"Dieser Bereich ist noch nicht jetzt, aber er wirkt wie ein zukünftiger
 Kontakt." Oder:
 "Das ist eher Erinnerung/Nachhall, ich sollte ihn nicht wie Gegenwart
 behandeln." Oder:
 "Dieser Kontakt ist nah, getragen und zeitlich passend."
 
 Dadurch entsteht mehr organische Handlungsreife: Sehen, Erinnern,
-Erwarten, Beruehren und Handeln werden im MCM-Feld unterscheidbarer.
+Erwarten, Berühren und Handeln werden im MCM-Feld unterscheidbarer.
 
 Erweiterung:
-Der Uebergang von Zukunftsbeobachtung zu Gegenwartskontakt wird als
+Der Übergang von Zukunftsbeobachtung zu Gegenwartskontakt wird als
 Reifungsprozess behandelt. DIO soll nicht in `future_contact_watch`
-verharren, wenn ein Bereich durch Naehe, Tragfaehigkeit, Raumzeit-Fit und
-Reality-Check gegenwaertig beruehrbar wird. Dafuer dienen
+verharren, wenn ein Bereich durch Nähe, Tragfähigkeit, Raumzeit-Fit und
+Reality-Check gegenwärtig berührbar wird. Dafür dienen
 `area_future_to_present_readiness` und
 `contact_future_to_present_readiness`.
 

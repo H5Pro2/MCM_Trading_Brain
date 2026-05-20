@@ -5336,7 +5336,9 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
             "diffuse_open_development_pressure;posture_development_hint;"
             "metaregulator_state;metaregulator_balance;regulatory_second_order_load;"
             "subconscious_field_pressure;subconscious_habituation;subconscious_filter_strength;"
-            "subconscious_buffering;subconscious_leakage;conscious_selection_pressure;"
+            "subconscious_buffering;subconscious_leakage;subconscious_afterimage_depth;"
+            "subconscious_afterimage_pressure;subconscious_afterimage_bearing;subconscious_afterimage_clarity;"
+            "subconscious_afterimage_release;subconscious_afterimage_reflection_pull;conscious_selection_pressure;"
             "conscious_workspace_focus;conscious_workspace_load;conscious_gate_balance;"
             "integration_strain_value;integration_sorting_need;integration_reframe_pull;"
             "integration_memory_recall;integration_contact_deepening;integration_response_strength;integration_response_state;"
@@ -5460,6 +5462,12 @@ def _record_memory_thinking_protocol(bot, runtime_result, meta_regulation_state=
         f"{float(meta.get('subconscious_filter_strength', 0.0) or 0.0):.4f}",
         f"{float(meta.get('subconscious_buffering', 0.0) or 0.0):.4f}",
         f"{float(meta.get('subconscious_leakage', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_clarity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_release', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_reflection_pull', 0.0) or 0.0):.4f}",
         f"{float(meta.get('conscious_selection_pressure', 0.0) or 0.0):.4f}",
         f"{float(meta.get('conscious_workspace_focus', 0.0) or 0.0):.4f}",
         f"{float(meta.get('conscious_workspace_load', 0.0) or 0.0):.4f}",
@@ -5904,7 +5912,9 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
             "diffuse_open_development_pressure;posture_development_hint;"
             "metaregulator_state;metaregulator_balance;regulatory_second_order_load;"
             "subconscious_field_pressure;subconscious_habituation;subconscious_filter_strength;"
-            "subconscious_buffering;subconscious_leakage;conscious_selection_pressure;"
+            "subconscious_buffering;subconscious_leakage;subconscious_afterimage_depth;"
+            "subconscious_afterimage_pressure;subconscious_afterimage_bearing;subconscious_afterimage_clarity;"
+            "subconscious_afterimage_release;subconscious_afterimage_reflection_pull;conscious_selection_pressure;"
             "conscious_workspace_focus;conscious_workspace_load;conscious_gate_balance;"
             "integration_strain_value;integration_sorting_need;integration_reframe_pull;"
             "integration_memory_recall;integration_contact_deepening;integration_response_strength;integration_response_state;"
@@ -6014,6 +6024,12 @@ def _record_field_decision_protocol(bot, runtime_result, meta_regulation_state=N
         f"{float(meta.get('subconscious_filter_strength', 0.0) or 0.0):.4f}",
         f"{float(meta.get('subconscious_buffering', 0.0) or 0.0):.4f}",
         f"{float(meta.get('subconscious_leakage', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_depth', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_pressure', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_bearing', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_clarity', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_release', 0.0) or 0.0):.4f}",
+        f"{float(meta.get('subconscious_afterimage_reflection_pull', 0.0) or 0.0):.4f}",
         f"{float(meta.get('conscious_selection_pressure', 0.0) or 0.0):.4f}",
         f"{float(meta.get('conscious_workspace_focus', 0.0) or 0.0):.4f}",
         f"{float(meta.get('conscious_workspace_load', 0.0) or 0.0):.4f}",
@@ -9933,7 +9949,16 @@ def _advance_thought_state(thought_state=None, felt_state=None, temporal_percept
 # --------------------------------------------------
 # PRICE BUILD
 # --------------------------------------------------
-def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, bot=None):
+def derive_trade_plan_from_brain(
+    side,
+    candle_state,
+    fused,
+    stimulus,
+    snapshot,
+    bot=None,
+    strategic_window_state=None,
+    form_symbol_state=None,
+):
 
     decision = str(side or "").upper().strip()
     if decision not in ("LONG", "SHORT"):
@@ -10012,13 +10037,26 @@ def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, 
     strategic_entry_price = float(entry_price)
     strategic_entry_weight = 0.0
     strategic_entry_fit = 0.0
+    area_motor_intention = 0.0
+    area_motor_distance_fit = 0.0
+    impulse_entry_intention = 0.0
+    area_entry_intention = 0.0
+    entry_choice_conflict = 0.0
+    entry_choice_bearing = 0.0
+    area_direct_readiness = 0.0
+    area_motor_restraint = 0.0
+    entry_choice_state = "impulse_only"
     strategic_entry_mode = "impulse_contact"
     strategic_area_focus_id = "-"
     strategic_area_low = 0.0
     strategic_area_high = 0.0
 
-    strategic_window = dict(getattr(bot, "strategic_window_state", {}) or {}) if bot is not None else {}
-    form_symbol = dict(getattr(bot, "form_symbol_state", {}) or {}) if bot is not None else {}
+    strategic_window = dict(strategic_window_state or {})
+    if not strategic_window and bot is not None:
+        strategic_window = dict(getattr(bot, "strategic_window_state", {}) or {})
+    form_symbol = dict(form_symbol_state or {})
+    if not form_symbol and bot is not None:
+        form_symbol = dict(getattr(bot, "form_symbol_state", {}) or {})
 
     def _clip(value, lo=0.0, hi=1.0):
         try:
@@ -10078,6 +10116,7 @@ def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, 
         area_patience_quality = _clip(selected_strategic_area.get("area_patience_quality", 0.0))
         area_invalidity_pressure = _clip(selected_strategic_area.get("area_invalidity_pressure", 0.0))
         area_action_timing_fit = _clip(selected_strategic_area.get("area_action_timing_fit", 0.0))
+        area_spacetime_fit = _clip(selected_strategic_area.get("area_spacetime_fit", 0.0))
         area_present_contact = _clip(selected_strategic_area.get("area_present_contact", 0.0))
         area_afterimage = _clip(selected_strategic_area.get("area_afterimage", 0.0))
         area_temporal_relevance = _clip(selected_strategic_area.get("area_temporal_relevance", 0.0))
@@ -10107,6 +10146,85 @@ def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, 
                 strategic_anchor = impulse_entry_price
         anchor_distance = abs(strategic_anchor - close_price)
         anchor_distance_fit = _clip(1.0 - (anchor_distance / max(base_move * 3.8, area_span * 1.6, 1e-9)))
+        area_motor_distance_fit = float(anchor_distance_fit)
+        area_motor_intention = _clip(
+            (area_order_intention * 0.22)
+            + (area_bearing_quality * 0.18)
+            + (area_action_timing_fit * 0.16)
+            + (area_spacetime_fit * 0.12)
+            + (area_replay_fit * 0.10)
+            + (area_present_contact * 0.08)
+            + (contact_fit * 0.10)
+            + (side_fit * 0.08)
+            + (anchor_distance_fit * 0.06)
+            - (area_invalidity_pressure * 0.16)
+            - (area_afterimage * 0.08)
+        )
+        impulse_entry_intention = _clip(
+            (abs(focus_direction) * 0.20)
+            + (focus_confidence * 0.16)
+            + (target_lock * 0.16)
+            + (filtered_optic_flow * 0.12)
+            + (directional_competition * 0.10)
+            + (max(0.0, directional_score) * 0.10)
+            + (conviction_boost * 0.10)
+            - (caution_penalty * 0.12)
+            - (volatility_penalty * 0.08)
+        )
+        area_entry_intention = _clip(
+            (area_motor_intention * 0.34)
+            + (area_order_intention * 0.16)
+            + (area_bearing_quality * 0.14)
+            + (area_spacetime_fit * 0.10)
+            + (area_replay_fit * 0.10)
+            + (anchor_distance_fit * 0.10)
+            + (contact_fit * 0.08)
+            - (area_invalidity_pressure * 0.12)
+            - (area_afterimage * 0.06)
+        )
+        entry_choice_conflict = _clip(
+            min(impulse_entry_intention, area_entry_intention)
+            * (1.0 - min(1.0, abs(impulse_entry_intention - area_entry_intention) * 1.8))
+        )
+        entry_choice_bearing = _clip(
+            (area_entry_intention * 0.28)
+            + (area_bearing_quality * 0.18)
+            + (area_spacetime_fit * 0.14)
+            + (area_motor_distance_fit * 0.12)
+            + (contact_fit * 0.12)
+            + (area_action_timing_fit * 0.10)
+            - (area_invalidity_pressure * 0.14)
+            - (area_afterimage * 0.08)
+        )
+        area_over_impulse = float(area_entry_intention - impulse_entry_intention)
+        area_direct_readiness = _clip(
+            (area_entry_intention * 0.22)
+            + (entry_choice_bearing * 0.20)
+            + (contact_fit * 0.18)
+            + (area_action_timing_fit * 0.14)
+            + (area_spacetime_fit * 0.10)
+            + (area_motor_distance_fit * 0.08)
+            + (max(0.0, area_over_impulse) * 0.18)
+            - (entry_choice_conflict * 0.10)
+            - (area_invalidity_pressure * 0.14)
+            - (area_afterimage * 0.08)
+        )
+        area_motor_restraint = _clip(
+            (entry_choice_conflict * 0.28)
+            + (max(0.0, -area_over_impulse) * 0.22)
+            + (contact_carefulness * max(0.0, 0.42 - contact_maturity) * 0.20)
+            + (area_invalidity_pressure * 0.16)
+            + (area_afterimage * 0.12)
+            + (max(0.0, 0.34 - area_direct_readiness) * 0.20)
+        )
+        if area_entry_intention > (impulse_entry_intention + 0.05) and entry_choice_bearing >= 0.26:
+            entry_choice_state = "area_preferred"
+        elif entry_choice_conflict >= 0.18 and entry_choice_bearing >= 0.24:
+            entry_choice_state = "entry_choice_conflict"
+        elif area_entry_intention >= 0.24 and entry_choice_bearing >= 0.22:
+            entry_choice_state = "area_available"
+        else:
+            entry_choice_state = "impulse_preferred"
         strategic_entry_fit = _clip(
             (area_order_intention * 0.24)
             + (area_bearing_quality * 0.22)
@@ -10122,15 +10240,40 @@ def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, 
             - (area_afterimage * 0.12)
             - (contact_carefulness * max(0.0, 0.38 - contact_maturity) * 0.10)
         )
-        if strategic_anchor > 0.0 and side_fit > 0.02 and strategic_entry_fit > 0.22:
-            strategic_entry_weight = min(0.58, max(0.0, (strategic_entry_fit - 0.22) * 0.96))
+        if (
+            strategic_anchor > 0.0
+            and side_fit > 0.02
+            and (
+                strategic_entry_fit > 0.22
+                or area_motor_intention > 0.24
+                or entry_choice_state in ("area_preferred", "entry_choice_conflict", "area_available")
+            )
+        ):
+            strategic_entry_weight = min(
+                0.58,
+                max(
+                    0.0,
+                    ((strategic_entry_fit - 0.18) * 0.72)
+                    + ((area_motor_intention - 0.24) * 0.52),
+                    ((area_entry_intention - impulse_entry_intention) * 0.38)
+                    + (entry_choice_bearing * 0.22)
+                    + (entry_choice_conflict * 0.04)
+                    + (area_direct_readiness * 0.18)
+                    - (area_motor_restraint * 0.16)
+                    - 0.07,
+                ),
+            )
+            if entry_choice_state == "entry_choice_conflict":
+                strategic_entry_weight *= 1.0 - min(0.26, area_motor_restraint * 0.42)
+            if area_direct_readiness < 0.34:
+                strategic_entry_weight *= 0.84 + (area_direct_readiness * 0.32)
             strategic_entry_price = float((impulse_entry_price * (1.0 - strategic_entry_weight)) + (strategic_anchor * strategic_entry_weight))
             entry_price = float(strategic_entry_price)
             if decision == "LONG":
                 validity_center = entry_price + min(abs(close_price - entry_price) * 0.28, base_move * 0.18)
             else:
                 validity_center = entry_price - min(abs(close_price - entry_price) * 0.28, base_move * 0.18)
-            strategic_entry_mode = "area_contact_blend" if strategic_entry_weight < 0.44 else "area_contact_entry"
+            strategic_entry_mode = "area_contact_intention" if strategic_entry_weight < 0.44 or area_direct_readiness < 0.36 else "area_contact_entry"
             strategic_area_focus_id = str(selected_strategic_area.get("area_focus_id", "-") or "-")
             strategic_area_low = float(area_low)
             strategic_area_high = float(area_high)
@@ -10310,6 +10453,15 @@ def derive_trade_plan_from_brain(side, candle_state, fused, stimulus, snapshot, 
         "strategic_entry_price": float(strategic_entry_price),
         "strategic_entry_weight": float(strategic_entry_weight),
         "strategic_entry_fit": float(strategic_entry_fit),
+        "area_motor_intention": float(area_motor_intention),
+        "area_motor_distance_fit": float(area_motor_distance_fit),
+        "impulse_entry_intention": float(impulse_entry_intention),
+        "area_entry_intention": float(area_entry_intention),
+        "entry_choice_conflict": float(entry_choice_conflict),
+        "entry_choice_bearing": float(entry_choice_bearing),
+        "area_direct_readiness": float(area_direct_readiness),
+        "area_motor_restraint": float(area_motor_restraint),
+        "entry_choice_state": str(entry_choice_state),
         "strategic_area_focus_id": str(strategic_area_focus_id),
         "strategic_area_price_low": float(strategic_area_low),
         "strategic_area_price_high": float(strategic_area_high),
@@ -10473,18 +10625,28 @@ def resolve_fused_decision(candle_state, tension_state, mcm_snapshot, bot=None, 
     elif reject_reason is None:
         reject_reason = "fused_score_too_low"
 
-    rr_value = float(getattr(Config, "RR", 2.0) or 2.0)
+    min_rr_floor = max(0.0, float(getattr(Config, "MIN_RR", 1.0) or 1.0))
+    endogenous_rr_lift = max(
+        0.0,
+        (abs(best_score) * 0.18)
+        + (focus_confidence * 0.14)
+        + (target_lock * 0.12)
+        + (conviction_boost * 0.16)
+        + (felt_bearing_score * 0.10)
+        - (caution_penalty * 0.12)
+        - (volatility_penalty * 0.10)
+    )
+    rr_value = min_rr_floor + endogenous_rr_lift
     risk_pct = float(getattr(Config, "BASE_RISK_PCT", 0.01) or 0.01)
 
     if self_state == "stressed":
         risk_pct *= float(getattr(Config, "MCM_STRESS_RISK_FACTOR", 0.75) or 0.75)
-        rr_value = max(float(getattr(Config, "MIN_RR", rr_value) or rr_value), rr_value * 0.92)
+        rr_value = max(min_rr_floor, rr_value * 0.92)
     elif self_state == "excited":
-        rr_value *= float(getattr(Config, "MCM_EXCITED_RR_FACTOR", 1.15) or 1.15)
-        rr_value = min(rr_value, float(getattr(Config, "MAX_RR", rr_value) or rr_value))
+        rr_value *= 1.0 + min(0.10, endogenous_rr_lift * 0.16)
 
     risk_pct = max(0.0005, risk_pct * (1.0 + risk_shift))
-    rr_value = max(float(getattr(Config, "MIN_RR", rr_value) or rr_value), rr_value * (1.0 + rr_shift))
+    rr_value = max(min_rr_floor, rr_value * (1.0 + rr_shift))
 
     _mcm_decision_debug(
         "MCM_DECISION | "
@@ -11330,16 +11492,19 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
     if bearing_context:
         structure_quality = _b01(bearing_context.get("structure_quality", structure_quality))
     contact_state = dict(meta.get("active_mcm_contact_state", meta.get("active_mcm_contact", {})) or {}) if isinstance(meta, dict) else {}
-    if not contact_state and isinstance(meta.get("meta_regulation_state", {}), dict):
-        meta_regulation = dict(meta.get("meta_regulation_state", {}) or {})
+    meta_regulation = dict(meta.get("meta_regulation_state", {}) or {}) if isinstance(meta.get("meta_regulation_state", {}), dict) else {}
+    if not contact_state and meta_regulation:
         contact_state = dict(meta_regulation.get("active_mcm_contact", {}) or {})
     contact_action_maturity = _b01(contact_state.get("contact_action_maturity", 0.0))
     contact_carrying_quality = _b01(contact_state.get("contact_carrying_quality", 0.0))
     contact_reality_check = _b01(contact_state.get("contact_reality_check", 0.0))
+    contact_temporal_bearing = _b01(contact_state.get("contact_temporal_bearing", meta_regulation.get("contact_temporal_bearing", 0.0)))
     contact_overcoupling_risk = _b01(contact_state.get("contact_overcoupling_risk", 0.0))
     contact_learning_need = _b01(contact_state.get("contact_learning_need", 0.0))
     contact_context_reframe_need = _b01(contact_state.get("contact_context_reframe_need", 0.0))
     contact_regime_mismatch = _b01(contact_state.get("contact_regime_mismatch", 0.0))
+    area_bearing_quality = _b01(meta_regulation.get("area_bearing_quality", meta.get("area_bearing_quality", 0.0)) if isinstance(meta, dict) else 0.0)
+    area_spacetime_fit = _b01(meta_regulation.get("area_spacetime_fit", meta.get("area_spacetime_fit", 0.0)) if isinstance(meta, dict) else 0.0)
     position_intervention_state = dict(meta.get("position_intervention_state", {}) or {}) if isinstance(meta, dict) else {}
     position_experience_state = dict(position_intervention_state.get("position_experience_state", {}) or {})
     position_experience_label = str(
@@ -11429,6 +11594,18 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         outcome_contact_reward = 0.28
 
     development_sample = _bs(((constructive_signal - 0.50) * 1.40) + result_bias)
+    transitional_contact_band = _b01(1.0 - min(1.0, abs(structure_quality - 0.54) / 0.24))
+    transitional_contact_maturation = _b01(
+        (transitional_contact_band * 0.18)
+        + (contact_temporal_bearing * 0.18)
+        + (area_bearing_quality * 0.16)
+        + (area_spacetime_fit * 0.12)
+        + (contact_reality_check * 0.16)
+        + (position_constructive_bearing * 0.16)
+        - (position_consequence_burden * 0.14)
+        - (contact_overcoupling_risk * 0.08)
+    )
+    transitional_contact_maturation = max(0.0, transitional_contact_maturation - 0.30)
     contact_utility_sample = _b01(
         (process_quality * 0.26)
         + (structural_support * 0.20)
@@ -11438,6 +11615,7 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         + (contact_reality_check * 0.08)
         + (emotional_decoupling * 0.04)
         + (position_constructive_bearing * 0.08)
+        + (transitional_contact_maturation * 0.08)
         - (contact_overcoupling_risk * 0.12)
         - (risk_width_pressure * 0.08)
         - (position_consequence_burden * 0.10)
@@ -11465,6 +11643,7 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         + (process_quality * 0.10)
         + (emotional_decoupling * 0.10)
         + (position_constructive_bearing * 0.08)
+        + (transitional_contact_maturation * 0.10)
         - (contact_pain_sample * 0.20)
         - (position_consequence_burden * 0.06)
     )
@@ -11689,6 +11868,8 @@ def _update_form_symbol_development_from_outcome(bot, outcome_reason, position=N
         "position_consequence_residual_for_care": float(position_consequence_residual_for_care),
         "position_consequence_residual_for_memory": float(position_consequence_residual_for_memory),
         "position_constructive_bearing": float(position_constructive_bearing),
+        "transitional_contact_band": float(transitional_contact_band),
+        "transitional_contact_maturation": float(transitional_contact_maturation),
         "position_feedback_label": str(position_experience_label or "-"),
         "position_process_quality": float(position_process_quality),
         "position_held_risk_discomfort": float(position_held_risk_discomfort),
@@ -16637,6 +16818,8 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
     perception_sequence_coherence = float(temporal_perception_state.get("perception_sequence_coherence", 0.0) or 0.0)
     memory_time_distance = float(temporal_perception_state.get("memory_time_distance", 1.0) or 1.0)
     temporal_binding_state = str(temporal_perception_state.get("temporal_binding_state", "unbound_moment") or "unbound_moment")
+    strategic_window_state = dict(getattr(bot, "strategic_window_state", {}) or {}) if bot is not None else {}
+    area_afterimage = float(strategic_window_state.get("area_afterimage", 0.0) or 0.0)
     spacetime_unlocated_pressure = _clip01(
         (max(0.0, 0.34 - temporal_self_location) * 0.56)
         + (max(0.0, 0.30 - mcm_spacetime_depth) * 0.34)
@@ -17045,6 +17228,62 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
             - (conscious_workspace_focus * 0.10),
         ),
     )
+    subconscious_afterimage_depth = _clip01(
+        (felt_afterimage * 0.26)
+        + (temporal_afterimage * 0.26)
+        + (area_afterimage * 0.18)
+        + (max(0.0, temporal_decay - temporal_source_binding) * 0.12)
+        + ((1.0 if temporal_self_location_state == "afterimage_trace" else 0.0) * 0.08)
+        + ((1.0 if temporal_binding_state == "afterimage_contact" else 0.0) * 0.06)
+        + (subconscious_field_pressure * 0.08)
+    )
+    compressed_afterimage_depth = _clip01(subconscious_afterimage_depth ** 0.72)
+    subconscious_afterimage_pressure = _clip01(
+        compressed_afterimage_depth
+        * (
+            0.28
+            + (subconscious_leakage * 0.26)
+            + (spacetime_reflection_need * 0.18)
+            + (max(0.0, 0.42 - temporal_source_binding) * 0.16)
+            + (max(0.0, 0.34 - subconscious_filter_strength) * 0.12)
+        )
+    )
+    subconscious_afterimage_bearing = _clip01(
+        (subconscious_buffering * 0.22)
+        + (subconscious_filter_strength * 0.16)
+        + (temporal_context_depth * 0.16)
+        + (spacetime_memory_bearing * 0.14)
+        + (perception_sequence_coherence * 0.12)
+        + (release_capacity * 0.10)
+        + (emotional_decoupling * 0.08)
+        - (subconscious_afterimage_pressure * 0.16)
+    )
+    subconscious_afterimage_clarity = _clip01(
+        (temporal_source_binding * 0.24)
+        + (perception_sequence_coherence * 0.18)
+        + (conscious_gate_balance * 0.16)
+        + (reflective_distance * 0.12)
+        + (inner_outer_alignment * 0.10)
+        + (emotional_decoupling * 0.10)
+        - (spacetime_unlocated_pressure * 0.14)
+    )
+    subconscious_afterimage_release = _clip01(
+        (release_capacity * 0.24)
+        + (subconscious_filter_strength * 0.20)
+        + (subconscious_buffering * 0.16)
+        + (emotional_decoupling * 0.14)
+        + (subconscious_afterimage_clarity * 0.14)
+        - (subconscious_afterimage_pressure * 0.22)
+    )
+    subconscious_afterimage_reflection_pull = _clip01(
+        subconscious_afterimage_pressure
+        * max(0.0, 1.0 - subconscious_afterimage_clarity)
+        * max(0.0, 1.0 - subconscious_afterimage_release)
+    )
+    if subconscious_afterimage_reflection_pull > 0.0:
+        field_observation_need = _clip01(field_observation_need + (subconscious_afterimage_reflection_pull * 0.045))
+        act_watch_readiness = _clip01(act_watch_readiness + (subconscious_afterimage_reflection_pull * 0.035))
+        action_clearance = _clip01(action_clearance - (subconscious_afterimage_reflection_pull * 0.025))
 
     return_strength = max(
         0.0,
@@ -17685,6 +17924,12 @@ def build_meta_regulation_state(perception_state, processing_state, felt_state, 
         "subconscious_filter_strength": float(subconscious_filter_strength),
         "subconscious_buffering": float(subconscious_buffering),
         "subconscious_leakage": float(subconscious_leakage),
+        "subconscious_afterimage_depth": float(subconscious_afterimage_depth),
+        "subconscious_afterimage_pressure": float(subconscious_afterimage_pressure),
+        "subconscious_afterimage_bearing": float(subconscious_afterimage_bearing),
+        "subconscious_afterimage_clarity": float(subconscious_afterimage_clarity),
+        "subconscious_afterimage_release": float(subconscious_afterimage_release),
+        "subconscious_afterimage_reflection_pull": float(subconscious_afterimage_reflection_pull),
         "conscious_selection_pressure": float(conscious_selection_pressure),
         "conscious_workspace_focus": float(conscious_workspace_focus),
         "conscious_workspace_load": float(conscious_workspace_load),
@@ -18610,7 +18855,16 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
     virtual_observation_plan = {}
     if decision in ("LONG", "SHORT"):
         try:
-            virtual_prices = derive_trade_plan_from_brain(decision, candle_state, fused, stimulus, snapshot, bot=bot)
+            virtual_prices = derive_trade_plan_from_brain(
+                decision,
+                candle_state,
+                fused,
+                stimulus,
+                snapshot,
+                bot=bot,
+                strategic_window_state=strategic_window_state,
+                form_symbol_state=form_symbol_state,
+            )
         except Exception:
             virtual_prices = None
         if isinstance(virtual_prices, dict):
@@ -18736,7 +18990,16 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         })
         return None
 
-    prices = derive_trade_plan_from_brain(decision, candle_state, fused, stimulus, snapshot, bot=bot)
+    prices = derive_trade_plan_from_brain(
+        decision,
+        candle_state,
+        fused,
+        stimulus,
+        snapshot,
+        bot=bot,
+        strategic_window_state=strategic_window_state,
+        form_symbol_state=form_symbol_state,
+    )
 
     if prices is None:
         _record_field_decision_protocol(
@@ -18778,6 +19041,39 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         })
         return None
 
+    if (
+        str(prices.get("entry_choice_state", "impulse_only") or "impulse_only") == "impulse_only"
+        and float(prices.get("area_motor_intention", 0.0) or 0.0) <= 0.0
+        and float(strategic_window_state.get("area_price_low", 0.0) or 0.0) > 0.0
+        and float(strategic_window_state.get("area_price_high", 0.0) or 0.0) > 0.0
+    ):
+        try:
+            synchronized_prices = derive_trade_plan_from_brain(
+                decision,
+                candle_state,
+                fused,
+                stimulus,
+                snapshot,
+                bot=bot,
+                strategic_window_state=strategic_window_state,
+                form_symbol_state=form_symbol_state,
+            )
+        except Exception:
+            synchronized_prices = None
+
+        if (
+            isinstance(synchronized_prices, dict)
+            and str(synchronized_prices.get("entry_choice_state", "impulse_only") or "impulse_only") != "impulse_only"
+        ):
+            prices = dict(synchronized_prices)
+            prices["entry_choice_sync"] = "strategic_context_integrated"
+        else:
+            prices = dict(prices)
+            prices["entry_choice_sync"] = "impulse_context_kept"
+    else:
+        prices = dict(prices)
+        prices["entry_choice_sync"] = "native_choice_state"
+
     result = {
         "decision": decision,
         "entry_price": float(prices["entry_price"]),
@@ -18793,6 +19089,16 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         "strategic_entry_price": float(prices.get("strategic_entry_price", prices["entry_price"]) or prices["entry_price"]),
         "strategic_entry_weight": float(prices.get("strategic_entry_weight", 0.0) or 0.0),
         "strategic_entry_fit": float(prices.get("strategic_entry_fit", 0.0) or 0.0),
+        "area_motor_intention": float(prices.get("area_motor_intention", 0.0) or 0.0),
+        "area_motor_distance_fit": float(prices.get("area_motor_distance_fit", 0.0) or 0.0),
+        "impulse_entry_intention": float(prices.get("impulse_entry_intention", 0.0) or 0.0),
+        "area_entry_intention": float(prices.get("area_entry_intention", 0.0) or 0.0),
+        "entry_choice_conflict": float(prices.get("entry_choice_conflict", 0.0) or 0.0),
+        "entry_choice_bearing": float(prices.get("entry_choice_bearing", 0.0) or 0.0),
+        "area_direct_readiness": float(prices.get("area_direct_readiness", 0.0) or 0.0),
+        "area_motor_restraint": float(prices.get("area_motor_restraint", 0.0) or 0.0),
+        "entry_choice_state": str(prices.get("entry_choice_state", "impulse_only") or "impulse_only"),
+        "entry_choice_sync": str(prices.get("entry_choice_sync", "-") or "-"),
         "strategic_area_focus_id": str(prices.get("strategic_area_focus_id", "-") or "-"),
         "strategic_area_price_low": float(prices.get("strategic_area_price_low", 0.0) or 0.0),
         "strategic_area_price_high": float(prices.get("strategic_area_price_high", 0.0) or 0.0),
@@ -18849,6 +19155,66 @@ def _compute_runtime_entry_result(window, candle_state, bot=None, visual_market_
         "recovery_need": float(recovery_need),
         "survival_pressure": float(survival_pressure),
     }
+
+    if (
+        str(result.get("entry_choice_state", "impulse_only") or "impulse_only") == "impulse_only"
+        and float(result.get("area_motor_intention", 0.0) or 0.0) <= 0.0
+        and float(strategic_window_state.get("area_price_low", 0.0) or 0.0) > 0.0
+        and float(strategic_window_state.get("area_price_high", 0.0) or 0.0) > 0.0
+    ):
+        try:
+            synchronized_prices = derive_trade_plan_from_brain(
+                decision,
+                dict(result.get("world_state", {}).get("candle_state", candle_state) or candle_state),
+                dict(result.get("signal", fused) or fused),
+                {
+                    "focus": dict(result.get("focus", stimulus.get("focus", {})) or {}),
+                    "filtered_vision": dict(result.get("filtered_vision", stimulus.get("filtered_vision", {})) or {}),
+                    "vision": dict(result.get("vision", stimulus.get("vision", {})) or {}),
+                },
+                snapshot,
+                bot=bot,
+                strategic_window_state=dict(result.get("strategic_window_state", strategic_window_state) or strategic_window_state),
+                form_symbol_state=dict(result.get("form_symbol_state", form_symbol_state) or form_symbol_state),
+            )
+        except Exception:
+            synchronized_prices = None
+
+        if (
+            isinstance(synchronized_prices, dict)
+            and str(synchronized_prices.get("entry_choice_state", "impulse_only") or "impulse_only") != "impulse_only"
+        ):
+            for _sync_key in (
+                "entry_price",
+                "sl_price",
+                "tp_price",
+                "rr_value",
+                "entry_validity_band",
+                "target_conviction",
+                "risk_model_score",
+                "reward_model_score",
+                "entry_mode",
+                "impulse_entry_price",
+                "strategic_entry_price",
+                "strategic_entry_weight",
+                "strategic_entry_fit",
+                "area_motor_intention",
+                "area_motor_distance_fit",
+                "impulse_entry_intention",
+                "area_entry_intention",
+                "entry_choice_conflict",
+                "entry_choice_bearing",
+                "entry_choice_state",
+                "strategic_area_focus_id",
+                "strategic_area_price_low",
+                "strategic_area_price_high",
+            ):
+                if _sync_key in synchronized_prices:
+                    result[_sync_key] = synchronized_prices[_sync_key]
+            result["entry_choice_sync"] = "strategic_context_integrated"
+        else:
+            result["entry_choice_sync"] = "impulse_context_kept"
+
     _record_field_decision_protocol(
         bot,
         result,

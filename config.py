@@ -38,9 +38,7 @@ class Config:
     # ==================================================
     # RISK MANAGEMENT
     # ==================================================
-    RR = 1.6
     MIN_RR = 1
-    MAX_RR = 2
     # trade_value_gate.py Ã–konomische Absicherung
     BASE_RISK_PCT = 0.0045
     MAX_SL_DISTANCE = 0.01
@@ -137,7 +135,6 @@ class Config:
     MCM_MEMORY_WEIGHT = 0.08 # Gewichtung der Erinnerung (Memory) in der Entscheidungsfindung der Agenten im MCM-Feld. Beeinflusst, wie stark die Agenten auf vergangene Erfahrungen und Ergebnisse reagieren.
     MCM_REGULATION_WEIGHT = 0.42 # Gewichtung der Regulierung (Regulation) in der Entscheidungsfindung der Agenten im MCM-Feld. Beeinflusst, wie stark die Agenten auf interne und externe Regeln reagieren.
     MCM_STRESS_RISK_FACTOR = 0.70 # Faktor, der das wahrgenommene Risiko (Risk) in Stress umwandelt. Je hÃ¶her, desto stÃ¤rker wird das Risiko in Stress umgewandelt, was zu vorsichtigerem Verhalten der Agenten fÃ¼hren kann.
-    MCM_EXCITED_RR_FACTOR = 1.06 # Faktor, der die Risikobereitschaft (Risk) in Erregung (Excitement) umwandelt. Je hÃ¶her, desto stÃ¤rker wird die Risikobereitschaft in Erregung umgewandelt, was zu risikofreudigerem Verhalten der Agenten fÃ¼hren kann.
     MCM_TP_REWARD = 0.75 # Belohnung fÃ¼r das Erreichen des Take-Profits (TP) in der MCM-Interne Simulation. Beeinflusst, wie stark die Agenten das Erreichen von Gewinnzielen anstreben.
     MCM_SL_PENALTY = 0.85 # Bestrafung fÃ¼r das Erreichen des Stop-Loss (SL) in der MCM-Interne Simulation. Beeinflusst, wie stark die Agenten das Erreichen von Verlustzielen vermeiden.
     MCM_CANCEL_PENALTY = 0.20 # Bestrafung fÃ¼r das Abbrechen von Trades in der MCM-Interne Simulation. Beeinflusst, wie stark die Agenten Trades abbrechen.
