@@ -699,6 +699,8 @@ wenn die innere und äussere Evidenz tragfähig genug ist.
 
 ## Transfer-Tragfähigkeit fremder Strukturen
 
+![alt text](files/BILDER/![alt text](files/BILDER/REIFE_DURCH_BOEBACHTUNGSLERNEN.png).png)
+
 Fremde Marktstrukturen sollen nicht einfach als bekannt oder unbekannt
 behandelt werden.
 
@@ -722,6 +724,8 @@ und daraus Beobachtung, Reframing, Halten oder kontrollierte Handlung ableiten.
 ---
 
 ## Reife durch Beobachtungslernen
+
+![alt text](files/BILDER/REIFE_DURCH_BOEBACHTUNGSLERNEN.png)
 
 Ein reiferes System lernt nicht nur aus ausgeführten Handlungen.
 Es kann auch aus bewusstem Zusehen lernen.
@@ -749,6 +753,8 @@ Reife bedeutet dann:
 ---
 
 ## Positionslast und Nicht-Intervention
+
+![alt text](files/BILDER/POSITIONSLAST_UND_NICHT_INTERVENTION.png)
 
 Eine offene Position erzeugt eine andere Art von Last als ein Entry.
 
@@ -790,6 +796,8 @@ Tragfähigkeit gemeinsam für einen neuen Exit sprechen.
 ---
 
 ## Zielerwartung einer Handlung
+
+![alt text](files/BILDER/ZIELERWARTUNG_EINER_HANDLUNG.png)
 
 Ein Trade ist im MCM Trading Brain nicht nur:
 
@@ -872,9 +880,9 @@ darf aus Druck ein echter Exit-Kandidat werden.
 
 ---
 
-## Kernprinzip
+## Zusammenfassung - Kernprinzip
 
-**Bot / KI haben keine festen Gates oder starren Handelsregeln als Kernlogik.**
+**DIO hat keine feste Gates oder starren Handelsregeln als Kernlogik.**
 
 Der Markt wird nicht direkt zu einer Order.  
 Er wird zuerst zu:

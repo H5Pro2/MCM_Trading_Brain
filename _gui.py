@@ -33,6 +33,9 @@ CANDLE_CARD_SIZE = (288, 160)
 BACKTEST_CARD_SIZE = (104, 160)
 EQUITY_CARD_SIZE = (1192, 240)
 
+
+OPTIONAL = "Optional: debug_lauf_44"
+
 C = {
     "bg_root": "#000000",
     "bg_panel": "#13161c",
@@ -578,7 +581,7 @@ class DIOGui:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-dir", default=".")
-    parser.add_argument("--debug-run", default=None, help="Optional: debug_lauf_44")
+    parser.add_argument("--debug-run", default=None, help=OPTIONAL)
     args = parser.parse_args()
 
     root = tk.Tk()

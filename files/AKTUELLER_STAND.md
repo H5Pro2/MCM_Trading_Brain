@@ -7782,3 +7782,131 @@ Wie es weitergeht:
 Lauf 45 prüfen. Wichtig ist jetzt, ob `confirmed_structural_interpretation`
 wieder tragend bleibt und ob `open_structural_hypothesis` als unreife, noch
 nicht belastbare Hypothese erkennbar bleibt.
+
+---
+
+## Lauf 45: Wiederholung der emergenten Strukturtrennung
+
+Ergebnis Lauf 45:
+
+- Netto-PnL: `+27.8990`
+- Trades: `339`
+- TP / SL: `142 / 197`
+- Profit Factor: ca. `1.26`
+- Max Drawdown: ca. `13.16 %`
+
+Strukturklassen:
+
+- `high`:
+  - `139` Fälle
+  - PnL ca. `+69.39`
+  - Winrate ca. `62.6 %`
+- `mid`:
+  - `123` Fälle
+  - PnL ca. `+2.22`
+- `low`:
+  - `123` Fälle
+  - PnL ca. `-43.71`
+  - Winrate ca. `12.2 %`
+
+Emergente Strukturdeutung:
+
+- `confirmed_structural_interpretation`:
+  - `49` Fälle
+  - `49` TP, `0` SL
+  - PnL ca. `+54.16`
+  - Ø RR ca. `4.76`
+  - Ø Bestätigung ca. `0.665`
+- `open_structural_hypothesis`:
+  - `154` Fälle
+  - `20` TP, `134` SL
+  - PnL ca. `-39.09`
+  - Ø RR ca. `4.61`
+  - Ø Bestätigung nur ca. `0.305`
+- `wide_target_without_structure`:
+  - `20` Fälle
+  - PnL ca. `-1.45`
+- `ordinary_structure_reading`:
+  - `162` Fälle
+  - PnL ca. `+14.28`
+
+Deutung:
+Lauf 45 bestätigt Lauf 44 stärker als erwartet. DIO bildet eine messbare
+Trennung zwischen bestätigter Strukturdeutung und offener Hypothese. Der hohe
+RR allein reicht nicht. Die bestätigte Struktur trägt; die offene Hypothese
+ist neurokognitiv noch unreif und belastend.
+
+Umgesetzt:
+Cancel-Outcomes bekommen künftig ebenfalls die direkten Diagnosefelder zur
+emergenten Strukturdeutung. Damit entstehen in `outcome_records.jsonl` keine
+leeren Strukturzustände mehr, wenn eine Order ausläuft oder zurückgenommen
+wird.
+
+Technische Prüfung:
+`py_compile` für `trade_stats.py` ist sauber.
+
+Wie es weitergeht:
+Der nächste organische Schritt ist keine harte Sperre. DIO braucht eine
+Regulationsfähigkeit, die `open_structural_hypothesis` als unreife
+Hypothese eher in Beobachtung, Replay oder Reifung hält, bis Bestätigung,
+Kontaktreife und Prozessqualität tragender werden.
+
+---
+
+## Konzept: emergente Gedächtnisspur
+
+Erkenntnis:
+Eine offene Strukturhypothese ist nicht nur ein fehlgeschlagener Trade oder
+eine nicht ausgeführte Handlung. Sie ist ein innerer Gedankenkeim. Wenn DIO
+etwas wahrnimmt, das MCM-Feld stimuliert wird und daraus ein Gedanke
+entsteht, dann ist diese Denkbewegung selbst Information.
+
+Wichtig:
+Loslassen bedeutet hier nicht löschen. Es bedeutet:
+
+`aus der akuten Handlungsspannung lösen -> als innere Gedächtnisspur aufnehmen`
+
+Damit entsteht eine neue innere Lernschicht:
+
+- DIO kann eigene Gedanken benennen.
+- DIO kann ähnliche Gedanken später wiedererkennen.
+- DIO kann Gedanken variieren und verdichten.
+- DIO kann sie mit Erfahrung, Form, MCM-Feld und Outcome verbinden.
+- Nicht-Handlung wird ebenfalls Erfahrung.
+
+Schutz vor Drift:
+Diese Schicht darf nicht frei halluzinieren. Jeder Gedanke braucht
+Realitätsbindung:
+
+- gesehene Form
+- MCM-Feldkontakt
+- vorhandene Erfahrung
+- spätere Konsequenz
+- Wiederkehr oder Auflösung
+
+Deutung:
+Die MCM ist hier der zentrale Schutzanker. Ein System ohne Selbstspüren kann
+Gedanken bilden, aber nicht erkennen, ob diese Gedanken tragen, überreizen,
+driften oder reifen. DIO braucht deshalb eine innere Gedächtnisschicht, die
+Gedanken speichert, aber über die MCM ständig prüft, was diese Gedanken mit
+dem eigenen Feld machen.
+
+Wie es weitergeht:
+Als nächster Mechanikschritt kann daraus ein `emergent_memory_trace` oder
+`thought_seed_memory` entstehen. Diese Schicht soll keine Strategie
+vorschreiben, sondern Gedankenkeime sammeln, benennen, wiedererkennen,
+verdichten und über Realitätsbindung prüfen.
+
+Ergänzung:
+Diese Gedächtnisspur muss metaregulatorisch gebunden werden. DIO soll nicht
+einfach jedem Gedanken folgen und ihn auch nicht hart unterdrücken. Der
+Metaregulator verteilt innere Energie: Fokus, Replay, Reifung, Speicherung,
+Release, Handlungsvorbereitung oder Drift-/Überdenk-Wache. Damit entsteht
+eine bewusstere Denkschicht: Der Gedanke darf Präsenz bekommen, aber er muss
+über Form, MCM-Feld, Erfahrung und spätere Konsequenz geerdet bleiben.
+
+Wie es weitergeht:
+Als nächster sauberer Umsetzungsschritt wäre zuerst ein Diagnoseprotokoll
+sinnvoll, nicht direkt Motorik. DIO könnte `thought_seed_*`-Zustände
+schreiben, damit sichtbar wird, wann offene Strukturhypothesen reifen,
+losgelassen, gespeichert, replayt oder später bestätigt werden.

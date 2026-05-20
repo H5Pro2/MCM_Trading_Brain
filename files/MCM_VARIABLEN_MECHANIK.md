@@ -3341,6 +3341,26 @@ erlebt.
 
 # Noch Zu Dokumentieren
 
+- `emergent_memory_trace`
+- `thought_seed_id`
+- `thought_seed_label`
+- `thought_trace_strength`
+- `thought_recall_potential`
+- `thought_maturity`
+- `reality_binding_score`
+- `hallucination_drift_risk`
+- `form_symbol_anchor`
+- `mcm_field_anchor`
+- `experience_memory_anchor`
+- `outcome_anchor`
+- `seed_focus`
+- `seed_replay`
+- `seed_mature`
+- `seed_store`
+- `seed_release`
+- `seed_action_ready`
+- `seed_drift_watch`
+- `seed_overthinking_watch`
 - `nervous_variance`
 - `regulation_oscillation`
 - `recovery_after_stress`

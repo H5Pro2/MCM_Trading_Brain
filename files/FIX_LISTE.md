@@ -1456,6 +1456,59 @@ Regelwerk: `files/MD_ANWEISUNG.md`.
   Prüfung:
   - `py_compile` für `trade_stats.py` sauber.
 
+- [x] Lauf 45 und Wiederholung der Strukturtrennung prüfen.
+  Ergebnis:
+  - Lauf 45: `+27.8990` Netto-PnL, `339` Trades, Profit Factor ca. `1.26`.
+  - `confirmed_structural_interpretation`: `49` Fälle, `49` TP, `0` SL,
+    ca. `+54.16` PnL.
+  - `open_structural_hypothesis`: `154` Fälle, `20` TP, `134` SL,
+    ca. `-39.09` PnL.
+  - Damit bestätigt sich: hohe RR-Struktur ist nur tragend, wenn sie auch
+    bestätigt und prozessqualitativ getragen ist.
+  Umsetzung:
+  - Cancel-Outcomes bekommen künftig ebenfalls direkte
+    `emergent_structure_*`-Felder.
+  Prüfung:
+  - `py_compile` für `trade_stats.py` sauber.
+  Nächster Mechanikpunkt:
+  - Offene Strukturhypothesen nicht blockieren, sondern als unreif erkennen
+    und eher in Beobachtung, Replay oder Reifung halten.
+
+- [ ] Emergente Gedächtnisspur als innere Denkschicht vorbereiten.
+  Ziel:
+  - offene Strukturhypothesen nicht löschen und nicht hart sperren
+  - Gedankenkeime aus der akuten Motorik lösen und als innere Spur speichern
+  - eigene DIO-Syntax für Gedanken zulassen
+  - Wiederkehr, Variation, Verdichtung und Reifung messbar machen
+  - Realitätsbindung sichern, damit keine freie Halluzinationsschicht entsteht
+  Mögliche Felder:
+  - `emergent_memory_trace`
+  - `thought_seed_id`
+  - `thought_seed_label`
+  - `thought_trace_strength`
+  - `thought_recall_potential`
+  - `thought_maturity`
+  - `reality_binding_score`
+  - `hallucination_drift_risk`
+  - `form_symbol_anchor`
+  - `mcm_field_anchor`
+  - `experience_memory_anchor`
+  - `outcome_anchor`
+  Wichtig:
+  - keine Handlungssperre
+  - keine freie Fantasieschicht
+  - Nicht-Handlung als Erfahrung behandeln
+  - MCM als Selbstspür- und Reflexionsanker verwenden
+  Metaregulatorische Bindung:
+  - Gedankenkeime nicht direkt motorisch entladen
+  - Gedankenkeime nicht hart blockieren
+  - `seed_focus`, `seed_replay`, `seed_mature`, `seed_store`,
+    `seed_release`, `seed_action_ready`, `seed_drift_watch`,
+    `seed_overthinking_watch` als mögliche Zustände prüfen
+  - Realitätsbindung über Form, MCM-Feld, Erfahrung und spätere Konsequenz
+    sichern
+  - Grübelkaskaden und Überregulation diagnostisch sichtbar machen
+
 - [ ] Spätere Web-GUI nur als Beobachtungsraum vorbereiten.
   Ziel:
   - erst nach stabilerer Brain-/Backtest-Diagnose umsetzen

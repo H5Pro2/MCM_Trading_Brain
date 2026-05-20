@@ -2583,12 +2583,74 @@ class TradeStats:
                 self.data["exploration_cancels"] = int(self.data.get("exploration_cancels", 0) or 0) + 1
 
             compact_context = self._compact_context(normalized_context)
+            trade_plan_state = dict(compact_context.get("trade_plan", {}) or {})
+            meta_regulation_state = dict(compact_context.get("meta_regulation_state", {}) or {})
+            active_mcm_contact_state = dict(compact_context.get("active_mcm_contact_state", meta_regulation_state.get("active_mcm_contact", {}) or {}) or {})
+            target_expectation_state = dict(compact_context.get("target_expectation_state", {}) or {})
+
+            def _f(*values, default=0.0):
+                for value in values:
+                    try:
+                        if value is None:
+                            continue
+                        return float(value)
+                    except Exception:
+                        continue
+                return float(default)
+
+            def _clip(value):
+                value = _f(value)
+                if value != value:
+                    value = 0.0
+                return max(0.0, min(1.0, float(value)))
+
+            rr_value = _f(trade_plan_state.get("rr_value"), default=0.0)
+            structural_run_room = _clip((rr_value - 1.6) / 3.2)
+            target_expectation_value = _clip(
+                target_expectation_state.get(
+                    "tp_reachability",
+                    target_expectation_state.get("base_target_expectation", 0.0),
+                )
+            )
+            emergent_structure_reading = _clip(
+                (structural_run_room * 0.24)
+                + (_clip(meta_regulation_state.get("future_projection_depth", 0.0)) * 0.16)
+                + (_clip(meta_regulation_state.get("mcm_spacetime_depth", 0.0)) * 0.14)
+                + (_clip(meta_regulation_state.get("area_bearing_quality", 0.0)) * 0.14)
+                + (_clip(trade_plan_state.get("entry_choice_bearing", 0.0)) * 0.12)
+                + (_clip(active_mcm_contact_state.get("contact_action_maturity", meta_regulation_state.get("contact_action_maturity", 0.0))) * 0.10)
+                + (target_expectation_value * 0.10)
+                - (_clip(meta_regulation_state.get("spacetime_unlocated_pressure", 0.0)) * 0.10)
+                - (_clip(meta_regulation_state.get("contact_regime_mismatch", 0.0)) * 0.08)
+            )
+            emergent_structure_confirmation = _clip(
+                (emergent_structure_reading * 0.42)
+                + (_clip(normalized_decomposition.get("plan_quality", 0.0)) * 0.16)
+                + (_clip(normalized_decomposition.get("execution_quality", 0.0)) * 0.14)
+                + (_clip(normalized_decomposition.get("risk_fit_quality", 0.0)) * 0.12)
+                + (_clip(normalized_decomposition.get("position_constructive_bearing", 0.0)) * 0.10)
+            )
+            if emergent_structure_reading >= 0.52 and emergent_structure_confirmation >= 0.50:
+                emergent_structure_state = "confirmed_structural_interpretation"
+            elif emergent_structure_reading >= 0.44 and rr_value >= 2.4:
+                emergent_structure_state = "open_structural_hypothesis"
+            elif rr_value >= 2.4 and emergent_structure_reading < 0.34:
+                emergent_structure_state = "wide_target_without_structure"
+            else:
+                emergent_structure_state = "ordinary_structure_reading"
+
             outcome_record = {
                     "event": "cancel",
                     "reason": "cancel",
                     "timestamp": self.data.get("current_timestamp"),
                     "order_id": None if order_id is None else str(order_id),
                     "cause": None if cause is None else str(cause),
+                    "rr_value": float(rr_value),
+                    "structural_run_room": float(structural_run_room),
+                    "emergent_structure_reading": float(emergent_structure_reading),
+                    "emergent_structure_confirmation": float(emergent_structure_confirmation),
+                    "emergent_structure_state": str(emergent_structure_state),
+                    "target_expectation_value": float(target_expectation_value),
                     "structure_quality": float(structure_quality),
                     "structure_bucket": structure_bucket,
                     "outcome_decomposition": normalized_decomposition,
