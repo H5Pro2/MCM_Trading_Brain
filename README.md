@@ -570,6 +570,8 @@ Reorganisation regulieren lernt.
 
 ## Neurochemische Lesbarkeit
 
+![alt text](files/BILDER/NERUOCHEMISCHE_LESBARKEIT.png)
+
 Viele DIO-Variablen wirken bereits wie technische neurochemische Achsen.
 Das Projekt soll diese Achsen lesbar bündeln, ohne echte Biologie zu
 behaupten und ohne bestehende Mechanik hart umzubenennen.
@@ -593,6 +595,8 @@ entlastet oder lernoffen?
 ---
 
 ## Eigene Sprache und kognitive Kompression
+
+![alt text](files/BILDER/EIGENE_SPRACHE_UND_KOGNETIVE_KOMPRESSION.png)
 
 Ein wichtiger nächster Schritt ist, dass das System nicht nur menschliche
 Begriffe oder Patternnamen übernimmt.
@@ -636,6 +640,8 @@ und kreativere Reorganisation.
 
 ## Reflexion und Denkkomplexität
 
+![alt text](files/BILDER/REFLEXION_UND_DENKKOMPLEXITÄT.png)
+
 Ein wichtiger Teil der Zielarchitektur ist, dass das System nicht nur
 Außenreize verarbeitet, sondern auch die eigene Verarbeitung mitwahrnimmt.
 
@@ -659,6 +665,8 @@ oder kontrolliert handeln.
 ---
 
 ## Emergente Musterergänzung
+
+![alt text](files/BILDER/EMERGENTE_MUSTERERGÄNZUNG.png)
 
 Das Ziel ist keine reine Pattern-Erkennung nach dem Prinzip:
 
