@@ -7910,3 +7910,20 @@ Als nächster sauberer Umsetzungsschritt wäre zuerst ein Diagnoseprotokoll
 sinnvoll, nicht direkt Motorik. DIO könnte `thought_seed_*`-Zustände
 schreiben, damit sichtbar wird, wann offene Strukturhypothesen reifen,
 losgelassen, gespeichert, replayt oder später bestätigt werden.
+
+---
+
+## Dokumentation: MCM-Quellen verlinkt
+
+Die MCM-Blockbereiche in der README wurden direkt mit den passenden
+Abhandlungen im MCM-Repository verlinkt. Verlinkt sind jetzt:
+
+- Block S - Mögliche Metaregulatoren
+- Block V - KI und starre Logik
+- Block O - Kreativität
+- Block J / K - Psyche und individuelle Selbstregulation
+- Von Resonanz zu Sprache
+- ProtoMind / selbstaktive Feldkognition
+- Das Gehirn als emergente konzentrisch-dipolare Feldstruktur
+
+Damit ist die Theoriebrücke aus README heraus direkt nachvollziehbar.

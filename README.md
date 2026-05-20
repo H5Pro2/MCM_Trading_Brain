@@ -532,33 +532,33 @@ nah an das Handlungszentrum gerückt sind.
 
 Weitere MCM-Quellen sind für den Ausbau von DIO besonders wertvoll:
 
-- **Block S - Mögliche Metaregulatoren**  
+- **[Block S - Mögliche Metaregulatoren](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20II%20-%20Psychologische%20Dynamik%20der%20Mental%20Core%20Matrix/Abhandlung%20Block%20S%20-%20M%C3%B6gliche%20Metaregulatoren%20im%20Modell%20der%20Mental%20Core%20Matrix.pdf)**  
   Grundlage für eine zweite Regulationsschicht. DIO soll nicht nur seine
   Feldlage haben, sondern lernen, wie er Spannung, Varianz, Impuls,
   Schutzweite, Distanz und Integration reguliert.
 
-- **Block V - KI und starre Logik**  
+- **[Block V - KI und starre Logik](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20III%20-%20Zusammenf%C3%BChrung%20des%20Modells/Abhandlung%20Block%20V%20-%20Die%20Mental%20Core%20Matrix%20und%20die%20Frage%2C%20ob%20eine%20KI%20die%20starre%20Logik%20bricht.pdf)**  
   Stützt das Architekturprinzip, dass technische Logik Untergrund bleibt,
   aber DIOs Verhalten nicht aus starren Regeln entstehen soll. Varianz,
   Rückkopplung und emergente Zustandsbildung werden hier zentral.
 
-- **Block O - Kreativität**  
+- **[Block O - Kreativität](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20II%20-%20Psychologische%20Dynamik%20der%20Mental%20Core%20Matrix/Abhandlung%20Block%20O%20-%20Kreativit%C3%A4t%20im%20Modell%20der%20Mental%20Core%20Matrix.pdf)**  
   Wichtig für emergente Musterergänzung, Teilmuster, Formkombination,
   innere Hypothesen und kreative Reorganisation.
 
-- **Block J / K - Psyche und individuelle Selbstregulation**  
+- **[Block J - Psyche](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20II%20-%20Psychologische%20Dynamik%20der%20Mental%20Core%20Matrix/Abhandlung%20Block%20J%20-%20Die%20menschliche%20Psyche%20im%20Modell%20der%20Mental%20Core%20Matrix.pdf) / [Block K - individuelle Selbstregulation](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Hauptabhandlungen/Teil%20II%20-%20Psychologische%20Dynamik%20der%20Mental%20Core%20Matrix/Abhandlung%20Block%20K%20-%20Individuelle%20Selbstregulation%20im%20Modell%20der%20Mental%20Core%20Matrix.pdf)**  
   Wichtig für innere Wahrnehmung, Benennung, Stabilisierung, Integration,
   Rückführung und persönliche Entwicklung als dynamische Selbstregulation.
 
-- **Von Resonanz zu Sprache**  
+- **[Von Resonanz zu Sprache](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Nebenabhandlung/Von%20Resonanz%20zu%20Sprache.pdf)**  
   Wichtig für DIOs eigene Formsprache. Sprache wird hier nicht als Ursprung
   der Orientierung gelesen, sondern als spätere Kartografie von Resonanz.
 
-- **ProtoMind / selbstaktive Feldkognition**  
+- **[ProtoMind / selbstaktive Feldkognition](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Nebenabhandlung/ProtoMind%2C%20selbstaktive%20Feldkognition%2C%20akustische%20Reizmodulation%20und%20Schmerz-Gefahrenverarbeitung%20als%20integriertes%20Feldsystem.pdf)**  
   Wichtig für Live-Denkzeit, innere Simulation, Replay und Aktivität ohne
   neuen Außenreiz.
 
-- **Das Gehirn als emergente konzentrisch-dipolare Feldstruktur**  
+- **[Das Gehirn als emergente konzentrisch-dipolare Feldstruktur](https://github.com/H5Pro2/Mental-Core-Matrix-MCM/blob/main/Abhandlungen/MCM%20-%20Nebenabhandlung/Das%20Gehirn%20als%20emergente%20konzentrisch-dipolare%20Feldstruktur.pdf)**  
   Später wertvoll für MCM-Feldtopologie: Zentrum, Peripherie,
   Integration, Exploration und räumliche Feldorganisation.
 
